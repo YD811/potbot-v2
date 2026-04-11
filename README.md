@@ -56,7 +56,7 @@ A POT is a shared on-chain SOL vault with:
 | 4 | Consensus | 100% required | Full democracy |
 
 ### POT Duels 🎮
-Group-vs-group trading competition. Inspired by DeFi (ETHGlobal).
+Group-vs-group trading competition.
 - Governance vote to accept a challenge
 - Stake % of vault into escrow
 - Real-time P&L scoreboard via WebSocket
