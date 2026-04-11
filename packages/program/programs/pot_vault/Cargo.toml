@@ -1,1 +1,20 @@
-W3BhY2thZ2VdCm5hbWUgPSAicG90X3ZhdWx0Igp2ZXJzaW9uID0gIjAuMS4wIgpkZXNjcmlwdGlvbiA9ICJQb3RCb3QgdjIg4oCUIENvbGxlY3RpdmUgdHJhZGluZyB2YXVsdCBwcm9ncmFtIgplZGl0aW9uID0gIjIwMjEiCgpbbGliXQpjcmF0ZS10eXBlID0gWyJjZHlsaWIiLCAibGliIl0KbmFtZSA9ICJwb3RfdmF1bHQiCgpbZmVhdHVyZXNdCm5vLWVudHJ5cG9pbnQgPSBbXQpuby1pZGwgPSBbXQpuby1sb2ctaXgtbmFtZSA9IFtdCmNwaSA9IFsibm8tZW50cnlwb2ludCJdCmRlZmF1bHQgPSBbXQoKW2RlcGVuZGVuY2llc10KYW5jaG9yLWxhbmcgID0geyB2ZXJzaW9uID0gIjAuMzAuMSIsIGZlYXR1cmVzID0gWyJpbml0LWlmLW5lZWRlZCJdIH0KYW5jaG9yLXNwbCAgID0geyB2ZXJzaW9uID0gIjAuMzAuMSIsIGZlYXR1cmVzID0gWyJ0b2tlbiIsICJ0b2tlbl8yMDIyIiwgImFzc29jaWF0ZWRfdG9rZW4iXSB9CnB5dGgtc29sYW5hLXJlY2VpdmVyLXNkayA9ICIwLjMuMCIK
+[package]
+name = "pot-vault"
+version = "0.1.0"
+description = "PotBot collective trading vault program"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "pot_vault"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.30.1"
+anchor-spl = "0.30.1"

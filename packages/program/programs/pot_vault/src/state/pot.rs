@@ -1,99 +1,136 @@
 use anchor_lang::prelude::*;
 
-/// Maximum length of a POT name
-pub const MAX_NAME_LEN: usize = 32;
-
-/// Root POT account — one per collective vault
 #[account]
-pub struct Pot {
-    /// Owner wallet (can be multisig in v3)
+#[derive(InitSpace)]
+pub struct PotAccount {
+    /// Creator / initial admin
     pub authority: Pubkey,
-    /// Human-readable name
+    /// Human-readable name (max 32 bytes)
+    #[max_len(32)]
     pub name: String,
-    /// Bump for vault PDA
+    /// Emoji identifier
+    #[max_len(8)]
+    pub emoji: String,
+    /// Bump for the vault PDA
     pub vault_bump: u8,
-    /// Total share units minted (lamport precision)
+    /// Bump for the pot PDA
+    pub pot_bump: u8,
+    /// Total share units distributed across all members
     pub total_shares: u64,
     /// Number of active members
     pub member_count: u32,
-    /// Cumulative trade count
-    pub trade_count: u64,
-    /// Cumulative USD volume (lamports, using SOL price)
+    /// Running trade counter
+    pub trade_count: u32,
+    /// Total volume in lamports
     pub total_volume: u64,
-    /// Monotonic proposal counter (used as nonce for proposal PDAs)
-    pub proposal_count: u64,
-    /// Tamagotchi evolution level (0-5)
+    /// Tamagotchi level 0-5
     pub tamagotchi_level: u8,
-    /// Accumulated XP
+    /// Tamagotchi XP
     pub tamagotchi_xp: u64,
-    /// Community SPL token mint (ETF-like)
+    /// Community token mint (SPL)
     pub community_token_mint: Pubkey,
-    /// Configurable settings
+    /// Config
     pub config: PotConfig,
-    /// Governance rules
+    /// Governance settings
     pub governance: GovSettings,
-    /// Unix timestamp
+    /// Next proposal ID
+    pub next_proposal_id: u64,
+    /// Created timestamp
     pub created_at: i64,
 }
 
-impl Pot {
-    pub const LEN: usize = 8  // discriminator
-        + 32                  // authority
-        + 4 + MAX_NAME_LEN    // name string
-        + 1                   // vault_bump
-        + 8 + 4 + 8 + 8 + 8  // shares, count, trades, volume, proposal_count
-        + 1 + 8               // tama level + xp
-        + 32                  // community_token_mint
-        + PotConfig::LEN
-        + GovSettings::LEN
-        + 8;                  // created_at
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub struct PotConfig {
+    /// Whether anyone can join or invite-only
     pub is_public: bool,
+    /// Minimum deposit in lamports
     pub min_deposit: u64,
+    /// Lockup period in seconds (0 = no lockup)
     pub lockup_seconds: i64,
-    pub privacy_enabled: bool,
+    /// Yield strategy
     pub yield_strategy: YieldStrategy,
-    /// Max % of vault in yield positions (basis points, 10000 = 100%)
+    /// Max % of vault allocated to yield (basis points, e.g. 5000 = 50%)
     pub max_yield_allocation_bps: u16,
 }
 
-impl PotConfig {
-    pub const LEN: usize = 1 + 8 + 8 + 1 + 1 + 2;
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
+pub struct GovSettings {
+    /// Governance level for trades (0=autocracy, 1=advisory, 2=majority, 3=super, 4=consensus)
+    pub trade_level: u8,
+    /// Governance level for withdrawals
+    pub withdraw_level: u8,
+    /// Governance level for member changes
+    pub member_change_level: u8,
+    /// Governance level for settings changes
+    pub settings_change_level: u8,
+    /// Governance level for yield strategy changes
+    pub yield_change_level: u8,
+    /// Voting timeout in seconds
+    pub vote_timeout_seconds: i64,
+    /// Quorum in basis points (e.g. 5000 = 50%)
+    pub quorum_bps: u16,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace, PartialEq)]
 pub enum YieldStrategy {
     None,
-    Conservative,   // Kamino stablecoins 3-6% APY
-    Balanced,       // Mixed lending 10-25% APY
-    Aggressive,     // High-risk farms 20-50%+ APY
+    Conservative,
+    Balanced,
+    Aggressive,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
-pub struct GovSettings {
-    /// 0=Autocracy, 1=Advisory, 2=Majority, 3=Supermajority, 4=Consensus
-    pub trade_level: u8,
-    pub withdraw_level: u8,
-    pub member_change_level: u8,
-    pub settings_change_level: u8,
-    pub yield_change_level: u8,
-    pub vote_timeout_seconds: i64,
-    pub quorum_bps: u16,  // % of members needed for quorum
-}
-
-impl GovSettings {
-    pub const LEN: usize = 5 + 8 + 2;
-
-    /// Does an action at given governance level require a vote?
-    pub fn requires_vote(&self, action_level: u8) -> bool {
-        action_level > 0
+impl PotAccount {
+    /// Calculate the share price: vault_lamports / total_shares
+    /// Returns lamports per share (scaled by 1e9 for precision)
+    pub fn share_price(&self, vault_lamports: u64) -> u64 {
+        if self.total_shares == 0 {
+            return 1_000_000_000; // 1:1 initial price
+        }
+        (vault_lamports as u128)
+            .checked_mul(1_000_000_000)
+            .unwrap()
+            .checked_div(self.total_shares as u128)
+            .unwrap() as u64
     }
 
-    /// Minimum approvals needed
-    pub fn quorum_count(&self, member_count: u32) -> u32 {
-        ((member_count as u64 * self.quorum_bps as u64) / 10_000) as u32
+    /// Calculate shares for a given deposit
+    pub fn lamports_to_shares(&self, lamports: u64, vault_lamports: u64) -> u64 {
+        if self.total_shares == 0 {
+            return lamports; // First deposit: 1 lamport = 1 share
+        }
+        (lamports as u128)
+            .checked_mul(self.total_shares as u128)
+            .unwrap()
+            .checked_div(vault_lamports as u128)
+            .unwrap() as u64
+    }
+
+    /// Calculate lamports for a given number of shares
+    pub fn shares_to_lamports(&self, shares: u64, vault_lamports: u64) -> u64 {
+        if self.total_shares == 0 {
+            return 0;
+        }
+        (shares as u128)
+            .checked_mul(vault_lamports as u128)
+            .unwrap()
+            .checked_div(self.total_shares as u128)
+            .unwrap() as u64
+    }
+
+    /// Check if governance level allows autocracy (owner decides)
+    pub fn is_autocracy(&self, level: u8) -> bool {
+        level == 0
+    }
+
+    /// Required approval BPS for a given governance level
+    pub fn required_approval_bps(level: u8) -> u16 {
+        match level {
+            0 => 0,       // Autocracy
+            1 => 0,       // Advisory (veto-based)
+            2 => 5001,    // Majority >50%
+            3 => 6667,    // Supermajority >66%
+            4 => 10000,   // Consensus 100%
+            _ => 10000,
+        }
     }
 }
