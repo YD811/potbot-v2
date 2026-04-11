@@ -341,6 +341,7 @@ export default function PotDetailPage() {
   const { pubkey } = useParams<{ pubkey: string }>()
   const { connected } = useWallet()
   const [tab, setTab] = useState<Tab>('overview')
+  const [showCopiedToast, setShowCopiedToast] = useState(false)
 
   const pot = MOCK_POT // TODO: fetch from chain
   const xpForNextLevel = [100, 500, 2000, 8000, 20000]
@@ -356,6 +357,18 @@ export default function PotDetailPage() {
     { id: 'members',     label: 'Members',     icon: '👥' },
     { id: 'duels',       label: 'Duels',       icon: '⚔️' },
   ]
+
+  function handleSharePerformance() {
+    const shareText = `🪴 ${pot.name} is up +${pot.pnlPct}% this month
+Tamagotchi Level: ${pot.tamagotchiLevel} ${pot.emoji}
+Members: ${pot.members} | Volume: ${pot.solBalance.toLocaleString()} SOL
+Join us: https://app.potbot.fun/pots/${pubkey}
+#PotBot #Solana #DeFi`
+
+    navigator.clipboard.writeText(shareText)
+    setShowCopiedToast(true)
+    setTimeout(() => setShowCopiedToast(false), 3000)
+  }
 
   return (
     <div className="min-h-screen bg-bg">
@@ -602,6 +615,21 @@ export default function PotDetailPage() {
                 <span className="font-mono">47d ago</span>
               </div>
             </div>
+
+            {/* Share Performance Button */}
+            <button
+              onClick={handleSharePerformance}
+              className="w-full card p-4 text-center text-sm font-semibold rounded-xl border border-[#1A2332] hover:border-[#9945FF] hover:bg-[#9945FF]/5 transition-all flex items-center justify-center gap-2"
+            >
+              <span>📤</span> Share Performance Card
+            </button>
+
+            {/* Toast notification */}
+            {showCopiedToast && (
+              <div className="card p-4 bg-[#14F195]/10 border border-[#14F195] text-sm">
+                <div className="text-[#14F195]">✓ Copied to clipboard!</div>
+              </div>
+            )}
           </div>
         </div>
       </div>
