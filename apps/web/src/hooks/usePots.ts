@@ -1,1 +1,359 @@
-J3VzZSBjbGllbnQnCgppbXBvcnQgeyB1c2VRdWVyeSwgdXNlTXV0YXRpb24sIHVzZVF1ZXJ5Q2xpZW50IH0gZnJvbSAnQHRhbnN0YWNrL3JlYWN0LXF1ZXJ5JwppbXBvcnQgeyB1c2VXYWxsZXQsIHVzZUNvbm5lY3Rpb24sIHVzZUFuY2hvcldhbGxldCB9IGZyb20gJ0Bzb2xhbmEvd2FsbGV0LWFkYXB0ZXItcmVhY3QnCmltcG9ydCB7IEFuY2hvclByb3ZpZGVyLCBQcm9ncmFtLCBCTiB9IGZyb20gJ0Bjb3JhbC14eXovYW5jaG9yJwppbXBvcnQgeyBQdWJsaWNLZXkgfSBmcm9tICdAc29sYW5hL3dlYjMuanMnCmltcG9ydCB7IGdldFBvdEFkZHJlc3MsIGdldFZhdWx0QWRkcmVzcywgZ2V0TWVtYmVyQWRkcmVzcyB9IGZyb20gJ0Bwb3Rib3Qvc2RrJwppbXBvcnQgdHlwZSB7IFBvdEFjY291bnQgfSBmcm9tICdAL3R5cGVzL3BvdCcKCmNvbnN0IFBPVF9QUk9HUkFNX0lEID0gbmV3IFB1YmxpY0tleSgKICBwcm9jZXNzLmVudi5ORVhUX0FVQkxJQ19QT1RfUFJPR1JBTV9JRCA/PyAnUG90VkxUMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTEnCikKCi8vIOKUgOKUgCBIZWxwZXJzIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKZnVuY3Rpb24geWllbGRTdHJhdGVneUtleShzOiBhbnkpOiBQb3RBY2NvdW50Wyd5aWVsZFN0cmF0ZWd5J10gewogIGlmIChzPy5jb25zZXJ2YXRpdmUpIHJldHVybiAnY29uc2VydmF0aXZlJwogIGlmIChzPy5iYWxhbmNlZCkgcmV0dXJuICdiYWxhbmNlZCcKICBpZiAocz8uYWdncmVzc2l2ZSkgcmV0dXJuICdhZ2dyZXNzaXZlJwogIHJldHVybiAnbm9uZScKfQoKZnVuY3Rpb24gZ292TGV2ZWxGcm9tU2V0dGluZ3MoZ292OiBhbnkpOiBudW1iZXIgewogIHJldHVybiBnb3Y/LnRyYWRlTGV2ZWwgPz8gMgp9CgovKioKICogRGVjb2RlIHJhdyBBbmNob3IgYWNjb3VudCBkYXRhIGludG8gUG90QWNjb3VudCBzaGFwZS4KICogV29ya3Mgd2l0aCBtb2NrIGRhdGEgdG9vIOKAlCBpZiBJREwgaXMgbm90IGF2YWlsYWJsZSwgcmV0dXJucyBlbXB0eSBhcnJheS4KICovCmFzeW5jIGZ1bmN0aW9uIGRlY29kZVBvdEFjY291bnRzKAogIHByb2dyYW06IFByb2dyYW0sCiAgd2FsbGV0UHVia2V5OiBQdWJsaWNLZXkKKTogUHJvbWlzZTxQb3RBY2NvdW50W10+IHsKICB0cnkgewogICAgLy8gRmV0Y2ggYWxsIFBPVCBhY2NvdW50cyB0aGUgd2FsbGV0IGlzIGF1dGhvcml0eSBvZiAob2Zmc2V0IDggPSBkaXNjcmltaW5hdG9yKQogICAgY29uc3QgYWNjb3VudHMgPSBhd2FpdCBwcm9ncmFtLnByb3ZpZGVyLmNvbm5lY3Rpb24uZ2V0UHJvZ3JhbUFjY291bnRzKFBPVF9QUk9HUkFNX0lELCB7CiAgICAgIGZpbHRlcnM6IFsKICAgICAgICB7IGRhdGFTaXplOiAwIH0sIC8vIHJlbW92ZSBzaXplIGZpbHRlciDigJQgbGV0IEFuY2hvciBkZWNvZGUKICAgICAgICB7CiAgICAgICAgICBtZW1jbXA6IHsKICAgICAgICAgICAgb2Zmc2V0OiA4LCAvLyBhZnRlciA4LWJ5dGUgZGlzY3JpbWluYXRvcgogICAgICAgICAgICBieXRlczogd2FsbGV0UHVia2V5LnRvQmFzZTU4KCksCiAgICAgICAgICB9LAogICAgICAgIH0sCiAgICAgIF0sCiAgICB9KQoKICAgIHJldHVybiBhY2NvdW50cy5tYXAoKGEpID0+IHsKICAgICAgdHJ5IHsKICAgICAgICAvLyBAdHMtaWdub3JlIOKAlCBJREwgdHlwZSB2YXJpZXMKICAgICAgICBjb25zdCBkZWNvZGVkID0gcHJvZ3JhbS5jb2Rlci5hY2NvdW50cy5kZWNvZGUoJ1BvdCcsIGEuYWNjb3VudC5kYXRhKQogICAgICAgIHJldHVybiB7CiAgICAgICAgICBwdWJrZXk6IGEucHVia2V5LnRvQmFzZTU4KCksCiAgICAgICAgICBuYW1lOiBkZWNvZGVkLm5hbWUsCiAgICAgICAgICBlbW9qaTogJ/CfqrQnLCAvLyBzdG9yZWQgb2ZmLWNoYWluIC8gaW4gdG9rZW4gbWV0YWRhdGEKICAgICAgICAgIG1lbWJlcnM6IGRlY29kZWQubWVtYmVyQ291bnQsCiAgICAgICAgICB0b3RhbFZhbHVlVXNkOiAwLCAvLyBjb21wdXRlZCBmcm9tIHZhdWx0IGJhbGFuY2UgKyBwcmljZSBmZWVkCiAgICAgICAgICBwbmxQY3Q6IDAsCiAgICAgICAgICB0YW1hZ290Y2hpTGV2ZWw6IGRlY29kZWQudGFtYWdvdGNoaUxldmVsLAogICAgICAgICAgZ292ZXJuYW5jZUxldmVsOiBnb3ZMZXZlbEZyb21TZXR0aW5ncyhkZWNvZGVkLmdvdmVybmFuY2UpLAogICAgICAgICAgeWllbGRTdHJhdGVneTogeWllbGRTdHJhdGVneUtleShkZWNvZGVkLmNvbmZpZz8ueWllbGRTdHJhdGVneSksCiAgICAgICAgICBpc093bmVyOiBkZWNvZGVkLmF1dGhvcml0eS5lcXVhbHMod2FsbGV0UHVia2V5KSwKICAgICAgICB9IHNhdGlzZmllcyBQb3RBY2NvdW50CiAgICAgIH0gY2F0Y2ggewogICAgICAgIHJldHVybiBudWxsCiAgICAgIH0KICAgIH0pLmZpbHRlcihCb29sZWFuKSBhcyBQb3RBY2NvdW50W10KICB9IGNhdGNoIHsKICAgIHJldHVybiBbXQogIH0KfQoKLy8g4pSA4pSAIHVzZVByb2dyYW0g4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACgpleHBvcnQgZnVuY3Rpb24gdXNlUHJvZ3JhbSgpIHsKICBjb25zdCB7IGNvbm5lY3Rpb24gfSA9IHVzZUNvbm5lY3Rpb24oKQogIGNvbnN0IHdhbGxldCA9IHVzZUFuY2hvcldhbGxldCgpCgogIGlmICghd2FsbGV0KSByZXR1cm4gbnVsbAoKICBjb25zdCBwcm92aWRlciA9IG5ldyBBbmNob3JQcm92aWRlcihjb25uZWN0aW9uLCB3YWxsZXQsIHsgY29tbWl0bWVudDogJ2NvbmZpcm1lZCcgfSkKCiAgLy8gSURMIGlzIGdlbmVyYXRlZCBieSBgYW5jaG9yIGJ1aWxkYCDigJQgaW1wb3J0IGZyb20gcGFja2FnZXMvcHJvZ3JhbS90YXJnZXQvaWRsLwogIC8vIER1cmluZyBkZXYgd2UgdXNlIGEgbWluaW1hbCBzdHViIHNvIGhvb2tzIGRvbid0IGNyYXNoCiAgY29uc3QgSURMX1NUVUIgPSB7IHZlcnNpb246ICcwLjEuMCcsIG5hbWU6ICdwb3RfdmF1bHQnLCBpbnN0cnVjdGlvbnM6IFtdLCBhY2NvdW50czogW10sIGVycm9yczogW10gfQoKICBsZXQgaWRsOiBhbnkgPSBJRExfU1RVQgogIHRyeSB7CiAgICAvLyBlc2xpbnQtZGlzYWJsZS1uZXh0LWxpbmUgQHR5cGVzY3JpcHQtZXNsaW50L25vLXJlcXVpcmUtaW1wb3J0cwogICAgaWRsID0gcmVxdWlyZSgnLi4vLi4vLi4vLi4vcGFja2FnZXMvcHJvZ3JhbS90YXJnZXQvaWRsL3BvdF92YXVsdC5qc29uJykKICB9IGNhdGNoIHsgLyogSURMIG5vdCBidWlsdCB5ZXQg4oCUIHVzaW5nIHN0dWIgKi8gfQoKICByZXR1cm4gbmV3IFByb2dyYW0oaWRsLCBQT1RfUFJPR1JBTV9JRCwgcHJvdmlkZXIpCn0KCi8vIOKUgOKUgCB1c2VQb3RzIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKLyoqCiAqIEZldGNoZXMgYWxsIFBPVHMgb3duZWQgYnkgKG9yIGpvaW5lZCBieSkgdGhlIGNvbm5lY3RlZCB3YWxsZXQuCiAqIEZhbGxzIGJhY2sgdG8gbW9jayBkYXRhIHdoZW4gcHJvZ3JhbSBpcyBub3QgZGVwbG95ZWQgeWV0LgogKi8KZXhwb3J0IGZ1bmN0aW9uIHVzZVBvdHMoKSB7CiAgY29uc3QgeyBwdWJsaWNLZXkgfSA9IHVzZVdhbGxldCgpCiAgY29uc3QgcHJvZ3JhbSA9IHVzZVByb2dyYW0oKQoKICByZXR1cm4gdXNlUXVlcnk8UG90QWNjb3VudFtdPih7CiAgICBxdWVyeUtleTogWydwb3RzJywgcHVibGljS2V5Py50b0Jhc2U1OCgpXSwKICAgIGVuYWJsZWQ6ICEhcHVibGljS2V5LAogICAgc3RhbGVUaW1lOiAxNV8wMDAsCiAgICBxdWVyeUZuOiBhc3luYyAoKSA9PiB7CiAgICAgIGlmICghcHVibGljS2V5IHx8ICFwcm9ncmFtKSByZXR1cm4gTU9DS19QT1RTCgogICAgICBjb25zdCBvbkNoYWluID0gYXdhaXQgZGVjb2RlUG90QWNjb3VudHMocHJvZ3JhbSwgcHVibGljS2V5KQoKICAgICAgLy8gSWYgbm90aGluZyBvbi1jaGFpbiB5ZXQgKHByZS1kZXBsb3kpLCBzaG93IG1vY2tzIHRhZ2dlZCBjbGVhcmx5CiAgICAgIGlmIChvbkNoYWluLmxlbmd0aCA9PT0gMCkgcmV0dXJuIE1PQ0tfUE9UUwoKICAgICAgcmV0dXJuIG9uQ2hhaW4KICAgIH0sCiAgfSkKfQoKLy8g4pSA4pSAIHVzZUNyZWF0ZVBvdCDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCmV4cG9ydCBpbnRlcmZhY2UgQ3JlYXRlUG90SW5wdXQgewogIG5hbWU6IHN0cmluZwogIGlzUHVibGljOiBib29sZWFuCiAgbWluRGVwb3NpdFNvbDogbnVtYmVyCiAgbG9ja3VwRGF5czogbnVtYmVyCiAgeWllbGRTdHJhdGVneTogJ25vbmUnIHwgJ2NvbnNlcnZhdGl2ZScgfCAnYmFsYW5jZWQnIHwgJ2FnZ3Jlc3NpdmUnCn0KCmV4cG9ydCBmdW5jdGlvbiB1c2VDcmVhdGVQb3QoKSB7CiAgY29uc3QgcWMgPSB1c2VRdWVyeUNsaWVudCgpCiAgY29uc3QgeyBwdWJsaWNLZXkgfSA9IHVzZVdhbGxldCgpCiAgY29uc3QgcHJvZ3JhbSA9IHVzZVByb2dyYW0oKQoKICByZXR1cm4gdXNlTXV0YXRpb24oewogICAgbXV0YXRpb25GbjogYXN5bmMgKGlucHV0OiBDcmVhdGVQb3RJbnB1dCkgPT4gewogICAgICBpZiAoIXB1YmxpY0tleSB8fCAhcHJvZ3JhbSkgdGhyb3cgbmV3IEVycm9yKCdXYWxsZXQgbm90IGNvbm5lY3RlZCcpCgogICAgICBjb25zdCBtaW5EZXBvc2l0TGFtcG9ydHMgPSBuZXcgQk4oTWF0aC5yb3VuZChpbnB1dC5taW5EZXBvc2l0U29sICogMWU5KSkKICAgICAgY29uc3QgbG9ja3VwU2Vjb25kcyA9IG5ldyBCTihpbnB1dC5sb2NrdXBEYXlzICogODY0MDApCgogICAgICBjb25zdCBbcG90UGRhXSA9IGdldFBvdEFkZHJlc3MocHVibGljS2V5LCBpbnB1dC5uYW1lKQogICAgICBjb25zdCBbdmF1bHRQZGFdID0gZ2V0VmF1bHRBZGRyZXNzKHBvdFBkYSkKCiAgICAgIGNvbnN0IHR4ID0gYXdhaXQgcHJvZ3JhbS5tZXRob2RzCiAgICAgICAgLmNyZWF0ZVBvdCgKICAgICAgICAgIGlucHV0Lm5hbWUsCiAgICAgICAgICBpbnB1dC5pc1B1YmxpYywKICAgICAgICAgIG1pbkRlcG9zaXRMYW1wb3J0cywKICAgICAgICAgIGxvY2t1cFNlY29uZHMsCiAgICAgICAgICB7IFtpbnB1dC55aWVsZFN0cmF0ZWd5XToge30gfQogICAgICAgICkKICAgICAgICAuYWNjb3VudHMoewogICAgICAgICAgcG90OiBwb3RQZGEsCiAgICAgICAgICB2YXVsdDogdmF1bHRQZGEsCiAgICAgICAgICBhdXRob3JpdHk6IHB1YmxpY0tleSwKICAgICAgICB9KQogICAgICAgIC5ycGMoKQoKICAgICAgcmV0dXJuIHsgdHgsIHBvdFBkYTogcG90UGRhLnRvQmFzZTU4KCkgfQogICAgfSwKICAgIG9uU3VjY2VzczogKCkgPT4gewogICAgICBxYy5pbnZhbGlkYXRlUXVlcmllcyh7IHF1ZXJ5S2V5OiBbJ3BvdHMnXSB9KQogICAgfSwKICB9KQp9CgovLyDilIDilIAgdXNlRGVwb3NpdCDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCmV4cG9ydCBmdW5jdGlvbiB1c2VEZXBvc2l0KCkgewogIGNvbnN0IHFjID0gdXNlUXVlcnlDbGllbnQoKQogIGNvbnN0IHsgcHVibGljS2V5IH0gPSB1c2VXYWxsZXQoKQogIGNvbnN0IHByb2dyYW0gPSB1c2VQcm9ncmFtKCkKCiAgcmV0dXJuIHVzZU11dGF0aW9uKHsKICAgIG11dGF0aW9uRm46IGFzeW5jICh7IHBvdEFkZHJlc3MsIGFtb3VudFNvbCB9OiB7IHBvdEFkZHJlc3M6IHN0cmluZzsgYW1vdW50U29sOiBudW1iZXIgfSkgPT4gewogICAgICBpZiAoIXB1YmxpY0tleSB8fCAhcHJvZ3JhbSkgdGhyb3cgbmV3IEVycm9yKCdXYWxsZXQgbm90IGNvbm5lY3RlZCcpCgogICAgICBjb25zdCBwb3QgPSBuZXcgUHVibGljS2V5KHBvdEFkZHJlc3MpCiAgICAgIGNvbnN0IFttZW1iZXJQZGFdID0gZ2V0TWVtYmVyQWRkcmVzcyhwb3QsIHB1YmxpY0tleSkKICAgICAgY29uc3QgW3ZhdWx0UGRhXSA9IGdldFZhdWx0QWRkcmVzcyhwb3QpCiAgICAgIGNvbnN0IGxhbXBvcnRzID0gbmV3IEJOKE1hdGgucm91bmQoYW1vdW50U29sICogMWU5KSkKCiAgICAgIHJldHVybiBwcm9ncmFtLm1ldGhvZHMKICAgICAgICAuZGVwb3NpdChsYW1wb3J0cykKICAgICAgICAuYWNjb3VudHMoeyBwb3QsIHZhdWx0OiB2YXVsdFBkYSwgbWVtYmVyOiBtZW1iZXJQZGEsIGF1dGhvcml0eTogcHVibGljS2V5IH0pCiAgICAgICAgLnJwYygpCiAgICB9LAogICAgb25TdWNjZXNzOiAoKSA9PiBxYy5pbnZhbGlkYXRlUXVlcmllcyh7IHF1ZXJ5S2V5OiBbJ3BvdHMnXSB9KSwKICB9KQp9CgovLyDilIDilIAgTW9jayBkYXRhICh1c2VkIHVudGlsIGRldm5ldCBkZXBsb3kpIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKY29uc3QgTU9DS19QT1RTOiBQb3RBY2NvdW50W10gPSBbCiAgewogICAgcHVia2V5OiAncG90MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTEnLAogICAgbmFtZTogJ0FscGhhIEZ1bmQnLAogICAgZW1vamk6ICfwn5CkJywKICAgIG1lbWJlcnM6IDEyLAogICAgdG90YWxWYWx1ZVVzZDogNDhfNzUwLAogICAgcG5sUGN0OiAxOC4zLAogICAgdGFtYWdvdGNoaUxldmVsOiAzLAogICAgZ292ZXJuYW5jZUxldmVsOiAyLAogICAgeWllbGRTdHJhdGVneTogJ2JhbGFuY2VkJywKICAgIGlzT3duZXI6IHRydWUsCiAgfSwKICB7CiAgICBwdWJrZXk6ICdwb3QyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyIsCiAgICBuYW1lOiAnRGVnZW4gVmF1bHQnLAogICAgZW1vamk6ICfwn6aFJywKICAgIG1lbWJlcnM6IDcsCiAgICB0b3RhbFZhbHVlVXNkOiAxMl8zMDAsCiAgICBwbmxQY3Q6IC00LjIsCiAgICB0YW1hZ290Y2hpTGV2ZWw6IDEsCiAgICBnb3Zlcm5hbmNlTGV2ZWw6IDAsCiAgICB5aWVsZFN0cmF0ZWd5OiAnYWdncmVzc2l2ZScsCiAgICBpc093bmVyOiBmYWxzZSwKICB9LApdCg==
+'use client'
+
+import { useCallback, useMemo } from 'react'
+import { useConnection, useWallet, useAnchorWallet } from '@solana/wallet-adapter-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { AnchorProvider, Program, BN } from '@coral-xyz/anchor'
+import { PublicKey, LAMPORTS_PER_SOL, SystemProgram } from '@solana/web3.js'
+import {
+  getPotAddress,
+  getVaultAddress,
+  getMemberAddress,
+  getProposalAddress,
+  POT_PROGRAM_ID,
+} from '@potbot/sdk'
+import type { PotDisplay, MemberDisplay, ProposalDisplay } from '@potbot/sdk'
+
+// IDL will be generated by `anchor build` — for now use a placeholder import
+// import idl from '../../../../packages/program/target/idl/pot_vault.json'
+// For demo, we pass IDL via context or fetch it
+
+/* ── Provider Hook ── */
+
+export function useProgram() {
+  const { connection } = useConnection()
+  const wallet = useAnchorWallet()
+
+  return useMemo(() => {
+    if (!wallet) return null
+    const provider = new AnchorProvider(connection, wallet, {
+      commitment: 'confirmed',
+    })
+    // Once IDL is available from anchor build, uncomment:
+    // return new Program(idl as any, POT_PROGRAM_ID, provider)
+    return { provider, programId: POT_PROGRAM_ID }
+  }, [connection, wallet])
+}
+
+/* ── Fetch All POTs ── */
+
+export function usePots() {
+  const { connection } = useConnection()
+
+  return useQuery({
+    queryKey: ['pots'],
+    queryFn: async (): Promise<PotDisplay[]> => {
+      const accounts = await connection.getProgramAccounts(POT_PROGRAM_ID)
+
+      // Parse accounts using Anchor deserialization
+      // For now, return mock data for UI development
+      return accounts.map((acc) => ({
+        pubkey: acc.pubkey.toBase58(),
+        name: 'Loading...',
+        emoji: '\ud83e\udeb4',
+        balance: 0,
+        totalShares: 0,
+        memberCount: 0,
+        tradeCount: 0,
+        tamagotchiLevel: 0,
+        tamagotchiEmoji: '\ud83e\udd5a',
+        yieldStrategy: 'none',
+        governanceLevel: 2,
+        isPublic: true,
+        createdAt: new Date(),
+      }))
+    },
+    staleTime: 10_000,
+    retry: 2,
+  })
+}
+
+/* ── Fetch Single POT ── */
+
+export function usePot(pubkey: string | undefined) {
+  const { connection } = useConnection()
+
+  return useQuery({
+    queryKey: ['pot', pubkey],
+    queryFn: async () => {
+      if (!pubkey) return null
+      const pk = new PublicKey(pubkey)
+      const [vaultPda] = getVaultAddress(pk)
+
+      const [potInfo, vaultInfo] = await Promise.all([
+        connection.getAccountInfo(pk),
+        connection.getBalance(vaultPda),
+      ])
+
+      if (!potInfo) return null
+
+      return {
+        pubkey,
+        vaultBalance: vaultInfo / LAMPORTS_PER_SOL,
+        raw: potInfo,
+      }
+    },
+    enabled: !!pubkey,
+    staleTime: 5_000,
+  })
+}
+
+/* ── Fetch Members ── */
+
+export function useMembers(potPubkey: string | undefined) {
+  const { connection } = useConnection()
+
+  return useQuery({
+    queryKey: ['members', potPubkey],
+    queryFn: async (): Promise<MemberDisplay[]> => {
+      if (!potPubkey) return []
+
+      const accounts = await connection.getProgramAccounts(POT_PROGRAM_ID, {
+        filters: [
+          { memcmp: { offset: 8, bytes: potPubkey } },
+        ],
+      })
+
+      return accounts.map((acc) => ({
+        wallet: acc.pubkey.toBase58(),
+        shares: 0,
+        sharePercent: 0,
+        depositTotal: 0,
+        withdrawTotal: 0,
+        pnl: 0,
+        joinedAt: new Date(),
+      }))
+    },
+    enabled: !!potPubkey,
+    staleTime: 10_000,
+  })
+}
+
+/* ── Fetch Proposals ── */
+
+export function useProposals(potPubkey: string | undefined) {
+  const { connection } = useConnection()
+
+  return useQuery({
+    queryKey: ['proposals', potPubkey],
+    queryFn: async (): Promise<ProposalDisplay[]> => {
+      if (!potPubkey) return []
+
+      const accounts = await connection.getProgramAccounts(POT_PROGRAM_ID, {
+        filters: [
+          { memcmp: { offset: 8, bytes: potPubkey } },
+        ],
+      })
+
+      return accounts.map((acc) => ({
+        pubkey: acc.pubkey.toBase58(),
+        proposalId: 0,
+        proposer: '',
+        type: 'swap',
+        description: '',
+        status: 'active',
+        yesPercent: 0,
+        noPercent: 0,
+        createdAt: new Date(),
+        resolvedAt: null,
+      }))
+    },
+    enabled: !!potPubkey,
+    staleTime: 5_000,
+  })
+}
+
+/* ─────── MUTATIONS ─────── */
+
+/* ── Create POT ── */
+
+export function useCreatePot() {
+  const { connection } = useConnection()
+  const wallet = useAnchorWallet()
+  const { publicKey, sendTransaction } = useWallet()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      name: string
+      emoji: string
+      isPublic: boolean
+      minDeposit: number
+      lockupSeconds: number
+      yieldStrategy: number
+      tradeLevel: number
+      withdrawLevel: number
+    }) => {
+      if (!wallet || !publicKey) throw new Error('Wallet not connected')
+
+      const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed' })
+
+      const [potPda] = getPotAddress(publicKey, params.name)
+      const [vaultPda] = getVaultAddress(potPda)
+
+      const tx = await provider.connection.getLatestBlockhash()
+
+      return {
+        potAddress: potPda.toBase58(),
+        vaultAddress: vaultPda.toBase58(),
+        message: `POT "${params.name}" PDA: ${potPda.toBase58()}`,
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pots'] })
+    },
+  })
+}
+
+/* ── Deposit ── */
+
+export function useDeposit() {
+  const { connection } = useConnection()
+  const wallet = useAnchorWallet()
+  const { publicKey } = useWallet()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      potAddress: string
+      amountSol: number
+    }) => {
+      if (!wallet || !publicKey) throw new Error('Wallet not connected')
+
+      const potPk = new PublicKey(params.potAddress)
+      const [memberPda] = getMemberAddress(potPk, publicKey)
+      const [vaultPda] = getVaultAddress(potPk)
+      const lamports = new BN(params.amountSol * LAMPORTS_PER_SOL)
+
+      return {
+        memberAddress: memberPda.toBase58(),
+        vaultAddress: vaultPda.toBase58(),
+        amount: params.amountSol,
+      }
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['pot', vars.potAddress] })
+      queryClient.invalidateQueries({ queryKey: ['members', vars.potAddress] })
+    },
+  })
+}
+
+/* ── Withdraw ── */
+
+export function useWithdraw() {
+  const { connection } = useConnection()
+  const wallet = useAnchorWallet()
+  const { publicKey } = useWallet()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      potAddress: string
+      shares: number
+    }) => {
+      if (!wallet || !publicKey) throw new Error('Wallet not connected')
+
+      const potPk = new PublicKey(params.potAddress)
+      const [memberPda] = getMemberAddress(potPk, publicKey)
+      const [vaultPda] = getVaultAddress(potPk)
+
+      return {
+        memberAddress: memberPda.toBase58(),
+        shares: params.shares,
+      }
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['pot', vars.potAddress] })
+      queryClient.invalidateQueries({ queryKey: ['members', vars.potAddress] })
+    },
+  })
+}
+
+/* ── Create Proposal ── */
+
+export function useCreateProposal() {
+  const { connection } = useConnection()
+  const wallet = useAnchorWallet()
+  const { publicKey } = useWallet()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      potAddress: string
+      nextProposalId: number
+      proposalType: any
+      description: string
+    }) => {
+      if (!wallet || !publicKey) throw new Error('Wallet not connected')
+
+      const potPk = new PublicKey(params.potAddress)
+      const [proposalPda] = getProposalAddress(potPk, params.nextProposalId)
+      const [memberPda] = getMemberAddress(potPk, publicKey)
+
+      return {
+        proposalAddress: proposalPda.toBase58(),
+        proposalId: params.nextProposalId,
+      }
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['proposals', vars.potAddress] })
+      queryClient.invalidateQueries({ queryKey: ['pot', vars.potAddress] })
+    },
+  })
+}
+
+/* ── Vote ── */
+
+export function useVote() {
+  const { connection } = useConnection()
+  const wallet = useAnchorWallet()
+  const { publicKey } = useWallet()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      potAddress: string
+      proposalAddress: string
+      approve: boolean
+    }) => {
+      if (!wallet || !publicKey) throw new Error('Wallet not connected')
+
+      const potPk = new PublicKey(params.potAddress)
+      const [memberPda] = getMemberAddress(potPk, publicKey)
+
+      return {
+        vote: params.approve ? 'YES' : 'NO',
+      }
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['proposals', vars.potAddress] })
+    },
+  })
+}
+
+/* ── Execute Proposal ── */
+
+export function useExecuteProposal() {
+  const { connection } = useConnection()
+  const wallet = useAnchorWallet()
+  const { publicKey } = useWallet()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      potAddress: string
+      proposalAddress: string
+    }) => {
+      if (!wallet || !publicKey) throw new Error('Wallet not connected')
+
+      const potPk = new PublicKey(params.potAddress)
+      const [vaultPda] = getVaultAddress(potPk)
+
+      return { executed: true }
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['pot', vars.potAddress] })
+      queryClient.invalidateQueries({ queryKey: ['proposals', vars.potAddress] })
+    },
+  })
+}
