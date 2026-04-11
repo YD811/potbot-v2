@@ -1,1 +1,156 @@
-aW1wb3J0IHR5cGUgeyBQdWJsaWNLZXkgfSBmcm9tICdAc29sYW5hL3dlYjMuanMnCmltcG9ydCB0eXBlIEJOIGZyb20gJ2JuLmpzJwoKZXhwb3J0IHR5cGUgWWllbGRTdHJhdGVneSA9IHsgbm9uZToge30gfSB8IHsgY29uc2VydmF0aXZlOiB7fSB9IHwgeyBiYWxhbmNlZDoge30gfSB8IHsgYWdncmVzc2l2ZToge30gfQoKZXhwb3J0IGludGVyZmFjZSBQb3RTdGF0ZSB7CiAgYXV0aG9yaXR5OiBQdWJsaWNLZXkKICBuYW1lOiBzdHJpbmcKICB2YXVsdEJ1bXA6IG51bWJlcgogIHRvdGFsU2hhcmVzOiBCTgogIG1lbWJlckNvdW50OiBudW1iZXIKICB0cmFkZUNvdW50OiBudW1iZXIKICB0b3RhbFZvbHVtZTogQk4KICB0YW1hZ290Y2hpTGV2ZWw6IG51bWJlcgogIHRhbWFnb3RjaGlYcDogQk4KICBDT21tdW5pdHlUb2tlbk1pbnQ6IFB1YmxpY0tleQogIGNvbmZpZzogUG90Q29uZmlnCiAgZ292ZXJuYW5jZTogR292U2V0dGluZ3MKICBjcmVhdGVkQXQ6IEJOCn0KCmV4cG9ydCBpbnRlcmZhY2UgUG90Q29uZmlnIHsKICBpc1B1YmxpYzogYm9vbGVhbgogIG1pbkRlcG9zaXQ6IEJOCiAgbG9ja3VwU2Vjb25kczogQk4KICBWCIVHD6VyPTogYm9vbGVhbgogIHlpZWxkU3RyYXRlZ3k6IFlpZWxkU3RyYXRlZ3kKICBtYXhZaWVsZEFsbG9jYXRpb25CcHM6IG51bWJlcgp9CgpleHBvcnQgaW50ZXJmYWNlIEdvdlNldHRpbmdzIHsKICB0cmFkZUxldmVsOiBudW1iZXIKICB3aXRoZHJhd0xldmVsOiBudW1iZXIKICBtZW1iZXJDaGFuZ2VMZXZlbDogbnVtYmVyCiAgc2V0dGluZ3NDaGFuZ2VMZXZlbDogbnVtYmVyCiAgeWllbGRDaGFuZ2VMZXZlbDogbnVtYmVyCiAgdm90ZVRpbWVvdXRTZWNvbmRzOiBCTgogIHF1b3J1bUJwczogbnVtYmVyCn0KCmV4cG9ydCBpbnRlcmZhY2UgTWVtYmVyU3RhdGUgewogIHBvdDogUHVibGljS2V5CiAgd2FsbGV0OiBQdWJsaWNLZXkKICBzaGFyZXM6IEJOCiAgZGVwb3NpdFRvdGFsOiBCTgogIGpvaW5lZEF0OiBCTgp9CgpleHBvcnQgaW50ZXJmYWNlIER1ZWxTdGF0ZSB7CiAgaWQ6IEJOCiAgY2hhbGxlbmdlcjogUHVibGljS2V5CiAgZGVmZW5kZXI6IFB1YmxpY0tleQogIHN0YWtlQnBzOiBudW1iZXIKICBkdXJhdGlvblNlY29uZHM6IEJOCiAgc3RhcnRUczogQk4KICBZWRRA6IEJOCiAgc3RhdHVzOiBEdWVsU3RhdHVzCiAgY2hhbGxlbmdlclN0YXJ0VmFsdWU6IEJOCiAgZGVmZW5kZXJTdGFydFZhbHVlOiBCTgogIGNoYWxsZW5nZXJFbmRWYWx1ZTogQk4KICBKZWZLKZU6IEJOTgogIGNoYWxsZW5nZXJFc2Nyb3c6IFB1YmxpY0tleQogIGRlZmVuZGVyRXNjcm93OiBQdWJsaWNLZXkKICB3aW5uZXI6IFB1YmxpY0tleSB8IG51bGwKICBjaGFsbGVuZ2VyUG5sQnBzOiBudW1iZXIKICBkZWZlbmRlclBubEJwczogbnVtYmVyCn0KCmV4cG9ydCB0eXBlIER1ZWxTdGF0dXMgPQogIHwgeyBwZW5kaW5nOiB7fSB9CiAgfCB7IGFjY2VwdGVkOiB7fSB9CiAgfCB7IGFjdGl2ZToge30gfQogIHwgeyBzZXR0bGluZzoge30gfQogIHwgeyBjb21wbGV0ZWQ6IHt9IH0KICB8IHsgY2FuY2VsbGVkOiB7fSB9Cg==
+import type { PublicKey } from '@solana/web3.js'
+import type BN from 'bn.js'
+
+/* ── Yield Strategy ── */
+export type YieldStrategy =
+  | { none: {} }
+  | { conservative: {} }
+  | { balanced: {} }
+  | { aggressive: {} }
+
+/* ── POT State (mirrors on-chain PotAccount) ── */
+export interface PotState {
+  authority: PublicKey
+  name: string
+  emoji: string
+  vaultBump: number
+  potBump: number
+  totalShares: BN
+  memberCount: number
+  tradeCount: number
+  totalVolume: BN
+  tamagotchiLevel: number
+  tamagotchiXp: BN
+  communityTokenMint: PublicKey
+  config: PotConfig
+  governance: GovSettings
+  nextProposalId: BN
+  createdAt: BN
+}
+
+export interface PotConfig {
+  isPublic: boolean
+  minDeposit: BN
+  lockupSeconds: BN
+  yieldStrategy: YieldStrategy
+  maxYieldAllocationBps: number
+}
+
+export interface GovSettings {
+  tradeLevel: number
+  withdrawLevel: number
+  memberChangeLevel: number
+  settingsChangeLevel: number
+  yieldChangeLevel: number
+  voteTimeoutSeconds: BN
+  quorumBps: number
+}
+
+/* ── Member State ── */
+export interface MemberState {
+  pot: PublicKey
+  wallet: PublicKey
+  shares: BN
+  depositTotal: BN
+  withdrawTotal: BN
+  joinedAt: BN
+  lastDepositAt: BN
+  bump: number
+}
+
+/* ── Proposal ── */
+export type ProposalType =
+  | { swap: { fromMint: PublicKey; toMint: PublicKey; amountIn: BN; minAmountOut: BN } }
+  | { withdraw: { beneficiary: PublicKey; amount: BN } }
+  | { changeSettings: { newTradeLevel: number; newWithdrawLevel: number } }
+  | { changeYield: { newStrategy: number } }
+
+export type ProposalStatus =
+  | { active: {} }
+  | { passed: {} }
+  | { rejected: {} }
+  | { executed: {} }
+  | { expired: {} }
+
+export interface ProposalState {
+  pot: PublicKey
+  proposalId: BN
+  proposer: PublicKey
+  proposalType: ProposalType
+  description: string
+  status: ProposalStatus
+  yesShares: BN
+  noShares: BN
+  totalSharesSnapshot: BN
+  createdAt: BN
+  resolvedAt: BN
+  bump: number
+}
+
+/* ── Duel State ── */
+export interface DuelState {
+  id: BN
+  challenger: PublicKey
+  defender: PublicKey
+  stakeBps: number
+  durationSeconds: BN
+  startTs: BN
+  status: DuelStatus
+  challengerStartValue: BN
+  defenderStartValue: BN
+  challengerEndValue: BN
+  defenderEndValue: BN
+  challengerEscrow: PublicKey
+  defenderEscrow: PublicKey
+  winner: PublicKey | null
+  challengerPnlBps: number
+  defenderPnlBps: number
+}
+
+export type DuelStatus =
+  | { pending: {} }
+  | { accepted: {} }
+  | { active: {} }
+  | { settling: {} }
+  | { completed: {} }
+  | { cancelled: {} }
+
+/* ── Frontend-friendly types ── */
+export interface PotDisplay {
+  pubkey: string
+  name: string
+  emoji: string
+  balance: number
+  totalShares: number
+  memberCount: number
+  tradeCount: number
+  tamagotchiLevel: number
+  tamagotchiEmoji: string
+  yieldStrategy: string
+  governanceLevel: number
+  isPublic: boolean
+  createdAt: Date
+}
+
+export interface MemberDisplay {
+  wallet: string
+  shares: number
+  sharePercent: number
+  depositTotal: number
+  withdrawTotal: number
+  pnl: number
+  joinedAt: Date
+}
+
+export interface ProposalDisplay {
+  pubkey: string
+  proposalId: number
+  proposer: string
+  type: string
+  description: string
+  status: string
+  yesPercent: number
+  noPercent: number
+  createdAt: Date
+  resolvedAt: Date | null
+}

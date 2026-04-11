@@ -1,1 +1,60 @@
-aW1wb3J0IHsgUHVibGljS2V5IH0gZnJvbSAnQHNvbGFuYS93ZWIzLmpzJwoKZXhwb3J0IGNvbnN0IFBPVF9QUk9HUkFNX0lEID0gbmV3IFB1YmxpY0tleSgKICBwcm9jZXNzLmVudi5QT1RfUFJPR1JBTV9JRCA/PyAnMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTEnCikKZXhwb3J0IGNvbnN0IERVRUxfUFJPR1JBTV9JRCA9IG5ldyBQdWJsaWNLZXkoCiAgcHJvY2Vzcy5lbnYuRFVFTF9QUk9HUkFNX0lEID8/ICcxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMScKKQoKLyoqIFBEQSBmb3IgdGhlIFBPVCBjb25maWcgYWNjb3VudCAqLwpleHBvcnQgZnVuY3Rpb24gZ2V0UG90QWRkcmVzcyhhdXRob3JpdHk6IFB1YmxpY0tleSwgbmFtZTogc3RyaW5nLCBwcm9ncmFtSWQgPSBQT1RfUFJPR1JBTV9JRCkgewogIHJldHVybiBQdWJsaWNLZXkuZmluZFByb2dyYW1BZGRyZXNzU3luYygKICAgIFtCdWZmZXIuZnJvbSgncG90JyksIGF1dGhvcml0eS50b0J1ZmZlcigpLCBCdWZmZXIuZnJvbShuYW1lKV0sCiAgICBwcm9ncmFtSWQKICApCn0KCi8qKiBQREEgZm9yIHRoZSBTT0wgdmF1bHQgaG9sZGluZyBjb2xsZWN0aXZlIGZ1bmRzICovCmV4cG9ydCBmdW5jdGlvbiBnZXRWYXVsdEFkZHJlc3MocG90QWRkcmVzczogUHVibGljS2V5LCBwcm9ncmFtSWQgPSBQT1RfUFJPR1JBTV9JRCkgewogIHJldHVybiBQdWJsaWNLZXkuZmluZFByb2dyYW1BZGRyZXNzU3luYygKICAgIFtCdWZmZXIuZnJvbSgndmF1bHQnKSwgcG90QWRkcmVzcy50b0J1ZmZlcigpXSwKICAgIHByb2dyYW1JZAogICkKfQoKLyoqIFBEQSBmb3IgYSBtZW1iZXIgYWNjb3VudCAqLwpleHBvcnQgZnVuY3Rpb24gZ2V0TWVtYmVyQWRkcmVzcyhwb3RBZGRyZXNzOiBQdWJsaWNLZXksIHdhbGxldDogUHVibGljS2V5LCBwcm9ncmFtSWQgPSBQT1RfUFJPR1JBTV9JRCkgewogIHJldHVybiBQdWJsaWNLZXkuZmluZFByb2dyYW1BZGRyZXNzU3luYygKICAgIFtCdWZmZXIuZnJvbSgnbWVtYmVyJyksIHBvdEFkZHJlc3MudG9CdWZmZXIoKSwgd2FsbGV0LnRvQnVmZmVyKCldLAogICAgcHJvZ3JhbUlkCiAgKQp9CgovKiogUERBIGZvciBhIGdvdmVybmFuY2UgcHJvcG9zYWwgKi8KZXhwb3J0IGZ1bmN0aW9uIGdldFByb3Bvc2FsQWRkcmVzcyhwb3RBZGRyZXNzOiBQdWJsaWNLZXksIHByb3Bvc2FsSWQ6IG51bWJlciwgcHJvZ3JhbUlkID0gUE9UX1BST0dSQU1fSUQpIHsKICBjb25zdCBpZEJ1ZiA9IEJ1ZmZlci5hbGxvYyg4KQogIGlkQnVmLndyaXRlQmlnVUludDY0TEUoQmlnSW50KHByb3Bvc2FsSWQpKQogIHJldHVybiBQdWJsaWNLZXkuZmluZFByb2dyYW1BZGRyZXNzU3luYygKICAgIFtCdWZmZXIuZnJvbSgncHJvcG9zYWwnKSwgcG90QWRkcmVzcy50b0J1ZmZlcigpLCBpZEJ1Zl0sCiAgICBwcm9ncmFtSWQKICApCn0KCi8qKiBQREEgZm9yIGEgRHVlbCBhY2NvdW50ICovCmV4cG9ydCBmdW5jdGlvbiBnZXREdWVsQWRkcmVzcyhjaGFsbGVuZ2VyOiBQdWJsaWNLZXksIGRlZmVuZGVyOiBQdWJsaWNLZXksIGR1ZWxJZDogbnVtYmVyLCBwcm9ncmFtSWQgPSBEVUVMX1BST0dSQU1fSUQpIHsKICBjb25zdCBpZEJ1ZiA9IEJ1ZmZlci5hbGxvYyg4KQogIGlkQnVmLndyaXRlQmlnVUludDY0TEUoQmlnSW50KGR1ZWxJZCkpCiAgcmV0dXJuIFB1YmxpY0tleS5maW5kUHJvZ3JhbUFkZHJlc3NTeW5jKAogICAgW0J1ZmZlci5mcm9tKCdkdWVsJyksIGNoYWxsZW5nZXIudG9CdWZmZXIoKSwgZGVmZW5kZXIudG9CdWZmZXIoKSwgaWRCdWZdLAogICAgcHJvZ3JhbUlkCiAgKQp9CgovKiogUERBIGZvciBhIHNpZGUgYmV0ICovCmV4cG9ydCBmdW5jdGlvbiBnZXRTaWRlQmV0QWRkcmVzcyhkdWVsQWRkcmVzczogUHVibGljS2V5LCBiZXR0b3I6IFB1YmxpY0tleSwgcHJvZ3JhbUlkID0gRFVFTF9QUk9HUkFNX0lEKSB7CiAgcmV0dXJuIFB1YmxpY0tleS5maW5kUHJvZ3JhbUFkZHJlc3NTeW5jKAogICAgW0J1ZmZlci5mcm9tKCdzaWRlYmV0JyksIGR1ZWxBZGRyZXNzLnRvQnVmZmVyKCksIGJldHRvci50b0J1ZmZlcigpXSwKICAgIHByb2dyYW1JZAogICkKfQo=
+import { PublicKey } from '@solana/web3.js'
+
+export const POT_PROGRAM_ID = new PublicKey(
+  process.env.NEXT_PUBLIC_POT_PROGRAM_ID ?? 'PotVLT111111111111111111111111111111111111'
+)
+export const DUEL_PROGRAM_ID = new PublicKey(
+  process.env.NEXT_PUBLIC_DUEL_PROGRAM_ID ?? 'PotDuel11111111111111111111111111111111111'
+)
+
+/** PDA for the POT config account */
+export function getPotAddress(authority: PublicKey, name: string, programId = POT_PROGRAM_ID) {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('pot'), authority.toBuffer(), Buffer.from(name)],
+    programId
+  )
+}
+
+/** PDA for the SOL vault holding collective funds */
+export function getVaultAddress(potAddress: PublicKey, programId = POT_PROGRAM_ID) {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('vault'), potAddress.toBuffer()],
+    programId
+  )
+}
+
+/** PDA for a member account */
+export function getMemberAddress(potAddress: PublicKey, wallet: PublicKey, programId = POT_PROGRAM_ID) {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('member'), potAddress.toBuffer(), wallet.toBuffer()],
+    programId
+  )
+}
+
+/** PDA for a governance proposal */
+export function getProposalAddress(potAddress: PublicKey, proposalId: number, programId = POT_PROGRAM_ID) {
+  const idBuf = Buffer.alloc(8)
+  idBuf.writeBigUInt64LE(BigInt(proposalId))
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('proposal'), potAddress.toBuffer(), idBuf],
+    programId
+  )
+}
+
+/** PDA for a Duel account */
+export function getDuelAddress(challenger: PublicKey, defender: PublicKey, duelId: number, programId = DUEL_PROGRAM_ID) {
+  const idBuf = Buffer.alloc(8)
+  idBuf.writeBigUInt64LE(BigInt(duelId))
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('duel'), challenger.toBuffer(), defender.toBuffer(), idBuf],
+    programId
+  )
+}
+
+/** PDA for a side bet */
+export function getSideBetAddress(duelAddress: PublicKey, bettor: PublicKey, programId = DUEL_PROGRAM_ID) {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('sidebet'), duelAddress.toBuffer(), bettor.toBuffer()],
+    programId
+  )
+}

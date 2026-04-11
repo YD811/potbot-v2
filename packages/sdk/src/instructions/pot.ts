@@ -1,1 +1,177 @@
-aW1wb3J0IHR5cGUgeyBQcm9ncmFtIH0gZnJvbSAnQGNvcmFsLXh5ei9hbmNob3InCmltcG9ydCB0eXBlIHsgUHVibGljS2V5IH0gZnJvbSAnQHNvbGFuYS93ZWIzLmpzJwppbXBvcnQgdHlwZSBCTiBmcm9tICdibi5qcycKaW1wb3J0IHsgZ2V0UG90QWRkcmVzcywgZ2V0VmF1bHRBZGRyZXNzLCBnZXRNZW1iZXJBZGRyZXNzIH0gZnJvbSAnLi4vcGRhLmpzJwoKZXhwb3J0IGludGVyZmFjZSBDcmVhdGVQb3RQYXJhbXMgewogIG5hbWU6IHN0cmluZwogIGlzUHVibGljOiBib29sZWFuCiAgbWluRGVwb3NpdExhbXBvcnRzOiBCTgogIGxvY2t1cFNlY29uZHM6IEJOCiAgeWllbGRTdHJhdGVneTogJ25vbmUnIHwgJ2NvbnNlcnZhdGl2ZScgfCAnYmFsYW5jZWQnIHwgJ2FnZ3Jlc3NpdmUnCn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBjcmVhdGVQb3QoCiAgcHJvZ3JhbTogUHJvZ3JhbSwKICBhdXRob3JpdHk6IFB1YmxpY0tleSwKICBwYXJhbXM6IENyZWF0ZVBvdFBhcmFtcwopIHsKICBjb25zdCBbcG90UGRhXSA9IGdldFBvdEFkZHJlc3MoYXV0aG9yaXR5LCBwYXJhbXMubmFtZSkKICBjb25zdCBbdmF1bHRQZGFdID0gZ2V0VmF1bHRBZGRyZXNzKHBvdFBkYSkKCiAgcmV0dXJuIHByb2dyYW0ubWV0aG9kcwogICAgLmNyZWF0ZVBvdCgKICAgICAgcGFyYW1zLm5hbWUsCiAgICAgIHBhcmFtcy5pc1B1YmxpYywKICAgICAgcGFyYW1zLm1pbkRlcG9zaXRMYW1wb3J0cywKICAgICAgcGFyYW1zLmxvY2t1cFNlY29uZHMsCiAgICAgIHsgW3BhcmFtcy55aWVsZFN0cmF0ZWd5XToge30gfQogICAgKQogICAgLmFjY291bnRzKHsKICAgICAgcG90OiBwb3RQZGEsCiAgICAgIHZhdWx0OiB2YXVsdFBkYSwKICAgICAgYXV0aG9yaXR5LAogICAgfSkKICAgIC5ycGMoKQp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gZGVwb3NpdFRvUG90KAogIHByb2dyYW06IFByb2dyYW0sCiAgcG90QWRkcmVzczogUHVibGljS2V5LAogIG1lbWJlcjogUHVibGljS2V5LAogIGxhbXBvcnRzOiBCTgopIHsKICBjb25zdCBbbWVtYmVyUGRhXSA9IGdldE1lbWJlckFkZHJlc3MocG90QWRkcmVzcywgbWVtYmVyKQogIGNvbnN0IFt2YXVsdFBkYV0gPSBnZXRWYXVsdEFkZHJlc3MocG90QWRkcmVzcykKCiAgcmV0dXJuIHByb2dyYW0ubWV0aG9kcwogICAgLmRlcG9zaXQobGFtcG9ydHMpCiAgICAuYWNjb3VudHMoewogICAgICBwb3Q6IHBvdEFkZHJlc3MsCiAgICAgIHZhdWx0OiB2YXVsdFBkYSwKICAgICAgbWVtYmVyOiBtZW1iZXJQZGEsCiAgICAgIGF1dGhvcml0eTogbWVtYmVyLAogICAgfSkKICAgIC5ycGMoKQp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gcHJvcG9zZVN3YXAoCiAgcHJvZ3JhbTogUHJvZ3JhbSwKICBwb3RBZGRyZXNzOiBQdWJsaWNLZXksCiAgcHJvcG9zZXI6IFB1YmxpY0tleSwKICBmcm9tVG9rZW46IFB1YmxpY0tleSwKICB0b1Rva2VuOiBQdWJsaWNLZXksCiAgYW1vdW50SW46IEJOLAogIG1pbkFtb3VudE91dDogQk4sCiAgZGVzY3JpcHRpb246IHN0cmluZwopIHsKICAvLyBDcmVhdGVzIGEgZ292ZXJuYW5jZSBQcm9wb3NhbCBhY2NvdW50OyBhY3R1YWwgSnVwaXRlciBzd2FwIGV4ZWN1dGVzIG9uIGFwcHJvdmFsCiAgcmV0dXJuIHByb2dyYW0ubWV0aG9kcwogICAgLnByb3Bvc2VTd2FwKGZyb21Ub2tlbiwgdG9Ub2tlbiwgYW1vdW50SW4sIG1pbkFtb3VudE91dCwgZGVzY3JpcHRpb24pCiAgICAuYWNjb3VudHMoewogICAgICBwb3Q6IHBvdEFkZHJlc3MsCiAgICAgIHByb3Bvc2VyLAogICAgfSkKICAgIC5ycGMoKQp9Cg==
+import type { Program } from '@coral-xyz/anchor'
+import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import type BN from 'bn.js'
+import { getPotAddress, getVaultAddress, getMemberAddress, getProposalAddress } from '../pda.js'
+
+/* ── Create POT ── */
+
+export interface CreatePotParams {
+  name: string
+  emoji: string
+  isPublic: boolean
+  minDeposit: BN
+  lockupSeconds: BN
+  yieldStrategy: number       // 0=none, 1=conservative, 2=balanced, 3=aggressive
+  maxYieldAllocationBps: number
+  tradeLevel: number
+  withdrawLevel: number
+  memberChangeLevel: number
+  settingsChangeLevel: number
+  yieldChangeLevel: number
+  voteTimeoutSeconds: BN
+  quorumBps: number
+}
+
+export async function createPot(
+  program: Program,
+  authority: PublicKey,
+  params: CreatePotParams
+) {
+  const [potPda] = getPotAddress(authority, params.name)
+  const [vaultPda] = getVaultAddress(potPda)
+
+  return program.methods
+    .createPot({
+      name: params.name,
+      emoji: params.emoji,
+      isPublic: params.isPublic,
+      minDeposit: params.minDeposit,
+      lockupSeconds: params.lockupSeconds,
+      yieldStrategy: params.yieldStrategy,
+      maxYieldAllocationBps: params.maxYieldAllocationBps,
+      tradeLevel: params.tradeLevel,
+      withdrawLevel: params.withdrawLevel,
+      memberChangeLevel: params.memberChangeLevel,
+      settingsChangeLevel: params.settingsChangeLevel,
+      yieldChangeLevel: params.yieldChangeLevel,
+      voteTimeoutSeconds: params.voteTimeoutSeconds,
+      quorumBps: params.quorumBps,
+    })
+    .accounts({
+      pot: potPda,
+      vault: vaultPda,
+      authority,
+      systemProgram: SystemProgram.programId,
+    })
+    .rpc()
+}
+
+/* ── Deposit ── */
+
+export async function depositToPot(
+  program: Program,
+  potAddress: PublicKey,
+  depositor: PublicKey,
+  lamports: BN
+) {
+  const [memberPda] = getMemberAddress(potAddress, depositor)
+  const [vaultPda] = getVaultAddress(potAddress)
+
+  return program.methods
+    .deposit(lamports)
+    .accounts({
+      pot: potAddress,
+      vault: vaultPda,
+      member: memberPda,
+      depositor,
+      systemProgram: SystemProgram.programId,
+    })
+    .rpc()
+}
+
+/* ── Withdraw ── */
+
+export async function withdrawFromPot(
+  program: Program,
+  potAddress: PublicKey,
+  withdrawer: PublicKey,
+  shares: BN
+) {
+  const [memberPda] = getMemberAddress(potAddress, withdrawer)
+  const [vaultPda] = getVaultAddress(potAddress)
+
+  return program.methods
+    .withdraw(shares)
+    .accounts({
+      pot: potAddress,
+      vault: vaultPda,
+      member: memberPda,
+      withdrawer,
+      systemProgram: SystemProgram.programId,
+    })
+    .rpc()
+}
+
+/* ── Create Proposal ── */
+
+export async function createProposal(
+  program: Program,
+  potAddress: PublicKey,
+  proposer: PublicKey,
+  nextProposalId: number,
+  params: {
+    proposalType: any
+    description: string
+  }
+) {
+  const [proposalPda] = getProposalAddress(potAddress, nextProposalId)
+  const [memberPda] = getMemberAddress(potAddress, proposer)
+
+  return program.methods
+    .createProposal({
+      proposalType: params.proposalType,
+      description: params.description,
+    })
+    .accounts({
+      pot: potAddress,
+      proposal: proposalPda,
+      member: memberPda,
+      proposer,
+      systemProgram: SystemProgram.programId,
+    })
+    .rpc()
+}
+
+/* ── Vote ── */
+
+export async function voteOnProposal(
+  program: Program,
+  potAddress: PublicKey,
+  proposalAddress: PublicKey,
+  voter: PublicKey,
+  approve: boolean
+) {
+  const [memberPda] = getMemberAddress(potAddress, voter)
+
+  return program.methods
+    .vote(approve)
+    .accounts({
+      pot: potAddress,
+      proposal: proposalAddress,
+      member: memberPda,
+      voter,
+    })
+    .rpc()
+}
+
+/* ── Execute Proposal ── */
+
+export async function executeProposal(
+  program: Program,
+  potAddress: PublicKey,
+  proposalAddress: PublicKey,
+  executor: PublicKey
+) {
+  const [vaultPda] = getVaultAddress(potAddress)
+
+  return program.methods
+    .executeProposal()
+    .accounts({
+      pot: potAddress,
+      vault: vaultPda,
+      proposal: proposalAddress,
+      executor,
+      systemProgram: SystemProgram.programId,
+    })
+    .rpc()
+}
