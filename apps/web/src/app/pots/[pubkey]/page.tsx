@@ -3,7 +3,11 @@
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
+import dynamic from 'next/dynamic'
+const WalletMultiButton = dynamic(
+  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
+  { ssr: false }
+)
 import {
   usePot,
   useMembers,
@@ -56,7 +60,7 @@ export default function PotDetailPage() {
                 <h1 className="text-2xl font-display font-bold">{pubkey?.slice(0, 8)}...</h1>
               </div>
               <div className="flex gap-4 text-sm text-gray-400">
-                <span>Balance: <span className="text-white font-mono">{pot?.vaultBalance?.toFixed(4) ?? '\u2014'} SOL</span></span>
+                <span>Balance: <span className="text-white font-mono">{pot?.balance?.toFixed(4) ?? '\u2014'} SOL</span></span>
                 <span>Members: <span className="text-white">\u2014</span></span>
                 <span>Trades: <span className="text-white">\u2014</span></span>
               </div>
@@ -81,7 +85,7 @@ export default function PotDetailPage() {
           ))}
         </div>
 
-        {tab === 'overview' && <OverviewPanel potPubkey={pubkey} vaultBalance={pot?.vaultBalance ?? 0} />}
+        {tab === 'overview' && <OverviewPanel potPubkey={pubkey} vaultBalance={pot?.balance ?? 0} />}
         {tab === 'swap' && <SwapPanel potPubkey={pubkey} />}
         {tab === 'governance' && <GovernancePanel potPubkey={pubkey} />}
         {tab === 'members' && <MembersPanel potPubkey={pubkey} />}

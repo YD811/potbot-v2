@@ -6,7 +6,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("PotVLT111111111111111111111111111111111111");
+declare_id!("Hyi1PNxPMUqwdDukhB2a4fvcBxQHmbXy3CZ95mgyFHA3");
 
 #[program]
 pub mod pot_vault {

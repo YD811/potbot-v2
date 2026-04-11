@@ -1,10 +1,11 @@
 import { PublicKey } from '@solana/web3.js'
 
+// Placeholder program IDs — update after `anchor deploy`
 export const POT_PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_POT_PROGRAM_ID ?? 'PotVLT111111111111111111111111111111111111'
+  process.env.NEXT_PUBLIC_POT_PROGRAM_ID ?? 'Hyi1PNxPMUqwdDukhB2a4fvcBxQHmbXy3CZ95mgyFHA3'
 )
 export const DUEL_PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_DUEL_PROGRAM_ID ?? 'PotDuel11111111111111111111111111111111111'
+  process.env.NEXT_PUBLIC_DUEL_PROGRAM_ID ?? 'Hyi1PNxPMUqwdDukhB2a4fvcBxQHmbXy3CZ95mgyFHA3'
 )
 
 /** PDA for the POT config account */

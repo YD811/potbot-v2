@@ -19,7 +19,7 @@ export function createConnection(rpcUrl: string, commitment: Commitment = 'confi
  */
 export function getPotProgram(provider: AnchorProvider, idl: any) {
   setProvider(provider)
-  return new Program(idl, POT_PROGRAM_ID, provider)
+  return new Program(idl as any, provider)
 }
 
 /**

@@ -1,1 +1,7 @@
-ZXhwb3J0ICogZnJvbSAnLi9jbGllbnQuanMnCmV4cG9ydCAqIGZyb20gJy4vcGRhLmpzJwpleHBvcnQgKiBmcm9tICcuL3R5cGVzLmpzJwpleHBvcnQgKiBmcm9tICcuL2luc3RydWN0aW9ucy9pbmRleC5qcycK
+export * from './client.js'
+export * from './pda.js'
+export * from './types.js'
+export * from './instructions/index.js'
+
+// IDL
+export { default as IDL } from './idl/pot_vault.js'
