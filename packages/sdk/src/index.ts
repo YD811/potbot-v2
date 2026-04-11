@@ -1,7 +1,5 @@
-export * from './client.js'
-export * from './pda.js'
-export * from './types.js'
-export * from './instructions/index.js'
+export * from './client'
+export * from './pda'
 
 // IDL
-export { default as IDL } from './idl/pot_vault.js'
+export { IDL } from './idl/pot_vault'

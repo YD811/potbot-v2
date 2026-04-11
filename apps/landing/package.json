@@ -1,1 +1,16 @@
-ewogICJuYW1lIjogIkBwb3Rib3QvbGFuZGluZyIsCiAgInZlcnNpb24iOiAiMC4wLjEiLAogICJkZXNjcmlwdGlvbiI6ICJQT1RCRCBM+aW5kaW5nIFBhZ2UiLAogICJidWlsZCI6ICJzcGluIiwKICAgc3RhY2s6IlJvYXJzIiAsCiAgICAidGVzdCI6ICJ2aXRlIiwKICAiZGVwZW5kZW5jaWVzIjoge30sCiAgImRldkRlcGVuZGVuY2llcyI6IHt9Cn0=
+{
+  "name": "@potbot/landing",
+  "version": "0.0.1",
+  "description": "PotBot landing page",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

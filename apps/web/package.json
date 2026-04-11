@@ -17,7 +17,7 @@
     "@solana/wallet-adapter-wallets": "^0.19.32",
     "@solana/web3.js": "^1.95.3",
     "@tanstack/react-query": "^5.51.1",
-    "@potbot/sdk": "workspace:*",
+    "@potbot/sdk": "*",
     "next": "14.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

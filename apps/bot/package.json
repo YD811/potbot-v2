@@ -1,1 +1,26 @@
-ewogICJuYW1lIjogIkBwb3Rib3QvYm90IiwKICAidmVyc2lvbiI6ICIwLjEuMCIsCiAgInByaXZhdGUiOiB0cnVlLAogICJ0eXBlIjogIm1vZHVsZSIsCiAgInNjcmlwdHMiOiB7CiAgICAiZGV2IjogInRzeCB3YXRjaCBzcmMvaW5kZXgudHMiLAogICAgImJ1aWxkIjogInRzYyAtcCB0c2NvbmZpZy5qc29uIiwKICAgICJzdGFydCI6ICJub2RlIGRpc3QvaW5kZXguanMiLAogICAgImNsZWFuIjogInJtIC1yZiBkaXN0IgogIH0sCiAgImRlcGVuZGVuY2llcyI6IHsKICAgICJncmFtbXkiOiAiXjEuMjguMCIsCiAgICAiQGdyYW1teWpzL2NvbnZlcnNhdGlvbnMiOiAiXjEuMi4wIiwKICAgICJAZ3JhbW15anMvbWVudSI6ICJeMS4yLjIiLAogICAgIkBzb2xhbmEvd2ViMy5qcyI6ICJeMS45NS4wIiwKICAgICJAY29yYWwteHl6L2FuY2hvciI6ICJeMC4zMC4xIiwKICAgICJAcG90Ym90L3NkayI6ICIqIiwKICAgICJkb3RlbnYiOiAiXjE2LjQuNSIKICB9LAogICJkZXZEZXBlbmRlbmNpZXMiOiB7CiAgICAidHlwZXNjcmlwdCI6ICJeNS41LjAiLAogICAgIkB0eXBlcy9ub2RlIjogIl4yMC4xNC4wIiwKICAgICJ0c3giOiAiXjQuMTYuMCIKICB9Cn0K
+{
+  "name": "@potbot/bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "grammy": "^1.28.0",
+    "@grammyjs/conversations": "^1.2.0",
+    "@grammyjs/menu": "^1.2.2",
+    "@solana/web3.js": "^1.95.0",
+    "@coral-xyz/anchor": "^0.30.1",
+    "@potbot/sdk": "*",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^20.14.0",
+    "tsx": "^4.16.0"
+  }
+}

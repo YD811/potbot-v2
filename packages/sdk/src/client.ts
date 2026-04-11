@@ -1,7 +1,7 @@
 import { AnchorProvider, Program, setProvider } from '@coral-xyz/anchor'
 import { Connection, PublicKey, Commitment, LAMPORTS_PER_SOL } from '@solana/web3.js'
-import { POT_PROGRAM_ID } from './pda.js'
-import type { PotState, MemberState, ProposalState, PotDisplay, MemberDisplay } from './types.js'
+import { POT_PROGRAM_ID } from './pda'
+import type { PotState, MemberState, ProposalState, PotDisplay, MemberDisplay } from './types'
 
 export interface PotSDKConfig {
   rpcUrl: string
