@@ -1,1 +1,63 @@
-aW1wb3J0ICdkb3RlbnYvY29uZmlnJwppbXBvcnQgeyBCb3QsIEdyYW1teUVycm9yLCBIdHRwRXJyb3IsIHNlc3Npb24gfSBmcm9tICdncmFtbXknCmltcG9ydCB7IGNvbnZlcnNhdGlvbnMgfSBmcm9tICdAZ3JhbW15anMvY29udmVyc2F0aW9ucycKCmltcG9ydCB0eXBlIHsgQm90Q29udGV4dCwgU2Vzc2lvbkRhdGEgfSBmcm9tICcuL3R5cGVzLmpzJwppbXBvcnQgeyBzdGFydENvbW1hbmQgfSBmcm9tICcuL2NvbW1hbmRzL3N0YXJ0LmpzJwppbXBvcnQgeyBwb3RDb21tYW5kLCBoYW5kbGVQb3RDYWxsYmFjayB9IGZyb20gJy4vY29tbWFuZHMvcG90LmpzJwppbXBvcnQgeyBzd2FwQ29tbWFuZCB9IGZyb20gJy4vY29tbWFuZHMvc3dhcC5qcycKaW1wb3J0IHsgZHVlbENvbW1hbmQgfSBmcm9tICcuL2NvbW1hbmRzL2R1ZWwuanMnCmltcG9ydCB7IGhlbHBDb21tYW5kIH0gZnJvbSAnLi9jb21tYW5kcy9oZWxwLmpzJwoKLy8g4pSA4pSAIEVudiBjaGVjayDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKY29uc3QgQk9UX1RPS0VOID0gcHJvY2Vzcy5lbnYuQk9UX1RPS0VOCmlmICghQk9UX1RPS0VOKSB0aHJvdyBuZXcgRXJyb3IoJ0JPVF9UT0tFTiBlbnYgdmFyIGlzIHJlcXVpcmVkJykKCi8vIOKUgOKUgCBCb3QgaW5zdGFuY2UgKHR5cGVkKSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKY29uc3QgYm90ID0gbmV3IEJvdDxCb3RDb250ZXh0PihCT1RfVE9LRU4pCgovLyDilIDilIAgTWlkZGxld2FyZSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKLy8gU2Vzc2lvbiDigJQgaW4tbWVtb3J5IHN0b3JhZ2UgKHN3YXAgZm9yIFJlZGlzL1N1cGFiYXNlIGFkYXB0ZXIgaW4gcHJvZHVjdGlvbikKYm90LnVzZSgKICBzZXNzaW9uPFNlc3Npb25EYXRhLCBCb3RDb250ZXh0Pih7CiAgICBpbml0aWFsOiAoKTogU2Vzc2lvbkRhdGEgPT4gKHsKICAgICAgd2FsbGV0QWRkcmVzczogbnVsbCwKICAgICAgYWN0aXZlUG90OiBudWxsLAogICAgfSksCiAgfSkKKQpib3QudXNlKGNvbnZlcnNhdGlvbnMoKSkKCi8vIOKUgOKUgCBDb21tYW5kcyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKYm90LmNvbW1hbmQoJ3N0YXJ0Jywgc3RhcnRDb21tYW5kKQpib3QuY29tbWFuZCgncG90JywgICBwb3RDb21tYW5kKQpib3QuY29tbWFuZCgnc3dhcCcsICBzd2FwQ29tbWFuZCkKYm90LmNvbW1hbmQoJ2R1ZWwnLCAgZHVlbENvbW1hbmQpCmJvdC5jb21tYW5kKCdoZWxwJywgIGhlbHBDb21tYW5kKQoKLy8g4pSA4pSAIENhbGxiYWNrIHF1ZXJpZXMg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACmJvdC5jYWxsYmFja1F1ZXJ5KC9ecG90Xy8sIGhhbmRsZVBvdENhbGxiYWNrKQoKLy8g4pSA4pSAIEVycm9yIGhhbmRsaW5nIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgApib3QuY2F0Y2goKGVycikgPT4gewogIGNvbnN0IGN0eCA9IGVyci5jdHgKICBjb25zb2xlLmVycm9yKGBbQm90RXJyb3JdIHVwZGF0ZV9pZD0ke2N0eC51cGRhdGUudXBkYXRlX2lkfWApCiAgaWYgKGVyci5lcnJvciBpbnN0YW5jZW9mIEdyYW1teUVycm9yKSB7CiAgICBjb25zb2xlLmVycm9yKCcgIEdyYW1teTonLCBlcnIuZXJyb3IuZGVzY3JpcHRpb24pCiAgfSBlbHNlIGlmIChlcnIuZXJyb3IgaW5zdGFuY2VvZiBIdHRwRXJyb3IpIHsKICAgIGNvbnNvbGUuZXJyb3IoJyAgSFRUUDonLCBlcnIuZXJyb3IubWVzc2FnZSkKICB9IGVsc2UgewogICAgY29uc29sZS5lcnJvcignICBVbmtub3duOicsIGVyci5lcnJvcikKICB9Cn0pCgovLyDilIDilIAgU3RhcnQg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACmJvdC5zdGFydCh7CiAgb25TdGFydDogKGluZm8pID0+IGNvbnNvbGUubG9nKGDwn6q0IEAke2luZm8udXNlcm5hbWV9IGlzIHJ1bm5pbmdgKSwKfSkKCnByb2Nlc3Mub24oJ1NJR1RFUk0nLCAoKSA9PiBib3Quc3RvcCgpKQpwcm9jZXNzLm9uKCdTSUdJTlQnLCAgKCkgPT4gYm90LnN0b3AoKSkK
+import 'dotenv/config'
+import { Bot, GrammyError, HttpError, session } from 'grammy'
+import { conversations } from '@grammyjs/conversations'
+
+import type { BotContext, SessionData } from './types.js'
+import { startCommand } from './commands/start.js'
+import { potCommand, handlePotCallback } from './commands/pot.js'
+import { swapCommand } from './commands/swap.js'
+import { duelCommand } from './commands/duel.js'
+import { helpCommand } from './commands/help.js'
+import { aiCommand, handleAiVoteCallback } from './commands/ai.js'
+
+// ── Env check ────────────────────────────────────────────────────────────────
+const BOT_TOKEN = process.env.BOT_TOKEN
+if (!BOT_TOKEN) throw new Error('BOT_TOKEN env var is required')
+
+// ── Bot instance (typed) ─────────────────────────────────────────────────────
+const bot = new Bot<BotContext>(BOT_TOKEN)
+
+// ── Middleware ────────────────────────────────────────────────────────────────
+// Session — in-memory storage (swap for Redis/Supabase adapter in production)
+bot.use(
+  session<SessionData, BotContext>({
+    initial: (): SessionData => ({
+      walletAddress: null,
+      activePot: null,
+    }),
+  })
+)
+bot.use(conversations())
+
+// ── Commands ──────────────────────────────────────────────────────────────────
+bot.command('start', startCommand)
+bot.command('pot',   potCommand)
+bot.command('swap',  swapCommand)
+bot.command('duel',  duelCommand)
+bot.command('help',  helpCommand)
+bot.command('ai',    aiCommand)
+
+// ── Callback queries ──────────────────────────────────────────────────────────
+bot.callbackQuery(/^pot_/,     handlePotCallback)
+bot.callbackQuery(/^ai_vote:/, handleAiVoteCallback)
+
+// ── Error handling ────────────────────────────────────────────────────────────
+bot.catch((err) => {
+  const ctx = err.ctx
+  console.error(`[BotError] update_id=${ctx.update.update_id}`)
+  if (err.error instanceof GrammyError) {
+    console.error('  Grammy:', err.error.description)
+  } else if (err.error instanceof HttpError) {
+    console.error('  HTTP:', err.error.message)
+  } else {
+    console.error('  Unknown:', err.error)
+  }
+})
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+bot.start({
+  onStart: (info) => console.log(`🪴 @${info.username} is running`),
+})
+
+process.on('SIGTERM', () => bot.stop())
+process.on('SIGINT',  () => bot.stop())
