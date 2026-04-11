@@ -1,1 +1,337 @@
-J3VzZSBjbGllbnQnCgppbXBvcnQgeyB1c2VTdGF0ZSB9IGZyb20gJ3JlYWN0JwppbXBvcnQgeyB1c2VXYWxsZXQsIHVzZUNvbm5lY3Rpb24gfSBmcm9tICdAc29sYW5hL3dhbGxldC1hZGFwdGVyLXJlYWN0JwppbXBvcnQgeyBNb2RhbCB9IGZyb20gJ0Bwb3Rib3QvdWknCmltcG9ydCB7IFNwaW5uZXIgfSBmcm9tICdAcG90Ym90L3VpJwoKaW50ZXJmYWNlIENyZWF0ZVBvdE1vZGFsUHJvcHMgewogIG9wZW46IGJvb2xlYW4KICBvbkNsb3NlOiAoKSA9PiB2b2lkCiAgb25DcmVhdGVkPzogKHB1YmtleTogc3RyaW5nKSA9PiB2b2lkCn0KCmNvbnN0IFlJRUxEX09QVElPTlMgPSBbCiAgeyB2YWx1ZTogJ25vbmUnLCBsYWJlbDogJ05vbmUnLCBkZXNjOiAnTm8geWllbGQg4oCUIHB1cmUgdHJhZGluZyB2YXVsdCcgfSwKICB7IHZhbHVlOiAnY29uc2VydmF0aXZlJywgbGFiZWw6ICdDb25zZXJ2YXRpdmUnLCBkZXNjOiAnS2FtaW5vIHN0YWJsZWNvaW5zIMK3IDPigJM2JSBBUFknIH0sCiAgeyB2YWx1ZTogJ2JhbGFuY2VkJywgbGFiZWw6ICdCYWxhbmNlZCcsIGRlc2M6ICdNaXhlZCBsZW5kaW5nIMK3IDEw4oCTMjUlIEFQWScgfSwKICB7IHZhbHVlOiAnYWdncmVzc2l2ZScsIGxhYmVsOiAnQWdncmVzc2l2ZScsIGRlc2M6ICdIaWdoLXJpc2sgZmFybXMgwrcgMjDigJM1MCUrIEFQWScgfSwKXQoKY29uc3QgR09WX09QVElPTlMgPSBbCiAgeyB2YWx1ZTogMCwgbGFiZWw6ICdBdXRvY3JhY3knLCBkZXNjOiAnT3duZXIgZGVjaWRlcyBldmVyeXRoaW5nIGluc3RhbnRseScgfSwKICB7IHZhbHVlOiAxLCBsYWJlbDogJ0Fkdmlzb3J5JywgZGVzYzogJ093bmVyIGxlYWRzLCBtYWpvcml0eSBjYW4gdmV0bycgfSwKICB7IHZhbHVlOiAyLCBsYWJlbDogJ01ham9yaXR5JywgZGVzYzogJ0RlbW9jcmF0aWMg4oCUIDUxJSByZXF1aXJlZCAoZGVmYXVsdCknIH0sCiAgeyB2YWx1ZTogMywgbGFiZWw6ICdTdXBlcm1ham9yaXR5JywgZGVzYzogJ0hpZ2ggY29udmljdGlvbiDigJQgNjYlKyByZXF1aXJlZCcgfSwKICB7IHZhbHVlOiA0LCBsYWJlbDogJ0NvbnNlbnN1cycsIGRlc2M6ICdBbGwgbWVtYmVycyBtdXN0IGFncmVlJyB9LApdCgpjb25zdCBFTU9KSV9PUFRJT05TID0gWyfwn6q0JywgJ/CfkIknLCAn8J+mhScsICfwn5CkJywgJ/CfpoonLCAn8J+QuCcsICfwn4y/JywgJ/Cfko4nLCAn8J+UpScsICfimqEnXQoKZXhwb3J0IGZ1bmN0aW9uIENyZWF0ZVBvdE1vZGFsKHsgb3Blbiwgb25DbG9zZSwgb25DcmVhdGVkIH06IENyZWF0ZVBvdE1vZGFsUHJvcHMpIHsKICBjb25zdCB7IHB1YmxpY0tleSB9ID0gdXNlV2FsbGV0KCkKICBjb25zdCB7IGNvbm5lY3Rpb24gfSA9IHVzZUNvbm5lY3Rpb24oKQoKICBjb25zdCBbc3RlcCwgc2V0U3RlcF0gPSB1c2VTdGF0ZSgxKQogIGNvbnN0IFtsb2FkaW5nLCBzZXRMb2FkaW5nXSA9IHVzZVN0YXRlKGZhbHNlKQogIGNvbnN0IFtlcnJvciwgc2V0RXJyb3JdID0gdXNlU3RhdGU8c3RyaW5nIHwgbnVsbD4obnVsbCkKCiAgY29uc3QgW25hbWUsIHNldE5hbWVdID0gdXNlU3RhdGUoJycpCiAgY29uc3QgW2Vtb2ppLCBzZXRFbW9qaV0gPSB1c2VTdGF0ZSgn8J+qtCcpCiAgY29uc3QgW2lzUHVibGljLCBzZXRJc1B1YmxpY10gPSB1c2VTdGF0ZSh0cnVlKQogIGNvbnN0IFttaW5EZXBvc2l0LCBzZXRNaW5EZXBvc2l0XSA9IHVzZVN0YXRlKCcwLjEnKQogIGNvbnN0IFt5aWVsZFN0cmF0ZWd5LCBzZXRZaWVsZFN0cmF0ZWd5XSA9IHVzZVN0YXRlKCdub25lJykKICBjb25zdCBbZ292TGV2ZWwsIHNldEdvdkxldmVsXSA9IHVzZVN0YXRlKDIpCgogIGNvbnN0IGNhblByb2NlZWQxID0gbmFtZS50cmltKCkubGVuZ3RoID49IDIgJiYgbmFtZS50cmltKCkubGVuZ3RoIDw9IDMyCgogIGFzeW5jIGZ1bmN0aW9uIGhhbmRsZUNyZWF0ZSgpIHsKICAgIGlmICghcHVibGljS2V5KSByZXR1cm4KICAgIHNldExvYWRpbmcodHJ1ZSkKICAgIHNldEVycm9yKG51bGwpCiAgICB0cnkgewogICAgICAvLyBUT0RPOiByZXBsYWNlIHdpdGggcmVhbCBTREsgY2FsbCBvbmNlIHByb2dyYW0gSURzIGFyZSBkZXBsb3llZAogICAgICBhd2FpdCBuZXcgUHJvbWlzZShyID0+IHNldFRpbWVvdXQociwgMTUwMCkpCiAgICAgIGNvbnN0IG1vY2tQdWJrZXkgPSAncG90JyArIE1hdGgucmFuZG9tKCkudG9TdHJpbmcoMzYpLnNsaWNlKDIsIDE0KS5wYWRFbmQoNDAsICcxJykKICAgICAgb25DcmVhdGVkPy4obW9ja1B1YmtleSkKICAgICAgaGFuZGxlQ2xvc2UoKQogICAgfSBjYXRjaCAoZTogYW55KSB7CiAgICAgIHNldEVycm9yKGUubWVzc2FnZSA/PyAnVHJhbnNhY3Rpb24gZmFpbGVkJykKICAgIH0gZmluYWxseSB7CiAgICAgIHNldExvYWRpbmcoZmFsc2UpCiAgICB9CiAgfQoKICBmdW5jdGlvbiBoYW5kbGVDbG9zZSgpIHsKICAgIHNldFN0ZXAoMSkKICAgIHNldE5hbWUoJycpCiAgICBzZXRFbW9qaSgn8J+qtCcpCiAgICBzZXRJc1B1YmxpYyh0cnVlKQogICAgc2V0TWluRGVwb3NpdCgnMC4xJykKICAgIHNldFlpZWxkU3RyYXRlZ3koJ25vbmUnKQogICAgc2V0R292TGV2ZWwoMikKICAgIHNldEVycm9yKG51bGwpCiAgICBvbkNsb3NlKCkKICB9CgogIHJldHVybiAoCiAgICA8TW9kYWwgb3Blbj17b3Blbn0gb25DbG9zZT17aGFuZGxlQ2xvc2V9IGNsYXNzTmFtZT0ibWF4LXcteGwiPgogICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuIHAtNiBib3JkZXItYiBib3JkZXItWyMxQTIzMzJdIj4KICAgICAgICA8ZGl2PgogICAgICAgICAgPGgyIGNsYXNzTmFtZT0idGV4dC14bCBmb250LWRpc3BsYXkgZm9udC1ib2xkIj5DcmVhdGUgYSBQT1Q8L2gyPgogICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LXhzIHRleHQtZ3JheS00MDAgbXQtMC41Ij5TdGVwIHtzdGVwfSBvZiAzPC9wPgogICAgICAgIDwvZGl2PgogICAgICAgIDxidXR0b24gb25DbGljaz17aGFuZGxlQ2xvc2V9IGNsYXNzTmFtZT0idGV4dC1ncmF5LTQwMCBob3Zlcjp0ZXh0LXdoaXRlIHRyYW5zaXRpb24tY29sb3JzIHRleHQteGwgbGVhZGluZy1ub25lIj7DlzwvYnV0dG9uPgogICAgICA8L2Rpdj4KCiAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IHB4LTYgcHQtNCBnYXAtMiI+CiAgICAgICAge1sxLCAyLCAzXS5tYXAocyA9PiAoCiAgICAgICAgICA8ZGl2IGtleT17c30gY2xhc3NOYW1lPXtgaC0xIGZsZXgtMSByb3VuZGVkLWZ1bGwgdHJhbnNpdGlvbi1jb2xvcnMgJHtzIDw9IHN0ZXAgPyAnYmctWyM5OTQ1RkZdJyA6ICdiZy1bIzFBMjMzMl0nfWB9IC8+CiAgICAgICAgKSl9CiAgICAgIDwvZGl2PgoKICAgICAgPGRpdiBjbGFzc05hbWU9InAtNiBzcGFjZS15LTUiPgogICAgICAgIHtzdGVwID09PSAxICYmICgKICAgICAgICAgIDw+CiAgICAgICAgICAgIDxkaXY+CiAgICAgICAgICAgICAgPGxhYmVsIGNsYXNzTmFtZT0idGV4dC1zbSB0ZXh0LWdyYXktNDAwIG1iLTIgYmxvY2siPlBPVCBOYW1lPC9sYWJlbD4KICAgICAgICAgICAgICA8aW5wdXQgdHlwZT0idGV4dCIgdmFsdWU9e25hbWV9IG9uQ2hhbmdlPXtlID0+IHNldE5hbWUoZS50YXJnZXQudmFsdWUpfSBwbGFjZWhvbGRlcj0iZS5nLiBBbHBoYSBGdW5kLCBEZWdlbiBWYXVsdOKApiIgbWF4TGVuZ3RoPXszMn0gY2xhc3NOYW1lPSJ3LWZ1bGwgYmctWyMwRDExMTddIGJvcmRlciBib3JkZXItWyMxQTIzMzJdIHJvdW5kZWQteGwgcHgtNCBweS0zIHRleHQtd2hpdGUgcGxhY2Vob2xkZXItZ3JheS02MDAgZm9jdXM6b3V0bGluZS1ub25lIGZvY3VzOmJvcmRlci1bIzk5NDVGRl0gdHJhbnNpdGlvbi1jb2xvcnMiIC8+CiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9InRleHQteHMgdGV4dC1ncmF5LTYwMCBtdC0xIHRleHQtcmlnaHQiPntuYW1lLmxlbmd0aH0vMzI8L2Rpdj4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgIDxkaXY+CiAgICAgICAgICAgICAgPGxhYmVsIGNsYXNzTmFtZT0idGV4dC1zbSB0ZXh0LWdyYXktNDAwIG1iLTIgYmxvY2siPk1hc2NvdCBFbW9qaTwvbGFiZWw+CiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggZmxleC13cmFwIGdhcC0yIj4KICAgICAgICAgICAgICAgIHtFTU9KSV9PUFRJT05TLm1hcChlID0+ICgKICAgICAgICAgICAgICAgICAgPGJ1dHRvbiBrZXk9e2V9IG9uQ2xpY2s9eygpID0+IHNldEVtb2ppKGUpfSBjbGFzc05hbWU9e2B3LTEwIGgtMTAgcm91bmRlZC14bCB0ZXh0LXhsIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHRyYW5zaXRpb24tYWxsICR7ZW1vamkgPT09IGUgPyAnYmctWyM5OTQ1RkZdLzMwIHJpbmctMiByaW5nLVsjOTk0NUZGXScgOiAnYmctWyMxQTIzMzJdIGhvdmVyOmJnLVsjMjQzMDQ0XSd9YH0+e2V9PC9idXR0b24+CiAgICAgICAgICAgICAgICApKX0KICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gcHktMyBweC00IGJnLVsjMUEyMzMyXS81MCByb3VuZGVkLXhsIj4KICAgICAgICAgICAgICA8ZGl2PgogICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9InRleHQtc20gZm9udC1tZWRpdW0iPlB1YmxpYyBQT1Q8L2Rpdj4KICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJ0ZXh0LXhzIHRleHQtZ3JheS00MDAiPkFueW9uZSBjYW4gZmluZCBhbmQgcmVxdWVzdCB0byBqb2luPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgPGJ1dHRvbiBvbkNsaWNrPXsoKSA9PiBzZXRJc1B1YmxpYyghaXNQdWJsaWMpfSBjbGFzc05hbWU9e2ByZWxhdGl2ZSB3LTEyIGgtNiByb3VuZGVkLWZ1bGwgdHJhbnNpdGlvbi1jb2xvcnMgJHtpc1B1YmxpYyA/ICdiZy1bIzk5NDVGRl0nIDogJ2JnLVsjMUEyMzMyXSd9YH0+CiAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9e2BhYnNvbHV0ZSB0b3AtMSB3LTQgaC00IHJvdW5kZWQtZnVsbCBiZy13aGl0ZSB0cmFuc2l0aW9uLXRyYW5zZm9ybSAke2lzUHVibGljID8gJ3RyYW5zbGF0ZS14LTcnIDogJ3RyYW5zbGF0ZS14LTEnfWB9IC8+CiAgICAgICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICA8ZGl2PgogICAgICAgICAgICAgIDxsYWJlbCBjbGFzc05hbWU9InRleHQtc20gdGV4dC1ncmF5LTQwMCBtYi0yIGJsb2NrIj5NaW4gRGVwb3NpdCAoU09MKTwvbGFiZWw+CiAgICAgICAgICAgICAgPGlucHV0IHR5cGU9Im51bWJlciIgdmFsdWU9e21pbkRlcG9zaXR9IG9uQ2hhbmdlPXtlID0+IHNldE1pbkRlcG9zaXQoZS50YXJnZXQudmFsdWUpfSBtaW49IjAiIHN0ZXA9IjAuMSIgY2xhc3NOYW1lPSJ3LWZ1bGwgYmctWyMwRDExMTddIGJvcmRlciBib3JkZXItWyMxQTIzMzJdIHJvdW5kZWQteGwgcHgtNCBweS0zIHRleHQtd2hpdGUgcGxhY2Vob2xkZXItZ3JheS02MDAgZm9jdXM6b3V0bGluZS1ub25lIGZvY3VzOmJvcmRlci1bIzk5NDVGRl0gdHJhbnNpdGlvbi1jb2xvcnMiIC8+CiAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgPC8+CiAgICAgICAgKX0KICAgICAgICB7c3RlcCA9PT0gMiAmJiAoCiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ic3BhY2UteS0yIj4KICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LXNtIHRleHQtZ3JheS00MDAgbWItNCI+Q2hvb3NlIGhvdyBpZGxlIFNPTCBlYXJucyB5aWVsZCBiZXR3ZWVuIHRyYWRlcy48L3A+CiAgICAgICAgICAgIHtZSUVMRF9PUFRJT05TLm1hcChvcHQgPT4gKAogICAgICAgICAgICAgIDxidXR0b24ga2V5PXtvcHQudmFsdWV9IG9uQ2xpY2s9eygpID0+IHNldFlpZWxkU3RyYXRlZ3kob3B0LnZhbHVlKX0gY2xhc3NOYW1lPXtgdy1mdWxsIHRleHQtbGVmdCBweC00IHB5LTMuNSByb3VuZGVkLXhsIGJvcmRlciB0cmFuc2l0aW9uLWFsbCAke3lpZWxkU3RyYXRlZ3kgPT09IG9wdC52YWx1ZSA/ICdib3JkZXItWyM5OTQ1RkZdIGJnLVsjOTk0NUZGXScgOiAnYm9yZGVyLVsjMUEyMzMyXSBiZy1bIzBEMTExN10gaG92ZXI6Ym9yZGVyLVsjMjQzMDQ0XSd9YH0+CiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZm9udC1zZW1pYm9sZCB0ZXh0LXNtIj57b3B0LmxhYmVsfTwvZGl2PgogICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9InRleHQteHMgdGV4dC1ncmF5LTQwMCBtdC0wLjUiPntvcHQuZGVzY308L2Rpdj4KICAgICAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgICAgKSl9CiAgICAgICAgICA8L2Rpdj4KICAgICAgICApfQogICAgICAgIHtzdGVwID09PSAzICYmICgKICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJzcGFjZS15LTIiPgogICAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtc20gdGV4dC1ncmF5LTQwMCBtYi00Ij5TZXQgZ292ZXJuYW5jZSBsZXZlbCBmb3IgdHJhZGUgZGVjaXNpb25zLiBDb25maWd1cmUgcGVyLWFjdGlvbiBsYXRlci48L3A+CiAgICAgICAgICAgIHtHT1ZfT1BUSU9OUy5tYXAob3B0ID0+ICgKICAgICAgICAgICAgICA8YnV0dG9uIGtleT17b3B0LnZhbHVlfSBvbkNsaWNrPXsoKSA9PiBzZXRHb3ZMZXZlbChvcHQudmFsdWUpfSBjbGFzc05hbWU9e2B3LWZ1bGwgdGV4dC1sZWZ0IHB4LTQgcHktMy41IHJvdW5kZWQteGwgYm9yZGVyIHRyYW5zaXRpb24tYWxsICR7Z292TGV2ZWwgPT09IG9wdC52YWx1ZSA/ICdib3JkZXItWyM5OTQ1RkZdIGJnLVsjOTk0NUZGXScgOiAnYm9yZGVyLVsjMUEyMzMyXSBiZy1bIzBEMTExN10gaG92ZXI6Ym9yZGVyLVsjMjQzMDQ0XSd9YH0+CiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIiPgogICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9InRleHQteHMgZm9udC1tb25vIGJnLVsjOTk0NUZGXS8yMCB0ZXh0LVsjOTk0NUZGXSBweC0xLjUgcHktMC41IHJvdW5kZWQiPkx7b3B0LnZhbHVlfTwvc3Bhbj4KICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJmb250LXNlbWlib2xkIHRleHQtc20iPntvcHQubGFiZWx9PC9zcGFuPgogICAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0idGV4dC14cyB0ZXh0LWdyYXktNDAwIG10LTAuNSI+e29wdC5kZXNjfTwvZGl2PgogICAgICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgICAgICApKX0KICAgICAgICAgICAge2Vycm9yICYmIDxkaXYgY2xhc3NOYW1lPSJ0ZXh0LXhzIHRleHQtcmVkLTQwMCBiZy1yZWQtNDAwLzEwIHJvdW5kZWQteGwgcHgtNCBweS0zIG10LTIiPntlcnJvcn08L2Rpdj59CiAgICAgICAgICA8L2Rpdj4KICAgICAgICApfQogICAgICA8L2Rpdj4KCiAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gcC02IGJvcmRlci10IGJvcmRlci1bIzFBMjMzMl0iPgogICAgICAgIHtzdGVwID4gMSA/ICgKICAgICAgICAgIDxidXR0b24gb25DbGljaz17KCkgPT4gc2V0U3RlcChzID0+IHMgLSAxKX0gY2xhc3NOYW1lPSJ0ZXh0LXNtIHRleHQtZ3JheS00MDAgaG92ZXI6dGV4dC13aGl0ZSB0cmFuc2l0aW9uLWNvbG9ycyI+4oaQIEJhY2s8L2J1dHRvbj4KICAgICAgICApIDogPGRpdiAvPn0KICAgICAgICB7c3RlcCA8IDMgPyAoCiAgICAgICAgICA8YnV0dG9uIG9uQ2xpY2s9eygpID0+IHNldFN0ZXAocyA9PiBzICsgMSl9IGRpc2FibGVkPXtzdGVwID09PSAxICYmICFjYW5Qcm9jZWVkMX0gY2xhc3NOYW1lPSJidG4tcHJpbWFyeSBkaXNhYmxlZDpvcGFjaXR5LTQwIGRpc2FibGVkOmN1cnNvci1ub3QtYWxsb3dlZCI+TmV4dCDihpI8L2J1dHRvbj4KICAgICAgICApIDogKAogICAgICAgICAgPGJ1dHRvbiBvbkNsaWNrPXtoYW5kbGVDcmVhdGV9IGRpc2FibGVkPXtsb2FkaW5nfSBjbGFzc05hbWU9ImJ0bi1wcmltYXJ5IGRpc2FibGVkOm9wYWNpdHktNDAgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIiPgogICAgICAgICAgICB7bG9hZGluZyA/IDw+PFNwaW5uZXIgc2l6ZT0ic20iIC8+IENyZWF0aW5n4oCmPC8+IDogJ/CfqrQgQ3JlYXRlIFBPVCd9CiAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICApfQogICAgICA8L2Rpdj4KICAgIDwvTW9kYWw+CiAgKQp9Cg==
+'use client'
+
+import { useState } from 'react'
+import { useWallet, useConnection } from '@solana/wallet-adapter-react'
+import { Modal } from '@potbot/ui'
+import { Spinner } from '@potbot/ui'
+
+interface CreatePotModalProps {
+  open: boolean
+  onClose: () => void
+  onCreated?: (pubkey: string) => void
+}
+
+const YIELD_OPTIONS = [
+  { value: 'none', label: 'None', desc: 'No yield — pure trading vault' },
+  { value: 'conservative', label: 'Conservative', desc: 'Kamino stablecoins · 3–6% APY' },
+  { value: 'balanced', label: 'Balanced', desc: 'Mixed lending · 10–25% APY' },
+  { value: 'aggressive', label: 'Aggressive', desc: 'High-risk farms · 20–50%+ APY' },
+]
+
+const GOV_OPTIONS = [
+  { value: 0, label: 'Autocracy', desc: 'Owner decides everything instantly' },
+  { value: 1, label: 'Advisory', desc: 'Owner leads, majority can veto' },
+  { value: 2, label: 'Majority', desc: 'Democratic — 51% required (default)' },
+  { value: 3, label: 'Supermajority', desc: 'High conviction — 66%+ required' },
+  { value: 4, label: 'Consensus', desc: 'All members must agree' },
+]
+
+const EMOJI_OPTIONS = ['🪴', '🐉', '🦅', '🐤', '🦊', '🐸', '🌿', '💎', '🔥', '⚡']
+
+const TOKEN_GATE_EXAMPLES = [
+  { label: 'BONK', mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixVrtVZvWr8Alfred89u' },
+  { label: 'JUP', mint: 'JUPyiwrYJFskUPiHa7hkeR8NqtwybKv5LqYjTrsixO7' },
+  { label: 'WIF', mint: 'EKpQGSKe94Fp3gWQrW1zYvbwDiQMqFEuer5pVUeX3mQ' },
+]
+
+export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps) {
+  const { publicKey } = useWallet()
+  const { connection } = useConnection()
+
+  const [step, setStep] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Form state
+  const [name, setName] = useState('')
+  const [emoji, setEmoji] = useState('🪴')
+  const [isPublic, setIsPublic] = useState(true)
+  const [minDeposit, setMinDeposit] = useState('0.1')
+  const [tokenGate, setTokenGate] = useState('')
+  const [requireTokenGate, setRequireTokenGate] = useState(false)
+  const [yieldStrategy, setYieldStrategy] = useState('none')
+  const [govLevel, setGovLevel] = useState(2)
+
+  const canProceed1 = name.trim().length >= 2 && name.trim().length <= 32
+
+  async function handleCreate() {
+    if (!publicKey) return
+    setLoading(true)
+    setError(null)
+
+    try {
+      // TODO: replace with real SDK call once program IDs are deployed
+      // const sdk = new PotSDK({ rpcUrl: process.env.NEXT_PUBLIC_RPC_URL! })
+      // await sdk.createPot({ name, isPublic, minDeposit: ..., yieldStrategy, govLevel })
+
+      // Mock success for now
+      await new Promise(r => setTimeout(r, 1500))
+      const mockPubkey = 'pot' + Math.random().toString(36).slice(2, 14).padEnd(40, '1')
+      onCreated?.(mockPubkey)
+      handleClose()
+    } catch (e: any) {
+      setError(e.message ?? 'Transaction failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleClose() {
+    setStep(1)
+    setName('')
+    setEmoji('🪴')
+    setIsPublic(true)
+    setMinDeposit('0.1')
+    setTokenGate('')
+    setRequireTokenGate(false)
+    setYieldStrategy('none')
+    setGovLevel(2)
+    setError(null)
+    onClose()
+  }
+
+  return (
+    <Modal open={open} onClose={handleClose} className="max-w-xl">
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 border-b border-[#1A2332]">
+        <div>
+          <h2 className="text-xl font-display font-bold">Create a POT</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Step {step} of 3</p>
+        </div>
+        <button
+          onClick={handleClose}
+          className="text-gray-400 hover:text-white transition-colors text-xl leading-none"
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Step indicator */}
+      <div className="flex px-6 pt-4 gap-2">
+        {[1, 2, 3].map(s => (
+          <div
+            key={s}
+            className={`h-1 flex-1 rounded-full transition-colors ${
+              s <= step ? 'bg-[#9945FF]' : 'bg-[#1A2332]'
+            }`}
+          />
+        ))}
+      </div>
+
+      <div className="p-6 space-y-5">
+        {/* ── Step 1: Identity ── */}
+        {step === 1 && (
+          <>
+            <div>
+              <label className="text-sm text-gray-400 mb-2 block">POT Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="e.g. Alpha Fund, Degen Vault…"
+                maxLength={32}
+                className="w-full bg-[#0D1117] border border-[#1A2332] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#9945FF] transition-colors"
+              />
+              <div className="text-xs text-gray-600 mt-1 text-right">{name.length}/32</div>
+            </div>
+
+            <div>
+              <label className="text-sm text-gray-400 mb-2 block">Mascot Emoji</label>
+              <div className="flex flex-wrap gap-2">
+                {EMOJI_OPTIONS.map(e => (
+                  <button
+                    key={e}
+                    onClick={() => setEmoji(e)}
+                    className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${
+                      emoji === e
+                        ? 'bg-[#9945FF]/30 ring-2 ring-[#9945FF]'
+                        : 'bg-[#1A2332] hover:bg-[#243044]'
+                    }`}
+                  >
+                    {e}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between py-3 px-4 bg-[#1A2332]/50 rounded-xl">
+              <div>
+                <div className="text-sm font-medium">Public POT</div>
+                <div className="text-xs text-gray-400">Anyone can find and request to join</div>
+              </div>
+              <button
+                onClick={() => setIsPublic(!isPublic)}
+                className={`relative w-12 h-6 rounded-full transition-colors ${
+                  isPublic ? 'bg-[#9945FF]' : 'bg-[#1A2332]'
+                }`}
+              >
+                <span
+                  className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                    isPublic ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div>
+              <label className="text-sm text-gray-400 mb-2 block">Min Deposit (SOL)</label>
+              <input
+                type="number"
+                value={minDeposit}
+                onChange={e => setMinDeposit(e.target.value)}
+                min="0"
+                step="0.1"
+                className="w-full bg-[#0D1117] border border-[#1A2332] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#9945FF] transition-colors"
+              />
+            </div>
+
+            {/* Token Gate Section */}
+            <div className="border-t border-[#1A2332] pt-5">
+              <div className="flex items-center justify-between py-3 px-4 bg-[#1A2332]/50 rounded-xl mb-4">
+                <div>
+                  <div className="text-sm font-medium">Require Token to Join</div>
+                  <div className="text-xs text-gray-400">Only wallets holding this token can join your POT</div>
+                </div>
+                <button
+                  onClick={() => setRequireTokenGate(!requireTokenGate)}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    requireTokenGate ? 'bg-[#9945FF]' : 'bg-[#1A2332]'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                      requireTokenGate ? 'translate-x-7' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {requireTokenGate && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">Token Mint Address</label>
+                    <input
+                      type="text"
+                      value={tokenGate}
+                      onChange={e => setTokenGate(e.target.value)}
+                      placeholder="e.g. TokenkegQfeZyiNwAJsyFbPVwwQnoxwUUKHVrCqFb..."
+                      className="w-full bg-[#0D1117] border border-[#1A2332] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#9945FF] transition-colors text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-400 mb-2">Quick select:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {TOKEN_GATE_EXAMPLES.map(token => (
+                        <button
+                          key={token.mint}
+                          onClick={() => setTokenGate(token.mint)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                            tokenGate === token.mint
+                              ? 'bg-[#9945FF] text-white'
+                              : 'bg-[#1A2332] text-gray-300 hover:text-white'
+                          }`}
+                        >
+                          {token.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ── Step 2: Yield Strategy ── */}
+        {step === 2 && (
+          <div className="space-y-2">
+            <p className="text-sm text-gray-400 mb-4">
+              Choose how idle SOL in the vault earns yield between trades.
+            </p>
+            {YIELD_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setYieldStrategy(opt.value)}
+                className={`w-full text-left px-4 py-3.5 rounded-xl border transition-all ${
+                  yieldStrategy === opt.value
+                    ? 'border-[#9945FF] bg-[#9945FF]/10'
+                    : 'border-[#1A2332] bg-[#0D1117] hover:border-[#243044]'
+                }`}
+              >
+                <div className="font-semibold text-sm">{opt.label}</div>
+                <div className="text-xs text-gray-400 mt-0.5">{opt.desc}</div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ── Step 3: Governance ── */}
+        {step === 3 && (
+          <div className="space-y-2">
+            <p className="text-sm text-gray-400 mb-4">
+              Set the governance level for trade decisions. You can configure per-action later.
+            </p>
+            {GOV_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setGovLevel(opt.value)}
+                className={`w-full text-left px-4 py-3.5 rounded-xl border transition-all ${
+                  govLevel === opt.value
+                    ? 'border-[#9945FF] bg-[#9945FF]/10'
+                    : 'border-[#1A2332] bg-[#0D1117] hover:border-[#243044]'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono bg-[#9945FF]/20 text-[#9945FF] px-1.5 py-0.5 rounded">
+                    L{opt.value}
+                  </span>
+                  <span className="font-semibold text-sm">{opt.label}</span>
+                </div>
+                <div className="text-xs text-gray-400 mt-0.5">{opt.desc}</div>
+              </button>
+            ))}
+
+            {error && (
+              <div className="text-xs text-red-400 bg-red-400/10 rounded-xl px-4 py-3 mt-2">
+                {error}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between p-6 border-t border-[#1A2332]">
+        {step > 1 ? (
+          <button
+            onClick={() => setStep(s => s - 1)}
+            className="text-sm text-gray-400 hover:text-white transition-colors"
+          >
+            ← Back
+          </button>
+        ) : (
+          <div />
+        )}
+
+        {step < 3 ? (
+          <button
+            onClick={() => setStep(s => s + 1)}
+            disabled={step === 1 && !canProceed1}
+            className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Next →
+          </button>
+        ) : (
+          <button
+            onClick={handleCreate}
+            disabled={loading}
+            className="btn-primary disabled:opacity-40 flex items-center gap-2"
+          >
+            {loading ? <><Spinner size="sm" /> Creating…</> : '🪴 Create POT'}
+          </button>
+        )}
+      </div>
+    </Modal>
+  )
+}
