@@ -1,4 +1,4 @@
-# 🎲 PotBot v2
+#  PotBot v2
 
 **Group trading vaults on Solana.** Collective POT management, on-chain governance, DeFi yield, Tamagotchi NFTs & POT Duels.
 
