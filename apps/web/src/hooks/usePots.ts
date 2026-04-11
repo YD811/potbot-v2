@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useConnection, useWallet, useAnchorWallet } from '@solana/wallet-adapter-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { AnchorProvider, Program, BN } from '@coral-xyz/anchor'
@@ -12,12 +12,11 @@ import {
   getProposalAddress,
   POT_PROGRAM_ID,
   IDL,
-  potToDisplay,
-  memberToDisplay,
 } from '@potbot/sdk'
-import type { PotDisplay, MemberDisplay, ProposalDisplay, PotState, MemberState } from '@potbot/sdk'
+import { useMockStore } from '@/lib/mock-store'
+import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 
-/* ── Provider + Program Hook ── */
+/* ── Program Hook (null when program not deployed) ── */
 
 export function useProgram() {
   const { connection } = useConnection()
@@ -25,195 +24,231 @@ export function useProgram() {
 
   return useMemo(() => {
     if (!wallet) return null
-    const provider = new AnchorProvider(connection, wallet, {
-      commitment: 'confirmed',
-    })
-    return new Program(IDL as any, POT_PROGRAM_ID, provider)
+    try {
+      const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed' })
+      return new Program(IDL as any, provider)
+    } catch {
+      return null
+    }
   }, [connection, wallet])
 }
 
-/* ── Fetch All POTs ── */
+/* ── Check if program is deployed ── */
 
-export function usePots() {
+function useIsProgramLive() {
   const { connection } = useConnection()
-  const program = useProgram()
 
   return useQuery({
-    queryKey: ['pots'],
-    queryFn: async (): Promise<PotDisplay[]> => {
-      if (program) {
-        try {
-          const accounts = await (program.account as any).potAccount.all()
-          const results: PotDisplay[] = []
-          for (const acc of accounts) {
-            const [vaultPda] = getVaultAddress(acc.publicKey)
-            const vaultBalance = await connection.getBalance(vaultPda)
-            results.push(potToDisplay(acc.publicKey, acc.account as PotState, vaultBalance))
-          }
-          return results
-        } catch (e) {
-          console.warn('Anchor fetch failed, falling back to raw:', e)
-        }
+    queryKey: ['program-live'],
+    queryFn: async () => {
+      try {
+        const info = await connection.getAccountInfo(POT_PROGRAM_ID)
+        return info !== null && info.executable
+      } catch {
+        return false
       }
-
-      // Fallback: raw getProgramAccounts
-      const accounts = await connection.getProgramAccounts(POT_PROGRAM_ID)
-      return accounts.map((acc) => ({
-        pubkey: acc.pubkey.toBase58(),
-        name: 'Loading...',
-        emoji: '🪴',
-        balance: 0,
-        totalShares: 0,
-        memberCount: 0,
-        tradeCount: 0,
-        tamagotchiLevel: 0,
-        tamagotchiEmoji: '🥚',
-        yieldStrategy: 'none',
-        governanceLevel: 2,
-        isPublic: true,
-        createdAt: new Date(),
-      }))
     },
-    staleTime: 10_000,
-    retry: 2,
+    staleTime: 60_000,
+    retry: false,
   })
 }
 
-/* ── Fetch Single POT ── */
+/* ══════════════════════════════
+   QUERIES
+   ══════════════════════════════ */
 
-export function usePot(pubkey: string | undefined) {
-  const { connection } = useConnection()
+/* ── All POTs ── */
+
+export function usePots() {
+  const mockStore = useMockStore()
+  const { data: isLive } = useIsProgramLive()
   const program = useProgram()
+  const { connection } = useConnection()
 
   return useQuery({
-    queryKey: ['pot', pubkey],
-    queryFn: async (): Promise<PotDisplay | null> => {
-      if (!pubkey) return null
-      const pk = new PublicKey(pubkey)
-      const [vaultPda] = getVaultAddress(pk)
-
-      if (program) {
+    queryKey: ['pots', isLive],
+    queryFn: async () => {
+      // Try on-chain first
+      if (isLive && program) {
         try {
-          const potData = await (program.account as any).potAccount.fetch(pk)
-          const vaultBalance = await connection.getBalance(vaultPda)
-          return potToDisplay(pk, potData as PotState, vaultBalance)
+          const accounts = await (program.account as any).potAccount.all()
+          return accounts.map((acc: any) => {
+            const d = acc.account
+            const stratKey = Object.keys(d.config.yieldStrategy)[0]
+            return {
+              pubkey: acc.publicKey.toBase58(),
+              name: d.name,
+              emoji: d.emoji || '🪴',
+              balance: 0,
+              totalShares: d.totalShares.toNumber(),
+              memberCount: d.memberCount,
+              tradeCount: d.tradeCount,
+              tamagotchiLevel: d.tamagotchiLevel,
+              tamagotchiEmoji: ['🥚','🐣','🐤','🦅','🐉','👑'][d.tamagotchiLevel] || '🥚',
+              yieldStrategy: stratKey,
+              governanceLevel: d.governance.tradeLevel,
+              isPublic: d.config.isPublic,
+              createdAt: new Date(d.createdAt.toNumber() * 1000),
+            }
+          })
         } catch (e) {
-          console.warn('Anchor fetch failed:', e)
+          console.warn('On-chain fetch failed, using mock:', e)
         }
       }
 
-      const [potInfo, vaultBalance] = await Promise.all([
-        connection.getAccountInfo(pk),
-        connection.getBalance(vaultPda),
-      ])
-      if (!potInfo) return null
+      // Mock fallback
+      return mockStore.pots.map((p) => {
+        const tama = calculateTamaStats({
+          tradeVolume: p.totalVolume,
+          memberCount: p.memberCount,
+          winRate: 0.6,
+          yieldApy: p.yieldStrategy * 0.05,
+          ageSeconds: (Date.now() - p.createdAt) / 1000,
+        })
+        return {
+          pubkey: p.pubkey,
+          name: p.name,
+          emoji: p.emoji,
+          balance: p.balance,
+          totalShares: p.totalShares,
+          memberCount: p.memberCount,
+          tradeCount: p.tradeCount,
+          tamagotchiLevel: tama.level,
+          tamagotchiEmoji: tama.emoji,
+          yieldStrategy: ['None', 'Conservative', 'Balanced', 'Aggressive'][p.yieldStrategy] || 'None',
+          governanceLevel: p.tradeLevel,
+          isPublic: p.isPublic,
+          createdAt: new Date(p.createdAt),
+        }
+      })
+    },
+    staleTime: 3_000,
+  })
+}
+
+/* ── Single POT ── */
+
+export function usePot(pubkey: string | undefined) {
+  const mockStore = useMockStore()
+  const { data: isLive } = useIsProgramLive()
+
+  return useQuery({
+    queryKey: ['pot', pubkey, isLive],
+    queryFn: async () => {
+      if (!pubkey) return null
+
+      const mock = mockStore.pots.find((p) => p.pubkey === pubkey)
+      if (!mock) return null
+
+      const tama = calculateTamaStats({
+        tradeVolume: mock.totalVolume,
+        memberCount: mock.memberCount,
+        winRate: 0.6,
+        yieldApy: mock.yieldStrategy * 0.05,
+        ageSeconds: (Date.now() - mock.createdAt) / 1000,
+      })
 
       return {
-        pubkey,
-        name: 'Unknown',
-        emoji: '🪴',
-        balance: vaultBalance / LAMPORTS_PER_SOL,
-        totalShares: 0,
-        memberCount: 0,
-        tradeCount: 0,
-        tamagotchiLevel: 0,
-        tamagotchiEmoji: '🥚',
-        yieldStrategy: 'none',
-        governanceLevel: 2,
-        isPublic: true,
-        createdAt: new Date(),
+        pubkey: mock.pubkey,
+        name: mock.name,
+        emoji: mock.emoji,
+        balance: mock.balance,
+        totalShares: mock.totalShares,
+        memberCount: mock.memberCount,
+        tradeCount: mock.tradeCount,
+        tamagotchiLevel: tama.level,
+        tamagotchiEmoji: tama.emoji,
+        tamagotchiXp: tama.xp,
+        tamagotchiXpToNext: tama.xpToNext,
+        tamagotchiStage: tama.stage,
+        yieldStrategy: ['None', 'Conservative', 'Balanced', 'Aggressive'][mock.yieldStrategy] || 'None',
+        governanceLevel: mock.tradeLevel,
+        withdrawLevel: mock.withdrawLevel,
+        isPublic: mock.isPublic,
+        authority: mock.authority,
+        nextProposalId: mock.nextProposalId,
+        createdAt: new Date(mock.createdAt),
       }
     },
     enabled: !!pubkey,
-    staleTime: 5_000,
+    staleTime: 2_000,
   })
 }
 
-/* ── Fetch Members ── */
+/* ── Members ── */
 
 export function useMembers(potPubkey: string | undefined) {
-  const program = useProgram()
+  const mockStore = useMockStore()
 
   return useQuery({
     queryKey: ['members', potPubkey],
-    queryFn: async (): Promise<MemberDisplay[]> => {
+    queryFn: async () => {
       if (!potPubkey) return []
+      const pot = mockStore.pots.find((p) => p.pubkey === potPubkey)
+      const totalShares = pot?.totalShares ?? 0
 
-      if (program) {
-        try {
-          const members = await (program.account as any).memberAccount.all([
-            { memcmp: { offset: 8, bytes: potPubkey } },
-          ])
-          const potPk = new PublicKey(potPubkey)
-          const potData = await (program.account as any).potAccount.fetch(potPk)
-          const totalShares = (potData as PotState).totalShares.toNumber()
-          return members.map((m: any) =>
-            memberToDisplay(m.account as MemberState, totalShares)
-          )
-        } catch (e) {
-          console.warn('Anchor member fetch failed:', e)
-        }
-      }
-
-      return []
+      return mockStore.members
+        .filter((m) => m.potPubkey === potPubkey)
+        .map((m) => ({
+          wallet: m.wallet,
+          shares: m.shares,
+          sharePercent: totalShares > 0 ? (m.shares / totalShares) * 100 : 0,
+          depositTotal: m.depositTotal,
+          withdrawTotal: m.withdrawTotal,
+          pnl: m.withdrawTotal - m.depositTotal,
+          joinedAt: new Date(m.joinedAt),
+        }))
     },
     enabled: !!potPubkey,
-    staleTime: 10_000,
+    staleTime: 3_000,
   })
 }
 
-/* ── Fetch Proposals ── */
+/* ── Proposals ── */
 
 export function useProposals(potPubkey: string | undefined) {
-  const program = useProgram()
+  const mockStore = useMockStore()
 
   return useQuery({
     queryKey: ['proposals', potPubkey],
-    queryFn: async (): Promise<ProposalDisplay[]> => {
+    queryFn: async () => {
       if (!potPubkey) return []
 
-      if (program) {
-        try {
-          const proposals = await (program.account as any).proposalAccount.all([
-            { memcmp: { offset: 8, bytes: potPubkey } },
-          ])
-          return proposals.map((p: any) => {
-            const d = p.account
-            const typeKey = Object.keys(d.proposalType)[0]
-            const statusKey = Object.keys(d.status)[0]
-            const totalVotes = d.yesShares.toNumber() + d.noShares.toNumber()
-            return {
-              pubkey: p.publicKey.toBase58(),
-              proposalId: d.proposalId.toNumber(),
-              proposer: d.proposer.toBase58(),
-              type: typeKey,
-              description: d.description,
-              status: statusKey,
-              yesPercent: totalVotes > 0 ? (d.yesShares.toNumber() / totalVotes) * 100 : 0,
-              noPercent: totalVotes > 0 ? (d.noShares.toNumber() / totalVotes) * 100 : 0,
-              createdAt: new Date(d.createdAt.toNumber() * 1000),
-              resolvedAt: d.resolvedAt.toNumber() > 0 ? new Date(d.resolvedAt.toNumber() * 1000) : null,
-            } satisfies ProposalDisplay
-          })
-        } catch (e) {
-          console.warn('Anchor proposal fetch failed:', e)
-        }
-      }
-
-      return []
+      return mockStore.proposals
+        .filter((p) => p.potPubkey === potPubkey)
+        .map((p) => {
+          const totalVotes = p.yesShares + p.noShares
+          return {
+            pubkey: p.pubkey,
+            proposalId: p.proposalId,
+            proposer: p.proposer,
+            type: p.type,
+            description: p.description,
+            status: p.status,
+            yesPercent: totalVotes > 0 ? Math.round((p.yesShares / totalVotes) * 100) : 0,
+            noPercent: totalVotes > 0 ? Math.round((p.noShares / totalVotes) * 100) : 0,
+            yesShares: p.yesShares,
+            noShares: p.noShares,
+            totalSharesSnapshot: p.totalSharesSnapshot,
+            createdAt: new Date(p.createdAt),
+            resolvedAt: null,
+          }
+        })
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     },
     enabled: !!potPubkey,
-    staleTime: 5_000,
+    staleTime: 2_000,
   })
 }
 
-/* ─────── MUTATIONS ─────── */
-
-/* ── Create POT ── */
+/* ══════════════════════════════
+   MUTATIONS
+   ══════════════════════════════ */
 
 export function useCreatePot() {
-  const program = useProgram()
+  const mockStore = useMockStore()
   const { publicKey } = useWallet()
+  const program = useProgram()
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -229,42 +264,47 @@ export function useCreatePot() {
     }) => {
       if (!publicKey) throw new Error('Wallet not connected')
 
-      const [potPda] = getPotAddress(publicKey, params.name)
-      const [vaultPda] = getVaultAddress(potPda)
-
+      // Try on-chain
       if (program) {
-        const tx = await program.methods
-          .createPot({
-            name: params.name,
-            emoji: params.emoji,
-            isPublic: params.isPublic,
-            minDeposit: new BN(params.minDeposit * LAMPORTS_PER_SOL),
-            lockupSeconds: new BN(params.lockupSeconds),
-            yieldStrategy: params.yieldStrategy,
-            maxYieldAllocationBps: 5000,
-            tradeLevel: params.tradeLevel,
-            withdrawLevel: params.withdrawLevel,
-            memberChangeLevel: params.tradeLevel,
-            settingsChangeLevel: 3,
-            yieldChangeLevel: 2,
-            voteTimeoutSeconds: new BN(86400),
-            quorumBps: 5000,
-          })
-          .accounts({
-            pot: potPda,
-            vault: vaultPda,
-            authority: publicKey,
-            systemProgram: SystemProgram.programId,
-          })
-          .rpc()
-        return { potAddress: potPda.toBase58(), tx }
+        try {
+          const [potPda] = getPotAddress(publicKey, params.name)
+          const [vaultPda] = getVaultAddress(potPda)
+          const tx = await program.methods
+            .createPot({
+              name: params.name,
+              emoji: params.emoji,
+              isPublic: params.isPublic,
+              minDeposit: new BN(params.minDeposit * LAMPORTS_PER_SOL),
+              lockupSeconds: new BN(params.lockupSeconds),
+              yieldStrategy: params.yieldStrategy,
+              maxYieldAllocationBps: 5000,
+              tradeLevel: params.tradeLevel,
+              withdrawLevel: params.withdrawLevel,
+              memberChangeLevel: params.tradeLevel,
+              settingsChangeLevel: 3,
+              yieldChangeLevel: 2,
+              voteTimeoutSeconds: new BN(86400),
+              quorumBps: 5000,
+            })
+            .accounts({
+              pot: potPda,
+              vault: vaultPda,
+              authority: publicKey,
+              systemProgram: SystemProgram.programId,
+            })
+            .rpc()
+          return { potAddress: potPda.toBase58(), tx }
+        } catch (e) {
+          console.warn('On-chain createPot failed, using mock:', e)
+        }
       }
 
-      return {
-        potAddress: potPda.toBase58(),
-        tx: 'demo-mode',
-        message: `POT "${params.name}" PDA: ${potPda.toBase58()} (program not deployed)`,
-      }
+      // Mock fallback
+      const potAddress = mockStore.createPot({
+        authority: publicKey.toBase58(),
+        ...params,
+      })
+      return { potAddress, tx: 'mock-tx-' + Date.now() }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pots'] })
@@ -272,87 +312,46 @@ export function useCreatePot() {
   })
 }
 
-/* ── Deposit ── */
-
 export function useDeposit() {
-  const program = useProgram()
+  const mockStore = useMockStore()
   const { publicKey } = useWallet()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (params: { potAddress: string; amountSol: number }) => {
       if (!publicKey) throw new Error('Wallet not connected')
-
-      const potPk = new PublicKey(params.potAddress)
-      const [memberPda] = getMemberAddress(potPk, publicKey)
-      const [vaultPda] = getVaultAddress(potPk)
-      const lamports = new BN(params.amountSol * LAMPORTS_PER_SOL)
-
-      if (program) {
-        const tx = await program.methods
-          .deposit(lamports)
-          .accounts({
-            pot: potPk,
-            vault: vaultPda,
-            member: memberPda,
-            depositor: publicKey,
-            systemProgram: SystemProgram.programId,
-          })
-          .rpc()
-        return { tx }
-      }
-
-      return { tx: 'demo-mode' }
+      mockStore.deposit(params.potAddress, publicKey.toBase58(), params.amountSol)
+      return { tx: 'mock-tx-' + Date.now() }
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['pot', vars.potAddress] })
       queryClient.invalidateQueries({ queryKey: ['members', vars.potAddress] })
+      queryClient.invalidateQueries({ queryKey: ['pots'] })
     },
   })
 }
 
-/* ── Withdraw ── */
-
 export function useWithdraw() {
-  const program = useProgram()
+  const mockStore = useMockStore()
   const { publicKey } = useWallet()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (params: { potAddress: string; shares: number }) => {
       if (!publicKey) throw new Error('Wallet not connected')
-
-      const potPk = new PublicKey(params.potAddress)
-      const [memberPda] = getMemberAddress(potPk, publicKey)
-      const [vaultPda] = getVaultAddress(potPk)
-
-      if (program) {
-        const tx = await program.methods
-          .withdraw(new BN(params.shares))
-          .accounts({
-            pot: potPk,
-            vault: vaultPda,
-            member: memberPda,
-            withdrawer: publicKey,
-            systemProgram: SystemProgram.programId,
-          })
-          .rpc()
-        return { tx }
-      }
-
-      return { tx: 'demo-mode' }
+      mockStore.withdraw(params.potAddress, publicKey.toBase58(), params.shares)
+      return { tx: 'mock-tx-' + Date.now() }
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['pot', vars.potAddress] })
       queryClient.invalidateQueries({ queryKey: ['members', vars.potAddress] })
+      queryClient.invalidateQueries({ queryKey: ['pots'] })
     },
   })
 }
 
-/* ── Create Proposal ── */
-
 export function useCreateProposal() {
-  const program = useProgram()
+  const mockStore = useMockStore()
   const { publicKey } = useWallet()
   const queryClient = useQueryClient()
 
@@ -364,29 +363,17 @@ export function useCreateProposal() {
       description: string
     }) => {
       if (!publicKey) throw new Error('Wallet not connected')
+      const typeKey = typeof params.proposalType === 'string'
+        ? params.proposalType
+        : Object.keys(params.proposalType)[0]
 
-      const potPk = new PublicKey(params.potAddress)
-      const [proposalPda] = getProposalAddress(potPk, params.nextProposalId)
-      const [memberPda] = getMemberAddress(potPk, publicKey)
-
-      if (program) {
-        const tx = await program.methods
-          .createProposal({
-            proposalType: params.proposalType,
-            description: params.description,
-          })
-          .accounts({
-            pot: potPk,
-            proposal: proposalPda,
-            member: memberPda,
-            proposer: publicKey,
-            systemProgram: SystemProgram.programId,
-          })
-          .rpc()
-        return { proposalAddress: proposalPda.toBase58(), tx }
-      }
-
-      return { proposalAddress: proposalPda.toBase58(), tx: 'demo-mode' }
+      const proposalAddress = mockStore.createProposal({
+        potPubkey: params.potAddress,
+        proposer: publicKey.toBase58(),
+        type: typeKey,
+        description: params.description,
+      })
+      return { proposalAddress, tx: 'mock-tx-' + Date.now() }
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['proposals', vars.potAddress] })
@@ -395,10 +382,8 @@ export function useCreateProposal() {
   })
 }
 
-/* ── Vote ── */
-
 export function useVote() {
-  const program = useProgram()
+  const mockStore = useMockStore()
   const { publicKey } = useWallet()
   const queryClient = useQueryClient()
 
@@ -409,24 +394,8 @@ export function useVote() {
       approve: boolean
     }) => {
       if (!publicKey) throw new Error('Wallet not connected')
-
-      const potPk = new PublicKey(params.potAddress)
-      const [memberPda] = getMemberAddress(potPk, publicKey)
-
-      if (program) {
-        const tx = await program.methods
-          .vote(params.approve)
-          .accounts({
-            pot: potPk,
-            proposal: new PublicKey(params.proposalAddress),
-            member: memberPda,
-            voter: publicKey,
-          })
-          .rpc()
-        return { tx }
-      }
-
-      return { tx: 'demo-mode' }
+      mockStore.vote(params.proposalAddress, publicKey.toBase58(), params.approve)
+      return { tx: 'mock-tx-' + Date.now() }
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['proposals', vars.potAddress] })
@@ -434,11 +403,8 @@ export function useVote() {
   })
 }
 
-/* ── Execute Proposal ── */
-
 export function useExecuteProposal() {
-  const program = useProgram()
-  const { publicKey } = useWallet()
+  const mockStore = useMockStore()
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -446,30 +412,13 @@ export function useExecuteProposal() {
       potAddress: string
       proposalAddress: string
     }) => {
-      if (!publicKey) throw new Error('Wallet not connected')
-
-      const potPk = new PublicKey(params.potAddress)
-      const [vaultPda] = getVaultAddress(potPk)
-
-      if (program) {
-        const tx = await program.methods
-          .executeProposal()
-          .accounts({
-            pot: potPk,
-            vault: vaultPda,
-            proposal: new PublicKey(params.proposalAddress),
-            executor: publicKey,
-            systemProgram: SystemProgram.programId,
-          })
-          .rpc()
-        return { tx }
-      }
-
-      return { tx: 'demo-mode' }
+      mockStore.executeProposal(params.proposalAddress)
+      return { tx: 'mock-tx-' + Date.now() }
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['pot', vars.potAddress] })
       queryClient.invalidateQueries({ queryKey: ['proposals', vars.potAddress] })
+      queryClient.invalidateQueries({ queryKey: ['pots'] })
     },
   })
 }

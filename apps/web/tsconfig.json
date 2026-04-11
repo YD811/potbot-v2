@@ -1,1 +1,24 @@
-ewogICJleHRlbmRzIjogIi4uLy4uL3RzY29uZmlnLmJhc2UuanNvbiIsCiAgImNvbXBpbGVyT3B0aW9ucyI6IHsKICAgICJ0YXJnZXQiOiAiRVMyMDIwIiwKICAgICJsaWIiOiBbIkVTMjAyMCIsICJkb20iLCAiZG9tLml0ZXJhdG9yIl0sCiAgICAianN4IjogInJlYWN0LWpzeCIsCiAgICAic3RyaWN0VHlwZXMiOiB0cnVlLAogICAgIm1vZHVsZVJlc29sdXRpb24iOiAibm9kZSIsCiAgICAibW9kdWxlIjogIkVTTW9kdWxlIiwKICAgICJhbGxvd0pzIjogdHJ1ZQogIH0KICAKICAKICAKICAJCU50dWRlIjogWyIuIiwgIi4vZ2xvYmFsLmQudHMiXQp9
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@potbot/sdk": ["../../packages/sdk/src"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useCreatePot } from '@/hooks/usePots'
 
-const EMOJIS = ['\ud83e\udeb4', '\ud83c\udf0a', '\ud83d\udd25', '\ud83d\ude80', '\ud83d\udc8e', '\ud83c\udf19', '\u26a1', '\ud83c\udfaf', '\ud83e\udd8a', '\ud83d\udc38', '\ud83e\udd81', '\ud83d\udc0b']
+const EMOJIS = ['🪴', '🌊', '🔥', '🚀', '💎', '🌙', '⚡', '🎯', '🦊', '🐸', '🦁', '🐋']
 
 const GOV_LEVELS = [
   { value: 0, label: 'Autocracy', desc: 'Owner decides everything' },
@@ -29,7 +29,7 @@ export default function CreatePotPage() {
 
   const [form, setForm] = useState({
     name: '',
-    emoji: '\ud83e\udeb4',
+    emoji: '🪴',
     isPublic: true,
     minDeposit: 0.01,
     lockupDays: 0,
@@ -65,7 +65,7 @@ export default function CreatePotPage() {
   if (!publicKey) {
     return (
       <div className="text-center py-20">
-        <span className="text-5xl mb-4 block">\ud83d\udd0c</span>
+        <span className="text-5xl mb-4 block">🔌</span>
         <h2 className="text-2xl font-bold text-white mb-2">
           Connect Your Wallet
         </h2>
@@ -299,7 +299,7 @@ export default function CreatePotPage() {
         >
           {createPot.isPending ? (
             <span className="inline-flex items-center gap-2">
-              <span className="animate-spin">\ud83e\udeb4</span> Creating...
+              <span className="animate-spin">🪴</span> Creating...
             </span>
           ) : (
             `Create ${form.emoji} ${form.name || 'POT'}`

@@ -1,1 +1,69 @@
-QHRhaWx3aW5kIGJhc2U7CkB0YWlsd2luZCBjb21wb25lbnRzOwpAdGFpbHdpbmQgdXRpbGl0aWVzOwoK
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ── */
+@layer base {
+  body {
+    @apply bg-pot-dark text-white;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-pot-dark;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-pot-border rounded-full;
+  }
+}
+
+/* ── Components ── */
+@layer components {
+  .card {
+    @apply rounded-2xl border border-pot-border bg-pot-card;
+  }
+
+  .btn-primary {
+    @apply rounded-xl bg-pot-green px-6 py-2.5 font-semibold text-pot-dark
+           transition hover:brightness-110 active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply rounded-xl border border-pot-border bg-pot-card px-6 py-2.5
+           font-medium text-white transition hover:border-pot-muted
+           active:scale-[0.98];
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-pot-border bg-pot-dark px-4 py-3
+           text-white placeholder:text-pot-muted
+           focus:border-pot-green focus:outline-none focus:ring-1 focus:ring-pot-green/50;
+  }
+
+  .glow-green {
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.15),
+                0 0 60px rgba(0, 255, 136, 0.05);
+  }
+
+  .glow-purple {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.15),
+                0 0 60px rgba(139, 92, 246, 0.05);
+  }
+}
+
+/* ── Wallet adapter overrides ── */
+.wallet-adapter-button {
+  @apply !rounded-xl !bg-pot-accent !font-semibold !text-sm !h-10;
+}
+.wallet-adapter-button:hover {
+  @apply !bg-pot-accent/80;
+}
+.wallet-adapter-modal-wrapper {
+  @apply !bg-pot-card !border !border-pot-border !rounded-2xl;
+}
+.wallet-adapter-modal-title {
+  @apply !text-white;
+}

@@ -1,1 +1,28 @@
-aW1wb3J0IHR5cGUgeyBNZXRhZGF0YSB9IGZyb20gJ25leHQnCmltcG9ydCB7IFByb3ZpZGVycyB9IGZyb20gJ0BwbG90Ym90L2NvcmUvcHJvdmlkZXJzJwppbXBvcnQgJy4vZ2xvYmFscy5jc3MnCgpleHBvcnQgY29uc3QgbWV0YWRhdGE6IE1ldGFkYXRhID0gewogIHRpdGxlOiAnUG90Qm90JywKICBkZXNjcmlwdGlvbjogJ0xpdmUgZHVlbGluZyBwbGF0Zm9ybSBvbiBTb2xhbmEnLAp9CgovLyBDYWNoZSBkZXZpY2UgYWNjZXNzCmRlY2xhcmUgZ2xvYmFsIHsKICBpbnRlcmZhY2UgV2luZG93IHsKICAgIHNvbGFuZUZyb21XQT86IGFueTsKICB9Cn0KCmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIFJvb3RMYXLLEOU7IGNoaWxkcmVuIH0pIHsKICByZXR1cm4gKAogICAgPGh0bWwgbGFuZz0iZW4iPgogICAgICA8Ym9keT4KICAgICAgICA8UHJvdmlkZXJzPnsjaWxkcmVufTwvUHJvdmlkZXJzPgogICAgICA8L2JvZHk+CiAgICA8L2h0bWw+CiAgKQp9Cg==
+import type { Metadata } from 'next'
+import { AppProviders } from './providers'
+import { Navbar } from '@/components/Navbar'
+import './globals.css'
+
+export const metadata: Metadata = {
+  title: 'PotBot — Collective Trading Vaults on Solana',
+  description: 'Create group trading vaults, govern together, trade together, win together.',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en" className="dark">
+      <body className="min-h-screen bg-pot-dark text-white antialiased">
+        <AppProviders>
+          <Navbar />
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {children}
+          </main>
+        </AppProviders>
+      </body>
+    </html>
+  )
+}

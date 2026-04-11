@@ -1,1 +1,24 @@
-ewogICJuYW1lIjogInBvdGJvdC12MiIsCiAgInZlcnNpb24iOiAiMC4xLjAiLAogICJkZXNjcmlwdGlvbiI6ICJHcm91cCB0cmFkaW5nIHZhdWx0cyBvbiBTb2xhbmEiLAogICJwcml2YXRlIjogdHJ1ZSwKICAid29ya3NwYWNlcyI6IFsKICAgICJhcHBzLyoiLAogICAgInBhY2thZ2VzLyoiCiAgXSwKICAic2NyaXB0cyI6IHsKICAgICJidWlsZCI6ICJ0dXJibyBydW4gYnVpbGQiLAogICAgImRldiI6ICJ0dXJibyBydW4gZGV2IC0tcGFyYWxsZWwiLAogICAgImxpbnQiOiAidHVyYm8gcnVuIGxpbnQiLAogICAgInRlc3QiOiAidHVyYm8gcnVuIHRlc3QiLAogICAgImNsZWFuIjogInR1cmJvIHJ1biBjbGVhbiIKICB9Cn0K
+{
+  "name": "potbot-v2",
+  "version": "0.1.0",
+  "description": "Group trading vaults on Solana",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean"
+  },
+  "overrides": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.6"
+  }
+}

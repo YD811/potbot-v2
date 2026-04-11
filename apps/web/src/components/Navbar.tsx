@@ -19,7 +19,7 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <span className="text-2xl group-hover:animate-float">\ud83e\udeb4</span>
+          <span className="text-2xl group-hover:animate-float">🪴</span>
           <span className="text-xl font-bold text-white">
             Pot<span className="text-pot-green">Bot</span>
           </span>
