@@ -1,8 +1,13 @@
-#  PotBot v2
+# 🪴 PotBot v2
 
-**Group trading vaults on Solana.** Collective POT management, on-chain governance, DeFi yield, Tamagotchi NFTs & POT Duels.
+**Group trading vaults on Solana.** Collective POT management, on-chain governance, DeFi yield, and Tamagotchi mascots that evolve with your vault's performance.
 
-Built for [Solana Frontier 2026](https://frontier.solana.com) hackathon by [@CryptoYDao](https://twitter.com/CryptoYDao) — Y-DAO Amsterdam
+Built for [Solana Frontier 2026](https://frontier.solana.com) hackathon · [@CryptoYDao](https://twitter.com/CryptoYDao) · Y-DAO Amsterdam
+
+[![Build](https://img.shields.io/badge/build-passing-00ff88?style=flat-square)](https://github.com/YD811/potbot-v2)
+[![Solana](https://img.shields.io/badge/Solana-devnet-9945FF?style=flat-square)](https://solana.com)
+[![Anchor](https://img.shields.io/badge/Anchor-0.30.1-blue?style=flat-square)](https://anchor-lang.com)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square)](https://nextjs.org)
 
 ---
 
@@ -17,114 +22,67 @@ Built for [Solana Frontier 2026](https://frontier.solana.com) hackathon by [@Cry
 
 ---
 
-## Architecture
+## Quick Start
+
+```bash
+git clone https://github.com/YD811/potbot-v2.git
+cd potbot-v2
+npm install
+cd apps/web
+npx next dev
+# Open http://localhost:3000
+```
+
+> **No wallet needed to explore.** The DApp boots in demo mode with 3 pre-seeded vaults,
+> members, and governance proposals. Connect Phantom to interact.
+
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for full setup including Anchor + devnet deploy.
+
+---
+
+## What is a POT?
+
+A **POT** is a shared on-chain SOL vault governed by its members:
+
+- **Collective ownership** — members deposit SOL and receive shares proportional to their stake
+- **On-chain governance** — every trade, withdrawal, or strategy change goes through a vote (configurable level L0–L4)
+- **DeFi yield** — idle capital deployed via Kamino / Marginfi / Drift
+- **Tamagotchi mascot** — a creature that evolves (🥚→🐣→🐤→🦅→🐉→👑) based on vault XP earned from trading volume, wins, and yield
+- **SNS subdomain** — each POT gets `<name>.potbot.site`
+
+---
+
+## Monorepo Structure
 
 ```
 potbot-v2/
-├─ apps/
-│  ├─ web/                 # Next.js 14 DApp (app.potbot.fun)
-│  ├─ landing/             # Static landing page (potbot.fun)
-│  └─ bot/                 # Telegram grammy bot
-├─ packages/
-│  ├─ program/             # Anchor Solana programs (Rust)
-│  │  ├─ programs/pot_vault/    # Core vault, governance, yield
-│  │  └─ programs/pot_duel/     # POT Duels, side bets, settlement
-│  ├─ sdk/                 # TypeScript SDK for on-chain programs
-│  └─ ui/                  # Shared React UI components
-└─ turbo.json              # Turborepo pipeline
+├── apps/
+│   ├── web/              # Next.js 14 DApp — main product
+│   ├── landing/          # Static landing page
+│   └── bot/              # Telegram bot (grammy)
+├── packages/
+│   ├── program/          # Anchor programs (Rust)
+│   │   └── programs/
+│   │       └── pot_vault/    # Core: vault, governance, yield
+│   ├── sdk/              # TypeScript SDK for on-chain programs
+│   └── ui/               # Shared React components
+└── docs/                 # Architecture, guides, references
 ```
 
 ---
 
-## Core Concepts
+## Current Status
 
-### POT = Collective Vault
-A POT is a shared on-chain SOL vault with:
-- **ETF-like community tokens** (SPL) representing fractional ownership
-- **Configurable governance** (L0 Autocracy → L4 Consensus) per action type
-- **DeFi yield** via Kamino / Marginfi / Drift (Conservative / Balanced / Aggressive)
-- **Tamagotchi mascot** evolving from trade stats (XP → level 0-5)
-- **SNS subdomain** `<name>.potbot.site` per POT
-
-### Governance Levels
-| Level | Name | Trades | Notes |
-|---|---|---|---|
-| 0 | Autocracy | Owner decides | Max speed |
-| 1 | Advisory | Majority can veto | |
-| 2 | Majority | >50% must approve | Default |
-| 3 | Supermajority | >66% approval | |
-| 4 | Consensus | 100% required | Full democracy |
-
-### POT Duels 🎮
-Group-vs-group trading competition.
-- Governance vote to accept a challenge
-- Stake % of vault into escrow
-- Real-time P&L scoreboard via WebSocket
-- Spectators place side bets
-- Settled permissionlessly via Pyth oracle
-- Tamagotchi HP & XP awarded to winner
-
----
-
-## On-Chain Programs
-
-### `pot_vault` — `PotVLT...`
-| Instruction | Description |
-|---|---|
-| `create_pot` | Initialize vault + community token mint |
-| `deposit` | Join POT, get share units |
-| `withdraw` | Redeem shares for SOL |
-| `create_proposal` | Governance proposal |
-| `vote` | Member vote (auto-resolves at quorum) |
-| `execute_proposal` | Execute passed proposal |
-| `execute_swap` | Jupiter CPI swap |
-| `mint_community_tokens` | ETF-like token mint |
-| `update_tamagotchi` | Permissionless XP crank |
-
-### `pot_duel` — `PotDUL...`
-| Instruction | Description |
-|---|---|
-| `challenge_pot` | Issue duel challenge |
-| `accept_duel` | Defender accepts |
-| `lock_stake` | Escrow POT stake |
-| `settle_duel` | Pyth oracle settlement |
-| `place_side_bet` | Spectator side bet |
-| `claim_winnings` | Winner claims escrow |
-| `claim_side_bet` | Bettor claims payout |
-
----
-
-## Getting Started
-
-### Prerequisites
-- Node.js ≥20, npm ≥10
-- Rust + Anchor CLI (`cargo install --git https://github.com/coral-xyz/anchor anchor-cli`)
-- Solana CLI
-
-### Install
-```bash
-npm install
-```
-
-### Dev
-```bash
-npm run dev                 # All apps in parallel
-cd apps/web && npm run dev   # DApp only (port 3000)
-cd apps/bot && npm run dev   # Telegram bot only
-```
-
-### Build Anchor Programs
-```bash
-cd packages/program
-anchor build
-anchor deploy --provider.cluster devnet
-```
-
-### Copy .env
-```bash
-cp apps/web/.env.local.example apps/web/.env.local
-# Fill in RPC URL, program IDs, Anthropic API key
-```
+| Component | Status | Notes |
+|---|---|---|
+| Anchor program `pot_vault` | ✅ Written | Needs devnet deploy |
+| TypeScript SDK | ✅ Done | PDAs, IDL, client helpers |
+| Next.js DApp | ✅ Builds & runs | Full UI with mock mode |
+| Mock demo mode | ✅ Working | 3 seed vaults, live on localhost |
+| Devnet deploy | 🔜 Next | `anchor deploy --provider.cluster devnet` |
+| Jupiter swap CPI | 🔜 Next | Program integration pending |
+| Tamagotchi NFT minting | 📋 Planned | Week 2 |
+| POT Duels | 📋 Planned | Week 2 |
 
 ---
 
@@ -132,42 +90,29 @@ cp apps/web/.env.local.example apps/web/.env.local
 
 | Layer | Tech |
 |---|---|
-| Blockchain | Solana (Anchor 0.30, SPL Token) |
+| Blockchain | Solana · Anchor 0.30.1 · SPL Token |
 | Price Oracle | Pyth Network |
 | DEX | Jupiter v6 (CPI) |
-| DeFi Yield | Kamino, Marginfi, Drift |
-| Frontend | Next.js 14, Tailwind CSS, Framer Motion |
-| State | Zustand + TanStack Query |
-| Wallets | Phantom, Solflare, Backpack |
-| Voice AI | Web Speech API + Claude claude-opus-4-6 |
-| Bot | grammy (Telegram) |
-| Monorepo | Turborepo |
-| Privacy | PrivacyCash / StampPot (ZK deposits) |
-| Domains | SNS (potbot.sol, *.potbot.site) |
+| DeFi Yield | Kamino · Marginfi · Drift |
+| Frontend | Next.js 14 · Tailwind CSS |
+| State | Zustand · TanStack Query |
+| Wallets | Phantom · Solflare · WalletConnect |
+| Monorepo | Turborepo · npm workspaces |
 
 ---
 
-## Roadmap
+## Documentation
 
-**Week 1 (Hackathon)**
-- [x] Monorepo scaffold
-- [x] Anchor programs: pot_vault + pot_duel
-- [x] TypeScript SDK
-- [x] Next.js DApp shell
-- [ ] Deploy to devnet
-- [ ] Jupiter swap integration
-- [ ] Live governance flow
-
-**Week 2**
-- [ ] Community token (ETF mechanics)
-- [ ] DeFi yield integrations
-- [ ] Tamagotchi NFT minting
-- [ ] Voice AI copilot
-- [ ] POT Duels live beta
-- [ ] SNS domain registration
+| Doc | Description |
+|---|---|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data flow, key decisions |
+| [DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local setup, commands, troubleshooting |
+| [PROGRAM.md](docs/PROGRAM.md) | Solana program: accounts, instructions, PDAs |
+| [GOVERNANCE.md](docs/GOVERNANCE.md) | Governance levels, voting mechanics |
+| [MOCK_MODE.md](docs/MOCK_MODE.md) | Demo mode architecture |
 
 ---
 
 ## License
 
-MIT © Built with ❤️ in Amsterdam
+MIT © 2026 Y-DAO Amsterdam — Built with ❤️ for Solana Frontier
