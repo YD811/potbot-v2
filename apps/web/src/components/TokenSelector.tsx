@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { KNOWN_TOKENS, useTokenPrices } from '@/lib/prices'
+import { useTokenRisks, RISK_CONFIG } from '@/lib/scam-check'
 
 interface Props {
   value: string
@@ -18,8 +19,10 @@ export function TokenSelector({ value, onChange, label, className = '' }: Props)
 
   const mints = TOKEN_LIST.map((t) => t.mint)
   const { data: prices } = useTokenPrices(mints)
+  const { data: risks } = useTokenRisks(mints)
 
   const selected = KNOWN_TOKENS[value]
+  const selectedRisk = risks?.[value]
 
   // Close on outside click
   useEffect(() => {
@@ -44,8 +47,15 @@ export function TokenSelector({ value, onChange, label, className = '' }: Props)
         <div className="flex items-center gap-2">
           <TokenIcon symbol={selected?.symbol ?? '?'} />
           <div>
-            <div className="text-sm font-semibold text-white">
-              {selected?.symbol ?? 'Select token'}
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-semibold text-white">
+                {selected?.symbol ?? 'Select token'}
+              </span>
+              {selectedRisk && selectedRisk.level !== 'safe' && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${RISK_CONFIG[selectedRisk.level].bg} ${RISK_CONFIG[selectedRisk.level].color}`}>
+                  {RISK_CONFIG[selectedRisk.level].icon}
+                </span>
+              )}
             </div>
             {selected && prices?.[value] && (
               <div className="text-xs text-gray-500">${prices[value].toFixed(4)}</div>
@@ -82,7 +92,14 @@ export function TokenSelector({ value, onChange, label, className = '' }: Props)
                   <div className="flex items-center gap-3">
                     <TokenIcon symbol={token.symbol} />
                     <div className="text-left">
-                      <div className="text-sm font-semibold text-white">{token.symbol}</div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-semibold text-white">{token.symbol}</span>
+                        {risks?.[token.mint] && risks[token.mint].level !== 'safe' && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${RISK_CONFIG[risks[token.mint].level].bg} ${RISK_CONFIG[risks[token.mint].level].color}`}>
+                            {RISK_CONFIG[risks[token.mint].level].icon}
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-gray-500">{token.name}</div>
                     </div>
                   </div>

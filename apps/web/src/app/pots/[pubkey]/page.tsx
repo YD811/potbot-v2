@@ -18,6 +18,8 @@ import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 import { SharesPanel } from '@/components/SharesPanel'
 import { PnLDashboard } from '@/components/PnLDashboard'
 import { StrategyPanel } from '@/components/StrategyPanel'
+import { ScamWarning } from '@/components/ScamWarning'
+import { KNOWN_TOKENS } from '@/lib/prices'
 
 const TABS = ['overview', 'shares', 'positions', 'strategy', 'governance', 'members'] as const
 type Tab = (typeof TABS)[number]
@@ -294,25 +296,40 @@ function OverviewPanel({ potPubkey, pot }: { potPubkey: string; pot: any }) {
 
 /* ── Swap ── */
 
+const TOKEN_SYMBOLS: Record<string, string> = {
+  'So11111111111111111111111111111111111111112': 'SOL',
+  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': 'USDC',
+  'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB': 'USDT',
+  'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263': 'BONK',
+  'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn': 'JitoSOL',
+  'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So': 'mSOL',
+  'WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk': 'WEN',
+}
+
+const SOL_MINT = 'So11111111111111111111111111111111111111112'
+const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+
 function SwapPanel({ potPubkey, pot }: { potPubkey: string; pot: any }) {
   const { connected } = useWallet()
   const createProposal = useCreateProposal()
-  const [fromToken, setFromToken] = useState('SOL')
-  const [toToken, setToToken] = useState('USDC')
+  const [fromToken, setFromToken] = useState(SOL_MINT)
+  const [toToken, setToToken] = useState(USDC_MINT)
   const [amount, setAmount] = useState('')
 
-  const TOKENS = ['SOL', 'USDC', 'BONK', 'JUP', 'WIF', 'JTO']
+  const TOKENS = Object.keys(TOKEN_SYMBOLS)
 
   const handleProposeSwap = async () => {
     const amountVal = parseFloat(amount)
     if (isNaN(amountVal) || amountVal <= 0) return
 
     try {
+      const fromSym = TOKEN_SYMBOLS[fromToken] ?? fromToken.slice(0, 6)
+      const toSym = TOKEN_SYMBOLS[toToken] ?? toToken.slice(0, 6)
       await createProposal.mutateAsync({
         potAddress: potPubkey,
         nextProposalId: pot.nextProposalId ?? 0,
         proposalType: { swap: { fromMint: fromToken, toMint: toToken, amountIn: amountVal, minAmountOut: 0 } },
-        description: `Swap ${amountVal} ${fromToken} → ${toToken}`,
+        description: `Swap ${amountVal} ${fromSym} → ${toSym}`,
       })
       setAmount('')
     } catch (e) {
@@ -335,9 +352,11 @@ function SwapPanel({ potPubkey, pot }: { potPubkey: string; pot: any }) {
               <select
                 value={fromToken}
                 onChange={(e) => setFromToken(e.target.value)}
-                className="input !w-24 !py-2 text-sm"
+                className="input !w-28 !py-2 text-sm"
               >
-                {TOKENS.map((t) => <option key={t} value={t}>{t}</option>)}
+                {TOKENS.map((mint) => (
+                  <option key={mint} value={mint}>{TOKEN_SYMBOLS[mint]}</option>
+                ))}
               </select>
               <input
                 type="number"
@@ -359,11 +378,16 @@ function SwapPanel({ potPubkey, pot }: { potPubkey: string; pot: any }) {
               onChange={(e) => setToToken(e.target.value)}
               className="input !py-2 text-sm"
             >
-              {TOKENS.filter((t) => t !== fromToken).map((t) => (
-                <option key={t} value={t}>{t}</option>
+              {TOKENS.filter((mint) => mint !== fromToken).map((mint) => (
+                <option key={mint} value={mint}>{TOKEN_SYMBOLS[mint]}</option>
               ))}
             </select>
           </div>
+
+          {/* Scam check for output token */}
+          {toToken && KNOWN_TOKENS[toToken] && (
+            <ScamWarning mint={toToken} symbol={KNOWN_TOKENS[toToken]?.symbol} />
+          )}
 
           <button
             onClick={handleProposeSwap}
