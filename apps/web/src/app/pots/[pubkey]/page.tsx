@@ -20,6 +20,9 @@ import { PnLDashboard } from '@/components/PnLDashboard'
 import { StrategyPanel } from '@/components/StrategyPanel'
 import { ScamWarning } from '@/components/ScamWarning'
 import { KNOWN_TOKENS } from '@/lib/prices'
+import { TokenSearch } from '@/components/TokenSearch'
+import { useJupiterQuote } from '@/lib/jupiter-tokens'
+import type { JupiterToken } from '@/lib/jupiter-tokens'
 
 const TABS = ['overview', 'shares', 'positions', 'strategy', 'governance', 'members'] as const
 type Tab = (typeof TABS)[number]
@@ -296,39 +299,50 @@ function OverviewPanel({ potPubkey, pot }: { potPubkey: string; pot: any }) {
 
 /* ── Swap ── */
 
-const TOKEN_SYMBOLS: Record<string, string> = {
-  'So11111111111111111111111111111111111111112': 'SOL',
-  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': 'USDC',
-  'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB': 'USDT',
-  'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263': 'BONK',
-  'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn': 'JitoSOL',
-  'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So': 'mSOL',
-  'WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk': 'WEN',
-}
-
-const SOL_MINT = 'So11111111111111111111111111111111111111112'
+const SOL_MINT  = 'So11111111111111111111111111111111111111112'
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+const SOL_DECIMALS = 9
 
 function SwapPanel({ potPubkey, pot }: { potPubkey: string; pot: any }) {
   const { connected } = useWallet()
   const createProposal = useCreateProposal()
-  const [fromToken, setFromToken] = useState(SOL_MINT)
-  const [toToken, setToToken] = useState(USDC_MINT)
-  const [amount, setAmount] = useState('')
 
-  const TOKENS = Object.keys(TOKEN_SYMBOLS)
+  const [fromToken, setFromToken] = useState<JupiterToken | null>(null)
+  const [toToken,   setToToken]   = useState<JupiterToken | null>(null)
+  const [amount, setAmount] = useState('')
+  const [slippageBps, setSlippageBps] = useState(50) // 0.5%
+
+  const fromMint = fromToken?.address ?? SOL_MINT
+  const toMint   = toToken?.address   ?? USDC_MINT
+  const fromDecimals = fromToken?.decimals ?? SOL_DECIMALS
+  const rawAmount = Math.floor(parseFloat(amount || '0') * Math.pow(10, fromDecimals))
+
+  // Live Jupiter quote
+  const { data: quote, isFetching: quoteLoading } = useJupiterQuote(
+    rawAmount > 0 ? { inputMint: fromMint, outputMint: toMint, amount: rawAmount, slippageBps } : null
+  )
+
+  const outAmount = quote
+    ? parseFloat(quote.outAmount) / Math.pow(10, toToken?.decimals ?? 6)
+    : null
+  const priceImpact = quote ? parseFloat(quote.priceImpactPct) : null
+
+  // Route: unique DEX labels
+  const routeLabels = quote
+    ? [...new Set(quote.routePlan.map((r) => r.swapInfo.label).filter(Boolean))]
+    : []
+
+  const fromSym = fromToken?.symbol ?? 'SOL'
+  const toSym   = toToken?.symbol   ?? 'USDC'
 
   const handleProposeSwap = async () => {
     const amountVal = parseFloat(amount)
     if (isNaN(amountVal) || amountVal <= 0) return
-
     try {
-      const fromSym = TOKEN_SYMBOLS[fromToken] ?? fromToken.slice(0, 6)
-      const toSym = TOKEN_SYMBOLS[toToken] ?? toToken.slice(0, 6)
       await createProposal.mutateAsync({
         potAddress: potPubkey,
         nextProposalId: pot.nextProposalId ?? 0,
-        proposalType: { swap: { fromMint: fromToken, toMint: toToken, amountIn: amountVal, minAmountOut: 0 } },
+        proposalType: { swap: { fromMint, toMint, amountIn: amountVal, minAmountOut: outAmount ? Math.floor(outAmount * 0.995) : 0 } },
         description: `Swap ${amountVal} ${fromSym} → ${toSym}`,
       })
       setAmount('')
@@ -338,75 +352,162 @@ function SwapPanel({ potPubkey, pot }: { potPubkey: string; pot: any }) {
   }
 
   return (
-    <div className="max-w-md mx-auto">
+    <div className="max-w-lg mx-auto space-y-4">
       <div className="card p-6">
-        <h3 className="text-lg font-semibold mb-2">Propose Swap</h3>
-        <p className="text-pot-muted text-xs mb-4">
-          Swaps require governance approval based on your POT's trade level (L{pot.governanceLevel}).
-        </p>
-
-        <div className="space-y-4">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <label className="text-xs text-pot-muted mb-1 block">From</label>
-            <div className="flex gap-2">
-              <select
-                value={fromToken}
-                onChange={(e) => setFromToken(e.target.value)}
-                className="input !w-28 !py-2 text-sm"
+            <h3 className="text-lg font-semibold">Propose Swap</h3>
+            <p className="text-pot-muted text-xs">
+              Requires governance vote (L{pot.governanceLevel ?? 0})
+            </p>
+          </div>
+          {/* Slippage selector */}
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-pot-muted">Slippage:</span>
+            {[50, 100, 200].map((bps) => (
+              <button
+                key={bps}
+                onClick={() => setSlippageBps(bps)}
+                className={`text-xs px-2 py-1 rounded-lg transition ${
+                  slippageBps === bps
+                    ? 'bg-pot-accent text-white'
+                    : 'bg-pot-dark text-pot-muted border border-pot-border hover:text-white'
+                }`}
               >
-                {TOKENS.map((mint) => (
-                  <option key={mint} value={mint}>{TOKEN_SYMBOLS[mint]}</option>
-                ))}
-              </select>
+                {bps / 100}%
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {/* From */}
+          <div className="bg-pot-dark rounded-2xl p-4 border border-pot-border">
+            <div className="flex justify-between text-xs text-pot-muted mb-2">
+              <span>From</span>
+              <span>Vault balance: {pot.balance?.toFixed(4)} SOL</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <TokenSearch
+                value={fromMint}
+                onChange={setFromToken}
+                exclude={toMint}
+                className="w-44"
+              />
               <input
                 type="number"
                 step="0.001"
+                min="0"
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="input flex-1 !py-2 text-sm font-mono"
+                className="flex-1 bg-transparent text-right text-2xl font-bold text-white outline-none placeholder:text-pot-border"
               />
+            </div>
+            <div className="flex gap-2 mt-2 justify-end">
+              {['25%', '50%', 'MAX'].map((pct) => (
+                <button
+                  key={pct}
+                  onClick={() => {
+                    const pctNum = pct === 'MAX' ? 100 : parseInt(pct)
+                    setAmount(((pot.balance * pctNum) / 100).toFixed(4))
+                  }}
+                  className="text-xs px-2 py-0.5 rounded-lg bg-pot-card border border-pot-border text-pot-muted hover:text-white transition"
+                >
+                  {pct}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="text-center text-pot-muted text-lg">↓</div>
-
-          <div>
-            <label className="text-xs text-pot-muted mb-1 block">To</label>
-            <select
-              value={toToken}
-              onChange={(e) => setToToken(e.target.value)}
-              className="input !py-2 text-sm"
+          {/* Swap arrow */}
+          <div className="flex justify-center">
+            <button
+              onClick={() => {
+                const tmp = fromToken
+                setFromToken(toToken)
+                setToToken(tmp)
+              }}
+              className="w-8 h-8 rounded-full bg-pot-card border border-pot-border flex items-center justify-center text-pot-muted hover:text-white hover:border-pot-accent/50 transition"
             >
-              {TOKENS.filter((mint) => mint !== fromToken).map((mint) => (
-                <option key={mint} value={mint}>{TOKEN_SYMBOLS[mint]}</option>
-              ))}
-            </select>
+              ⇅
+            </button>
           </div>
 
-          {/* Scam check for output token */}
-          {toToken && KNOWN_TOKENS[toToken] && (
-            <ScamWarning mint={toToken} symbol={KNOWN_TOKENS[toToken]?.symbol} />
-          )}
-
-          <button
-            onClick={handleProposeSwap}
-            disabled={!connected || createProposal.isPending || !amount}
-            className="btn-primary w-full !py-3"
-          >
-            {createProposal.isPending
-              ? 'Creating Proposal...'
-              : connected
-              ? 'Propose Swap'
-              : 'Connect Wallet'}
-          </button>
-
-          {createProposal.isSuccess && (
-            <p className="text-pot-green text-xs text-center">
-              Proposal created! Head to Governance tab to vote.
-            </p>
-          )}
+          {/* To */}
+          <div className="bg-pot-dark rounded-2xl p-4 border border-pot-border">
+            <div className="flex justify-between text-xs text-pot-muted mb-2">
+              <span>To (estimated)</span>
+              {quoteLoading && <span className="animate-pulse">Fetching quote…</span>}
+            </div>
+            <div className="flex items-center gap-3">
+              <TokenSearch
+                value={toMint}
+                onChange={setToToken}
+                exclude={fromMint}
+                className="w-44"
+              />
+              <div className="flex-1 text-right">
+                <div className={`text-2xl font-bold ${outAmount ? 'text-white' : 'text-pot-border'}`}>
+                  {outAmount ? outAmount.toLocaleString(undefined, { maximumFractionDigits: 6 }) : '—'}
+                </div>
+                {priceImpact !== null && (
+                  <div className={`text-xs ${Math.abs(priceImpact) > 2 ? 'text-red-400' : 'text-pot-muted'}`}>
+                    Impact: {priceImpact.toFixed(3)}%
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Route visualization */}
+        {routeLabels.length > 0 && (
+          <div className="mt-3 p-3 bg-pot-dark rounded-xl border border-pot-border">
+            <div className="text-xs text-pot-muted mb-2">Route</div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs font-semibold text-white">{fromSym}</span>
+              {routeLabels.map((label, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <span className="text-pot-muted">→</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-pot-accent/10 border border-pot-accent/20 text-pot-accent">
+                    {label}
+                  </span>
+                </div>
+              ))}
+              <span className="text-pot-muted">→</span>
+              <span className="text-xs font-semibold text-white">{toSym}</span>
+            </div>
+            <div className="text-[10px] text-pot-muted mt-1.5">
+              Jupiter aggregates {routeLabels.length} DEX{routeLabels.length > 1 ? 'es' : ''} for best price
+            </div>
+          </div>
+        )}
+
+        {/* Scam warning for output token */}
+        {toMint && (
+          <div className="mt-3">
+            <ScamWarning mint={toMint} symbol={toSym} />
+          </div>
+        )}
+
+        <button
+          onClick={handleProposeSwap}
+          disabled={!connected || createProposal.isPending || !amount || parseFloat(amount) <= 0}
+          className="btn-primary w-full !py-3 mt-4"
+        >
+          {createProposal.isPending
+            ? 'Creating Proposal…'
+            : connected
+            ? `Propose: Swap ${amount || '0'} ${fromSym} → ${toSym}`
+            : 'Connect Wallet'}
+        </button>
+
+        {createProposal.isSuccess && (
+          <p className="text-pot-green text-xs text-center mt-2">
+            ✅ Proposal created! Head to Governance to vote.
+          </p>
+        )}
       </div>
     </div>
   )
