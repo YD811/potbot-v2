@@ -15,9 +15,21 @@ import {
   useExecuteProposal,
 } from '@/hooks/usePots'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
+import { SharesPanel } from '@/components/SharesPanel'
+import { PnLDashboard } from '@/components/PnLDashboard'
+import { StrategyPanel } from '@/components/StrategyPanel'
 
-const TABS = ['overview', 'swap', 'governance', 'members'] as const
+const TABS = ['overview', 'shares', 'positions', 'strategy', 'governance', 'members'] as const
 type Tab = (typeof TABS)[number]
+
+const TAB_LABELS: Record<Tab, string> = {
+  overview: 'Overview',
+  shares: '🪙 Shares',
+  positions: '📊 P&L',
+  strategy: '⚙️ Strategy',
+  governance: 'Governance',
+  members: 'Members',
+}
 
 export default function PotDetailPage() {
   const { pubkey } = useParams<{ pubkey: string }>()
@@ -115,19 +127,24 @@ export default function PotDetailPage() {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all capitalize ${
+            className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-medium transition-all ${
               tab === t
                 ? 'bg-pot-accent text-white shadow-lg shadow-pot-accent/20'
                 : 'text-pot-muted hover:text-white hover:bg-white/5'
             }`}
           >
-            {t}
+            {TAB_LABELS[t]}
           </button>
         ))}
       </div>
 
       {/* Panels */}
       {tab === 'overview' && <OverviewPanel potPubkey={pubkey} pot={pot} />}
+      {tab === 'shares' && <SharesPanel potPubkey={pubkey} />}
+      {tab === 'positions' && (
+        <PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} />
+      )}
+      {tab === 'strategy' && <StrategyPanel potPubkey={pubkey} />}
       {tab === 'swap' && <SwapPanel potPubkey={pubkey} pot={pot} />}
       {tab === 'governance' && <GovernancePanel potPubkey={pubkey} />}
       {tab === 'members' && <MembersPanel potPubkey={pubkey} />}
