@@ -41,4 +41,14 @@ pub mod pot_vault {
     pub fn execute_proposal(ctx: Context<ExecuteProposal>) -> Result<()> {
         instructions::execute_proposal::handler(ctx)
     }
+
+    /// Update tamagotchi level based on on-chain stats (permissionless crank)
+    pub fn update_tamagotchi(ctx: Context<UpdateTamagotchi>) -> Result<()> {
+        instructions::update_tamagotchi::handler(ctx)
+    }
+
+    /// Execute a swap with vault balance validation and stat updates
+    pub fn execute_swap(ctx: Context<ExecuteSwap>, params: ExecuteSwapParams) -> Result<()> {
+        instructions::execute_swap::handler(ctx, params)
+    }
 }
