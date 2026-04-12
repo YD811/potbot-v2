@@ -1,1 +1,2 @@
-dXNlIGFuY2hvcl9sYW5nOjpFcnJvcjtkaXApOwoKIztsIEVycm9yIENvZGVzCiNbZXJyb3JdCnB1YiBmaW4gbWlzc2luZ19hY2NvdW50KCkgLT4gRXJyb3IgewogICAgRXJyb3I6Om5ldyhjcmF0ZXM6OmZyb206OkFjY291bnROb3RGb3VuZAogICAgICAgIC53aXRoX3NvdXJjZSgnTWlzc2luZyBhY2NvdW50KiIpCn0K
+// This file intentionally left empty.
+// Error definitions are in src/errors/mod.rs

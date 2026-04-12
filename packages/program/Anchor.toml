@@ -1,1 +1,24 @@
-W2ZlYXR1cmVzXQpzZWVkcyA9IGZhbHNlCnNraXAtbGludCA9IGZhbHNlCgpbcHJvZ3JhbXMubG9jYWxuZXRdCnBvdF92YXVsdCA9ICJQb3RWTFQxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIKcG90X2R1ZWwgID0gIlBvdERVTDExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExIgoKW3Byb2dyYW1zLmRldm5ldF0KcG90X3ZhdWx0ID0gIlBvdFZMVDExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExIgpwb3RfZHVlbCAgPSAiUG90RFVMMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTEiCgpbcmVnaXN0cnldCnVybCA9ICJodHRwczovL2FwaS5hcHIuZGV2IgoKW3Byb3ZpZGVyXQpjbHVzdGVyID0gIkxvY2FsbmV0Igp3YWxsZXQgPSAifi8uY29uZmlnL3NvbGFuYS9pZC5qc29uIgoKW3NjcmlwdHNdCnRlc3QgPSAieWFybiBydW4gdHMtbW9jaGEgLXAgLi90c2NvbmZpZy5qc29uIC10IDEwMDAwMDAgdGVzdHMvKiovKi50cyIKClt3b3Jrc3BhY2VdCm1lbWJlcnMgPSBbCiAgInByb2dyYW1zL3BvdF92YXVsdCIsCiAgInByb2dyYW1zL3BvdF9kdWVsIiwKXQo=
+[features]
+seeds = false
+skip-lint = false
+
+[programs.localnet]
+pot_vault = "Hyi1PNxPMUqwdDukhB2a4fvcBxQHmbXy3CZ95mgyFHA3"
+
+[programs.devnet]
+pot_vault = "Hyi1PNxPMUqwdDukhB2a4fvcBxQHmbXy3CZ95mgyFHA3"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "Devnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[workspace]
+members = [
+  "programs/pot_vault",
+]
