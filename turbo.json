@@ -1,1 +1,24 @@
-ewogICIkc2NoZW1hIjogImh0dHBzOi8vdHVyYm8uYnVpbGQvc2NoZW1hLmpzb24iLAogICJnbG9iYWxEZXBlbmRlbmNpZXMiOiBbIioqLy5lbnYuKmxvY2FsIl0sCiAgInBpcGVsaW5lIjogewogICAgImJ1aWxkIjogewogICAgICAiZGVwZW5kc09uIjogWyJeYnVpbGQiXSwKICAgICAgIm91dHB1dHMiOiBbIi5uZXh0LyoqIiwgIiEubmV4dC9jYWNoZS8qKiIsICJkaXN0LyoqIl0KICAGIH0sCiAgICAiZGV2IjogewogICAgICAiY2FjaGUiOiBmYWxzZSwKICAgICAgInBlcnNpc3RlbnQiOiB0cnVlCiAgICB9LAogICAgImxpbnQiOiB7CiAgICAgICJvdXRwdXRzIjogW10KICAGIH0sCiAgICAiY2xlYW4iOiB7CiAgICAgICJjYWNoZSI6IGZhbHNlCiAgICB9LAogICAgInRlc3QiOiB7CiAgICAgICJkZXBlbmRzT24iOiBbIl5idWlsZCJdLAogICAgICAib3V0cHV0cyI6IFsiY292ZXJhZ2UvKioiXQogICAgfQogIH0KfQo=
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "outputs": []
+    },
+    "clean": {
+      "cache": false
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    }
+  }
+}
