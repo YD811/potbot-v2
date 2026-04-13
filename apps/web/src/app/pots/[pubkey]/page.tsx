@@ -127,6 +127,16 @@ export default function PotDetailPage() {
           <span className="text-xs px-2 py-0.5 rounded-full bg-pot-border text-pot-muted">
             L{pot.governanceLevel} Trade Gov
           </span>
+          {/* ETF tokenization mode badge */}
+          {pot.mode === 'tokenized' ? (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 flex items-center gap-1">
+              🪙 TOKENIZED · ${pot.tokenTicker}
+            </span>
+          ) : (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-pot-dark text-pot-muted border border-pot-border">
+              Virtual shares
+            </span>
+          )}
           {isAdmin && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
               👑 Admin
@@ -269,18 +279,31 @@ function OverviewPanel({ potPubkey, pot }: { potPubkey: string; pot: any }) {
         <h3 className="text-lg font-semibold mb-4">Performance</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            ['Total Volume', `${pot.totalVolume?.toFixed(1) ?? pot.balance.toFixed(1)} SOL`],
+            ['Total Volume', `${(pot.totalVolume ?? pot.balance).toFixed(1)} SOL`],
             ['Total Trades', `${pot.tradeCount}`],
-            ['Win Rate', '—'],
-            ['Yield APY', '—'],
+            ['NAV/Share', pot.navPerShareBps
+              ? `${((pot.navPerShareBps / 10000 - 1) * 100).toFixed(2)}%`
+              : '—'],
+            ['Yield Earned', pot.totalYieldEarned
+              ? `${pot.totalYieldEarned.toFixed(4)} SOL`
+              : '—'],
           ].map(([label, value]) => (
             <div key={label as string} className="bg-pot-dark rounded-lg p-3 text-center">
               <div className="text-xs text-pot-muted mb-1">{label}</div>
-              <div className="font-mono font-semibold">{value}</div>
+              <div className={`font-mono font-semibold text-sm ${
+                label === 'NAV/Share' && pot.navPerShareBps > 10000 ? 'text-pot-green' : ''
+              }`}>{value}</div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Yield panel — only show if strategy is not None */}
+      {pot.yieldStrategy > 0 && (
+        <div className="card p-6 md:col-span-2">
+          <YieldPanel pot={pot} />
+        </div>
+      )}
 
       {/* Portfolio */}
       <div className="card p-6 md:col-span-2">
@@ -424,6 +447,118 @@ function VaultPortfolio({ pot }: { pot: any }) {
   )
 }
 
+/* ── Yield Panel ── */
+
+const YIELD_APY: Record<string, number> = {
+  None: 0,
+  Conservative: 0.06,
+  Balanced: 0.15,
+  Aggressive: 0.30,
+}
+
+const YIELD_RESERVE_PCT: Record<string, number> = {
+  None: 0,
+  Conservative: 0.30,
+  Balanced: 0.60,
+  Aggressive: 0.80,
+}
+
+function YieldPanel({ pot }: { pot: any }) {
+  const apy = YIELD_APY[pot.yieldStrategy] ?? 0
+  const reservePct = YIELD_RESERVE_PCT[pot.yieldStrategy] ?? 0
+
+  const liquidBal = pot.balance ?? 0
+  const meteoraBal = pot.meteoraLpBalance ?? 0
+  const totalYieldEarned = pot.totalYieldEarned ?? 0
+  const navPerShareBps = pot.navPerShareBps ?? 10000
+
+  const totalAssets = liquidBal + meteoraBal
+  const liquidPct = totalAssets > 0 ? (liquidBal / totalAssets) * 100 : 100
+  const meteoraPct = totalAssets > 0 ? (meteoraBal / totalAssets) * 100 : 0
+
+  const navGrowthPct = ((navPerShareBps / 10000 - 1) * 100)
+  const navLabel = navGrowthPct >= 0
+    ? `+${navGrowthPct.toFixed(2)}%`
+    : `${navGrowthPct.toFixed(2)}%`
+
+  const strategyColors: Record<string, string> = {
+    None:         'text-pot-muted',
+    Conservative: 'text-blue-400',
+    Balanced:     'text-teal-400',
+    Aggressive:   'text-orange-400',
+  }
+  const strategyColor = strategyColors[pot.yieldStrategy] ?? 'text-pot-muted'
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h3 className="text-lg font-semibold text-white">Yield Strategy</h3>
+          <p className="text-xs text-pot-muted mt-0.5">Powered by Meteora Dynamic Vaults</p>
+        </div>
+        <div className="text-right">
+          <div className={`text-lg font-bold font-mono ${strategyColor}`}>
+            {(apy * 100).toFixed(0)}% APY
+          </div>
+          <div className={`text-xs ${strategyColor}`}>{pot.yieldStrategy}</div>
+        </div>
+      </div>
+
+      {/* Allocation bar */}
+      <div className="mb-5">
+        <div className="flex justify-between text-xs text-pot-muted mb-1.5">
+          <span>Liquid (trading) <span className="text-white font-mono">{liquidPct.toFixed(0)}%</span></span>
+          <span>In Meteora <span className="text-teal-400 font-mono">{meteoraPct.toFixed(0)}%</span></span>
+        </div>
+        <div className="flex h-3 rounded-full overflow-hidden gap-0.5">
+          <div className="bg-purple-500 h-full rounded-l-full transition-all" style={{ width: `${liquidPct}%` }} />
+          {meteoraPct > 0 && (
+            <div className="bg-teal-500 h-full rounded-r-full transition-all" style={{ width: `${meteoraPct}%` }} />
+          )}
+        </div>
+        <div className="flex justify-between text-xs text-pot-muted mt-1">
+          <span className="font-mono">{liquidBal.toFixed(4)} SOL</span>
+          <span className="font-mono text-teal-400">{meteoraBal.toFixed(4)} SOL equivalent</span>
+        </div>
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-pot-dark rounded-xl p-3 text-center">
+          <div className="text-xs text-pot-muted mb-1">Yield Earned</div>
+          <div className="text-sm font-mono font-semibold text-teal-400">
+            +{totalYieldEarned.toFixed(4)} SOL
+          </div>
+        </div>
+        <div className="bg-pot-dark rounded-xl p-3 text-center">
+          <div className="text-xs text-pot-muted mb-1">NAV Growth</div>
+          <div className={`text-sm font-mono font-semibold ${navGrowthPct >= 0 ? 'text-pot-green' : 'text-red-400'}`}>
+            {navLabel}
+          </div>
+        </div>
+        <div className="bg-pot-dark rounded-xl p-3 text-center">
+          <div className="text-xs text-pot-muted mb-1">Yield Target</div>
+          <div className="text-sm font-mono font-semibold text-white">
+            {(reservePct * 100).toFixed(0)}% earning
+          </div>
+        </div>
+      </div>
+
+      {/* Live accrual indicator */}
+      {apy > 0 && (
+        <div className="mt-4 flex items-center gap-2 text-xs text-pot-muted">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500" />
+          </span>
+          Live accrual — yield updates every 10 seconds from Meteora simulation
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── Governance (full panel with settings + budgets + proposals) ── */
 
 // Mint → symbol map for PnL display
@@ -445,7 +580,7 @@ function GovernancePanel({
   const execute = useExecuteProposal()
   const createProposal = useCreateProposal()
 
-  const [govTab, setGovTab] = useState<'proposals' | 'swap' | 'budget' | 'settings'>('proposals')
+  const [govTab, setGovTab] = useState<'proposals' | 'swap' | 'budget' | 'tokenize' | 'yield' | 'settings'>('proposals')
 
   const handleProposeSwap = async ({ fromMint, toMint, amountSol, description }: {
     fromMint: string; toMint: string; amountSol: number; description: string
@@ -458,18 +593,24 @@ function GovernancePanel({
     })
   }
 
+  const govSubTabs = [
+    { key: 'proposals',  label: '📋 Proposals' },
+    { key: 'swap',       label: '🔄 Swap' },
+    { key: 'budget',     label: '💰 Budget' },
+    ...(pot.mode !== 'tokenized' ? [{ key: 'tokenize', label: '🪙 Tokenize' }] : []),
+    ...(pot.yieldStrategy !== 'None' && pot.yieldStrategy !== 0
+      ? [{ key: 'yield', label: '🌱 Yield' }]
+      : []),
+    { key: 'settings',   label: isAdmin ? '⚙️ Settings' : '📖 Rules' },
+  ] as { key: typeof govTab; label: string }[]
+
   return (
     <div className="space-y-4">
       {/* Gov sub-tabs */}
-      <div className="flex gap-1 bg-pot-dark rounded-xl p-1 border border-pot-border">
-        {([
-          { key: 'proposals', label: '📋 Proposals' },
-          { key: 'swap', label: '🔄 Propose Swap' },
-          { key: 'budget', label: '💰 Budget Grant' },
-          { key: 'settings', label: isAdmin ? '⚙️ Settings' : '📖 Rules' },
-        ] as const).map(({ key, label }) => (
+      <div className="flex gap-1 bg-pot-dark rounded-xl p-1 border border-pot-border overflow-x-auto">
+        {govSubTabs.map(({ key, label }) => (
           <button key={key} onClick={() => setGovTab(key)}
-            className={`flex-1 py-2 text-xs font-medium rounded-lg transition ${
+            className={`flex-shrink-0 flex-1 py-2 text-xs font-medium rounded-lg transition ${
               govTab === key ? 'bg-pot-card text-white shadow' : 'text-pot-muted hover:text-white'
             }`}>
             {label}
@@ -523,8 +664,277 @@ function GovernancePanel({
         />
       )}
 
+      {govTab === 'tokenize' && (
+        <TokenizeProposalPanel
+          pot={pot}
+          potPubkey={potPubkey}
+          connected={connected}
+          createProposal={createProposal}
+        />
+      )}
+
+      {govTab === 'yield' && (
+        <YieldProposalPanel
+          pot={pot}
+          potPubkey={potPubkey}
+          connected={connected}
+          createProposal={createProposal}
+        />
+      )}
+
       {govTab === 'settings' && (
         <GovernanceSettings potPubkey={potPubkey} isAdmin={isAdmin} />
+      )}
+    </div>
+  )
+}
+
+/* ── Tokenize Proposal Panel ── */
+
+function TokenizeProposalPanel({
+  pot, potPubkey, connected, createProposal,
+}: {
+  pot: any; potPubkey: string; connected: boolean; createProposal: any
+}) {
+  const [ticker, setTicker] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [done, setDone] = useState(false)
+
+  const handleSubmit = async () => {
+    const t = ticker.trim().toUpperCase()
+    if (!t || t.length < 2 || t.length > 10) return
+    setSubmitting(true)
+    try {
+      await createProposal.mutateAsync({
+        potAddress: potPubkey,
+        nextProposalId: pot.nextProposalId ?? 0,
+        proposalType: { tokenizePot: { ticker: t } },
+        description: `Tokenize POT shares as $${t} SPL token (ETF mode)`,
+      })
+      setDone(true)
+      setTicker('')
+    } catch (e) { console.error(e) }
+    finally { setSubmitting(false) }
+  }
+
+  if (pot.mode === 'tokenized') {
+    return (
+      <div className="card p-6 text-center">
+        <div className="text-3xl mb-3">🪙</div>
+        <h3 className="text-white font-semibold mb-2">Already Tokenized</h3>
+        <p className="text-pot-muted text-sm">
+          This POT has been tokenized as <span className="text-yellow-400 font-mono">${pot.tokenTicker}</span>.
+          Shares are now transferable SPL tokens — this transition is one-way.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="card p-6">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="text-3xl">🏦</div>
+        <div>
+          <h3 className="text-white font-semibold">Tokenize This POT</h3>
+          <p className="text-xs text-pot-muted mt-0.5">Convert virtual shares to transferable SPL tokens (ETF mode)</p>
+        </div>
+      </div>
+
+      {/* Info boxes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+        {[
+          { icon: '✅', title: 'After tokenization', items: ['Shares become transferable SPL tokens', 'Trade $TICKER on secondary markets', 'NAV tracked on-chain per share'] },
+          { icon: '⚠️', title: 'Irreversible action', items: ['One-way transition — cannot revert', 'Requires governance supermajority', 'All members get equivalent tokens'] },
+        ].map(({ icon, title, items }) => (
+          <div key={title} className="bg-pot-dark rounded-xl p-4">
+            <div className="text-sm font-medium text-white mb-2">{icon} {title}</div>
+            <ul className="space-y-1">
+              {items.map((item) => (
+                <li key={item} className="text-xs text-pot-muted flex items-start gap-1.5">
+                  <span className="mt-0.5 shrink-0">·</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      {done && (
+        <div className="mb-4 bg-teal-500/10 border border-teal-500/20 rounded-xl p-3 text-center">
+          <div className="text-teal-400 text-sm font-medium">
+            ✅ Tokenization proposal created! Members can now vote.
+          </div>
+        </div>
+      )}
+
+      {!connected ? (
+        <p className="text-pot-muted text-sm text-center">Connect wallet to propose tokenization</p>
+      ) : (
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs text-pot-muted mb-1.5 block">Token Ticker (2–10 chars)</label>
+            <input
+              type="text"
+              maxLength={10}
+              placeholder="e.g. ALPHA, VAULT, DEGN"
+              value={ticker}
+              onChange={(e) => setTicker(e.target.value.toUpperCase())}
+              className="input w-full !py-2.5 text-sm font-mono tracking-widest"
+            />
+            {ticker && (
+              <p className="text-xs text-pot-muted mt-1">
+                Will create: <span className="text-yellow-400 font-mono">${ticker.toUpperCase()}</span> SPL token
+              </p>
+            )}
+          </div>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || !ticker.trim() || ticker.trim().length < 2}
+            className="btn-primary w-full !py-2.5 disabled:opacity-50"
+          >
+            {submitting ? 'Creating Proposal...' : '🏦 Propose Tokenization'}
+          </button>
+          <p className="text-xs text-pot-muted text-center">
+            This proposal requires a governance vote to pass before execution.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Yield Management Proposal Panel ── */
+
+function YieldProposalPanel({
+  pot, potPubkey, connected, createProposal,
+}: {
+  pot: any; potPubkey: string; connected: boolean; createProposal: any
+}) {
+  const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit')
+  const [amount, setAmount] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [done, setDone] = useState(false)
+
+  const liquidBal = pot.balance ?? 0
+  const meteoraBal = pot.meteoraLpBalance ?? 0
+
+  const handleSubmit = async () => {
+    const amt = parseFloat(amount)
+    if (isNaN(amt) || amt <= 0) return
+    setSubmitting(true)
+    try {
+      if (mode === 'deposit') {
+        await createProposal.mutateAsync({
+          potAddress: potPubkey,
+          nextProposalId: pot.nextProposalId ?? 0,
+          proposalType: { depositToYield: { meteoraVault: 'MeteoraVault111', amount: amt } },
+          description: `Deposit ${amt.toFixed(4)} SOL into Meteora yield vault (${pot.yieldStrategy})`,
+        })
+      } else {
+        await createProposal.mutateAsync({
+          potAddress: potPubkey,
+          nextProposalId: pot.nextProposalId ?? 0,
+          proposalType: { withdrawFromYield: { lpAmount: amt } },
+          description: `Withdraw ${amt.toFixed(4)} SOL equivalent from Meteora yield vault`,
+        })
+      }
+      setDone(true)
+      setAmount('')
+    } catch (e) { console.error(e) }
+    finally { setSubmitting(false) }
+  }
+
+  const maxAmount = mode === 'deposit' ? liquidBal * 0.9 : meteoraBal
+
+  return (
+    <div className="card p-6">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="text-3xl">🌱</div>
+        <div>
+          <h3 className="text-white font-semibold">Yield Management</h3>
+          <p className="text-xs text-pot-muted mt-0.5">Move funds between trading vault and Meteora yield strategy</p>
+        </div>
+      </div>
+
+      {/* Current state */}
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="bg-pot-dark rounded-xl p-3 text-center">
+          <div className="text-xs text-pot-muted mb-1">💧 Liquid (trading)</div>
+          <div className="font-mono text-white font-semibold">{liquidBal.toFixed(4)} SOL</div>
+        </div>
+        <div className="bg-pot-dark rounded-xl p-3 text-center">
+          <div className="text-xs text-pot-muted mb-1">🌱 In Meteora</div>
+          <div className="font-mono text-teal-400 font-semibold">{meteoraBal.toFixed(4)} SOL</div>
+        </div>
+      </div>
+
+      {/* Mode toggle */}
+      <div className="flex gap-1 bg-pot-dark rounded-xl p-1 border border-pot-border mb-4">
+        <button
+          onClick={() => { setMode('deposit'); setAmount('') }}
+          className={`flex-1 py-2 text-xs font-medium rounded-lg transition ${mode === 'deposit' ? 'bg-teal-500/20 text-teal-400' : 'text-pot-muted hover:text-white'}`}
+        >
+          ↓ Deposit to Meteora
+        </button>
+        <button
+          onClick={() => { setMode('withdraw'); setAmount('') }}
+          className={`flex-1 py-2 text-xs font-medium rounded-lg transition ${mode === 'withdraw' ? 'bg-orange-500/20 text-orange-400' : 'text-pot-muted hover:text-white'}`}
+        >
+          ↑ Withdraw from Meteora
+        </button>
+      </div>
+
+      {done && (
+        <div className="mb-4 bg-teal-500/10 border border-teal-500/20 rounded-xl p-3 text-center">
+          <div className="text-teal-400 text-sm font-medium">
+            ✅ Yield proposal created! Members can now vote.
+          </div>
+        </div>
+      )}
+
+      {!connected ? (
+        <p className="text-pot-muted text-sm text-center">Connect wallet to propose yield management</p>
+      ) : (
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs text-pot-muted mb-1.5 block">
+              Amount (SOL) — max {maxAmount.toFixed(4)}
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max={maxAmount}
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="input flex-1 !py-2 text-sm"
+              />
+              <button
+                onClick={() => setAmount(maxAmount.toFixed(4))}
+                className="text-xs text-pot-accent hover:text-white px-3 rounded-xl bg-pot-dark border border-pot-border transition"
+              >
+                MAX
+              </button>
+            </div>
+          </div>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || !amount || parseFloat(amount) <= 0 || parseFloat(amount) > maxAmount}
+            className={`w-full !py-2.5 rounded-xl font-medium text-sm transition disabled:opacity-50 ${
+              mode === 'deposit'
+                ? 'bg-teal-500/20 text-teal-400 hover:bg-teal-500/30'
+                : 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30'
+            }`}
+          >
+            {submitting ? 'Creating...' : mode === 'deposit'
+              ? `🌱 Propose Deposit ${amount ? parseFloat(amount).toFixed(2) : '0'} SOL → Meteora`
+              : `💸 Propose Withdraw ${amount ? parseFloat(amount).toFixed(2) : '0'} SOL ← Meteora`
+            }
+          </button>
+        </div>
       )}
     </div>
   )
