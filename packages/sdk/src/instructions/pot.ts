@@ -1,7 +1,7 @@
 import type { Program } from '@coral-xyz/anchor'
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import type BN from 'bn.js'
-import { getPotAddress, getVaultAddress, getMemberAddress, getProposalAddress, getVoterRecordAddress } from '../pda.js'
+import { getPotAddress, getVaultAddress, getMemberAddress, getProposalAddress, getVoterRecordAddress } from '../pda'
 
 /* ── Create POT ── */
 
