@@ -37,6 +37,28 @@ pub struct PotAccount {
     pub next_proposal_id: u64,
     /// Created timestamp
     pub created_at: i64,
+
+    // ── Risk & performance fields ──────────────────────────────────────
+    /// High-water mark in lamports (for performance fee tracking)
+    pub high_water_mark: u64,
+    /// Protocol performance fee in basis points (0-1000 = 0-10%)
+    pub protocol_fee_bps: u16,
+    /// Last activity timestamp (deposit/trade) — for leaderboard & tamagotchi decay
+    pub last_activity_at: i64,
+
+    // ── AI Agent ───────────────────────────────────────────────────────
+    /// AI agent wallet pubkey — None = disabled
+    pub agent_pubkey: Option<Pubkey>,
+    /// Max single trade size the agent can propose (bps of vault, e.g. 1000 = 10%)
+    pub agent_max_trade_bps: u16,
+    /// Unix timestamp of agent's last proposal (rate limiting)
+    pub agent_last_proposal_at: i64,
+
+    // ── Daily trade tracking ───────────────────────────────────────────
+    /// Trades executed on the current UTC day
+    pub daily_trades_count: u8,
+    /// UTC midnight timestamp of the current trading day
+    pub last_trade_day: i64,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
@@ -51,6 +73,11 @@ pub struct PotConfig {
     pub yield_strategy: YieldStrategy,
     /// Max % of vault allocated to yield (basis points, e.g. 5000 = 50%)
     pub max_yield_allocation_bps: u16,
+    /// Max single swap size as % of vault (basis points, e.g. 2000 = 20%)
+    /// 0 = no limit (not recommended for production)
+    pub max_trade_size_bps: u16,
+    /// Max number of members — 0 = unlimited
+    pub max_members: u16,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
@@ -132,5 +159,49 @@ impl PotAccount {
             4 => 10000,   // Consensus 100%
             _ => 10000,
         }
+    }
+
+    /// Recalculate tamagotchi XP and level — call after any stat change
+    pub fn recalculate_tamagotchi(&mut self) {
+        let total_volume_sol = self.total_volume / 1_000_000_000;
+        let volume_xp = std::cmp::min(total_volume_sol * 10, 5000);
+        let member_xp = (self.member_count as u64) * 50;
+        let trade_xp = (self.trade_count as u64) * 20;
+        let total_xp = volume_xp + member_xp + trade_xp;
+
+        self.tamagotchi_xp = total_xp;
+        self.tamagotchi_level = match total_xp {
+            0..=99   => 0,
+            100..=499  => 1,
+            500..=1999  => 2,
+            2000..=7999  => 3,
+            8000..=24999 => 4,
+            25000..    => 5,
+        };
+    }
+
+    /// Check and reset daily trade counter if a new UTC day has started.
+    /// Returns false if daily limit is reached.
+    pub fn check_daily_trade_limit(&mut self, now: i64, limit: u8) -> bool {
+        let current_day = now / 86400;
+        let last_day = self.last_trade_day / 86400;
+
+        if current_day > last_day {
+            self.daily_trades_count = 0;
+            self.last_trade_day = now;
+        }
+
+        if limit == 0 {
+            // No limit configured
+            self.daily_trades_count = self.daily_trades_count.saturating_add(1);
+            return true;
+        }
+
+        if self.daily_trades_count >= limit {
+            return false;
+        }
+
+        self.daily_trades_count = self.daily_trades_count.saturating_add(1);
+        true
     }
 }

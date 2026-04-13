@@ -39,12 +39,12 @@ pub enum ProposalType {
         amount_in: u64,
         min_amount_out: u64,
     },
-    /// Withdraw from vault (for governance-protected withdrawals)
+    /// Withdraw from vault to a beneficiary (governance-controlled)
     Withdraw {
         beneficiary: Pubkey,
         amount: u64,
     },
-    /// Change governance settings
+    /// Change governance levels for trades and withdrawals
     ChangeSettings {
         new_trade_level: u8,
         new_withdraw_level: u8,
@@ -52,6 +52,31 @@ pub enum ProposalType {
     /// Change yield strategy
     ChangeYield {
         new_strategy: u8,
+    },
+    /// Invite a wallet to join a private pot
+    AddMember {
+        wallet: Pubkey,
+    },
+    /// Remove a member (they keep their shares but can't vote/propose)
+    RemoveMember {
+        wallet: Pubkey,
+    },
+    /// Set or update the AI agent wallet and its trade cap
+    SetAgent {
+        agent: Pubkey,
+        max_trade_bps: u16,
+    },
+    /// Transfer funds from vault for operational purposes (bounties, expenses)
+    TransferFunds {
+        to: Pubkey,
+        amount: u64,
+        #[max_len(64)]
+        purpose: String,
+    },
+    /// Update max trade size risk limit
+    UpdateRiskConfig {
+        max_trade_size_bps: u16,
+        max_members: u16,
     },
 }
 
