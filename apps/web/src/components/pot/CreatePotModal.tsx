@@ -5,6 +5,8 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { Modal } from '@potbot/ui'
 import { Spinner } from '@potbot/ui'
 import { useCreatePot } from '@/hooks/usePots'
+import { PRIVACY_OPTIONS, type PrivacyLevel } from '@/lib/umbra'
+import { buildPotDomain, sanitizePotName } from '@/lib/sns'
 
 interface CreatePotModalProps {
   open: boolean
@@ -58,7 +60,12 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
   const [govLevel, setGovLevel] = useState(2)
   const [maxTradeSizeBps, setMaxTradeSizeBps] = useState(2000)
 
+  // Step 4: Privacy (Umbra) & SNS
+  const [privacyLevel, setPrivacyLevel] = useState<PrivacyLevel>('public')
+
+  const TOTAL_STEPS = 4
   const canProceed1 = name.trim().length >= 2 && name.trim().length <= 32
+  const snsDomain = name.trim().length >= 2 ? buildPotDomain(name.trim()) : null
 
   async function handleCreate() {
     if (!publicKey) return
@@ -94,6 +101,7 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
     setYieldStrategy(0)
     setGovLevel(2)
     setMaxTradeSizeBps(2000)
+    setPrivacyLevel('public')
     setError(null)
     onClose()
   }
@@ -106,7 +114,7 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
       <div className="flex items-center justify-between p-6 border-b border-[#1A2332]">
         <div>
           <h2 className="text-xl font-display font-bold">Create a POT</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Step {step} of 3</p>
+          <p className="text-xs text-gray-400 mt-0.5">Step {step} of {TOTAL_STEPS}</p>
         </div>
         <button
           onClick={handleClose}
@@ -118,7 +126,7 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
 
       {/* Step indicator */}
       <div className="flex px-6 pt-4 gap-2">
-        {[1, 2, 3].map(s => (
+        {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map(s => (
           <div
             key={s}
             className={`h-1 flex-1 rounded-full transition-colors ${
@@ -142,7 +150,19 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
                 maxLength={32}
                 className="w-full bg-[#0D1117] border border-[#1A2332] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#9945FF] transition-colors"
               />
-              <div className="text-xs text-gray-600 mt-1 text-right">{name.length}/32</div>
+              <div className="flex items-center justify-between mt-1">
+                {/* SNS domain preview */}
+                {snsDomain ? (
+                  <div className="flex items-center gap-1.5 text-[10px]">
+                    <span className="text-pot-muted">🌐</span>
+                    <span className="font-mono text-pot-green">{snsDomain}</span>
+                    <span className="text-pot-muted">· via SNS</span>
+                  </div>
+                ) : (
+                  <span className="text-[10px] text-pot-muted">Type a name to get your .potbot.sol domain</span>
+                )}
+                <div className="text-xs text-gray-600">{name.length}/32</div>
+              </div>
             </div>
 
             <div>
@@ -238,7 +258,6 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
         {/* ── Step 3: Governance & Risk ── */}
         {step === 3 && (
           <div className="space-y-5">
-            {/* Governance */}
             <div>
               <p className="text-sm text-gray-400 mb-3">
                 Set the governance level for trade decisions.
@@ -266,7 +285,6 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
               </div>
             </div>
 
-            {/* Max trade size */}
             <div>
               <p className="text-sm text-gray-400 mb-3 flex items-center gap-2">
                 <span>🛡️</span>
@@ -292,6 +310,87 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
                 Limits any single proposed swap to this % of the vault balance
               </p>
             </div>
+          </div>
+        )}
+
+        {/* ── Step 4: Privacy (Umbra) + SNS confirmation ── */}
+        {step === 4 && (
+          <div className="space-y-5">
+            {/* Umbra Privacy Mode */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <p className="text-sm font-semibold text-white">Privacy Mode</p>
+                <span className="text-[10px] bg-[#7C3AED]/20 text-[#7C3AED] px-1.5 py-0.5 rounded font-semibold">
+                  Powered by Umbra
+                </span>
+              </div>
+              <p className="text-xs text-gray-400 mb-3">
+                Umbra hides deposit amounts and trade sizes on-chain, protecting the vault from front-running and surveillance.
+              </p>
+              <div className="space-y-2">
+                {PRIVACY_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setPrivacyLevel(opt.value)}
+                    className={`w-full text-left px-4 py-3.5 rounded-xl border transition-all ${
+                      privacyLevel === opt.value
+                        ? opt.umbra
+                          ? 'border-[#7C3AED] bg-[#7C3AED]/10'
+                          : 'border-[#9945FF] bg-[#9945FF]/10'
+                        : 'border-[#1A2332] bg-[#0D1117] hover:border-[#243044]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span>{opt.icon}</span>
+                      <span className="font-semibold text-sm">{opt.label}</span>
+                      {opt.umbra && (
+                        <span className="text-[9px] bg-[#7C3AED]/20 text-[#7C3AED] px-1 py-0.5 rounded ml-auto">
+                          Umbra
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-0.5">{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* SNS Domain Confirmation */}
+            {snsDomain && (
+              <div className="bg-[#0D1117] border border-[#14F195]/20 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm">🌐</span>
+                  <span className="text-xs font-semibold text-white">SNS Domain</span>
+                  <span className="text-[10px] bg-[#14F195]/10 text-[#14F195] px-1.5 py-0.5 rounded ml-auto">
+                    potbot.sol
+                  </span>
+                </div>
+                <div className="font-mono text-sm text-[#14F195] mb-1">{snsDomain}</div>
+                <div className="text-[10px] text-pot-muted">
+                  Your vault will be accessible via this Solana Name Service subdomain. Share it instead of a raw pubkey.
+                </div>
+              </div>
+            )}
+
+            {/* Summary */}
+            <div className="bg-[#0D1117] border border-[#1A2332] rounded-xl p-4 space-y-2">
+              <div className="text-xs font-semibold text-white mb-2">Summary</div>
+              <SummaryRow label="Name" value={`${emoji} ${name}`} />
+              <SummaryRow label="Type" value={isPublic ? '🌍 Public' : '🔒 Private'} />
+              <SummaryRow
+                label="Yield"
+                value={YIELD_OPTIONS.find(o => o.value === yieldStrategy)?.label ?? 'None'}
+              />
+              <SummaryRow
+                label="Governance"
+                value={GOV_OPTIONS.find(o => o.value === govLevel)?.label ?? 'Majority'}
+              />
+              <SummaryRow
+                label="Privacy"
+                value={PRIVACY_OPTIONS.find(o => o.value === privacyLevel)?.label ?? 'Public'}
+              />
+              {snsDomain && <SummaryRow label="Domain" value={snsDomain} mono />}
+            </div>
 
             {error && (
               <div className="text-xs text-red-400 bg-red-400/10 rounded-xl px-4 py-3">
@@ -316,7 +415,7 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
           <div />
         )}
 
-        {step < 3 ? (
+        {step < TOTAL_STEPS ? (
           <button
             onClick={() => setStep(s => s + 1)}
             disabled={step === 1 && !canProceed1}
@@ -335,5 +434,14 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
         )}
       </div>
     </Modal>
+  )
+}
+
+function SummaryRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex items-center justify-between text-xs">
+      <span className="text-gray-500">{label}</span>
+      <span className={`text-white ${mono ? 'font-mono text-[#14F195]' : ''}`}>{value}</span>
+    </div>
   )
 }
