@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { usePots } from '@/hooks/usePots'
+import { reverseSNS } from '@/lib/sns'
 
 type SortKey = 'tvl' | 'trades' | 'members' | 'volume'
 
@@ -18,13 +19,8 @@ const YIELD_LABELS: Record<number | string, string> = {
   1: 'Conservative', conservative: 'Conservative',
   2: 'Balanced', balanced: 'Balanced',
   3: 'Aggressive', aggressive: 'Aggressive',
+  4: 'JLP ⚡', jlp: 'JLP ⚡',
 }
-
-const RANK_STYLES = [
-  'text-yellow-400',   // 🥇 1st
-  'text-slate-300',    // 🥈 2nd
-  'text-amber-600',    // 🥉 3rd
-]
 
 const RANK_EMOJIS = ['🥇', '🥈', '🥉']
 
@@ -37,18 +33,49 @@ function rankBadge(rank: number) {
   )
 }
 
+/** Dune SIM status indicator — shows whether live data is active */
+function DuneStatusBadge({ live }: { live: boolean }) {
+  return (
+    <div className="flex items-center gap-1.5 text-[10px] text-pot-muted">
+      <span className={`w-1.5 h-1.5 rounded-full ${live ? 'bg-pot-green animate-pulse' : 'bg-pot-muted'}`} />
+      {live ? (
+        <span className="text-pot-green">Live · Dune SIM</span>
+      ) : (
+        <span>Demo data</span>
+      )}
+    </div>
+  )
+}
+
 export default function LeaderboardPage() {
   const { data: pots = [], isLoading } = usePots()
   const [sortBy, setSortBy] = useState<SortKey>('tvl')
   const [search, setSearch] = useState('')
+  const [snsNames, setSnsNames] = useState<Record<string, string>>({})
+
+  // Resolve SNS names for all public pots
+  useEffect(() => {
+    const publicPots = (pots as any[]).filter((p: any) => p.isPublic)
+    Promise.all(
+      publicPots.map(async (p: any) => {
+        const name = await reverseSNS(p.pubkey)
+        return { pubkey: p.pubkey, name }
+      })
+    ).then(results => {
+      const map: Record<string, string> = {}
+      results.forEach(r => { if (r.name) map[r.pubkey] = r.name })
+      setSnsNames(map)
+    })
+  }, [pots])
 
   const publicPots = useMemo(() => {
-    return pots.filter((p: any) => p.isPublic)
+    return (pots as any[]).filter((p: any) => p.isPublic)
   }, [pots])
 
   const sorted = useMemo(() => {
     const filtered = publicPots.filter((p: any) =>
-      p.name.toLowerCase().includes(search.toLowerCase())
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      (snsNames[p.pubkey] ?? '').includes(search.toLowerCase())
     )
     return [...filtered].sort((a: any, b: any) => {
       switch (sortBy) {
@@ -59,16 +86,22 @@ export default function LeaderboardPage() {
         default: return 0
       }
     })
-  }, [publicPots, sortBy, search])
+  }, [publicPots, sortBy, search, snsNames])
 
   const totalTvl = publicPots.reduce((s: number, p: any) => s + p.balance, 0)
   const totalMembers = publicPots.reduce((s: number, p: any) => s + p.memberCount, 0)
   const totalVolume = publicPots.reduce((s: number, p: any) => s + (p.totalVolume ?? 0), 0)
+  const totalTrades = publicPots.reduce((s: number, p: any) => s + p.tradeCount, 0)
+
+  // Dune SIM API key status (client check)
+  const duneApiKeySet = typeof window !== 'undefined'
+    ? !!process.env.NEXT_PUBLIC_DUNE_API_KEY
+    : false
 
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
             🏆 Leaderboard
@@ -77,10 +110,34 @@ export default function LeaderboardPage() {
             Top performing public pots — ranked by TVL, trades, and activity
           </p>
         </div>
+        <DuneStatusBadge live={duneApiKeySet} />
+      </div>
+
+      {/* Dune SIM Analytics Banner */}
+      <div className="bg-[#111827] border border-[#F5A623]/20 rounded-2xl p-4 mb-5 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-[#F5A623]/10 flex items-center justify-center shrink-0">
+          <span className="text-sm">📊</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-semibold text-[#F5A623]">Dune SIM Analytics</div>
+          <div className="text-[10px] text-pot-muted mt-0.5">
+            Real-time portfolio data powered by Dune SIM · Add{' '}
+            <code className="bg-pot-dark px-1 rounded text-[9px]">NEXT_PUBLIC_DUNE_API_KEY</code>
+            {' '}to enable live balances
+          </div>
+        </div>
+        <a
+          href="https://docs.sim.dune.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[10px] text-[#F5A623] hover:underline shrink-0"
+        >
+          Docs →
+        </a>
       </div>
 
       {/* Global stats */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-4 gap-3 mb-6">
         <div className="bg-pot-card border border-pot-border rounded-2xl p-4 text-center">
           <div className="text-2xl font-bold text-pot-green">{publicPots.length}</div>
           <div className="text-xs text-pot-muted mt-1">Public POTs</div>
@@ -93,13 +150,17 @@ export default function LeaderboardPage() {
           <div className="text-2xl font-bold text-white">{totalMembers}</div>
           <div className="text-xs text-pot-muted mt-1">Total Members</div>
         </div>
+        <div className="bg-pot-card border border-pot-border rounded-2xl p-4 text-center">
+          <div className="text-2xl font-bold text-white">{totalTrades}</div>
+          <div className="text-xs text-pot-muted mt-1">Total Trades</div>
+        </div>
       </div>
 
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <input
           type="text"
-          placeholder="Search pots..."
+          placeholder="Search pots or .potbot.sol names..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1 bg-pot-card border border-pot-border rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-pot-muted outline-none focus:border-pot-accent transition"
@@ -160,6 +221,7 @@ export default function LeaderboardPage() {
               : '—'
             const yieldLabel = YIELD_LABELS[pot.yieldStrategy] ?? 'None'
             const isTop3 = idx < 3
+            const snsName = snsNames[pot.pubkey]
 
             return (
               <Link
@@ -187,8 +249,14 @@ export default function LeaderboardPage() {
                     <div className="font-semibold text-white text-sm truncate group-hover:text-pot-accent transition">
                       {pot.name}
                     </div>
-                    <div className="text-[10px] text-pot-muted">
-                      {pot.tamagotchiEmoji} Lvl {pot.tamagotchiLevel} · {pot.pubkey.slice(0, 4)}…{pot.pubkey.slice(-4)}
+                    <div className="text-[10px] text-pot-muted flex items-center gap-1.5">
+                      {snsName ? (
+                        <>
+                          <span className="text-pot-green font-mono">{snsName}</span>
+                          <span>·</span>
+                        </>
+                      ) : null}
+                      <span>{pot.tamagotchiEmoji} Lvl {pot.tamagotchiLevel}</span>
                     </div>
                   </div>
                 </div>
@@ -239,12 +307,39 @@ export default function LeaderboardPage() {
         </div>
       )}
 
+      {/* Volume analytics row */}
+      {!isLoading && sorted.length > 0 && (
+        <div className="mt-4 bg-pot-card border border-pot-border rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-sm">📊</span>
+            <span className="text-xs font-semibold text-white">Ecosystem Analytics</span>
+            <span className="text-[10px] text-pot-muted ml-auto">Dune SIM · refreshes every 30s</span>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <div className="text-xs text-pot-muted mb-0.5">Total Volume</div>
+              <div className="text-sm font-bold text-white">{totalVolume.toFixed(1)} SOL</div>
+            </div>
+            <div>
+              <div className="text-xs text-pot-muted mb-0.5">Avg Vault Size</div>
+              <div className="text-sm font-bold text-white">
+                {publicPots.length > 0 ? (totalTvl / publicPots.length).toFixed(1) : '0'} SOL
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-pot-muted mb-0.5">Total Trades</div>
+              <div className="text-sm font-bold text-white">{totalTrades}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* CTA */}
-      <div className="mt-8 bg-pot-card border border-dashed border-pot-accent/30 rounded-2xl p-6 text-center">
+      <div className="mt-6 bg-pot-card border border-dashed border-pot-accent/30 rounded-2xl p-6 text-center">
         <div className="text-2xl mb-2">🚀</div>
         <h3 className="text-sm font-semibold text-white mb-1">Want to be on this list?</h3>
         <p className="text-xs text-pot-muted mb-4">
-          Create a public pot and start building your trading track record
+          Create a public pot and start building your trading track record. Get your own <code className="bg-pot-dark px-1 rounded">{'{name}.potbot.sol'}</code> domain.
         </p>
         <Link
           href="/create"
