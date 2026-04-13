@@ -13,10 +13,11 @@ interface CreatePotModalProps {
 }
 
 const YIELD_OPTIONS = [
-  { value: 0, label: 'None', desc: 'No yield — pure trading vault' },
+  { value: 0, label: 'None',         desc: 'No yield — pure trading vault' },
   { value: 1, label: 'Conservative', desc: 'Kamino stablecoins · 3–6% APY' },
-  { value: 2, label: 'Balanced', desc: 'Mixed lending · 10–25% APY' },
-  { value: 3, label: 'Aggressive', desc: 'High-risk farms · 20–50%+ APY' },
+  { value: 2, label: 'Balanced',     desc: 'Mixed lending · 10–25% APY' },
+  { value: 3, label: 'Aggressive',   desc: 'High-risk farms · 20–50%+ APY' },
+  { value: 4, label: 'JLP ⚡',       desc: 'Jupiter LP · 30–60% APY · delta-hedged via Drift' },
 ]
 
 const GOV_OPTIONS = [
@@ -309,7 +310,7 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
             disabled={loading}
             className="text-sm text-gray-400 hover:text-white transition-colors disabled:opacity-40"
           >
-            <- Back
+            ← Back
           </button>
         ) : (
           <div />
@@ -321,7 +322,7 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
             disabled={step === 1 && !canProceed1}
             className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Next ->
+            Next →
           </button>
         ) : (
           <button
@@ -329,7 +330,7 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
             disabled={loading || !publicKey}
             className="btn-primary disabled:opacity-40 flex items-center gap-2"
           >
-            {loading ? <><Spinner size="sm" /> Creating...</> : '🪴 Create POT'}
+            {loading ? <><Spinner size="sm" /> Creating…</> : '🪴 Create POT'}
           </button>
         )}
       </div>
