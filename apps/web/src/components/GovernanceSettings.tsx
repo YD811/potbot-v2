@@ -403,4 +403,3 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
 
 /* ── Export default settings for use elsewhere ── */
 export { DEFAULT_SETTINGS }
-export type { GovSettings }

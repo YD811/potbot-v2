@@ -72,16 +72,20 @@ export default function PotDetailPage() {
     )
   }
 
+  const createdAtMs = typeof pot.createdAt === 'number'
+    ? pot.createdAt
+    : (pot.createdAt as Date).getTime()
+
   const tama = calculateTamaStats({
-    tradeVolume: 0,
+    tradeVolume: ((pot as any).totalVolume ?? pot.tradeCount * 2),
     memberCount: pot.memberCount,
     winRate: 0.6,
     yieldApy: 0.05,
-    ageSeconds: (Date.now() - pot.createdAt.getTime()) / 1000,
+    ageSeconds: (Date.now() - createdAtMs) / 1000,
   })
 
   // Determine if current user is admin (pot creator)
-  const isAdmin = publicKey?.toString() === pot.admin
+  const isAdmin = publicKey?.toString() === (pot.authority ?? (pot as any).admin)
 
   return (
     <div>
@@ -154,9 +158,9 @@ export default function PotDetailPage() {
             L{pot.governanceLevel} Trade Gov
           </span>
           {/* ETF tokenization mode badge */}
-          {pot.mode === 'tokenized' ? (
+          {(pot as any).mode === 'tokenized' ? (
             <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 flex items-center gap-1">
-              🪙 TOKENIZED · ${pot.tokenTicker}
+              🪙 TOKENIZED · ${(pot as any).tokenTicker}
             </span>
           ) : (
             <span className="text-xs px-2 py-0.5 rounded-full bg-pot-dark text-pot-muted border border-pot-border">

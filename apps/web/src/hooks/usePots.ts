@@ -17,7 +17,7 @@ import {
 import { useMockStore } from '@/lib/mock-store'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 
-const TAMA_EMOJIS = ['🦚','🐣','🐤','🦅','🐉','🐑']
+const TAMA_EMOJIS = ['🦐','🐣','🐤','🦅','🐉','👑']
 
 /* ── Anchor program instance ── */
 
@@ -80,11 +80,11 @@ export function usePots() {
               const vaultInfo = await connection.getAccountInfo(vaultPda)
               const balance = (vaultInfo?.lamports ?? 0) / LAMPORTS_PER_SOL
               const tama = calculateTamaStats({
-                tradeVolumeSol: d.totalVolume.toNumber() / LAMPORTS_PER_SOL,
+                tradeVolume: d.totalVolume.toNumber() / LAMPORTS_PER_SOL,
                 memberCount: d.memberCount,
                 winRate: 0,
-                annualYieldPct: 0,
-                daysAlive: Math.floor((Date.now() / 1000 - d.createdAt.toNumber()) / 86400),
+                yieldApy: 0,
+                ageSeconds: Math.floor(Date.now() / 1000 - d.createdAt.toNumber()),
               })
               const stratKey = Object.keys(d.config.yieldStrategy)[0]
               return {
@@ -114,11 +114,11 @@ export function usePots() {
       // Mock fallback
       return mockStore.pots.map((p) => {
         const tama = calculateTamaStats({
-          tradeVolumeSol: p.tradeCount * 2,
+          tradeVolume: p.tradeCount * 2,
           memberCount: p.memberCount,
-          winRate: 60,
-          annualYieldPct: p.yieldStrategy === 'aggressive' ? 15 : p.yieldStrategy === 'balanced' ? 8 : 3,
-          daysAlive: 7,
+          winRate: 0.6,
+          yieldApy: p.yieldStrategy === 3 ? 0.30 : p.yieldStrategy === 2 ? 0.15 : p.yieldStrategy === 1 ? 0.06 : 0,
+          ageSeconds: 7 * 86400,
         })
         return { ...p, tamagotchiLevel: tama.level, tamagotchiEmoji: tama.emoji, tamagotchiXp: tama.xp }
       })
@@ -147,11 +147,11 @@ export function usePot(pubkey?: string) {
           const balance = (vaultInfo?.lamports ?? 0) / LAMPORTS_PER_SOL
           const stratKey = Object.keys(d.config.yieldStrategy)[0]
           const tama = calculateTamaStats({
-            tradeVolumeSol: d.totalVolume.toNumber() / LAMPORTS_PER_SOL,
+            tradeVolume: d.totalVolume.toNumber() / LAMPORTS_PER_SOL,
             memberCount: d.memberCount,
             winRate: 0,
-            annualYieldPct: 0,
-            daysAlive: Math.floor((Date.now() / 1000 - d.createdAt.toNumber()) / 86400),
+            yieldApy: 0,
+            ageSeconds: Math.floor(Date.now() / 1000 - d.createdAt.toNumber()),
           })
           return {
             pubkey,
@@ -182,11 +182,11 @@ export function usePot(pubkey?: string) {
       const p = mockStore.pots.find((p) => p.pubkey === pubkey)
       if (!p) return null
       const tama = calculateTamaStats({
-        tradeVolumeSol: p.tradeCount * 2,
+        tradeVolume: p.tradeCount * 2,
         memberCount: p.memberCount,
-        winRate: 60,
-        annualYieldPct: 8,
-        daysAlive: 7,
+        winRate: 0.6,
+        yieldApy: 0.08,
+        ageSeconds: 7 * 86400,
       })
       return {
         ...p,
@@ -347,6 +347,7 @@ export function useCreatePot() {
         try {
           const [potPda] = getPotAddress(publicKey, params.name)
           const [vaultPda] = getVaultAddress(potPda)
+          // @ts-ignore — Anchor IDL types are too deeply nested for TS inference
           const tx = await program.methods
             .createPot({
               name: params.name,

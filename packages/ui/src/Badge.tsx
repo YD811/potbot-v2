@@ -1,1 +1,26 @@
-aW1wb3J0IHsgY2xzeCB9IGZyb20gJ2Nsc3gnCgp0eXBlIEJhZGdlQ29sb3IgPSAncHVycGxlJyB8ICdncmVlbicgfCAncmVkJyB8ICdncmF5JyB8ICd5ZWxsb3cnIHwgJ2JsdWUnCgppbnRlcmZhY2UgQmFkZ2VQcm9wcyB7CiAgY2hpbGRyZW46IFJlYWN0LlJlYWN0Tm9kZQogIGNvbG9yPzogQmFkZ2VDb2xvcgogIGNsYXNzTmFtZT86IHN0cmluZwp9Cgpjb25zdCBDT0xPUlM6IFJlY29yZDxCYWRnZUNvbG9yLCBzdHJpbmc+ID0gewogIHB1cnBsZTogJ2JnLVsjOTk0NUZGXS8yMCB0ZXh0LVsjOTk0NUZGXScsCiAgZ3JlZW46ICAnYmctWyMxNEYxOTVdLzEwIHRleHQtWyMxNEYxOTVdJywKICByZWQ6ICAgICdiZy1bI0ZGNDU0NV0vMTAgdGV4dC1bI0ZGNDU0NV0nLAogIGdyYXk6ICAgJ2JnLWdyYXktNTAwLzIwIHRleHQtZ3JheS00MDAnLAogIHllbGxvdzogJ2JnLXllbGxvdy00MDAvMTAgdGV4dC15ZWxsb3ctNDAwJywKICBibHVlOiAgICdiZy1ibHVlLTQwMC8xMCB0ZXh0LWJsdWUtNDAwJywKfQoKZXhwb3J0IGZ1bmN0aW9uIEJhZGdlKHsgY2hpbGRyZW4sIGNvbG9yID0gJ3B1cnBsZScsIGNsYXNzTmFtZSB9OiBCYWRnZVByb3BzKSB7CiAgcmV0dXJuICgKICAgIDxzcGFuIGNsYXNzTmFtZT17Y2xzeCgndGV4dC14cyBweC0yIHB5LTAuNSByb3VuZGVkLWZ1bGwgZm9udC1tb25vJywgQ09MT1JTW2NvbG9yXSwgY2xhc3NOYW1lKX0+CiAgICAgIHtjaGlsZHJlbn0KICAgIDwvc3Bhbj4KICAKICKK
+import { clsx } from 'clsx'
+
+type BadgeColor = 'purple' | 'green' | 'red' | 'gray' | 'yellow' | 'blue'
+
+interface BadgeProps {
+  children: React.ReactNode
+  color?: BadgeColor
+  className?: string
+}
+
+const COLORS: Record<BadgeColor, string> = {
+  purple: 'bg-[#9945FF]/20 text-[#9945FF]',
+  green:  'bg-[#14F195]/10 text-[#14F195]',
+  red:    'bg-[#FF4545]/10 text-[#FF4545]',
+  gray:   'bg-gray-500/20 text-gray-400',
+  yellow: 'bg-yellow-400/10 text-yellow-400',
+  blue:   'bg-blue-400/10 text-blue-400',
+}
+
+export function Badge({ children, color = 'purple', className }: BadgeProps) {
+  return (
+    <span className={clsx('text-xs px-2 py-0.5 rounded-full font-mono', COLORS[color], className)}>
+      {children}
+    </span>
+  )
+}

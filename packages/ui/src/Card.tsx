@@ -1,1 +1,28 @@
-aW1wb3J0IHsgY2xzeCB9IGZyb20gJ2Nsc3gnCgppbnRlcmZhY2UgQ2FyZFByb3BzIHsKICBjaGlsZHJlbjogUmVhY3QuUmVhY3ROb2RlCiAgY2xhc3NOYW1lPzogc3RyaW5nCiAgZ2xvdz86ICdwdXJwbGUnIHwgJ2dyZWVuJyB8ICdyZWQnIHwgJ25vbmUnCiAgaG92ZXI/OiBib29sZWFuCn0KCmNvbnN0IEdMT1dTID0gewogIG5vbmU6ICAgJycsCiAgcHVycGxlOiAnaG92ZXI6c2hhZG93LVswXzBfMzBweF9yZ2JhKDE1Myw2OSwyNTUsMC4yNSldJywKICBncmVlbjogICdob3ZlcjpzaGFkb3ctWzBfMF8zMHB4X3JnYmEoMjAsMjQxLDE0OSwwLjI1KV0nLAogIHJlZDogICAgJ2hvdmVyOnNoYWRvdy1bMF8wXzMwcHhfcmdiYSgyNTUsNjksNjksMC4yNSldJywKfQoKZXhwb3J0IGZ1bmN0aW9uIENhcmQoeyBjaGlsZHJlbiwgY2xhc3NOYW1lLCBnbG93ID0gJ25vbmUnLCBob3ZlciA9IGZhbHNlIH06IENhcmRQcm9wcykgewogIHJldHVybiAoCiAgICA8ZGl2IGNsYXNzTmFtZT17Y2xzeCgKICAgICAgJ2JnLVsjMEQxMTE3XSBib3JkZXIgYm9yZGVyLVsjMUEyMzMyXSByb3VuZGVkLTJ4bCcsCiAgICAgIGhvdmVyICYmICd0cmFuc2l0aW9uLWFsbCBkdXJhdGlvbi0yMDAgY3Vyc29yLXBvaW50ZXIgaG92ZXI6Ym9yZGVyLVsjOTk0NUZGXS81MCcsCiAgICAgIEdMT1dTW2dsb3ddLAogICAgICBjbGFzc05hbWUKICAgICl9PgogICAgICB7Y2hpbGRyZW59CiAgICA8L2Rpdj4KICAKICKK
+import { clsx } from 'clsx'
+
+interface CardProps {
+  children: React.ReactNode
+  className?: string
+  glow?: 'purple' | 'green' | 'red' | 'none'
+  hover?: boolean
+}
+
+const GLOWS = {
+  none:   '',
+  purple: 'hover:shadow-[0_0_30px_rgba(153,69,255,0.25)]',
+  green:  'hover:shadow-[0_0_30px_rgba(20,241,149,0.25)]',
+  red:    'hover:shadow-[0_0_30px_rgba(255,69,69,0.25)]',
+}
+
+export function Card({ children, className, glow = 'none', hover = false }: CardProps) {
+  return (
+    <div className={clsx(
+      'bg-[#0D1117] border border-[#1A2332] rounded-2xl',
+      hover && 'transition-all duration-200 cursor-pointer hover:border-[#9945FF]/50',
+      GLOWS[glow],
+      className
+    )}>
+      {children}
+    </div>
+  )
+}
