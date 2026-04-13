@@ -37,25 +37,34 @@ pub fn handler(ctx: Context<Deposit>, lamports: u64) -> Result<()> {
     // Validate minimum deposit
     require!(lamports >= pot.config.min_deposit, PotError::DepositTooSmall);
 
-    // Check if POT is public or depositor is authority
+    // Public/private check
     if !pot.config.is_public && ctx.accounts.depositor.key() != pot.authority {
         return Err(PotError::NotPublic.into());
     }
 
-    // Get current vault balance BEFORE transfer
+    // Max members check (0 = unlimited)
+    let is_new_member = ctx.accounts.member.shares == 0 && ctx.accounts.member.deposit_total == 0;
+    if is_new_member && pot.config.max_members > 0 {
+        require!(
+            pot.member_count < pot.config.max_members as u32,
+            PotError::MaxMembersReached
+        );
+    }
+
+    // Get current vault balance BEFORE transfer (critical for correct share math)
     let vault_lamports = ctx.accounts.vault.lamports();
 
     // Calculate shares
     let shares = pot.lamports_to_shares(lamports, vault_lamports);
     require!(shares > 0, PotError::MathOverflow);
 
-    // Transfer SOL from depositor to vault
+    // Transfer SOL: depositor → vault
     system_program::transfer(
         CpiContext::new(
             ctx.accounts.system_program.to_account_info(),
             system_program::Transfer {
                 from: ctx.accounts.depositor.to_account_info(),
-                to: ctx.accounts.vault.to_account_info(),
+                to:   ctx.accounts.vault.to_account_info(),
             },
         ),
         lamports,
@@ -63,32 +72,31 @@ pub fn handler(ctx: Context<Deposit>, lamports: u64) -> Result<()> {
 
     // Update member account
     let member = &mut ctx.accounts.member;
-    let clock = Clock::get()?;
-    let is_new = member.shares == 0 && member.deposit_total == 0;
+    let clock  = Clock::get()?;
 
-    if is_new {
-        member.pot = ctx.accounts.pot.key();
-        member.wallet = ctx.accounts.depositor.key();
-        member.joined_at = clock.unix_timestamp;
-        member.bump = ctx.bumps.member;
+    if is_new_member {
+        member.pot           = ctx.accounts.pot.key();
+        member.wallet        = ctx.accounts.depositor.key();
+        member.joined_at     = clock.unix_timestamp;
+        member.bump          = ctx.bumps.member;
     }
 
-    member.shares = member.shares.checked_add(shares).ok_or(PotError::MathOverflow)?;
-    member.deposit_total = member.deposit_total.checked_add(lamports).ok_or(PotError::MathOverflow)?;
-    member.last_deposit_at = clock.unix_timestamp;
+    member.shares           = member.shares.checked_add(shares).ok_or(PotError::MathOverflow)?;
+    member.deposit_total    = member.deposit_total.checked_add(lamports).ok_or(PotError::MathOverflow)?;
+    member.last_deposit_at  = clock.unix_timestamp;
 
     // Update POT
     let pot = &mut ctx.accounts.pot;
-    pot.total_shares = pot.total_shares.checked_add(shares).ok_or(PotError::MathOverflow)?;
-    if is_new {
+    pot.total_shares     = pot.total_shares.checked_add(shares).ok_or(PotError::MathOverflow)?;
+    pot.last_activity_at = clock.unix_timestamp;
+    if is_new_member {
         pot.member_count = pot.member_count.checked_add(1).ok_or(PotError::MathOverflow)?;
     }
+    pot.recalculate_tamagotchi();
 
     msg!(
-        "Deposited {} lamports \u2192 {} shares in POT {}",
-        lamports,
-        shares,
-        pot.name
+        "Deposited {} lamports → {} shares in POT \"{}\" (total shares: {})",
+        lamports, shares, pot.name, pot.total_shares
     );
     Ok(())
 }
