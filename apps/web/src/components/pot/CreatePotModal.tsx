@@ -7,6 +7,7 @@ import { Spinner } from '@potbot/ui'
 import { useCreatePot } from '@/hooks/usePots'
 import { PRIVACY_OPTIONS, type PrivacyLevel } from '@/lib/umbra'
 import { buildPotDomain, sanitizePotName } from '@/lib/sns'
+import { KORA_BADGE, describeGaslessFee } from '@/lib/kora'
 
 interface CreatePotModalProps {
   open: boolean
@@ -355,6 +356,32 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
               </div>
             </div>
 
+            {/* Kora Gasless Transactions */}
+            <div className="bg-[#0D1117] border border-[#9945FF]/20 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm">⚡</span>
+                <span className="text-xs font-semibold text-white">Gasless Transactions</span>
+                <span className="text-[10px] bg-[#9945FF]/20 text-[#9945FF] px-1.5 py-0.5 rounded ml-auto">
+                  Powered by Kora
+                </span>
+              </div>
+              <div className="text-[10px] text-pot-muted leading-relaxed">
+                Members deposit &amp; vote without holding SOL. Gas fees are paid in USDC ({describeGaslessFee()}).
+                Removes the #1 onboarding barrier for group vaults.
+              </div>
+              <div className="flex items-center gap-4 mt-2.5">
+                <div className="flex items-center gap-1 text-[10px] text-[#9945FF]">
+                  <span>✓</span><span>Deposit in USDC</span>
+                </div>
+                <div className="flex items-center gap-1 text-[10px] text-[#9945FF]">
+                  <span>✓</span><span>Vote for free</span>
+                </div>
+                <div className="flex items-center gap-1 text-[10px] text-[#9945FF]">
+                  <span>✓</span><span>No SOL required</span>
+                </div>
+              </div>
+            </div>
+
             {/* SNS Domain Confirmation */}
             {snsDomain && (
               <div className="bg-[#0D1117] border border-[#14F195]/20 rounded-xl p-4">
@@ -390,6 +417,7 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
                 value={PRIVACY_OPTIONS.find(o => o.value === privacyLevel)?.label ?? 'Public'}
               />
               {snsDomain && <SummaryRow label="Domain" value={snsDomain} mono />}
+              <SummaryRow label="Gas" value="⚡ Gasless · Kora" />
             </div>
 
             {error && (
@@ -429,7 +457,11 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
             disabled={loading || !publicKey}
             className="btn-primary disabled:opacity-40 flex items-center gap-2"
           >
-            {loading ? <><Spinner size="sm" /> Creating…</> : '🪴 Create POT'}
+            {loading ? (
+              <><Spinner size="sm" /> Creating…</>
+            ) : (
+              <>🪴 Create POT <span className="text-[10px] opacity-60 font-normal">⚡ Gasless</span></>
+            )}
           </button>
         )}
       </div>
