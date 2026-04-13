@@ -9,11 +9,19 @@ import { Keypair, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
 
 /* ── Types ── */
 
+export interface TokenHolding {
+  mint: string
+  symbol: string
+  icon: string
+  amount: number   // raw token amount in UI units (e.g. USDC in dollars, BONK in bonk)
+  decimals: number
+}
+
 export interface MockPot {
   pubkey: string
   name: string
   emoji: string
-  balance: number // SOL
+  balance: number // SOL held directly
   totalShares: number
   memberCount: number
   tradeCount: number
@@ -27,6 +35,7 @@ export interface MockPot {
   authority: string
   createdAt: number // unix ms
   nextProposalId: number
+  holdings?: TokenHolding[]  // non-SOL token positions
 }
 
 export interface MockMember {
@@ -111,6 +120,10 @@ const SEED_POTS: MockPot[] = [
     authority: 'SeedAuth1111111111111111111111111111111111',
     createdAt: Date.now() - 7 * 86400000,
     nextProposalId: 3,
+    holdings: [
+      { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', symbol: 'USDC',    icon: '💵', amount: 820,         decimals: 6 },
+      { mint: 'JUPyiwrYJFskUPiHa7hkeR8NqtwybKv5LqYjTrsixO7', symbol: 'JUP',     icon: '🪐', amount: 1200,        decimals: 6 },
+    ],
   },
   {
     pubkey: 'DemoPoT2222222222222222222222222222222222222',
@@ -130,6 +143,10 @@ const SEED_POTS: MockPot[] = [
     authority: 'SeedAuth2222222222222222222222222222222222',
     createdAt: Date.now() - 14 * 86400000,
     nextProposalId: 5,
+    holdings: [
+      { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixVrtVZvWr8Alfred89u', symbol: 'BONK', icon: '🐕', amount: 125_000_000, decimals: 5 },
+      { mint: 'EKpQGSKe94Fp3gWQrW1zYvbwDiQMqFEuer5pVUeX3mQ', symbol: 'WIF',  icon: '🐶', amount: 480,        decimals: 6 },
+    ],
   },
   {
     pubkey: 'DemoPoT3333333333333333333333333333333333333',
@@ -149,6 +166,10 @@ const SEED_POTS: MockPot[] = [
     authority: 'SeedAuth3333333333333333333333333333333333',
     createdAt: Date.now() - 21 * 86400000,
     nextProposalId: 2,
+    holdings: [
+      { mint: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn', symbol: 'JitoSOL', icon: '🔥', amount: 62.5, decimals: 9 },
+      { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', symbol: 'USDC',    icon: '💵', amount: 5400, decimals: 6 },
+    ],
   },
   {
     pubkey: 'DemoPoT4444444444444444444444444444444444444',
@@ -168,6 +189,11 @@ const SEED_POTS: MockPot[] = [
     authority: 'SeedAuth4444444444444444444444444444444444',
     createdAt: Date.now() - 30 * 86400000,
     nextProposalId: 12,
+    holdings: [
+      { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', symbol: 'USDC', icon: '💵', amount: 3200, decimals: 6 },
+      { mint: 'JUPyiwrYJFskUPiHa7hkeR8NqtwybKv5LqYjTrsixO7', symbol: 'JUP',  icon: '🪐', amount: 8500, decimals: 6 },
+      { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixVrtVZvWr8Alfred89u', symbol: 'BONK', icon: '🐕', amount: 450_000_000, decimals: 5 },
+    ],
   },
   {
     pubkey: 'DemoPoT5555555555555555555555555555555555555',
@@ -187,6 +213,10 @@ const SEED_POTS: MockPot[] = [
     authority: 'SeedAuth5555555555555555555555555555555555',
     createdAt: Date.now() - 10 * 86400000,
     nextProposalId: 8,
+    holdings: [
+      { mint: 'EKpQGSKe94Fp3gWQrW1zYvbwDiQMqFEuer5pVUeX3mQ', symbol: 'WIF',  icon: '🐶', amount: 2100,  decimals: 6 },
+      { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixVrtVZvWr8Alfred89u', symbol: 'BONK', icon: '🐕', amount: 900_000_000, decimals: 5 },
+    ],
   },
   {
     pubkey: 'DemoPoT6666666666666666666666666666666666666',
@@ -206,6 +236,11 @@ const SEED_POTS: MockPot[] = [
     authority: 'SeedAuth6666666666666666666666666666666666',
     createdAt: Date.now() - 45 * 86400000,
     nextProposalId: 4,
+    holdings: [
+      { mint: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn', symbol: 'JitoSOL', icon: '🔥', amount: 98.5,  decimals: 9 },
+      { mint: 'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So', symbol: 'mSOL',    icon: '💎', amount: 45.2,  decimals: 9 },
+      { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', symbol: 'USDC',    icon: '💵', amount: 12000, decimals: 6 },
+    ],
   },
 ]
 

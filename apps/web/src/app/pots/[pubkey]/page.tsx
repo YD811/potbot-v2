@@ -18,14 +18,11 @@ import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 import { SharesPanel } from '@/components/SharesPanel'
 import { PnLDashboard } from '@/components/PnLDashboard'
 import { StrategyPanel } from '@/components/StrategyPanel'
-import { ScamWarning } from '@/components/ScamWarning'
-import { TokenSearch } from '@/components/TokenSearch'
 import { AIAgentPanel } from '@/components/AIAgentPanel'
 import { GovernanceSettings } from '@/components/GovernanceSettings'
 import { BudgetGrantPanel } from '@/components/BudgetGrantPanel'
-import { useJupiterQuote } from '@/lib/jupiter-tokens'
+import { JupiterSwapPanel } from '@/components/JupiterSwapPanel'
 import { fetchPricesRaw } from '@/lib/useAIAgent-helpers'
-import type { JupiterToken } from '@/lib/jupiter-tokens'
 
 const TABS = ['overview', 'shares', 'positions', 'strategy', 'governance', 'agent', 'members'] as const
 type Tab = (typeof TABS)[number]
@@ -272,7 +269,7 @@ function OverviewPanel({ potPubkey, pot }: { potPubkey: string; pot: any }) {
         <h3 className="text-lg font-semibold mb-4">Performance</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            ['Total Volume', `${pot.balance.toFixed(1)} SOL`],
+            ['Total Volume', `${pot.totalVolume?.toFixed(1) ?? pot.balance.toFixed(1)} SOL`],
             ['Total Trades', `${pot.tradeCount}`],
             ['Win Rate', '—'],
             ['Yield APY', '—'],
@@ -284,159 +281,146 @@ function OverviewPanel({ potPubkey, pot }: { potPubkey: string; pot: any }) {
           ))}
         </div>
       </div>
+
+      {/* Portfolio */}
+      <div className="card p-6 md:col-span-2">
+        <VaultPortfolio pot={pot} />
+      </div>
     </div>
   )
 }
 
-/* ── Swap (inline on governance tab) ── */
+/* ── Vault Portfolio ── */
 
-const SOL_MINT  = 'So11111111111111111111111111111111111111112'
-const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
-const SOL_DECIMALS = 9
+const SOL_MINT_ADDR = 'So11111111111111111111111111111111111111112'
 
-function SwapPanel({ potPubkey, pot }: { potPubkey: string; pot: any }) {
-  const { connected } = useWallet()
-  const createProposal = useCreateProposal()
+function VaultPortfolio({ pot }: { pot: any }) {
+  const [prices, setPrices] = useState<Record<string, number>>({})
+  const [loading, setLoading] = useState(true)
 
-  const [fromToken, setFromToken] = useState<JupiterToken | null>(null)
-  const [toToken,   setToToken]   = useState<JupiterToken | null>(null)
-  const [amount, setAmount] = useState('')
-  const [slippageBps, setSlippageBps] = useState(50)
+  const holdings: Array<{ mint: string; symbol: string; icon: string; amount: number; decimals: number }> = pot.holdings ?? []
 
-  const fromMint = fromToken?.address ?? SOL_MINT
-  const toMint   = toToken?.address   ?? USDC_MINT
-  const fromDecimals = fromToken?.decimals ?? SOL_DECIMALS
-  const rawAmount = Math.floor(parseFloat(amount || '0') * Math.pow(10, fromDecimals))
+  const allMints = [SOL_MINT_ADDR, ...holdings.map((h: any) => h.mint)]
 
-  const { data: quote, isFetching: quoteLoading } = useJupiterQuote(
-    rawAmount > 0 ? { inputMint: fromMint, outputMint: toMint, amount: rawAmount, slippageBps } : null
-  )
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    fetchPricesRaw(allMints).then((p) => {
+      if (!cancelled) { setPrices(p); setLoading(false) }
+    }).catch(() => setLoading(false))
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pot.pubkey])
 
-  const outAmount = quote ? parseFloat(quote.outAmount) / Math.pow(10, toToken?.decimals ?? 6) : null
-  const priceImpact = quote ? parseFloat(quote.priceImpactPct) : null
-  const routeLabels = quote
-    ? [...new Set(quote.routePlan.map((r) => r.swapInfo.label).filter(Boolean))]
-    : []
+  const solPrice = prices[SOL_MINT_ADDR] ?? 0
 
-  const fromSym = fromToken?.symbol ?? 'SOL'
-  const toSym   = toToken?.symbol   ?? 'USDC'
+  // Build unified position list: SOL + token holdings
+  const positions = [
+    {
+      mint: SOL_MINT_ADDR,
+      symbol: 'SOL',
+      icon: '◎',
+      colorClass: 'bg-purple-500',
+      amount: pot.balance,
+      usdValue: pot.balance * solPrice,
+    },
+    ...holdings.map((h: any) => {
+      const price = prices[h.mint] ?? 0
+      return {
+        mint: h.mint,
+        symbol: h.symbol,
+        icon: h.icon,
+        colorClass: 'bg-pot-accent',
+        amount: h.amount,
+        usdValue: h.amount * price,
+      }
+    }),
+  ].filter((p) => p.amount > 0)
 
-  const handleProposeSwap = async () => {
-    const amountVal = parseFloat(amount)
-    if (isNaN(amountVal) || amountVal <= 0) return
-    try {
-      await createProposal.mutateAsync({
-        potAddress: potPubkey,
-        nextProposalId: pot.nextProposalId ?? 0,
-        proposalType: { swap: { fromMint, toMint, amountIn: amountVal, minAmountOut: outAmount ? Math.floor(outAmount * 0.995) : 0 } },
-        description: `Swap ${amountVal} ${fromSym} → ${toSym}`,
-      })
-      setAmount('')
-    } catch (e) { console.error('Proposal failed:', e) }
+  const totalUsd = positions.reduce((s, p) => s + p.usdValue, 0)
+
+  // Color palette for allocation bar segments
+  const COLORS = [
+    'bg-purple-500', 'bg-blue-500', 'bg-teal-500', 'bg-orange-500',
+    'bg-pink-500', 'bg-yellow-500', 'bg-green-500', 'bg-red-500',
+  ]
+
+  if (positions.length === 0) {
+    return (
+      <div className="text-center py-6 text-pot-muted text-sm">
+        <div className="text-3xl mb-2">📭</div>
+        No token positions yet — propose a swap to start building the portfolio
+      </div>
+    )
   }
 
   return (
-    <div className="card p-6">
+    <>
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-semibold">Propose Swap</h3>
-          <p className="text-pot-muted text-xs">Creates a governance vote for members to approve</p>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-pot-muted">Slippage:</span>
-          {[50, 100, 200].map((bps) => (
-            <button key={bps} onClick={() => setSlippageBps(bps)}
-              className={`text-xs px-2 py-1 rounded-lg transition ${slippageBps === bps ? 'bg-pot-accent text-white' : 'bg-pot-dark text-pot-muted border border-pot-border hover:text-white'}`}>
-              {bps / 100}%
-            </button>
-          ))}
-        </div>
+        <h3 className="text-lg font-semibold">Portfolio</h3>
+        {loading ? (
+          <span className="text-xs text-pot-muted animate-pulse">Fetching prices…</span>
+        ) : totalUsd > 0 ? (
+          <span className="text-sm text-white font-mono font-bold">
+            ≈ ${totalUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          </span>
+        ) : null}
       </div>
 
+      {/* Allocation bar */}
+      {totalUsd > 0 && (
+        <div className="flex rounded-full overflow-hidden h-2 mb-5 gap-0.5">
+          {positions.map((p, i) => {
+            const pct = totalUsd > 0 ? (p.usdValue / totalUsd) * 100 : 0
+            if (pct < 0.5) return null
+            return (
+              <div
+                key={p.mint}
+                className={`${COLORS[i % COLORS.length]} h-full rounded-sm`}
+                style={{ width: `${pct}%` }}
+                title={`${p.symbol}: ${pct.toFixed(1)}%`}
+              />
+            )
+          })}
+        </div>
+      )}
+
+      {/* Position rows */}
       <div className="space-y-2">
-        <div className="bg-pot-dark rounded-2xl p-4 border border-pot-border">
-          <div className="flex justify-between text-xs text-pot-muted mb-2">
-            <span>From</span>
-            <span>Vault: {pot.balance?.toFixed(4)} SOL</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <TokenSearch value={fromMint} onChange={setFromToken} exclude={toMint} className="w-44" />
-            <input type="number" step="0.001" min="0" placeholder="0.00" value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="flex-1 bg-transparent text-right text-2xl font-bold text-white outline-none placeholder:text-pot-border" />
-          </div>
-          <div className="flex gap-2 mt-2 justify-end">
-            {['25%', '50%', 'MAX'].map((pct) => (
-              <button key={pct}
-                onClick={() => {
-                  const pctNum = pct === 'MAX' ? 100 : parseInt(pct)
-                  setAmount(((pot.balance * pctNum) / 100).toFixed(4))
-                }}
-                className="text-xs px-2 py-0.5 rounded-lg bg-pot-card border border-pot-border text-pot-muted hover:text-white transition">
-                {pct}
-              </button>
-            ))}
-          </div>
-        </div>
+        {positions.map((p, i) => {
+          const pct = totalUsd > 0 ? (p.usdValue / totalUsd) * 100 : null
+          const fmtAmount = p.symbol === 'SOL'
+            ? p.amount.toFixed(4)
+            : p.amount >= 1_000_000
+              ? `${(p.amount / 1_000_000).toFixed(2)}M`
+              : p.amount >= 1_000
+                ? `${(p.amount / 1_000).toFixed(2)}K`
+                : p.amount.toFixed(4)
 
-        <div className="flex justify-center">
-          <button onClick={() => { const tmp = fromToken; setFromToken(toToken); setToToken(tmp) }}
-            className="w-8 h-8 rounded-full bg-pot-card border border-pot-border flex items-center justify-center text-pot-muted hover:text-white hover:border-pot-accent/50 transition">
-            ⇅
-          </button>
-        </div>
-
-        <div className="bg-pot-dark rounded-2xl p-4 border border-pot-border">
-          <div className="flex justify-between text-xs text-pot-muted mb-2">
-            <span>To (estimated)</span>
-            {quoteLoading && <span className="animate-pulse">Fetching quote…</span>}
-          </div>
-          <div className="flex items-center gap-3">
-            <TokenSearch value={toMint} onChange={setToToken} exclude={fromMint} className="w-44" />
-            <div className="flex-1 text-right">
-              <div className={`text-2xl font-bold ${outAmount ? 'text-white' : 'text-pot-border'}`}>
-                {outAmount ? outAmount.toLocaleString(undefined, { maximumFractionDigits: 6 }) : '—'}
+          return (
+            <div key={p.mint} className="flex items-center gap-3 p-2.5 rounded-xl bg-pot-dark">
+              <div className={`w-8 h-8 rounded-full ${COLORS[i % COLORS.length]} flex items-center justify-center text-sm shrink-0`}>
+                {p.icon}
               </div>
-              {priceImpact !== null && (
-                <div className={`text-xs ${Math.abs(priceImpact) > 2 ? 'text-red-400' : 'text-pot-muted'}`}>
-                  Impact: {priceImpact.toFixed(3)}%
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-white">{p.symbol}</span>
+                  <span className="text-sm font-mono text-white">
+                    {p.usdValue > 0 ? `$${p.usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '—'}
+                  </span>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {routeLabels.length > 0 && (
-        <div className="mt-3 p-3 bg-pot-dark rounded-xl border border-pot-border">
-          <div className="text-xs text-pot-muted mb-2">Route</div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-semibold text-white">{fromSym}</span>
-            {routeLabels.map((label, i) => (
-              <div key={i} className="flex items-center gap-1.5">
-                <span className="text-pot-muted">→</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-pot-accent/10 border border-pot-accent/20 text-pot-accent">{label}</span>
+                <div className="flex items-center justify-between mt-0.5">
+                  <span className="text-xs text-pot-muted font-mono">{fmtAmount} {p.symbol}</span>
+                  {pct !== null && (
+                    <span className="text-xs text-pot-muted">{pct.toFixed(1)}%</span>
+                  )}
+                </div>
               </div>
-            ))}
-            <span className="text-pot-muted">→</span>
-            <span className="text-xs font-semibold text-white">{toSym}</span>
-          </div>
-        </div>
-      )}
-
-      {toMint && <div className="mt-3"><ScamWarning mint={toMint} symbol={toSym} /></div>}
-
-      <button onClick={handleProposeSwap}
-        disabled={!connected || createProposal.isPending || !amount || parseFloat(amount) <= 0}
-        className="btn-primary w-full !py-3 mt-4">
-        {createProposal.isPending ? 'Creating Proposal…' : connected
-          ? `Propose: Swap ${amount || '0'} ${fromSym} → ${toSym}`
-          : 'Connect Wallet'}
-      </button>
-      {createProposal.isSuccess && (
-        <p className="text-pot-green text-xs text-center mt-2">✅ Proposal created! Head to Governance to vote.</p>
-      )}
-    </div>
+            </div>
+          )
+        })}
+      </div>
+    </>
   )
 }
 
@@ -459,8 +443,20 @@ function GovernancePanel({
   const { data: proposals, isLoading } = useProposals(potPubkey)
   const vote = useVote()
   const execute = useExecuteProposal()
+  const createProposal = useCreateProposal()
 
   const [govTab, setGovTab] = useState<'proposals' | 'swap' | 'budget' | 'settings'>('proposals')
+
+  const handleProposeSwap = async ({ fromMint, toMint, amountSol, description }: {
+    fromMint: string; toMint: string; amountSol: number; description: string
+  }) => {
+    await createProposal.mutateAsync({
+      potAddress: potPubkey,
+      nextProposalId: pot.nextProposalId ?? 0,
+      proposalType: { swap: { fromMint, toMint, amountIn: amountSol, minAmountOut: 0 } },
+      description,
+    })
+  }
 
   return (
     <div className="space-y-4">
@@ -509,7 +505,14 @@ function GovernancePanel({
         </div>
       )}
 
-      {govTab === 'swap' && <SwapPanel potPubkey={potPubkey} pot={pot} />}
+      {govTab === 'swap' && (
+        <JupiterSwapPanel
+          mode="vault"
+          potPubkey={potPubkey}
+          vaultBalance={pot.balance}
+          onPropose={handleProposeSwap}
+        />
+      )}
 
       {govTab === 'budget' && (
         <BudgetGrantPanel
