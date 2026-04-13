@@ -1,1 +1,48 @@
-bm9kZV9tb2R1bGVzLwoucG5wCi5wbnAuanMKY292ZXJhZ2UvCmJ1aWxkLwpkaXN0Lwoudm9sLwpvdXQvCi5EU19TdG9yZQoqLnBlbQpucG0tZGVidWcubG9nKgp5YXJuLWRlYnVnLmxvZyoKeWFybi1lcnJvci5sb2cqCi5wbnBtLWRlYnVnLmxvZyoKLmlkZWEvCi52c2NvZGUvCiouCnN3cAoqLnN3bwogKgouZW52Ci5lbnYubG9jYWwKLmVudi4qLmxvY2FsCi5lbnYuZGV2ZWxvcG1lbnQubG9jYWwKLmVudi50ZXN0LmxvY2FsCi5lbnYucHJvZHVjdGlvbi5sb2NhbAp0YXJnZXQvCi5hbmNob3IvCi50dXJiby8K
+node_modules/
+.pnp
+.pnp.js
+coverage/
+build/
+dist/
+.vol/
+out/
+.DS_Store
+*.pem
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.idea/
+.vscode/
+*.
+swp
+*.swo
+ *
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+target/
+.anchor/
+.turbo/
+# Solana wallet keypairs — NEVER commit
+*keypair.json
+*wallet.json
+*deployer.json
+deploy-keypair.json
+id.json
+
+# Next.js build
+apps/web/.next/
+apps/web/next-env.d.ts
+
+# Anchor deploy artifacts (contain program keys)
+packages/program/target/deploy/*.json
+packages/program/.anchor/
+
+# Local secrets
+secrets/
+*.secret
+*.key
