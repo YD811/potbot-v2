@@ -10,13 +10,14 @@ import {
   getVaultAddress,
   getMemberAddress,
   getProposalAddress,
+  getVoterRecordAddress,
   POT_PROGRAM_ID,
   IDL,
 } from '@potbot/sdk'
 import { useMockStore } from '@/lib/mock-store'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 
-const TAMA_EMOJIS = ['\ud83e\udd5a','\ud83d\udc23','\ud83d\udc24','\ud83e\udd85','\ud83d\udc09','\ud83d\udc51']
+const TAMA_EMOJIS = ['🦚','🐣','🐤','🦅','🐉','🐑']
 
 /* ── Anchor program instance ── */
 
@@ -89,7 +90,7 @@ export function usePots() {
               return {
                 pubkey: acc.publicKey.toBase58(),
                 name: d.name,
-                emoji: d.emoji || '\ud83e\udeb4',
+                emoji: d.emoji || '🪴',
                 balance,
                 totalShares: d.totalShares.toNumber(),
                 memberCount: d.memberCount,
@@ -155,7 +156,7 @@ export function usePot(pubkey?: string) {
           return {
             pubkey,
             name: d.name,
-            emoji: d.emoji || '\ud83e\udeb4',
+            emoji: d.emoji || '🪴',
             balance,
             totalShares: d.totalShares.toNumber(),
             memberCount: d.memberCount,
@@ -333,6 +334,12 @@ export function useCreatePot() {
       yieldStrategy: number
       tradeLevel: number
       withdrawLevel: number
+      /** Max single swap in bps of vault (e.g. 2000 = 20%). Default 2000 */
+      maxTradeSizeBps?: number
+      /** Max members. 0 = unlimited. Default 0 */
+      maxMembers?: number
+      /** Protocol performance fee bps. Default 0 */
+      protocolFeeBps?: number
     }) => {
       if (!publicKey) throw new Error('Wallet not connected')
 
@@ -349,6 +356,9 @@ export function useCreatePot() {
               lockupSeconds: new BN(params.lockupSeconds),
               yieldStrategy: params.yieldStrategy,
               maxYieldAllocationBps: 5000,
+              maxTradeSizeBps: params.maxTradeSizeBps ?? 2000,
+              maxMembers: params.maxMembers ?? 0,
+              protocolFeeBps: params.protocolFeeBps ?? 0,
               tradeLevel: params.tradeLevel,
               withdrawLevel: params.withdrawLevel,
               memberChangeLevel: params.tradeLevel,
@@ -545,13 +555,16 @@ export function useVote() {
           const potPk = new PublicKey(params.potAddress)
           const proposalPk = new PublicKey(params.proposalAddress)
           const [memberPda] = getMemberAddress(potPk, publicKey)
+          const [voterRecordPda] = getVoterRecordAddress(proposalPk, publicKey)
           const tx = await program.methods
             .vote(params.approve)
             .accounts({
               pot: potPk,
               proposal: proposalPk,
               member: memberPda,
+              voterRecord: voterRecordPda,
               voter: publicKey,
+              systemProgram: SystemProgram.programId,
             })
             .rpc()
           return { tx }

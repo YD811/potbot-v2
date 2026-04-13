@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useWallet, useConnection } from '@solana/wallet-adapter-react'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { Modal } from '@potbot/ui'
 import { Spinner } from '@potbot/ui'
+import { useCreatePot } from '@/hooks/usePots'
 
 interface CreatePotModalProps {
   open: boolean
@@ -12,10 +13,10 @@ interface CreatePotModalProps {
 }
 
 const YIELD_OPTIONS = [
-  { value: 'none', label: 'None', desc: 'No yield — pure trading vault' },
-  { value: 'conservative', label: 'Conservative', desc: 'Kamino stablecoins · 3–6% APY' },
-  { value: 'balanced', label: 'Balanced', desc: 'Mixed lending · 10–25% APY' },
-  { value: 'aggressive', label: 'Aggressive', desc: 'High-risk farms · 20–50%+ APY' },
+  { value: 0, label: 'None', desc: 'No yield — pure trading vault' },
+  { value: 1, label: 'Conservative', desc: 'Kamino stablecoins · 3–6% APY' },
+  { value: 2, label: 'Balanced', desc: 'Mixed lending · 10–25% APY' },
+  { value: 3, label: 'Aggressive', desc: 'High-risk farms · 20–50%+ APY' },
 ]
 
 const GOV_OPTIONS = [
@@ -26,53 +27,60 @@ const GOV_OPTIONS = [
   { value: 4, label: 'Consensus', desc: 'All members must agree' },
 ]
 
-const EMOJI_OPTIONS = ['🪴', '🐉', '🦅', '🐤', '🦊', '🐸', '🌿', '💎', '🔥', '⚡']
-
-const TOKEN_GATE_EXAMPLES = [
-  { label: 'BONK', mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixVrtVZvWr8Alfred89u' },
-  { label: 'JUP', mint: 'JUPyiwrYJFskUPiHa7hkeR8NqtwybKv5LqYjTrsixO7' },
-  { label: 'WIF', mint: 'EKpQGSKe94Fp3gWQrW1zYvbwDiQMqFEuer5pVUeX3mQ' },
+const TRADE_SIZE_OPTIONS = [
+  { value: 500,  label: '5%',   desc: 'Very conservative — small bites' },
+  { value: 1000, label: '10%',  desc: 'Conservative — balanced risk' },
+  { value: 2000, label: '20%',  desc: 'Standard — recommended' },
+  { value: 5000, label: '50%',  desc: 'Aggressive — high conviction trades' },
+  { value: 0,    label: '∞',    desc: 'No limit — full vault per trade' },
 ]
+
+const EMOJI_OPTIONS = ['🪴', '🐉', '🦅', '🐤', '🦊', '🐸', '🌿', '💎', '🔥', '⚡']
 
 export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps) {
   const { publicKey } = useWallet()
-  const { connection } = useConnection()
+  const createPot = useCreatePot()
 
   const [step, setStep] = useState(1)
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Form state
+  // Step 1: Identity
   const [name, setName] = useState('')
   const [emoji, setEmoji] = useState('🪴')
   const [isPublic, setIsPublic] = useState(true)
   const [minDeposit, setMinDeposit] = useState('0.1')
-  const [tokenGate, setTokenGate] = useState('')
-  const [requireTokenGate, setRequireTokenGate] = useState(false)
-  const [yieldStrategy, setYieldStrategy] = useState('none')
+
+  // Step 2: Yield
+  const [yieldStrategy, setYieldStrategy] = useState(0)
+
+  // Step 3: Governance & Risk
   const [govLevel, setGovLevel] = useState(2)
+  const [maxTradeSizeBps, setMaxTradeSizeBps] = useState(2000)
 
   const canProceed1 = name.trim().length >= 2 && name.trim().length <= 32
 
   async function handleCreate() {
     if (!publicKey) return
-    setLoading(true)
     setError(null)
 
     try {
-      // TODO: replace with real SDK call once program IDs are deployed
-      // const sdk = new PotSDK({ rpcUrl: process.env.NEXT_PUBLIC_RPC_URL! })
-      // await sdk.createPot({ name, isPublic, minDeposit: ..., yieldStrategy, govLevel })
-
-      // Mock success for now
-      await new Promise(r => setTimeout(r, 1500))
-      const mockPubkey = 'pot' + Math.random().toString(36).slice(2, 14).padEnd(40, '1')
-      onCreated?.(mockPubkey)
+      const result = await createPot.mutateAsync({
+        name: name.trim(),
+        emoji,
+        isPublic,
+        minDeposit: parseFloat(minDeposit) || 0.01,
+        lockupSeconds: 0,
+        yieldStrategy,
+        tradeLevel: govLevel,
+        withdrawLevel: Math.min(govLevel + 1, 4),
+        maxTradeSizeBps,
+        maxMembers: 0,
+        protocolFeeBps: 0,
+      })
+      onCreated?.(result.potAddress)
       handleClose()
     } catch (e: any) {
       setError(e.message ?? 'Transaction failed')
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -82,13 +90,14 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
     setEmoji('🪴')
     setIsPublic(true)
     setMinDeposit('0.1')
-    setTokenGate('')
-    setRequireTokenGate(false)
-    setYieldStrategy('none')
+    setYieldStrategy(0)
     setGovLevel(2)
+    setMaxTradeSizeBps(2000)
     setError(null)
     onClose()
   }
+
+  const loading = createPot.isPending
 
   return (
     <Modal open={open} onClose={handleClose} className="max-w-xl">
@@ -199,62 +208,6 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
                 className="w-full bg-[#0D1117] border border-[#1A2332] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#9945FF] transition-colors"
               />
             </div>
-
-            {/* Token Gate Section */}
-            <div className="border-t border-[#1A2332] pt-5">
-              <div className="flex items-center justify-between py-3 px-4 bg-[#1A2332]/50 rounded-xl mb-4">
-                <div>
-                  <div className="text-sm font-medium">Require Token to Join</div>
-                  <div className="text-xs text-gray-400">Only wallets holding this token can join your POT</div>
-                </div>
-                <button
-                  onClick={() => setRequireTokenGate(!requireTokenGate)}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    requireTokenGate ? 'bg-[#9945FF]' : 'bg-[#1A2332]'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                      requireTokenGate ? 'translate-x-7' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {requireTokenGate && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm text-gray-400 mb-2 block">Token Mint Address</label>
-                    <input
-                      type="text"
-                      value={tokenGate}
-                      onChange={e => setTokenGate(e.target.value)}
-                      placeholder="e.g. TokenkegQfeZyiNwAJsyFbPVwwQnoxwUUKHVrCqFb..."
-                      className="w-full bg-[#0D1117] border border-[#1A2332] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#9945FF] transition-colors text-xs"
-                    />
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-400 mb-2">Quick select:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {TOKEN_GATE_EXAMPLES.map(token => (
-                        <button
-                          key={token.mint}
-                          onClick={() => setTokenGate(token.mint)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                            tokenGate === token.mint
-                              ? 'bg-[#9945FF] text-white'
-                              : 'bg-[#1A2332] text-gray-300 hover:text-white'
-                          }`}
-                        >
-                          {token.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
           </>
         )}
 
@@ -281,34 +234,66 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
           </div>
         )}
 
-        {/* ── Step 3: Governance ── */}
+        {/* ── Step 3: Governance & Risk ── */}
         {step === 3 && (
-          <div className="space-y-2">
-            <p className="text-sm text-gray-400 mb-4">
-              Set the governance level for trade decisions. You can configure per-action later.
-            </p>
-            {GOV_OPTIONS.map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => setGovLevel(opt.value)}
-                className={`w-full text-left px-4 py-3.5 rounded-xl border transition-all ${
-                  govLevel === opt.value
-                    ? 'border-[#9945FF] bg-[#9945FF]/10'
-                    : 'border-[#1A2332] bg-[#0D1117] hover:border-[#243044]'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono bg-[#9945FF]/20 text-[#9945FF] px-1.5 py-0.5 rounded">
-                    L{opt.value}
-                  </span>
-                  <span className="font-semibold text-sm">{opt.label}</span>
-                </div>
-                <div className="text-xs text-gray-400 mt-0.5">{opt.desc}</div>
-              </button>
-            ))}
+          <div className="space-y-5">
+            {/* Governance */}
+            <div>
+              <p className="text-sm text-gray-400 mb-3">
+                Set the governance level for trade decisions.
+              </p>
+              <div className="space-y-2">
+                {GOV_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setGovLevel(opt.value)}
+                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
+                      govLevel === opt.value
+                        ? 'border-[#9945FF] bg-[#9945FF]/10'
+                        : 'border-[#1A2332] bg-[#0D1117] hover:border-[#243044]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono bg-[#9945FF]/20 text-[#9945FF] px-1.5 py-0.5 rounded">
+                        L{opt.value}
+                      </span>
+                      <span className="font-semibold text-sm">{opt.label}</span>
+                    </div>
+                    <div className="text-xs text-gray-400 mt-0.5">{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Max trade size */}
+            <div>
+              <p className="text-sm text-gray-400 mb-3 flex items-center gap-2">
+                <span>🛡️</span>
+                <span>Max trade size per swap</span>
+              </p>
+              <div className="grid grid-cols-5 gap-2">
+                {TRADE_SIZE_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setMaxTradeSizeBps(opt.value)}
+                    className={`text-center px-2 py-2.5 rounded-xl border transition-all ${
+                      maxTradeSizeBps === opt.value
+                        ? 'border-[#9945FF] bg-[#9945FF]/10 text-white'
+                        : 'border-[#1A2332] bg-[#0D1117] text-gray-400 hover:border-[#243044]'
+                    }`}
+                  >
+                    <div className="font-bold text-sm">{opt.label}</div>
+                    <div className="text-[9px] mt-0.5 text-gray-500">{opt.desc.split('—')[0].trim()}</div>
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-gray-600 mt-2">
+                Limits any single proposed swap to this % of the vault balance
+              </p>
+            </div>
 
             {error && (
-              <div className="text-xs text-red-400 bg-red-400/10 rounded-xl px-4 py-3 mt-2">
+              <div className="text-xs text-red-400 bg-red-400/10 rounded-xl px-4 py-3">
                 {error}
               </div>
             )}
@@ -321,9 +306,10 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
         {step > 1 ? (
           <button
             onClick={() => setStep(s => s - 1)}
-            className="text-sm text-gray-400 hover:text-white transition-colors"
+            disabled={loading}
+            className="text-sm text-gray-400 hover:text-white transition-colors disabled:opacity-40"
           >
-            ← Back
+            <- Back
           </button>
         ) : (
           <div />
@@ -335,15 +321,15 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
             disabled={step === 1 && !canProceed1}
             className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Next →
+            Next ->
           </button>
         ) : (
           <button
             onClick={handleCreate}
-            disabled={loading}
+            disabled={loading || !publicKey}
             className="btn-primary disabled:opacity-40 flex items-center gap-2"
           >
-            {loading ? <><Spinner size="sm" /> Creating…</> : '🪴 Create POT'}
+            {loading ? <><Spinner size="sm" /> Creating...</> : '🪴 Create POT'}
           </button>
         )}
       </div>
