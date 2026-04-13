@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const config = {
-  transpilePackages: ['@potbot/sdk'],
+  transpilePackages: ['@potbot/sdk', '@potbot/ui'],
   typescript: {
     // Allow build even with type mismatches from wallet adapter React version conflicts
     ignoreBuildErrors: true,
@@ -16,7 +16,15 @@ const config = {
       os: false,
       path: false,
       crypto: false,
+      stream: false,
+      zlib: false,
     }
+    // Ignore problematic server-only modules on client
+    config.plugins.push(
+      new (require('webpack')).IgnorePlugin({
+        resourceRegExp: /^(encoding)$/,
+      })
+    )
     return config
   },
 }
