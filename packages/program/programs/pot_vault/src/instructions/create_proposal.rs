@@ -113,6 +113,11 @@ pub fn handler(ctx: Context<CreateProposal>, params: CreateProposalParams) -> Re
         ProposalType::AddMember { .. }        => pot.governance.member_change_level,
         ProposalType::RemoveMember { .. }     => pot.governance.member_change_level,
         ProposalType::SetAgent { .. }         => pot.governance.settings_change_level,
+        // ETF tokenization: irreversible — require settings_change_level (supermajority recommended)
+        ProposalType::TokenizePot { .. }      => pot.governance.settings_change_level,
+        // Yield management
+        ProposalType::DepositToYield { .. }   => pot.governance.yield_change_level,
+        ProposalType::WithdrawFromYield { .. } => pot.governance.yield_change_level,
     };
 
     // Auto-pass in autocracy mode when authority proposes

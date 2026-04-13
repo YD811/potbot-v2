@@ -76,6 +76,9 @@ pub fn handler(ctx: Context<Vote>, approve: bool) -> Result<()> {
         ProposalType::AddMember { .. }        => pot.governance.member_change_level,
         ProposalType::RemoveMember { .. }     => pot.governance.member_change_level,
         ProposalType::SetAgent { .. }         => pot.governance.settings_change_level,
+        ProposalType::TokenizePot { .. }      => pot.governance.settings_change_level,
+        ProposalType::DepositToYield { .. }   => pot.governance.yield_change_level,
+        ProposalType::WithdrawFromYield { .. } => pot.governance.yield_change_level,
     };
 
     let required_bps = PotAccount::required_approval_bps(gov_level);

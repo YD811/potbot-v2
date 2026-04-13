@@ -78,9 +78,8 @@ export async function getJupiterQuote(
 
     const inAmountUi  = Number(quote.inAmount)  / Math.pow(10, inDecimals)
     const outAmountUi = Number(quote.outAmount) / Math.pow(10, outDecimals)
-    const priceImpact = parseFloat(quote.priceImpactPct) * 100  // convert to %
+    const priceImpact = parseFloat(quote.priceImpactPct) * 100
 
-    // Build readable route string from routePlan
     const route = quote.routePlan
       .map(r => r.swapInfo.label)
       .filter(Boolean)
@@ -96,7 +95,6 @@ export async function getJupiterQuote(
 
 /**
  * Build, sign and send a swap transaction through Jupiter v6
- * Returns transaction signature or throws
  */
 export async function executeJupiterSwap(
   connection: Connection,
@@ -104,7 +102,6 @@ export async function executeJupiterSwap(
   userPublicKey: PublicKey,
   signTransaction: (tx: VersionedTransaction) => Promise<VersionedTransaction>,
 ): Promise<string> {
-  // 1. Get swap transaction from Jupiter
   const swapRes = await fetch(JUPITER_SWAP_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -123,15 +120,9 @@ export async function executeJupiterSwap(
   }
 
   const { swapTransaction } = await swapRes.json()
-
-  // 2. Deserialize the transaction
   const txBytes = Buffer.from(swapTransaction, 'base64')
   const tx = VersionedTransaction.deserialize(txBytes)
-
-  // 3. Sign with user wallet
   const signedTx = await signTransaction(tx)
-
-  // 4. Send and confirm
   const rawTx = signedTx.serialize()
   const signature = await connection.sendRawTransaction(rawTx, {
     skipPreflight: false,
@@ -139,48 +130,30 @@ export async function executeJupiterSwap(
     maxRetries: 3,
   })
 
-  // 5. Wait for confirmation
   const latestBlockhash = await connection.getLatestBlockhash()
-  await connection.confirmTransaction({
-    signature,
-    ...latestBlockhash,
-  }, 'confirmed')
+  await connection.confirmTransaction({ signature, ...latestBlockhash }, 'confirmed')
 
   return signature
 }
 
-/**
- * Token decimals lookup
- */
 export function getDecimals(mint: string): number {
   const DECIMALS: Record<string, number> = {
     [SOL_MINT]: 9,
     [USDC_MINT]: 6,
     [USDT_MINT]: 6,
-    // BONK
     'DezXAZ8z7PnrnRJjz3wXBoRgixVrtVZvWr8Alfred89u': 5,
-    // JitoSOL
     'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn': 9,
-    // mSOL
     'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So': 9,
-    // JUP
     'JUPyiwrYJFskUPiHa7hkeR8NqtwybKv5LqYjTrsixO7': 6,
-    // WIF
     'EKpQGSKe94Fp3gWQrW1zYvbwDiQMqFEuer5pVUeX3mQ': 6,
   }
   return DECIMALS[mint] ?? 9
 }
 
-/**
- * Convert UI amount to raw amount (lamports / smallest unit)
- */
 export function toRawAmount(uiAmount: number, mint: string): number {
   return Math.floor(uiAmount * Math.pow(10, getDecimals(mint)))
 }
 
-/**
- * Format price impact with colour hint
- */
 export function priceImpactColor(pct: number): string {
   if (pct < 0.1) return 'text-green-400'
   if (pct < 1)   return 'text-yellow-400'

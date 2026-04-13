@@ -37,6 +37,17 @@ export interface PotState {
   // Daily trade tracking
   dailyTradesCount: number
   lastTradeDay: BN
+  // ETF tokenization
+  mode: 'virtual' | 'tokenized'
+  tokenMint: PublicKey | null
+  navPerShareBps: BN
+  tokenTicker: string
+  // Meteora yield
+  meteoraVault: PublicKey | null
+  meteoraLpMint: PublicKey | null
+  meteoraLpBalance: BN
+  totalYieldEarned: BN
+  yieldReservePctBps: number
 }
 
 export interface PotConfig {
@@ -84,6 +95,9 @@ export type ProposalType =
   | { setAgent: { agent: PublicKey; maxTradeBps: number } }
   | { transferFunds: { to: PublicKey; amount: BN; purpose: string } }
   | { updateRiskConfig: { maxTradeSizeBps: number; maxMembers: number } }
+  | { tokenizePot: { ticker: string } }
+  | { depositToYield: { meteoraVault: PublicKey; amount: BN } }
+  | { withdrawFromYield: { lpAmount: BN } }
 
 /* ── Voter Record ── */
 export interface VoterRecord {
