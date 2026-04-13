@@ -23,6 +23,7 @@ import { GovernanceSettings } from '@/components/GovernanceSettings'
 import { BudgetGrantPanel } from '@/components/BudgetGrantPanel'
 import { JupiterSwapPanel } from '@/components/JupiterSwapPanel'
 import { fetchPricesRaw } from '@/lib/useAIAgent-helpers'
+import { reverseSNS, getPotShareText, buildPotDomain } from '@/lib/sns'
 
 const TABS = ['overview', 'shares', 'positions', 'strategy', 'governance', 'agent', 'members'] as const
 type Tab = (typeof TABS)[number]
@@ -43,6 +44,14 @@ export default function PotDetailPage() {
   const [tab, setTab] = useState<Tab>('overview')
 
   const { data: pot, isLoading } = usePot(pubkey)
+  const [snsName, setSnsName] = useState<string | null>(null)
+
+  // Resolve SNS domain for this pot
+  useEffect(() => {
+    if (pubkey) {
+      reverseSNS(pubkey).then(name => setSnsName(name ?? null))
+    }
+  }, [pubkey])
 
   if (isLoading) {
     return (
@@ -54,183 +63,303 @@ export default function PotDetailPage() {
 
   if (!pot) {
     return (
-      <div className="text-center py-20">
-        <div className="text-4xl mb-3">🔍</div>
-        <h2 className="text-xl font-bold text-white mb-2">POT not found</h2>
-        <p className="text-pot-muted mb-4">This vault doesn't exist or hasn't been created yet.</p>
-        <Link href="/" className="text-blue-400 hover:underline">← Back to all POTs</Link>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-2xl text-gray-500">Pot not found</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0D0E11] to-[#1A1B22] pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-[#0D0E11]/95 backdrop-blur border-b border-[#1A2332]">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-3xl">{pot.emoji}</span>
-            <div>
-              <h1 className="text-2xl font-bold text-white">{pot.name}</h1>
-              <p className="text-xs text-gray-500 mt-0.5">Public key: {pubkey.slice(0, 10)}...{pubkey.slice(-10)}</p>
-            </div>
+    <div className="w-full max-w-6xl mx-auto px-4 py-8">
+      {/* Header with pot name, SNS domain, and emoji */}
+      <div className="mb-8 border-b pb-6">
+        <div className="flex items-center gap-4 mb-4">
+          <span className="text-5xl">{pot.emoji}</span>
+          <div>
+            <h1 className="text-4xl font-bold text-white">{pot.name}</h1>
+            {snsName && (
+              <p className="text-lg text-gray-400 font-mono">{snsName}</p>
+            )}
           </div>
+        </div>
+        <p className="text-gray-400 text-sm font-mono break-all">{pot.pubkey}</p>
+      </div>
 
-          {/* Tab navigation */}
-          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
-            {TABS.map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap transition-colors text-sm ${
-                  tab === t
-                    ? 'bg-[#9945FF] text-white'
-                    : 'bg-[#1A2332] text-gray-400 hover:bg-[#243044]'
-                }`}
-              >
-                {TAB_LABELS[t]}
-              </button>
-            ))}
-          </div>
+      {/* Tabs */}
+      <div className="flex gap-2 mb-8 border-b border-gray-700 overflow-x-auto">
+        {TABS.map(tabName => (
+          <button
+            key={tabName}
+            onClick={() => setTab(tabName)}
+            className={`px-4 py-3 font-medium whitespace-nowrap transition-colors ${
+              tab === tabName
+                ? 'text-white border-b-2 border-green-500'
+                : 'text-gray-400 hover:text-gray-300'
+            }`}
+          >
+            {TAB_LABELS[tabName]}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      <div className="min-h-[400px]">
+        {tab === 'overview' && (
+          <OverviewTab pot={pot} />
+        )}
+        {tab === 'shares' && (
+          <SharesTab pot={pot} pubkey={pubkey} />
+        )}
+        {tab === 'positions' && (
+          <PositionsTab pot={pot} />
+        )}
+        {tab === 'strategy' && (
+          <StrategyTab pot={pot} pubkey={pubkey} />
+        )}
+        {tab === 'governance' && (
+          <GovernanceTab pot={pot} pubkey={pubkey} />
+        )}
+        {tab === 'agent' && (
+          <AgentTab pot={pot} pubkey={pubkey} />
+        )}
+        {tab === 'members' && (
+          <MembersTab pot={pot} pubkey={pubkey} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+function OverviewTab({ pot }: { pot: any }) {
+  const stats = calculateTamaStats(pot.tamagotchiLevel, pot.tamagotchiXp)
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Left: Stats */}
+      <div>
+        <h2 className="text-2xl font-bold mb-6 text-white">Pot Stats</h2>
+        <div className="space-y-4">
+          <StatItem label="Balance" value={`${pot.balance.toFixed(2)} SOL`} />
+          <StatItem label="Members" value={pot.memberCount.toString()} />
+          <StatItem label="Trades" value={pot.tradeCount.toString()} />
+          <StatItem label="Total Volume" value={`${(pot.totalVolume / 1e9).toFixed(2)} SOL`} />
+          <StatItem label="Yield Strategy" value={['None', 'Conservative', 'Balanced', 'Aggressive', 'JLP'][pot.yieldStrategy] || 'Unknown'} />
+          <StatItem label="Yield Earned" value={`${(pot.yieldEarned || 0).toFixed(4)} SOL`} />
+          <StatItem label="Created" value={new Date(pot.createdAt).toLocaleDateString()} />
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Overview tab */}
-        {tab === 'overview' && (
-          <div className="grid gap-6">
-            {/* Key stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-[#1A2332] rounded-xl p-4">
-                <p className="text-xs text-gray-500 mb-1">Balance</p>
-                <p className="text-lg font-bold text-white">{pot.balance.toFixed(2)} SOL</p>
-              </div>
-              <div className="bg-[#1A2332] rounded-xl p-4">
-                <p className="text-xs text-gray-500 mb-1">Members</p>
-                <p className="text-lg font-bold text-white">{pot.memberCount}</p>
-              </div>
-              <div className="bg-[#1A2332] rounded-xl p-4">
-                <p className="text-xs text-gray-500 mb-1">Trades</p>
-                <p className="text-lg font-bold text-white">{pot.tradeCount}</p>
-              </div>
-              <div className="bg-[#1A2332] rounded-xl p-4">
-                <p className="text-xs text-gray-500 mb-1">Volume</p>
-                <p className="text-lg font-bold text-white">{pot.totalVolume.toFixed(1)} SOL</p>
-              </div>
-            </div>
+      {/* Right: Tamagotchi */}
+      <div>
+        <h2 className="text-2xl font-bold mb-6 text-white">Tamagotchi Status</h2>
+        <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+          <div className="text-center text-6xl mb-4">🪴</div>
+          <StatItem label="Level" value={pot.tamagotchiLevel.toString()} />
+          <StatItem label="XP" value={pot.tamagotchiXp.toString()} />
+          <StatItem label="Health" value={`${stats.health}%`} />
+          <StatItem label="Happiness" value={`${stats.happiness}%`} />
+          <StatItem label="Growth" value={`${stats.growth}%`} />
+        </div>
+      </div>
+    </div>
+  )
+}
 
-            {/* Tamagotchi section */}
-            {true && (
-              <div className="bg-gradient-to-br from-[#1A2332] to-[#0D1117] rounded-xl p-8 border border-[#243044]">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="text-6xl">{pot.emoji}</div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">Pot Health</h2>
-                    <p className="text-gray-400">Level {pot.tamagotchiLevel} • {pot.tamagotchiXp.toLocaleString()} XP</p>
-                  </div>
-                </div>
-                <div className="mt-4 space-y-2">
-                  <div className="flex justify-between text-sm text-gray-400 mb-1">
-                    <span>Experience</span>
-                    <span>{pot.tamagotchiXp.toLocaleString()} / {(pot.tamagotchiLevel * 5000).toLocaleString()}</span>
-                  </div>
-                  <div className="w-full bg-[#0D1117] rounded-full h-2 overflow-hidden border border-[#1A2332]">
-                    <div
-                      className="bg-gradient-to-r from-[#9945FF] to-[#14F195] h-full transition-all"
-                      style={{ width: `${Math.min(100, (pot.tamagotchiXp / (pot.tamagotchiLevel * 5000)) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+function SharesTab({ pot, pubkey }: { pot: any, pubkey: string }) {
+  const { data: members } = useMembers(pubkey)
 
-            {/* Holdings */}
-            {pot.holdings && pot.holdings.length > 0 && (
-              <div className="bg-[#1A2332] rounded-xl p-6">
-                <h3 className="text-lg font-bold text-white mb-4">Holdings</h3>
-                <div className="space-y-3">
-                  {pot.holdings.map((h) => (
-                    <div key={h.mint} className="flex items-center justify-between p-3 bg-[#0D1117] rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{h.icon}</span>
-                        <div>
-                          <p className="font-semibold text-white text-sm">{h.symbol}</p>
-                          <p className="text-xs text-gray-500">{h.mint.slice(0, 8)}...</p>
-                        </div>
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-6 text-white">Share Distribution</h2>
+      <SharesPanel pot={pot} />
+      
+      {members && members.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-xl font-bold mb-4 text-white">Members</h3>
+          <div className="space-y-2">
+            {members.map((m, i) => (
+              <div key={i} className="flex justify-between items-center bg-gray-800 p-4 rounded">
+                <span className="text-gray-300 font-mono text-sm">{m.pubkey.slice(0, 8)}...</span>
+                <span className="text-white font-bold">{m.shares.toFixed(2)} shares</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PositionsTab({ pot }: { pot: any }) {
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-6 text-white">P&L Dashboard</h2>
+      <PnLDashboard pot={pot} />
+    </div>
+  )
+}
+
+function StrategyTab({ pot, pubkey }: { pot: any, pubkey: string }) {
+  return (
+    <div className="space-y-8">
+      <StrategyPanel pot={pot} />
+      <BudgetGrantPanel potPubkey={pubkey} />
+    </div>
+  )
+}
+
+function GovernanceTab({ pot, pubkey }: { pot: any, pubkey: string }) {
+  const { data: proposals, isLoading: proposalsLoading } = useProposals(pubkey)
+  const { mutate: executeProposal } = useExecuteProposal()
+  const [expandedId, setExpandedId] = useState<number | null>(null)
+
+  if (proposalsLoading) {
+    return <div className="text-gray-400">Loading proposals...</div>
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold mb-6 text-white">Governance</h2>
+        <GovernanceSettings pot={pot} />
+      </div>
+
+      <div>
+        <h3 className="text-xl font-bold mb-4 text-white">Proposals ({proposals?.length || 0})</h3>
+        {proposals && proposals.length > 0 ? (
+          <div className="space-y-3">
+            {proposals.map((p: any) => {
+              // Determine badge for proposal type
+              const getBadge = () => {
+                if (p.proposalType === 'limitOrder') return '⚡ Limit Order'
+                if (p.proposalType === 'dca') return '🔄 DCA'
+                return '🔀 Swap'
+              }
+
+              return (
+                <div
+                  key={p.id}
+                  className="bg-gray-800 rounded-lg p-4 cursor-pointer hover:bg-gray-700 transition"
+                  onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="px-3 py-1 bg-blue-900 text-blue-100 rounded text-sm font-medium">
+                          {getBadge()}
+                        </span>
+                        <h4 className="font-bold text-white">{p.title}</h4>
                       </div>
-                      <p className="font-bold text-white">{h.amount.toLocaleString()}</p>
+                      <p className="text-gray-400 text-sm">{p.description}</p>
                     </div>
-                  ))}
+                    <span className={`px-3 py-1 rounded text-sm font-medium whitespace-nowrap ml-2 ${
+                      p.status === 'active' ? 'bg-yellow-900 text-yellow-100' :
+                      p.status === 'passed' ? 'bg-green-900 text-green-100' :
+                      p.status === 'executed' ? 'bg-blue-900 text-blue-100' :
+                      'bg-red-900 text-red-100'
+                    }`}>
+                      {p.status}
+                    </span>
+                  </div>
+
+                  {/* Voting info */}
+                  <div className="mt-3 flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400">Yes:</span>
+                      <span className="text-green-400 font-bold">{p.yesVotes}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400">No:</span>
+                      <span className="text-red-400 font-bold">{p.noVotes}</span>
+                    </div>
+                  </div>
+
+                  {/* Expanded details */}
+                  {expandedId === p.id && (
+                    <div className="mt-4 pt-4 border-t border-gray-700 space-y-2">
+                      <DetailRow label="ID" value={p.id.toString()} />
+                      <DetailRow label="Type" value={p.proposalType} />
+                      <DetailRow label="Status" value={p.status} />
+                      {p.inputMint && <DetailRow label="Input Mint" value={p.inputMint.slice(0, 8) + '...'} />}
+                      {p.outputMint && <DetailRow label="Output Mint" value={p.outputMint.slice(0, 8) + '...'} />}
+                      {p.inputAmount && <DetailRow label="Amount" value={p.inputAmount.toFixed(2)} />}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (p.status === 'passed') {
+                            executeProposal({ proposalId: p.id.toString(), potPubkey: pubkey })
+                          }
+                        }}
+                        disabled={p.status !== 'passed' || p.executed}
+                        className={`mt-3 px-4 py-2 rounded font-medium transition ${
+                          p.status === 'passed' && !p.executed
+                            ? 'bg-green-600 hover:bg-green-700 text-white'
+                            : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        {p.executed ? 'Executed' : 'Execute'}
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              )
+            })}
           </div>
-        )}
-
-        {/* Shares tab */}
-        {tab === 'shares' && (
-          <SharesPanel pubkey={pubkey} />
-        )}
-
-        {/* Positions tab */}
-        {tab === 'positions' && (
-          <PnLDashboard pubkey={pubkey} />
-        )}
-
-        {/* Strategy tab */}
-        {tab === 'strategy' && (
-          <StrategyPanel pubkey={pubkey} />
-        )}
-
-        {/* Governance tab */}
-        {tab === 'governance' && (
-          <GovernanceSettings pubkey={pubkey} />
-        )}
-
-        {/* AI Agent tab */}
-        {tab === 'agent' && (
-          <AIAgentPanel pubkey={pubkey} />
-        )}
-
-        {/* Members tab */}
-        {tab === 'members' && (
-          <div className="bg-[#1A2332] rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-[#0D1117] border-b border-[#243044]">
-                    <th className="px-6 py-4 text-left font-semibold text-gray-400">Member</th>
-                    <th className="px-6 py-4 text-right font-semibold text-gray-400">Shares</th>
-                    <th className="px-6 py-4 text-right font-semibold text-gray-400">%</th>
-                    <th className="px-6 py-4 text-right font-semibold text-gray-400">Deposited</th>
-                    <th className="px-6 py-4 text-right font-semibold text-gray-400">P&L</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#243044]">
-                  {/* Mock members */}
-                  {[1, 2, 3].map((i) => {
-                    const shares = Math.floor(Math.random() * 50000) + 1000
-                    const sharePercent = (shares / pot.totalShares) * 100
-                    const depositTotal = Math.random() * 50 + 1
-                    const pnl = (Math.random() - 0.5) * 10
-                    return (
-                      <tr key={i} className="hover:bg-[#243044] transition-colors">
-                        <td className="px-6 py-3"><span className="text-gray-300 font-mono">Member{i}</span></td>
-                        <td className="text-right font-mono">{shares.toLocaleString()}</td>
-                        <td className="text-right font-mono">{sharePercent.toFixed(1)}%</td>
-                        <td className="text-right font-mono">{depositTotal.toFixed(2)}</td>
-                        <td className={`text-right font-mono ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {pnl >= 0 ? '+' : ''}{pnl.toFixed(2)}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        ) : (
+          <p className="text-gray-400">No proposals yet</p>
         )}
       </div>
+    </div>
+  )
+}
+
+function AgentTab({ pot, pubkey }: { pot: any, pubkey: string }) {
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-6 text-white">AI Agent Control</h2>
+      <AIAgentPanel pot={pot} potPubkey={pubkey} />
+    </div>
+  )
+}
+
+function MembersTab({ pot, pubkey }: { pot: any, pubkey: string }) {
+  const { data: members } = useMembers(pubkey)
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-6 text-white">Members</h2>
+      {members && members.length > 0 ? (
+        <div className="space-y-3">
+          {members.map((m, i) => (
+            <div key={i} className="bg-gray-800 rounded-lg p-4 flex justify-between items-center">
+              <span className="text-gray-300 font-mono text-sm">{m.pubkey}</span>
+              <span className="text-white font-bold">{m.shares.toFixed(2)} shares</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-400">No members yet</p>
+      )}
+    </div>
+  )
+}
+
+/* ── Helper Components ────────────────────────────────────────────────────────── */
+
+function StatItem({ label, value }: { label: string, value: string }) {
+  return (
+    <div className="flex justify-between items-center">
+      <span className="text-gray-400">{label}:</span>
+      <span className="text-white font-bold">{value}</span>
+    </div>
+  )
+}
+
+function DetailRow({ label, value }: { label: string, value: string }) {
+  return (
+    <div className="flex justify-between items-center text-sm">
+      <span className="text-gray-400">{label}:</span>
+      <span className="text-white font-mono">{value}</span>
     </div>
   )
 }
