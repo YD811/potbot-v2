@@ -1,15 +1,19 @@
+import { createRequire } from 'module'
+const require = createRequire(import.meta.url)
+
 /** @type {import('next').NextConfig} */
 const config = {
   transpilePackages: ['@potbot/sdk', '@potbot/ui'],
-  typescript: {
-    // Allow build even with type mismatches from wallet adapter React version conflicts
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
   webpack: (config) => {
-    // Solana libs need these Node.js polyfill fallbacks in browser
+    // Explicit aliases for Solana/Anchor peer deps that aren't auto-resolved
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'bs58': require.resolve('bs58'),
+    }
+
+    // Node.js polyfill fallbacks for browser bundle
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
@@ -18,13 +22,10 @@ const config = {
       crypto: false,
       stream: false,
       zlib: false,
+      net: false,
+      tls: false,
     }
-    // Ignore problematic server-only modules on client
-    config.plugins.push(
-      new (require('webpack')).IgnorePlugin({
-        resourceRegExp: /^(encoding)$/,
-      })
-    )
+
     return config
   },
 }
