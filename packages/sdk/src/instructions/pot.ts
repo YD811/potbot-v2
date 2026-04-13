@@ -1,7 +1,7 @@
 import type { Program } from '@coral-xyz/anchor'
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import type BN from 'bn.js'
-import { getPotAddress, getVaultAddress, getMemberAddress, getProposalAddress } from '../pda.js'
+import { getPotAddress, getVaultAddress, getMemberAddress, getProposalAddress, getVoterRecordAddress } from '../pda.js'
 
 /* ── Create POT ── */
 
@@ -13,6 +13,12 @@ export interface CreatePotParams {
   lockupSeconds: BN
   yieldStrategy: number       // 0=none, 1=conservative, 2=balanced, 3=aggressive
   maxYieldAllocationBps: number
+  /** Max single swap size as % of vault in bps (e.g. 2000 = 20%). 0 = no limit */
+  maxTradeSizeBps: number
+  /** Max number of members. 0 = unlimited */
+  maxMembers: number
+  /** Protocol performance fee in bps (0-1000) */
+  protocolFeeBps: number
   tradeLevel: number
   withdrawLevel: number
   memberChangeLevel: number
@@ -39,6 +45,9 @@ export async function createPot(
       lockupSeconds: params.lockupSeconds,
       yieldStrategy: params.yieldStrategy,
       maxYieldAllocationBps: params.maxYieldAllocationBps,
+      maxTradeSizeBps: params.maxTradeSizeBps,
+      maxMembers: params.maxMembers,
+      protocolFeeBps: params.protocolFeeBps,
       tradeLevel: params.tradeLevel,
       withdrawLevel: params.withdrawLevel,
       memberChangeLevel: params.memberChangeLevel,
@@ -142,6 +151,7 @@ export async function voteOnProposal(
   approve: boolean
 ) {
   const [memberPda] = getMemberAddress(potAddress, voter)
+  const [voterRecordPda] = getVoterRecordAddress(proposalAddress, voter)
 
   return program.methods
     .vote(approve)
@@ -149,7 +159,9 @@ export async function voteOnProposal(
       pot: potAddress,
       proposal: proposalAddress,
       member: memberPda,
+      voterRecord: voterRecordPda,
       voter,
+      systemProgram: SystemProgram.programId,
     })
     .rpc()
 }

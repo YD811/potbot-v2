@@ -32,6 +32,14 @@ export function getMemberAddress(potAddress: PublicKey, wallet: PublicKey, progr
   )
 }
 
+/** PDA for a voter record (prevents double voting) */
+export function getVoterRecordAddress(proposalAddress: PublicKey, voter: PublicKey, programId = POT_PROGRAM_ID) {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('voter'), proposalAddress.toBuffer(), voter.toBuffer()],
+    programId
+  )
+}
+
 /** PDA for a governance proposal */
 export function getProposalAddress(potAddress: PublicKey, proposalId: number, programId = POT_PROGRAM_ID) {
   const idBuf = Buffer.alloc(8)

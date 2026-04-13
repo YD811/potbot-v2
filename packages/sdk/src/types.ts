@@ -26,6 +26,17 @@ export interface PotState {
   governance: GovSettings
   nextProposalId: BN
   createdAt: BN
+  // Performance & risk fields
+  highWaterMark: BN
+  protocolFeeBps: number
+  lastActivityAt: BN
+  // AI agent
+  agentPubkey: PublicKey | null
+  agentMaxTradeBps: number
+  agentLastProposalAt: BN
+  // Daily trade tracking
+  dailyTradesCount: number
+  lastTradeDay: BN
 }
 
 export interface PotConfig {
@@ -34,6 +45,10 @@ export interface PotConfig {
   lockupSeconds: BN
   yieldStrategy: YieldStrategy
   maxYieldAllocationBps: number
+  /** Max single swap size as % of vault in bps (e.g. 2000 = 20%). 0 = no limit */
+  maxTradeSizeBps: number
+  /** Max number of members. 0 = unlimited */
+  maxMembers: number
 }
 
 export interface GovSettings {
@@ -64,6 +79,20 @@ export type ProposalType =
   | { withdraw: { beneficiary: PublicKey; amount: BN } }
   | { changeSettings: { newTradeLevel: number; newWithdrawLevel: number } }
   | { changeYield: { newStrategy: number } }
+  | { addMember: { wallet: PublicKey } }
+  | { removeMember: { wallet: PublicKey } }
+  | { setAgent: { agent: PublicKey; maxTradeBps: number } }
+  | { transferFunds: { to: PublicKey; amount: BN; purpose: string } }
+  | { updateRiskConfig: { maxTradeSizeBps: number; maxMembers: number } }
+
+/* ── Voter Record ── */
+export interface VoterRecord {
+  proposal: PublicKey
+  voter: PublicKey
+  votedYes: boolean
+  votedAt: BN
+  bump: number
+}
 
 export type ProposalStatus =
   | { active: {} }
