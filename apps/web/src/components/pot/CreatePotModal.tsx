@@ -154,23 +154,38 @@ export function CreatePotModal({ open, onClose, onCreated }: CreatePotModalProps
               </div>
             </div>
 
-            <div className="flex items-center justify-between py-3 px-4 bg-[#1A2332]/50 rounded-xl">
-              <div>
-                <div className="text-sm font-medium">Public POT</div>
-                <div className="text-xs text-gray-400">Anyone can find and request to join</div>
-              </div>
-              <button
-                onClick={() => setIsPublic(!isPublic)}
-                className={`relative w-12 h-6 rounded-full transition-colors ${
-                  isPublic ? 'bg-[#9945FF]' : 'bg-[#1A2332]'
-                }`}
-              >
-                <span
-                  className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                    isPublic ? 'translate-x-7' : 'translate-x-1'
+            {/* Public / Private toggle */}
+            <div className={`rounded-xl border transition-all ${isPublic ? 'border-[#9945FF]/40 bg-[#9945FF]/5' : 'border-[#1A2332] bg-[#1A2332]/50'}`}>
+              <div className="flex items-center justify-between py-3 px-4">
+                <div>
+                  <div className="text-sm font-medium flex items-center gap-2">
+                    {isPublic ? '🌍 Public POT' : '🔒 Private POT'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-0.5">
+                    {isPublic
+                      ? 'Visible on the leaderboard — anyone can request to join'
+                      : 'Hidden from leaderboard — invite-only access'}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsPublic(!isPublic)}
+                  className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${
+                    isPublic ? 'bg-[#9945FF]' : 'bg-[#1A2332]'
                   }`}
-                />
-              </button>
+                >
+                  <span
+                    className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                      isPublic ? 'translate-x-7' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+              {isPublic && (
+                <div className="flex items-center gap-2 px-4 py-2 border-t border-[#9945FF]/20 text-[10px] text-[#9945FF]/70">
+                  <span>🏆</span>
+                  <span>This pot will appear in the public leaderboard and can attract new members</span>
+                </div>
+              )}
             </div>
 
             <div>

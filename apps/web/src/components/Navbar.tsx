@@ -34,6 +34,12 @@ export function Navbar() {
             Dashboard
           </Link>
           <Link
+            href="/leaderboard"
+            className="text-gray-400 transition hover:text-white flex items-center gap-1.5"
+          >
+            🏆 Leaderboard
+          </Link>
+          <Link
             href="/create"
             className="text-gray-400 transition hover:text-white"
           >

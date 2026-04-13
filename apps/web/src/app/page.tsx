@@ -58,12 +58,14 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <p className="text-pot-muted text-xs mt-4">
-          Demo mode active — no wallet needed to explore
-        </p>
-        <Link href="/?demo=true" className="btn-secondary text-sm">
-          Explore Demo
-        </Link>
+        <div className="flex gap-3 mt-4">
+          <p className="text-pot-muted text-xs self-center">
+            Demo mode active — no wallet needed to explore
+          </p>
+          <Link href="/leaderboard" className="btn-secondary text-sm flex items-center gap-1.5">
+            🏆 View Leaderboard
+          </Link>
+        </div>
       </div>
     )
   }
@@ -89,6 +91,23 @@ export default function DashboardPage() {
           <div className="text-xs text-pot-muted mt-1">Total Trades</div>
         </div>
       </div>
+
+      {/* Leaderboard teaser */}
+      <Link
+        href="/leaderboard"
+        className="flex items-center justify-between p-4 mb-6 bg-gradient-to-r from-amber-500/10 to-violet-500/10 border border-amber-500/20 rounded-2xl hover:border-amber-500/40 transition group"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🏆</span>
+          <div>
+            <div className="text-sm font-semibold text-white">Public Leaderboard</div>
+            <div className="text-xs text-pot-muted">
+              {pots?.filter((p) => p.isPublic).length ?? 0} public pots competing — see top performers
+            </div>
+          </div>
+        </div>
+        <span className="text-pot-muted text-sm group-hover:text-white transition">View →</span>
+      </Link>
 
       {/* Header + Search */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
