@@ -1,30 +1,62 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useWallet } from '@solana/wallet-adapter-react'
 import dynamic from 'next/dynamic'
 import { usePots } from '@/hooks/usePots'
-import { calculateTamaStats } from '@/lib/tamagotchi/stats'
+import { useMockStore } from '@/lib/mock-store'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
   { ssr: false }
 )
 
+const YIELD_LABELS: Record<number, string> = {
+  0: 'None',
+  1: 'Conservative',
+  2: 'Balanced',
+  3: 'Aggressive',
+  4: 'JLP',
+}
+
 export default function DashboardPage() {
   const { publicKey, connected } = useWallet()
   const { data: pots, isLoading } = usePots()
-  const [search, setSearch] = useState('')
+  const [search, setSearch]     = useState('')
+  const [tab, setTab]           = useState<'all' | 'mine'>('all')
 
-  const filtered = pots?.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+  const walletStr = publicKey?.toBase58() ?? ''
+
+  // My pot pubkeys via membership + authority
+  const myPotPubkeys = useMemo(() => {
+    if (!walletStr) return new Set<string>()
+    const members = useMockStore.getState().members
+    const fromMembership = members
+      .filter((m) => m.wallet === walletStr)
+      .map((m) => m.potPubkey)
+    return new Set(fromMembership)
+  }, [walletStr])
+
+  const basePots = useMemo(() => {
+    if (tab === 'mine' && walletStr) {
+      return (pots ?? []).filter(
+        (p) => myPotPubkeys.has(p.pubkey) || p.authority === walletStr
+      )
+    }
+    return pots ?? []
+  }, [pots, tab, walletStr, myPotPubkeys])
+
+  const filtered = useMemo(
+    () => basePots.filter((p) => p.name.toLowerCase().includes(search.toLowerCase())),
+    [basePots, search]
   )
 
-  const totalTvl = pots?.reduce((sum, p) => sum + p.balance, 0) ?? 0
+  const totalTvl     = pots?.reduce((sum, p) => sum + p.balance, 0) ?? 0
   const totalMembers = pots?.reduce((sum, p) => sum + p.memberCount, 0) ?? 0
-  const totalTrades = pots?.reduce((sum, p) => sum + p.tradeCount, 0) ?? 0
+  const totalTrades  = pots?.reduce((sum, p) => sum + p.tradeCount, 0) ?? 0
 
+  /* ── Landing (not connected) ── */
   if (!connected) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 text-center">
@@ -47,7 +79,7 @@ export default function DashboardPage() {
             <p className="text-pot-muted text-sm">Pool SOL with friends into shared trading vaults</p>
           </div>
           <div className="card p-5 text-center">
-            <div className="text-3xl mb-2">🗳️</div>
+            <div className="text-3xl mb-2">🗳\ufe0f</div>
             <h3 className="font-semibold text-white mb-1">Governance</h3>
             <p className="text-pot-muted text-sm">Vote on trades with share-weighted governance</p>
           </div>
@@ -70,6 +102,7 @@ export default function DashboardPage() {
     )
   }
 
+  /* ── Dashboard (connected) ── */
   return (
     <div>
       {/* Stats bar */}
@@ -106,24 +139,62 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-        <span className="text-pot-muted text-sm group-hover:text-white transition">View →</span>
+        <span className="text-pot-muted text-sm group-hover:text-white transition">View \u2192</span>
       </Link>
 
-      {/* Header + Search */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <h2 className="text-2xl font-bold">All POTs</h2>
+      {/* Header + Search + Tabs */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+        <h2 className="text-2xl font-bold">POTs</h2>
         <div className="flex gap-3 w-full sm:w-auto">
           <input
             type="text"
             placeholder="Search POTs..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input flex-1 sm:w-64 !py-2 text-sm"
+            className="input flex-1 sm:w-56 !py-2 text-sm"
           />
           <Link href="/create" className="btn-primary text-sm whitespace-nowrap">
             + Create POT
           </Link>
         </div>
+      </div>
+
+      {/* Tab row */}
+      <div className="flex items-center gap-1 mb-6">
+        <button
+          onClick={() => setTab('all')}
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+            tab === 'all'
+              ? 'bg-pot-card border border-pot-border text-white'
+              : 'text-pot-muted hover:text-white'
+          }`}
+        >
+          All POTs
+          <span className="ml-1.5 text-[10px] font-mono opacity-60">{pots?.length ?? 0}</span>
+        </button>
+        <button
+          onClick={() => setTab('mine')}
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+            tab === 'mine'
+              ? 'bg-pot-card border border-pot-accent/30 text-pot-accent'
+              : 'text-pot-muted hover:text-white'
+          }`}
+        >
+          My POTs
+          {walletStr && (
+            <span className="ml-1.5 text-[10px] font-mono opacity-60">
+              {(pots ?? []).filter((p) => myPotPubkeys.has(p.pubkey) || p.authority === walletStr).length}
+            </span>
+          )}
+        </button>
+        {tab === 'mine' && (
+          <Link
+            href="/my-pots"
+            className="ml-auto text-xs text-pot-muted hover:text-white transition"
+          >
+            Full dashboard \u2192
+          </Link>
+        )}
       </div>
 
       {/* POT Grid */}
@@ -137,79 +208,100 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
-      ) : !filtered?.length ? (
+      ) : !filtered.length ? (
         <div className="card p-12 text-center">
           <div className="text-4xl mb-3">🪴</div>
           <h3 className="text-lg font-semibold text-white mb-1">
-            {search ? 'No POTs found' : 'No POTs yet'}
+            {search ? 'No POTs found' : tab === 'mine' ? "You haven't joined any POTs yet" : 'No POTs yet'}
           </h3>
           <p className="text-pot-muted text-sm mb-4">
-            {search ? 'Try a different search term' : 'Create the first collective trading vault!'}
+            {search
+              ? 'Try a different search term'
+              : tab === 'mine'
+              ? 'Deposit into a public vault to join, or create your own'
+              : 'Create the first collective trading vault!'}
           </p>
-          {!search && (
+          <div className="flex gap-3 justify-center">
+            {tab === 'mine' && (
+              <button onClick={() => setTab('all')} className="btn-secondary text-sm">
+                Browse All
+              </button>
+            )}
             <Link href="/create" className="btn-primary text-sm">
-              Create Your First POT
+              Create POT
             </Link>
-          )}
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((pot) => (
-            <Link
-              key={pot.pubkey}
-              href={`/pots/${pot.pubkey}`}
-              className="card p-5 hover:border-pot-green/30 transition-all group"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl group-hover:animate-float">{pot.emoji}</span>
-                  <div>
-                    <h3 className="font-semibold text-white">{pot.name}</h3>
-                    <span className="text-xs text-pot-muted font-mono">
-                      {pot.pubkey.slice(0, 4)}...{pot.pubkey.slice(-4)}
-                    </span>
+          {filtered.map((pot) => {
+            const isMine = myPotPubkeys.has(pot.pubkey) || pot.authority === walletStr
+            return (
+              <Link
+                key={pot.pubkey}
+                href={`/pots/${pot.pubkey}`}
+                className="card p-5 hover:border-pot-green/30 transition-all group relative"
+              >
+                {/* Mine badge */}
+                {isMine && tab === 'all' && (
+                  <span className="absolute top-3 right-3 text-[10px] px-1.5 py-0.5 rounded-full bg-pot-accent/10 text-pot-accent border border-pot-accent/20">
+                    Mine
+                  </span>
+                )}
+
+                {/* Header */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl group-hover:animate-float">{pot.emoji}</span>
+                    <div>
+                      <h3 className="font-semibold text-white">{pot.name}</h3>
+                      <span className="text-xs text-pot-muted font-mono">
+                        {pot.pubkey.slice(0, 4)}...{pot.pubkey.slice(-4)}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-xl">{pot.tamagotchiEmoji}</span>
+                </div>
+
+                {/* Balance */}
+                <div className="text-xl font-bold text-pot-green mb-3">
+                  {pot.balance.toFixed(2)} SOL
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div className="bg-pot-dark rounded-lg p-2 text-center">
+                    <div className="text-white font-medium">{pot.memberCount}</div>
+                    <div className="text-pot-muted">Members</div>
+                  </div>
+                  <div className="bg-pot-dark rounded-lg p-2 text-center">
+                    <div className="text-white font-medium">{pot.tradeCount}</div>
+                    <div className="text-pot-muted">Trades</div>
+                  </div>
+                  <div className="bg-pot-dark rounded-lg p-2 text-center">
+                    <div className="text-white font-medium text-[10px] truncate">
+                      {YIELD_LABELS[pot.yieldStrategy] ?? pot.yieldStrategy}
+                    </div>
+                    <div className="text-pot-muted">Yield</div>
                   </div>
                 </div>
-                <span className="text-xl">{pot.tamagotchiEmoji}</span>
-              </div>
 
-              {/* Balance */}
-              <div className="text-xl font-bold text-pot-green mb-3">
-                {pot.balance.toFixed(2)} SOL
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="bg-pot-dark rounded-lg p-2 text-center">
-                  <div className="text-white font-medium">{pot.memberCount}</div>
-                  <div className="text-pot-muted">Members</div>
+                {/* Tags */}
+                <div className="flex gap-2 mt-3">
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    pot.isPublic
+                      ? 'bg-pot-green/10 text-pot-green'
+                      : 'bg-pot-accent/10 text-pot-accent'
+                  }`}>
+                    {pot.isPublic ? 'Public' : 'Private'}
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-pot-border text-pot-muted">
+                    L{pot.governanceLevel} Gov
+                  </span>
                 </div>
-                <div className="bg-pot-dark rounded-lg p-2 text-center">
-                  <div className="text-white font-medium">{pot.tradeCount}</div>
-                  <div className="text-pot-muted">Trades</div>
-                </div>
-                <div className="bg-pot-dark rounded-lg p-2 text-center">
-                  <div className="text-white font-medium">{pot.yieldStrategy}</div>
-                  <div className="text-pot-muted">Strategy</div>
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div className="flex gap-2 mt-3">
-                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  pot.isPublic
-                    ? 'bg-pot-green/10 text-pot-green'
-                    : 'bg-pot-accent/10 text-pot-accent'
-                }`}>
-                  {pot.isPublic ? 'Public' : 'Private'}
-                </span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-pot-border text-pot-muted">
-                  L{pot.governanceLevel} Gov
-                </span>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>
