@@ -4,7 +4,7 @@
 # =============================================================================
 # Requirements:
 #   - Rust:    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-#   - Solana:  sh -c "$(curl -sSfL https://release.solana.com/v1.18.0/install)"
+#   - Solana:  sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
 #   - Anchor:  cargo install --git https://github.com/coral-xyz/anchor avm --locked
 #              avm install 0.30.1 && avm use 0.30.1
 # =============================================================================
@@ -28,9 +28,10 @@ cd "$SCRIPT_DIR"
 # 1. Check prerequisites
 # ──────────────────────────────────────────────────────────────────────────────
 log "Checking prerequisites..."
-command -v solana  &>/dev/null || err "Solana CLI not found. Install: sh -c \"$(curl -sSfL https://release.solana.com/v1.18.0/install)\""
-command -v anchor  &>/dev/null || err "Anchor CLI not found. Install: cargo install --git https://github.com/coral-xyz/anchor avm --locked"
-command -v cargo   &>/dev/null || err "Rust/Cargo not found. Install: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+command -v solana       &>/dev/null || err "Solana CLI not found. Install: sh -c \"$(curl -sSfL https://release.anza.xyz/stable/install)\""
+command -v solana-keygen &>/dev/null || err "solana-keygen not found (should come with Solana CLI)"
+command -v cargo        &>/dev/null || err "Rust/Cargo not found. Install: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+# cargo build-sbf comes with Solana CLI platform tools
 ok "All prerequisites found"
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -57,39 +58,46 @@ log "Current balance: ${BALANCE} SOL"
 
 if [ "$BALANCE" -lt 3 ] 2>/dev/null; then
   log "Balance low, requesting airdrop..."
-  solana airdrop 4 --url devnet || warn "Airdrop failed (rate limited). Try: https://faucet.solana.com"
+  solana airdrop 4 --url devnet || warn "Airdrop failed (rate limited). Get SOL at: https://faucet.solana.com"
   sleep 5
+  NEW_BAL=$(solana balance --url devnet | awk '{print $1}' | cut -d. -f1)
+  if [ "$NEW_BAL" -lt 1 ] 2>/dev/null; then
+    err "Insufficient SOL. Please fund $DEPLOYER via https://faucet.solana.com then re-run."
+  fi
   solana balance --url devnet
 fi
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 4. Build
+# 4. Build with cargo build-sbf (bypasses anchor IDL generation / nightly issue)
 # ──────────────────────────────────────────────────────────────────────────────
-log "Building Anchor program..."
-RUSTFLAGS="--cfg proc_macro_span" anchor build
-ok "Build successful"
+log "Building program with cargo build-sbf..."
+cargo build-sbf --manifest-path programs/pot_vault/Cargo.toml
+ok "Build successful — $(ls -sh target/deploy/pot_vault.so 2>/dev/null | awk '{print $1}') .so"
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 5. Check if program ID matches keypair (IMPORTANT)
+# 5. Verify / fix program ID
 # ──────────────────────────────────────────────────────────────────────────────
-ACTUAL_ID=$(anchor keys list 2>/dev/null | grep pot_vault | awk '{print $2}' || true)
+KEYPAIR_PATH="target/deploy/pot_vault-keypair.json"
 HARDCODED_ID="Hyi1PNxPMUqwdDukhB2a4fvcBxQHmbXy3CZ95mgyFHA3"
 
-if [ -n "$ACTUAL_ID" ] && [ "$ACTUAL_ID" != "$HARDCODED_ID" ]; then
+if [ ! -f "$KEYPAIR_PATH" ]; then
+  warn "No program keypair found — generating one..."
+  solana-keygen new --outfile "$KEYPAIR_PATH" --no-bip39-passphrase
+fi
+
+ACTUAL_ID=$(solana-keygen pubkey "$KEYPAIR_PATH")
+log "Program keypair ID: $ACTUAL_ID"
+
+if [ "$ACTUAL_ID" != "$HARDCODED_ID" ]; then
   warn "Program ID mismatch!"
   warn "  Keypair ID : $ACTUAL_ID"
   warn "  Hardcoded  : $HARDCODED_ID"
-  warn "Updating declare_id! and Anchor.toml..."
-
-  # Update lib.rs
+  warn "Patching declare_id! in lib.rs and Anchor.toml..."
   sed -i.bak "s/$HARDCODED_ID/$ACTUAL_ID/g" programs/pot_vault/src/lib.rs
-  # Update Anchor.toml
   sed -i.bak "s/$HARDCODED_ID/$ACTUAL_ID/g" Anchor.toml
-
   log "Rebuilding with corrected program ID..."
-  RUSTFLAGS="--cfg proc_macro_span" anchor build
+  cargo build-sbf --manifest-path programs/pot_vault/Cargo.toml
   ok "Rebuild successful"
-
   PROGRAM_ID="$ACTUAL_ID"
 else
   ok "Program ID matches: $HARDCODED_ID"
@@ -100,8 +108,10 @@ fi
 # 6. Deploy
 # ──────────────────────────────────────────────────────────────────────────────
 log "Deploying to devnet..."
-anchor deploy --provider.cluster devnet
-ok "Program deployed!"
+solana program deploy target/deploy/pot_vault.so \
+  --program-id "$KEYPAIR_PATH" \
+  --url https://api.devnet.solana.com
+ok "Program deployed to devnet!"
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 7. Write frontend .env.local
@@ -116,7 +126,7 @@ NEXT_PUBLIC_RPC_URL=https://api.devnet.solana.com
 NEXT_PUBLIC_NETWORK=devnet
 EOF
 
-ok "Frontend env written"
+ok "Frontend env written: $ENV_FILE"
 
 # ──────────────────────────────────────────────────────────────────────────────
 echo ""
