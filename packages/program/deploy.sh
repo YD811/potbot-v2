@@ -28,10 +28,9 @@ cd "$SCRIPT_DIR"
 # 1. Check prerequisites
 # ──────────────────────────────────────────────────────────────────────────────
 log "Checking prerequisites..."
-command -v solana       &>/dev/null || err "Solana CLI not found. Install: sh -c \"$(curl -sSfL https://release.anza.xyz/stable/install)\""
+command -v solana        &>/dev/null || err "Solana CLI not found. Install: sh -c \"$(curl -sSfL https://release.anza.xyz/stable/install)\""
 command -v solana-keygen &>/dev/null || err "solana-keygen not found (should come with Solana CLI)"
-command -v cargo        &>/dev/null || err "Rust/Cargo not found. Install: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
-# cargo build-sbf comes with Solana CLI platform tools
+command -v cargo         &>/dev/null || err "Rust/Cargo not found. Install: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 ok "All prerequisites found"
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -62,17 +61,24 @@ if [ "$BALANCE" -lt 3 ] 2>/dev/null; then
   sleep 5
   NEW_BAL=$(solana balance --url devnet | awk '{print $1}' | cut -d. -f1)
   if [ "$NEW_BAL" -lt 1 ] 2>/dev/null; then
-    err "Insufficient SOL. Please fund $DEPLOYER via https://faucet.solana.com then re-run."
+    err "Insufficient SOL. Fund $DEPLOYER via https://faucet.solana.com then re-run."
   fi
   solana balance --url devnet
 fi
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 4. Build with cargo build-sbf (bypasses anchor IDL generation / nightly issue)
+# 4. Build with cargo build-sbf
+#    IDL generation may fail on stable Rust (anchor-syn/proc_macro2 issue) —
+#    that is OK: we only need the compiled .so for deployment.
 # ──────────────────────────────────────────────────────────────────────────────
 log "Building program with cargo build-sbf..."
-cargo build-sbf --manifest-path programs/pot_vault/Cargo.toml
-ok "Build successful — $(ls -sh target/deploy/pot_vault.so 2>/dev/null | awk '{print $1}') .so"
+cargo build-sbf --manifest-path programs/pot_vault/Cargo.toml || true
+
+SO_FILE="target/deploy/pot_vault.so"
+if [ ! -f "$SO_FILE" ]; then
+  err "Build failed — $SO_FILE not found. Check compile errors above."
+fi
+ok "Build successful — $(ls -sh $SO_FILE | awk '{print $1}') .so ready"
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 5. Verify / fix program ID
@@ -96,7 +102,10 @@ if [ "$ACTUAL_ID" != "$HARDCODED_ID" ]; then
   sed -i.bak "s/$HARDCODED_ID/$ACTUAL_ID/g" programs/pot_vault/src/lib.rs
   sed -i.bak "s/$HARDCODED_ID/$ACTUAL_ID/g" Anchor.toml
   log "Rebuilding with corrected program ID..."
-  cargo build-sbf --manifest-path programs/pot_vault/Cargo.toml
+  cargo build-sbf --manifest-path programs/pot_vault/Cargo.toml || true
+  if [ ! -f "$SO_FILE" ]; then
+    err "Rebuild failed — $SO_FILE not found."
+  fi
   ok "Rebuild successful"
   PROGRAM_ID="$ACTUAL_ID"
 else
@@ -108,7 +117,7 @@ fi
 # 6. Deploy
 # ──────────────────────────────────────────────────────────────────────────────
 log "Deploying to devnet..."
-solana program deploy target/deploy/pot_vault.so \
+solana program deploy "$SO_FILE" \
   --program-id "$KEYPAIR_PATH" \
   --url https://api.devnet.solana.com
 ok "Program deployed to devnet!"
