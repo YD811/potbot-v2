@@ -16,7 +16,8 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./src/*"],
-      "@potbot/sdk": ["../../packages/sdk/src"]
+      "@potbot/sdk": ["../../packages/sdk/src"],
+      "@potbot/ui": ["../../packages/ui/src"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
