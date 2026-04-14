@@ -17,7 +17,7 @@ import {
 import { useMockStore } from '@/lib/mock-store'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 
-const TAMA_EMOJIS = ['🦐','🐣','🐤','🦅','🐉','👑']
+const TAMA_EMOJIS = ['\ud83e\udd5a','\ud83d\udc23','\ud83d\udc24','\ud83e\udd85','\ud83d\udc09','\ud83d\udc51']
 
 /* ── Anchor program instance ── */
 
@@ -72,7 +72,6 @@ export function usePots() {
       if (isLive && program) {
         try {
           const accounts = await (program.account as any).potAccount.all()
-          // Fetch vault balances in parallel
           const withBalances = await Promise.all(
             accounts.map(async (acc: any) => {
               const d = acc.account
@@ -90,7 +89,7 @@ export function usePots() {
               return {
                 pubkey: acc.publicKey.toBase58(),
                 name: d.name,
-                emoji: d.emoji || '🪴',
+                emoji: d.emoji || '\ud83e\udeb4',
                 balance,
                 totalShares: d.totalShares.toNumber(),
                 memberCount: d.memberCount,
@@ -111,8 +110,8 @@ export function usePots() {
         }
       }
 
-      // Mock fallback
-      return mockStore.pots.map((p) => {
+      // Mock fallback — use .getState() to always get fresh data
+      return useMockStore.getState().pots.map((p) => {
         const tama = calculateTamaStats({
           tradeVolume: p.tradeCount * 2,
           memberCount: p.memberCount,
@@ -156,7 +155,7 @@ export function usePot(pubkey?: string) {
           return {
             pubkey,
             name: d.name,
-            emoji: d.emoji || '🪴',
+            emoji: d.emoji || '\ud83e\udeb4',
             balance,
             totalShares: d.totalShares.toNumber(),
             memberCount: d.memberCount,
@@ -179,7 +178,8 @@ export function usePot(pubkey?: string) {
         }
       }
 
-      const p = mockStore.pots.find((p) => p.pubkey === pubkey)
+      const store = useMockStore.getState()
+      const p = store.pots.find((p) => p.pubkey === pubkey)
       if (!p) return null
       const tama = calculateTamaStats({
         tradeVolume: p.tradeCount * 2,
@@ -196,7 +196,7 @@ export function usePot(pubkey?: string) {
         withdrawGovernanceLevel: 2,
         minDeposit: 0.01,
         lockupSeconds: 0,
-        nextProposalId: mockStore.getProposals(pubkey).length,
+        nextProposalId: store.getProposals(pubkey).length,
         authority: p.pubkey,
       }
     },
@@ -241,8 +241,9 @@ export function useMembers(potPubkey?: string) {
         }
       }
 
-      const members = mockStore.getMembers(potPubkey)
-      const pot = mockStore.pots.find((p) => p.pubkey === potPubkey)
+      const store = useMockStore.getState()
+      const members = store.getMembers(potPubkey)
+      const pot = store.pots.find((p) => p.pubkey === potPubkey)
       const totalShares = pot?.totalShares ?? 1
       return members.map((m) => ({
         ...m,
@@ -273,7 +274,6 @@ export function useProposals(potPubkey?: string) {
           return accounts.map((acc: any) => {
             const p = acc.account
             const typeKey = Object.keys(p.proposalType)[0]
-            const totalVotes = p.yesShares.toNumber() + p.noShares.toNumber()
             const snapshot = p.totalSharesSnapshot.toNumber()
             return {
               pubkey: acc.publicKey.toBase58(),
@@ -296,9 +296,8 @@ export function useProposals(potPubkey?: string) {
         }
       }
 
-      return mockStore.getProposals(potPubkey)
+      return useMockStore.getState().getProposals(potPubkey)
         .map((p) => {
-          const totalVotes = p.yesShares + p.noShares
           return {
             ...p,
             yesPercent: p.totalSharesSnapshot > 0 ? Math.round((p.yesShares / p.totalSharesSnapshot) * 100) : 0,
@@ -318,7 +317,6 @@ export function useProposals(potPubkey?: string) {
    ══════════════════════════════ */
 
 export function useCreatePot() {
-  const mockStore = useMockStore()
   const { publicKey } = useWallet()
   const program = useProgram()
   const { data: isLive } = useIsProgramLive()
@@ -334,11 +332,8 @@ export function useCreatePot() {
       yieldStrategy: number
       tradeLevel: number
       withdrawLevel: number
-      /** Max single swap in bps of vault (e.g. 2000 = 20%). Default 2000 */
       maxTradeSizeBps?: number
-      /** Max members. 0 = unlimited. Default 0 */
       maxMembers?: number
-      /** Protocol performance fee bps. Default 0 */
       protocolFeeBps?: number
     }) => {
       if (!publicKey) throw new Error('Wallet not connected')
@@ -357,9 +352,6 @@ export function useCreatePot() {
               lockupSeconds: new BN(params.lockupSeconds),
               yieldStrategy: params.yieldStrategy,
               maxYieldAllocationBps: 5000,
-              maxTradeSizeBps: params.maxTradeSizeBps ?? 2000,
-              maxMembers: params.maxMembers ?? 0,
-              protocolFeeBps: params.protocolFeeBps ?? 0,
               tradeLevel: params.tradeLevel,
               withdrawLevel: params.withdrawLevel,
               memberChangeLevel: params.tradeLevel,
@@ -381,7 +373,8 @@ export function useCreatePot() {
         }
       }
 
-      const potAddress = mockStore.createPot({
+      // Always use .getState() in async callbacks to avoid stale closure
+      const potAddress = useMockStore.getState().createPot({
         authority: publicKey.toBase58(),
         ...params,
       })
@@ -394,7 +387,6 @@ export function useCreatePot() {
 }
 
 export function useDeposit() {
-  const mockStore = useMockStore()
   const { publicKey } = useWallet()
   const program = useProgram()
   const { data: isLive } = useIsProgramLive()
@@ -426,7 +418,7 @@ export function useDeposit() {
         }
       }
 
-      mockStore.deposit(params.potAddress, publicKey.toBase58(), params.amountSol)
+      useMockStore.getState().deposit(params.potAddress, publicKey.toBase58(), params.amountSol)
       return { tx: 'mock-tx-' + Date.now() }
     },
     onSuccess: (_, vars) => {
@@ -438,7 +430,6 @@ export function useDeposit() {
 }
 
 export function useWithdraw() {
-  const mockStore = useMockStore()
   const { publicKey } = useWallet()
   const program = useProgram()
   const { data: isLive } = useIsProgramLive()
@@ -469,7 +460,7 @@ export function useWithdraw() {
         }
       }
 
-      mockStore.withdraw(params.potAddress, publicKey.toBase58(), params.shares)
+      useMockStore.getState().withdraw(params.potAddress, publicKey.toBase58(), params.shares)
       return { tx: 'mock-tx-' + Date.now() }
     },
     onSuccess: (_, vars) => {
@@ -481,7 +472,6 @@ export function useWithdraw() {
 }
 
 export function useCreateProposal() {
-  const mockStore = useMockStore()
   const { publicKey } = useWallet()
   const program = useProgram()
   const { data: isLive } = useIsProgramLive()
@@ -521,7 +511,7 @@ export function useCreateProposal() {
       }
 
       const typeKey = Object.keys(params.proposalType)[0]
-      const proposalAddress = mockStore.createProposal({
+      const proposalAddress = useMockStore.getState().createProposal({
         potPubkey: params.potAddress,
         proposer: publicKey.toBase58(),
         type: typeKey,
@@ -537,7 +527,6 @@ export function useCreateProposal() {
 }
 
 export function useVote() {
-  const mockStore = useMockStore()
   const { publicKey } = useWallet()
   const program = useProgram()
   const { data: isLive } = useIsProgramLive()
@@ -574,7 +563,7 @@ export function useVote() {
         }
       }
 
-      mockStore.vote(params.proposalAddress, publicKey.toBase58(), params.approve)
+      useMockStore.getState().vote(params.proposalAddress, publicKey.toBase58(), params.approve)
       return { tx: 'mock-tx-' + Date.now() }
     },
     onSuccess: (_, vars) => {
@@ -585,7 +574,6 @@ export function useVote() {
 }
 
 export function useExecuteProposal() {
-  const mockStore = useMockStore()
   const { publicKey } = useWallet()
   const program = useProgram()
   const { data: isLive } = useIsProgramLive()
@@ -619,7 +607,7 @@ export function useExecuteProposal() {
         }
       }
 
-      mockStore.executeProposal(params.proposalAddress)
+      useMockStore.getState().executeProposal(params.proposalAddress)
       return { tx: 'mock-tx-' + Date.now() }
     },
     onSuccess: (_, vars) => {
