@@ -62,368 +62,712 @@ export interface MockPot {
   holdings?: TokenHolding[]
 
   // ── Yield (Meteora mock) ──────────────────────────────────────────────────
-  lastYieldAccrual: number  // ms
-  yieldAccrued: number      // SOL accrued from yield strategy
+  meteoraLpBalance: number    // SOL-equivalent deposited in Meteora
+  totalYieldEarned: number    // cumulative SOL earned via yield
+  lastYieldAccrualAt: number  // unix ms
+
+  // ── ETF tokenization ──────────────────────────────────────────────────────
+  mode: 'virtual' | 'tokenized'
+  tokenTicker: string         // set when tokenized
+  navPerShareBps: number      // 10000 = 1.0x, no change; grows with yield/profit
 }
 
-export interface MockProposal {
-  id: number
+export interface MockMember {
   potPubkey: string
-  title: string
-  description: string
-  action: string   // "swap" | "divest" | "governance" etc.
-  votesFor: number
-  votesAgainst: number
-  executed: boolean
-  timestamp: number
-}
-
-export interface StoreMember {
-  pubkey: string
+  wallet: string
   shares: number
+  depositTotal: number
+  withdrawTotal: number
   joinedAt: number
 }
 
-export interface StoreState {
-  // Pots
-  pots: Map<string, MockPot>
-  members: Map<string, StoreMember[]>  // pubkey -> array of members in that pot
-
-  // Proposals
-  proposals: Map<string, MockProposal[]>  // pot pubkey -> proposals
-
-  // Actions
-  createPot: (name: string, emoji: string, yieldStrategy: number) => void
-  deposit: (potPubkey: string, amount: number) => void
-  withdraw: (potPubkey: string, amount: number) => void
-  createProposal: (potPubkey: string, title: string, description: string, action: string) => void
-  vote: (potPubkey: string, proposalId: number, voteFor: boolean) => void
-  executeProposal: (potPubkey: string, proposalId: number) => void
-  accrueYield: () => void  // called by timer
+export interface MockProposal {
+  pubkey: string
+  potPubkey: string
+  proposalId: number
+  proposer: string
+  type: string
+  description: string
+  status: 'active' | 'passed' | 'rejected' | 'executed' | 'expired'
+  yesShares: number
+  noShares: number
+  totalSharesSnapshot: number
+  createdAt: Date
+  voters: string[]
 }
 
-/* ── Seed Data ─────────────────────────────────────────────────────────────── */
+/* ── Seed data ──────────────────────────────────────────────────────────────── */
 
-const SEED_POTS: Array<Omit<MockPot, 'pubkey'>> = [
+const SEED_POTS: MockPot[] = [
   {
-    name: 'Birthday Fund',
-    emoji: '🎂',
-    balance: 15.5,
-    totalShares: 50,
-    memberCount: 8,
-    tradeCount: 2,
-    totalVolume: 45.3,
+    pubkey: 'DemoPoT1111111111111111111111111111111111111',
+    name: 'Diamond Hands DAO',
+    emoji: '💎',
+    balance: 42.5,
+    totalShares: 42500,
+    memberCount: 5,
+    tradeCount: 12,
+    totalVolume: 156.3,
     tamagotchiLevel: 3,
-    tamagotchiXp: 1200,
+    tamagotchiXp: 2400,
     isPublic: true,
-    yieldStrategy: 1,  // Conservative
-    tradeLevel: 0,
-    withdrawLevel: 0,
-    authority: Keypair.generate().publicKey.toString(),
-    createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000,  // 30 days ago
-    nextProposalId: 1,
-    lastYieldAccrual: Date.now(),
-    yieldAccrued: 0.42,
-  },
-  {
-    name: 'Vacation Pool',
-    emoji: '✈️',
-    balance: 250,
-    totalShares: 100,
-    memberCount: 12,
-    tradeCount: 5,
-    totalVolume: 890.25,
-    tamagotchiLevel: 5,
-    tamagotchiXp: 3500,
-    isPublic: false,
-    yieldStrategy: 2,  // Balanced
-    tradeLevel: 1,
-    withdrawLevel: 0,
-    authority: Keypair.generate().publicKey.toString(),
-    createdAt: Date.now() - 60 * 24 * 60 * 60 * 1000,  // 60 days ago
+    yieldStrategy: 2,
+    tradeLevel: 2,
+    withdrawLevel: 2,
+    authority: 'SeedAuth1111111111111111111111111111111111',
+    createdAt: Date.now() - 7 * 86400000,
     nextProposalId: 3,
-    lastYieldAccrual: Date.now(),
-    yieldAccrued: 8.75,
+    holdings: [
+      { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', symbol: 'USDC', icon: '💵', amount: 820,  decimals: 6 },
+      { mint: 'JUPyiwrYJFskUPiHa7hkeR8NqtwybKv5LqYjTrsixO7', symbol: 'JUP',  icon: '🪐', amount: 1200, decimals: 6 },
+    ],
+    meteoraLpBalance: 25.5,
+    totalYieldEarned: 0.42,
+    lastYieldAccrualAt: Date.now(),
+    mode: 'virtual',
+    tokenTicker: '',
+    navPerShareBps: 10098,
   },
   {
-    name: 'Gaming Gear Fund',
-    emoji: '🎮',
-    balance: 48.2,
-    totalShares: 120,
-    memberCount: 15,
-    tradeCount: 8,
-    totalVolume: 340.6,
+    pubkey: 'DemoPoT2222222222222222222222222222222222222',
+    name: 'Degen Squad',
+    emoji: '🐸',
+    balance: 8.2,
+    totalShares: 8200,
+    memberCount: 3,
+    tradeCount: 28,
+    totalVolume: 310.7,
+    tamagotchiLevel: 4,
+    tamagotchiXp: 8500,
+    isPublic: true,
+    yieldStrategy: 3,
+    tradeLevel: 1,
+    withdrawLevel: 1,
+    authority: 'SeedAuth2222222222222222222222222222222222',
+    createdAt: Date.now() - 14 * 86400000,
+    nextProposalId: 5,
+    holdings: [
+      { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixVrtVZvWr8Alfred89u', symbol: 'BONK', icon: '🐕', amount: 125_000_000, decimals: 5 },
+      { mint: 'EKpQGSKe94Fp3gWQrW1zYvbwDiQMqFEuer5pVUeX3mQ', symbol: 'WIF',  icon: '🐶', amount: 480,        decimals: 6 },
+    ],
+    meteoraLpBalance: 6.56,
+    totalYieldEarned: 0.31,
+    lastYieldAccrualAt: Date.now(),
+    mode: 'virtual',
+    tokenTicker: '',
+    navPerShareBps: 10150,
+  },
+  {
+    pubkey: 'DemoPoT3333333333333333333333333333333333333',
+    name: 'Safe Stack',
+    emoji: '🛡️',
+    balance: 125.0,
+    totalShares: 125000,
+    memberCount: 8,
+    tradeCount: 4,
+    totalVolume: 45.2,
     tamagotchiLevel: 2,
     tamagotchiXp: 890,
-    isPublic: true,
-    yieldStrategy: 0,  // None
-    tradeLevel: 2,
-    withdrawLevel: 1,
-    authority: Keypair.generate().publicKey.toString(),
-    createdAt: Date.now() - 10 * 24 * 60 * 60 * 1000,  // 10 days ago
-    nextProposalId: 2,
-    lastYieldAccrual: Date.now(),
-    yieldAccrued: 0,
-  },
-  {
-    name: 'Project Fund',
-    emoji: '🚀',
-    balance: 500,
-    totalShares: 200,
-    memberCount: 20,
-    tradeCount: 12,
-    totalVolume: 2100.75,
-    tamagotchiLevel: 4,
-    tamagotchiXp: 2800,
-    isPublic: true,
-    yieldStrategy: 3,  // Aggressive
-    tradeLevel: 3,
-    withdrawLevel: 1,
-    authority: Keypair.generate().publicKey.toString(),
-    createdAt: Date.now() - 90 * 24 * 60 * 60 * 1000,  // 90 days ago
-    nextProposalId: 5,
-    lastYieldAccrual: Date.now(),
-    yieldAccrued: 42.5,
-  },
-  {
-    name: 'Charity Drive',
-    emoji: '❤️',
-    balance: 75.8,
-    totalShares: 75,
-    memberCount: 18,
-    tradeCount: 3,
-    totalVolume: 125.4,
-    tamagotchiLevel: 3,
-    tamagotchiXp: 1500,
-    isPublic: true,
-    yieldStrategy: 1,  // Conservative
-    tradeLevel: 0,
-    withdrawLevel: 0,
-    authority: Keypair.generate().publicKey.toString(),
-    createdAt: Date.now() - 45 * 24 * 60 * 60 * 1000,  // 45 days ago
-    nextProposalId: 1,
-    lastYieldAccrual: Date.now(),
-    yieldAccrued: 2.1,
-  },
-  {
-    name: 'House Improvement',
-    emoji: '🏡',
-    balance: 180,
-    totalShares: 150,
-    memberCount: 6,
-    tradeCount: 4,
-    totalVolume: 620.3,
-    tamagotchiLevel: 2,
-    tamagotchiXp: 950,
     isPublic: false,
-    yieldStrategy: 2,  // Balanced
+    yieldStrategy: 1,
+    tradeLevel: 3,
+    withdrawLevel: 3,
+    authority: 'SeedAuth3333333333333333333333333333333333',
+    createdAt: Date.now() - 21 * 86400000,
+    nextProposalId: 2,
+    holdings: [
+      { mint: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn', symbol: 'JitoSOL', icon: '🔥', amount: 62.5, decimals: 9 },
+      { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', symbol: 'USDC',    icon: '💵', amount: 5400, decimals: 6 },
+    ],
+    meteoraLpBalance: 37.5,
+    totalYieldEarned: 0.24,
+    lastYieldAccrualAt: Date.now(),
+    mode: 'virtual',
+    tokenTicker: '',
+    navPerShareBps: 10019,
+  },
+  {
+    pubkey: 'DemoPoT4444444444444444444444444444444444444',
+    name: 'Alpha Hunters',
+    emoji: '🦅',
+    balance: 87.3,
+    totalShares: 87300,
+    memberCount: 11,
+    tradeCount: 47,
+    totalVolume: 892.4,
+    tamagotchiLevel: 5,
+    tamagotchiXp: 15200,
+    isPublic: true,
+    yieldStrategy: 2,
+    tradeLevel: 2,
+    withdrawLevel: 2,
+    authority: 'SeedAuth4444444444444444444444444444444444',
+    createdAt: Date.now() - 30 * 86400000,
+    nextProposalId: 12,
+    holdings: [
+      { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', symbol: 'USDC', icon: '💵', amount: 3200,        decimals: 6 },
+      { mint: 'JUPyiwrYJFskUPiHa7hkeR8NqtwybKv5LqYjTrsixO7', symbol: 'JUP',  icon: '🪐', amount: 8500,        decimals: 6 },
+      { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixVrtVZvWr8Alfred89u', symbol: 'BONK', icon: '🐕', amount: 450_000_000, decimals: 5 },
+    ],
+    meteoraLpBalance: 52.4,
+    totalYieldEarned: 1.84,
+    lastYieldAccrualAt: Date.now(),
+    mode: 'tokenized',
+    tokenTicker: 'ALPHA',
+    navPerShareBps: 10840,
+  },
+  {
+    pubkey: 'DemoPoT5555555555555555555555555555555555555',
+    name: 'Moon Frogs',
+    emoji: '🌙',
+    balance: 19.8,
+    totalShares: 19800,
+    memberCount: 4,
+    tradeCount: 63,
+    totalVolume: 445.1,
+    tamagotchiLevel: 4,
+    tamagotchiXp: 11000,
+    isPublic: true,
+    yieldStrategy: 3,
     tradeLevel: 1,
     withdrawLevel: 1,
-    authority: Keypair.generate().publicKey.toString(),
-    createdAt: Date.now() - 75 * 24 * 60 * 60 * 1000,  // 75 days ago
-    nextProposalId: 2,
-    lastYieldAccrual: Date.now(),
-    yieldAccrued: 6.3,
+    authority: 'SeedAuth5555555555555555555555555555555555',
+    createdAt: Date.now() - 10 * 86400000,
+    nextProposalId: 8,
+    holdings: [
+      { mint: 'EKpQGSKe94Fp3gWQrW1zYvbwDiQMqFEuer5pVUeX3mQ', symbol: 'WIF',  icon: '🐶', amount: 2100,        decimals: 6 },
+      { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixVrtVZvWr8Alfred89u', symbol: 'BONK', icon: '🐕', amount: 900_000_000, decimals: 5 },
+    ],
+    meteoraLpBalance: 15.84,
+    totalYieldEarned: 0.55,
+    lastYieldAccrualAt: Date.now(),
+    mode: 'virtual',
+    tokenTicker: '',
+    navPerShareBps: 10278,
   },
   {
-    name: 'Education Fund',
-    emoji: '📚',
-    balance: 320,
-    totalShares: 250,
-    memberCount: 25,
-    tradeCount: 7,
-    totalVolume: 1450.8,
-    tamagotchiLevel: 4,
-    tamagotchiXp: 2200,
+    pubkey: 'DemoPoT6666666666666666666666666666666666666',
+    name: 'Yield Farmers',
+    emoji: '🌾',
+    balance: 210.0,
+    totalShares: 210000,
+    memberCount: 15,
+    tradeCount: 8,
+    totalVolume: 67.5,
+    tamagotchiLevel: 2,
+    tamagotchiXp: 1200,
     isPublic: true,
-    yieldStrategy: 4,  // JLP
-    tradeLevel: 2,
-    withdrawLevel: 0,
-    authority: Keypair.generate().publicKey.toString(),
-    createdAt: Date.now() - 120 * 24 * 60 * 60 * 1000,  // 120 days ago
+    yieldStrategy: 1,
+    tradeLevel: 3,
+    withdrawLevel: 3,
+    authority: 'SeedAuth6666666666666666666666666666666666',
+    createdAt: Date.now() - 45 * 86400000,
     nextProposalId: 4,
-    lastYieldAccrual: Date.now(),
-    yieldAccrued: 28.6,
+    holdings: [
+      { mint: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn', symbol: 'JitoSOL', icon: '🔥', amount: 98.5,  decimals: 9 },
+      { mint: 'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So', symbol: 'mSOL',    icon: '💎', amount: 45.2,  decimals: 9 },
+      { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', symbol: 'USDC',    icon: '💵', amount: 12000, decimals: 6 },
+    ],
+    meteoraLpBalance: 63.0,
+    totalYieldEarned: 2.31,
+    lastYieldAccrualAt: Date.now(),
+    mode: 'virtual',
+    tokenTicker: '',
+    navPerShareBps: 10110,
+  },
+  {
+    pubkey: 'DemoPoT7777777777777777777777777777777777777',
+    name: 'JLP Hedged Vault',
+    emoji: '⚡',
+    balance: 48.0,
+    totalShares: 48000,
+    memberCount: 7,
+    tradeCount: 22,
+    totalVolume: 384.5,
+    tamagotchiLevel: 3,
+    tamagotchiXp: 3800,
+    isPublic: true,
+    yieldStrategy: 4,
+    tradeLevel: 2,
+    withdrawLevel: 2,
+    authority: 'SeedAuth7777777777777777777777777777777777',
+    createdAt: Date.now() - 12 * 86400000,
+    nextProposalId: 3,
+    holdings: [
+      { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', symbol: 'USDC',  icon: '💵', amount: 2400, decimals: 6 },
+      { mint: 'JUPyiwrYJFskUPiHa7hkeR8NqtwybKv5LqYjTrsixO7', symbol: 'JUP',   icon: '🪐', amount: 3200, decimals: 6 },
+      { mint: 'So11111111111111111111111111111111111111112',  symbol: 'SOL',   icon: '◎',  amount: 9.6,  decimals: 9 },
+    ],
+    meteoraLpBalance: 38.4,
+    totalYieldEarned: 1.28,
+    lastYieldAccrualAt: Date.now(),
+    mode: 'virtual',
+    tokenTicker: '',
+    navPerShareBps: 10342,
   },
 ]
 
-/* ── Store ───────────────────────────────────────────────────────────────────── */
+const SEED_MEMBERS: MockMember[] = [
+  { potPubkey: 'DemoPoT1111111111111111111111111111111111111', wallet: 'SeedAuth1111111111111111111111111111111111', shares: 20000, depositTotal: 20.0, withdrawTotal: 0, joinedAt: Date.now() - 7 * 86400000 },
+  { potPubkey: 'DemoPoT1111111111111111111111111111111111111', wallet: 'Member1A1111111111111111111111111111111111', shares: 10000, depositTotal: 10.0, withdrawTotal: 0, joinedAt: Date.now() - 6 * 86400000 },
+  { potPubkey: 'DemoPoT1111111111111111111111111111111111111', wallet: 'Member1B1111111111111111111111111111111111', shares: 5000,  depositTotal: 5.0,  withdrawTotal: 0, joinedAt: Date.now() - 5 * 86400000 },
+  { potPubkey: 'DemoPoT1111111111111111111111111111111111111', wallet: 'Member1C1111111111111111111111111111111111', shares: 4500,  depositTotal: 4.5,  withdrawTotal: 0, joinedAt: Date.now() - 3 * 86400000 },
+  { potPubkey: 'DemoPoT1111111111111111111111111111111111111', wallet: 'Member1D1111111111111111111111111111111111', shares: 3000,  depositTotal: 3.0,  withdrawTotal: 0, joinedAt: Date.now() - 1 * 86400000 },
+  { potPubkey: 'DemoPoT4444444444444444444444444444444444444', wallet: 'SeedAuth4444444444444444444444444444444444', shares: 40000, depositTotal: 40.0, withdrawTotal: 0, joinedAt: Date.now() - 30 * 86400000 },
+  { potPubkey: 'DemoPoT4444444444444444444444444444444444444', wallet: 'Member4A1111111111111111111111111111111111', shares: 25000, depositTotal: 25.0, withdrawTotal: 0, joinedAt: Date.now() - 25 * 86400000 },
+  { potPubkey: 'DemoPoT4444444444444444444444444444444444444', wallet: 'Member4B1111111111111111111111111111111111', shares: 22300, depositTotal: 22.3, withdrawTotal: 0, joinedAt: Date.now() - 20 * 86400000 },
+  { potPubkey: 'DemoPoT7777777777777777777777777777777777777', wallet: 'SeedAuth7777777777777777777777777777777777', shares: 20000, depositTotal: 20.0, withdrawTotal: 0, joinedAt: Date.now() - 12 * 86400000 },
+  { potPubkey: 'DemoPoT7777777777777777777777777777777777777', wallet: 'Member7A1111111111111111111111111111111111', shares: 12000, depositTotal: 12.0, withdrawTotal: 0, joinedAt: Date.now() - 11 * 86400000 },
+  { potPubkey: 'DemoPoT7777777777777777777777777777777777777', wallet: 'Member7B1111111111111111111111111111111111', shares: 8000,  depositTotal: 8.0,  withdrawTotal: 0, joinedAt: Date.now() - 10 * 86400000 },
+  { potPubkey: 'DemoPoT7777777777777777777777777777777777777', wallet: 'Member7C1111111111111111111111111111111111', shares: 4800,  depositTotal: 4.8,  withdrawTotal: 0, joinedAt: Date.now() - 8 * 86400000 },
+  { potPubkey: 'DemoPoT7777777777777777777777777777777777777', wallet: 'Member7D1111111111111111111111111111111111', shares: 2400,  depositTotal: 2.4,  withdrawTotal: 0, joinedAt: Date.now() - 5 * 86400000 },
+]
 
-export const useMockStore = create<StoreState>((set, get) => {
-  // Initialize with seed data
-  const initialPots = new Map<string, MockPot>()
-  const initialMembers = new Map<string, StoreMember[]>()
-  const initialProposals = new Map<string, MockProposal[]>()
+const SEED_PROPOSALS: MockProposal[] = [
+  {
+    pubkey: 'DemoProp111111111111111111111111111111111111',
+    potPubkey: 'DemoPoT1111111111111111111111111111111111111',
+    proposalId: 1,
+    proposer: 'SeedAuth1111111111111111111111111111111111',
+    type: 'swap',
+    description: 'Swap 5 SOL → USDC (protect gains)',
+    status: 'executed',
+    yesShares: 35000,
+    noShares: 5000,
+    totalSharesSnapshot: 42500,
+    createdAt: new Date(Date.now() - 3 * 86400000),
+    voters: [],
+  },
+  {
+    pubkey: 'DemoProp222222222222222222222222222222222222',
+    potPubkey: 'DemoPoT1111111111111111111111111111111111111',
+    proposalId: 2,
+    proposer: 'Member1A1111111111111111111111111111111111',
+    type: 'swap',
+    description: 'Swap 10 SOL → JUP (ecosystem bet)',
+    status: 'active',
+    yesShares: 20000,
+    noShares: 5000,
+    totalSharesSnapshot: 42500,
+    createdAt: new Date(Date.now() - 86400000),
+    voters: ['SeedAuth1111111111111111111111111111111111', 'Member1B1111111111111111111111111111111111'],
+  },
+  {
+    pubkey: 'DemoProp333111111111111111111111111111111111',
+    potPubkey: 'DemoPoT1111111111111111111111111111111111111',
+    proposalId: 3,
+    proposer: 'Member1C1111111111111111111111111111111111',
+    type: 'limitOrder',
+    description: 'Limit Order: Buy 200 JUP when 1 JUP ≤ 0.0042 SOL (spend 0.84 SOL)',
+    status: 'passed',
+    yesShares: 38000,
+    noShares: 2000,
+    totalSharesSnapshot: 42500,
+    createdAt: new Date(Date.now() - 2 * 86400000),
+    voters: ['SeedAuth1111111111111111111111111111111111', 'Member1A1111111111111111111111111111111111', 'Member1B1111111111111111111111111111111111'],
+  },
+  {
+    pubkey: 'DemoProp333222222222222222222222222222222222',
+    potPubkey: 'DemoPoT1111111111111111111111111111111111111',
+    proposalId: 4,
+    proposer: 'Member1D1111111111111111111111111111111111',
+    type: 'dca',
+    description: 'DCA: 2 SOL → JUP · daily × 7 cycles (total 14 SOL)',
+    status: 'active',
+    yesShares: 15000,
+    noShares: 8000,
+    totalSharesSnapshot: 42500,
+    createdAt: new Date(Date.now() - 43200000),
+    voters: ['Member1A1111111111111111111111111111111111'],
+  },
+  {
+    pubkey: 'DemoProp444111111111111111111111111111111111',
+    potPubkey: 'DemoPoT4444444444444444444444444444444444444',
+    proposalId: 10,
+    proposer: 'SeedAuth4444444444444444444444444444444444',
+    type: 'tokenizePot',
+    description: 'Tokenize Alpha Hunters as $ALPHA — make shares transferable on Jupiter',
+    status: 'executed',
+    yesShares: 80000,
+    noShares: 7300,
+    totalSharesSnapshot: 87300,
+    createdAt: new Date(Date.now() - 5 * 86400000),
+    voters: [],
+  },
+  {
+    pubkey: 'DemoProp444222222222222222222222222222222222',
+    potPubkey: 'DemoPoT4444444444444444444444444444444444444',
+    proposalId: 11,
+    proposer: 'Member4A1111111111111111111111111111111111',
+    type: 'depositToYield',
+    description: 'Deposit 50 SOL into Meteora SOL vault (Balanced strategy)',
+    status: 'executed',
+    yesShares: 85000,
+    noShares: 2300,
+    totalSharesSnapshot: 87300,
+    createdAt: new Date(Date.now() - 3 * 86400000),
+    voters: [],
+  },
+  {
+    pubkey: 'DemoProp444333333333333333333333333333333333',
+    potPubkey: 'DemoPoT4444444444444444444444444444444444444',
+    proposalId: 12,
+    proposer: 'Member4B1111111111111111111111111111111111',
+    type: 'limitOrder',
+    description: 'Limit Order: Buy 5000 WIF when 1 WIF ≤ 0.0028 SOL (spend 14 SOL)',
+    status: 'active',
+    yesShares: 60000,
+    noShares: 15000,
+    totalSharesSnapshot: 87300,
+    createdAt: new Date(Date.now() - 86400000),
+    voters: ['SeedAuth4444444444444444444444444444444444', 'Member4A1111111111111111111111111111111111'],
+  },
+  {
+    pubkey: 'DemoProp777111111111111111111111111111111111',
+    potPubkey: 'DemoPoT7777777777777777777777777777777777777',
+    proposalId: 1,
+    proposer: 'SeedAuth7777777777777777777777777777777777',
+    type: 'dca',
+    description: 'DCA: 3 SOL → JUP · weekly × 4 cycles (total 12 SOL)',
+    status: 'executed',
+    yesShares: 42000,
+    noShares: 2000,
+    totalSharesSnapshot: 47200,
+    createdAt: new Date(Date.now() - 7 * 86400000),
+    voters: [],
+  },
+]
 
-  SEED_POTS.forEach((pot, idx) => {
-    const pubkey = `seed_pot_${idx}`
-    initialPots.set(pubkey, { ...pot, pubkey })
-    initialMembers.set(pubkey, [])
-    initialProposals.set(pubkey, [])
-  })
+/* ── Store ──────────────────────────────────────────────────────────────────── */
 
-  return {
-    pots: initialPots,
-    members: initialMembers,
-    proposals: initialProposals,
+interface MockState {
+  pots: MockPot[]
+  members: MockMember[]
+  proposals: MockProposal[]
 
-    createPot: (name: string, emoji: string, yieldStrategy: number) => {
-      const newPotKey = `pot_${Date.now()}`
-      const newPot: MockPot = {
-        pubkey: newPotKey,
-        name,
-        emoji,
-        balance: 0,
-        totalShares: 0,
-        memberCount: 1,  // creator is member 0
-        tradeCount: 0,
-        totalVolume: 0,
-        tamagotchiLevel: 1,
-        tamagotchiXp: 0,
-        isPublic: false,
-        yieldStrategy,
-        tradeLevel: 0,
-        withdrawLevel: 0,
-        authority: Keypair.generate().publicKey.toString(),
-        createdAt: Date.now(),
-        nextProposalId: 0,
-        lastYieldAccrual: Date.now(),
-        yieldAccrued: 0,
-      }
+  // Selectors
+  getMembers: (potPubkey: string) => MockMember[]
+  getProposals: (potPubkey: string) => MockProposal[]
 
-      set((state) => {
-        const newPots = new Map(state.pots)
-        const newMembers = new Map(state.members)
-        const newProposals = new Map(state.proposals)
+  // Actions
+  createPot: (params: {
+    authority: string
+    name: string
+    emoji: string
+    isPublic: boolean
+    minDeposit: number
+    yieldStrategy: number
+    tradeLevel: number
+    withdrawLevel: number
+    maxTradeSizeBps?: number
+    maxMembers?: number
+  }) => string
 
-        newPots.set(newPotKey, newPot)
-        newMembers.set(newPotKey, [])
-        newProposals.set(newPotKey, [])
+  deposit: (potPubkey: string, wallet: string, amountSol: number) => void
+  withdraw: (potPubkey: string, wallet: string, shares: number) => void
 
-        return { pots: newPots, members: newMembers, proposals: newProposals }
+  createProposal: (params: {
+    potPubkey: string
+    proposer: string
+    type: string
+    description: string
+  }) => string
+
+  vote: (proposalPubkey: string, voter: string, approve: boolean) => void
+  executeProposal: (proposalPubkey: string) => void
+
+  /** Accrue yield for all pots — called by the yield keeper interval */
+  accrueYield: () => void
+}
+
+function mockPubkey(): string {
+  return Keypair.generate().publicKey.toBase58()
+}
+
+/* ── Yield accrual helper ────────────────────────────────────────────────────── */
+
+function computeYieldTick(pot: MockPot): { yieldAmount: number; newNavBps: number } {
+  const apy = YIELD_APY[pot.yieldStrategy] ?? 0
+  if (apy === 0 || pot.totalShares === 0) return { yieldAmount: 0, newNavBps: pot.navPerShareBps }
+
+  const reservePct = YIELD_RESERVE_PCT[pot.yieldStrategy] ?? 1
+  const earningPct = 1 - reservePct
+  const earningSol = pot.balance * earningPct + pot.meteoraLpBalance
+
+  const nowMs = Date.now()
+  const elapsedSecs = Math.max(0, (nowMs - pot.lastYieldAccrualAt) / 1000)
+  if (elapsedSecs <= 0) return { yieldAmount: 0, newNavBps: pot.navPerShareBps }
+
+  const yieldAmount = earningSol * apy * (elapsedSecs / SECS_PER_YEAR)
+
+  const totalValue = pot.balance + pot.meteoraLpBalance
+  if (totalValue <= 0) return { yieldAmount: 0, newNavBps: pot.navPerShareBps }
+  const growthFactor = 1 + yieldAmount / totalValue
+  const newNavBps = Math.floor(pot.navPerShareBps * growthFactor)
+
+  return { yieldAmount, newNavBps }
+}
+
+/* ── Store implementation ────────────────────────────────────────────────────── */
+
+export const useMockStore = create<MockState>((set, get) => ({
+  pots: [...SEED_POTS],
+  members: [...SEED_MEMBERS],
+  proposals: [...SEED_PROPOSALS],
+
+  getMembers: (potPubkey) => {
+    return get().members.filter((m) => m.potPubkey === potPubkey)
+  },
+
+  getProposals: (potPubkey) => {
+    return get().proposals.filter((p) => p.potPubkey === potPubkey)
+  },
+
+  createPot: (params) => {
+    const pubkey = mockPubkey()
+    const pot: MockPot = {
+      pubkey,
+      name: params.name,
+      emoji: params.emoji,
+      balance: 0,
+      totalShares: 0,
+      memberCount: 0,
+      tradeCount: 0,
+      totalVolume: 0,
+      tamagotchiLevel: 0,
+      tamagotchiXp: 0,
+      isPublic: params.isPublic,
+      yieldStrategy: params.yieldStrategy,
+      tradeLevel: params.tradeLevel,
+      withdrawLevel: params.withdrawLevel,
+      authority: params.authority,
+      createdAt: Date.now(),
+      nextProposalId: 0,
+      meteoraLpBalance: 0,
+      totalYieldEarned: 0,
+      lastYieldAccrualAt: Date.now(),
+      mode: 'virtual',
+      tokenTicker: '',
+      navPerShareBps: 10000,
+    }
+    set((s) => ({ pots: [...s.pots, pot] }))
+    return pubkey
+  },
+
+  deposit: (potPubkey, wallet, amountSol) => {
+    set((s) => {
+      const pot = s.pots.find((p) => p.pubkey === potPubkey)
+      if (!pot) return s
+
+      const currentValue = pot.balance + pot.meteoraLpBalance
+      const sharesToMint = pot.totalShares === 0
+        ? Math.floor(amountSol * 1000)
+        : Math.floor((amountSol / Math.max(currentValue, amountSol)) * pot.totalShares)
+
+      const reservePct = YIELD_RESERVE_PCT[pot.yieldStrategy] ?? 1
+      const liquidAmount = amountSol * reservePct
+      const yieldAmount  = amountSol * (1 - reservePct)
+
+      const pots = s.pots.map((p) =>
+        p.pubkey === potPubkey
+          ? {
+              ...p,
+              balance: p.balance + liquidAmount,
+              meteoraLpBalance: p.meteoraLpBalance + yieldAmount,
+              totalShares: p.totalShares + sharesToMint,
+              memberCount: s.members.some((m) => m.potPubkey === potPubkey && m.wallet === wallet)
+                ? p.memberCount
+                : p.memberCount + 1,
+            }
+          : p
+      )
+
+      const existingIdx = s.members.findIndex(
+        (m) => m.potPubkey === potPubkey && m.wallet === wallet
+      )
+      const members: MockMember[] = existingIdx >= 0
+        ? s.members.map((m, i) =>
+            i === existingIdx
+              ? { ...m, shares: m.shares + sharesToMint, depositTotal: m.depositTotal + amountSol }
+              : m
+          )
+        : [
+            ...s.members,
+            { potPubkey, wallet, shares: sharesToMint, depositTotal: amountSol, withdrawTotal: 0, joinedAt: Date.now() },
+          ]
+
+      return { pots, members }
+    })
+  },
+
+  withdraw: (potPubkey, wallet, shares) => {
+    set((s) => {
+      const pot = s.pots.find((p) => p.pubkey === potPubkey)
+      const member = s.members.find((m) => m.potPubkey === potPubkey && m.wallet === wallet)
+      if (!pot || !member || member.shares < shares) return s
+
+      const totalValue = pot.balance + pot.meteoraLpBalance
+      const solAmount = pot.totalShares > 0 ? (shares / pot.totalShares) * totalValue : 0
+
+      const fromLiquid = Math.min(solAmount, pot.balance)
+      const fromMeteora = Math.max(0, solAmount - fromLiquid)
+
+      const pots = s.pots.map((p) =>
+        p.pubkey === potPubkey
+          ? {
+              ...p,
+              balance: Math.max(0, p.balance - fromLiquid),
+              meteoraLpBalance: Math.max(0, p.meteoraLpBalance - fromMeteora),
+              totalShares: p.totalShares - shares,
+            }
+          : p
+      )
+
+      const members = s.members.map((m) =>
+        m.potPubkey === potPubkey && m.wallet === wallet
+          ? { ...m, shares: m.shares - shares, withdrawTotal: m.withdrawTotal + solAmount }
+          : m
+      )
+
+      return { pots, members }
+    })
+  },
+
+  createProposal: (params) => {
+    const pubkey = mockPubkey()
+    const pot = get().pots.find((p) => p.pubkey === params.potPubkey)
+    if (!pot) return pubkey
+
+    const proposal: MockProposal = {
+      pubkey,
+      potPubkey: params.potPubkey,
+      proposalId: pot.nextProposalId,
+      proposer: params.proposer,
+      type: params.type,
+      description: params.description,
+      status: 'active',
+      yesShares: 0,
+      noShares: 0,
+      totalSharesSnapshot: pot.totalShares,
+      createdAt: new Date(),
+      voters: [],
+    }
+
+    set((s) => ({
+      proposals: [...s.proposals, proposal],
+      pots: s.pots.map((p) =>
+        p.pubkey === params.potPubkey ? { ...p, nextProposalId: p.nextProposalId + 1 } : p
+      ),
+    }))
+
+    return pubkey
+  },
+
+  vote: (proposalPubkey, voter, approve) => {
+    set((s) => {
+      const proposal = s.proposals.find((p) => p.pubkey === proposalPubkey)
+      if (!proposal || proposal.status !== 'active') return s
+      if (proposal.voters.includes(voter)) return s
+
+      const member = s.members.find((m) => m.potPubkey === proposal.potPubkey && m.wallet === voter)
+      const voterShares = member?.shares ?? 1000
+
+      const proposals = s.proposals.map((p) => {
+        if (p.pubkey !== proposalPubkey) return p
+        const newYes = approve ? p.yesShares + voterShares : p.yesShares
+        const newNo  = !approve ? p.noShares + voterShares : p.noShares
+
+        let newStatus = p.status
+        if (newYes > p.totalSharesSnapshot * 0.5) newStatus = 'passed'
+        else if (newNo >= p.totalSharesSnapshot * 0.5) newStatus = 'rejected'
+
+        return { ...p, yesShares: newYes, noShares: newNo, status: newStatus as MockProposal['status'], voters: [...p.voters, voter] }
       })
-    },
 
-    deposit: (potPubkey: string, amount: number) => {
-      set((state) => {
-        const newPots = new Map(state.pots)
-        const pot = newPots.get(potPubkey)
+      return { proposals }
+    })
+  },
 
-        if (pot) {
-          pot.balance += amount
-          pot.totalVolume += amount
-          newPots.set(potPubkey, pot)
-        }
+  executeProposal: (proposalPubkey) => {
+    set((s) => {
+      const proposal = s.proposals.find((p) => p.pubkey === proposalPubkey)
+      if (!proposal || proposal.status !== 'passed') return s
 
-        return { pots: newPots }
-      })
-    },
+      const proposals = s.proposals.map((p) =>
+        p.pubkey === proposalPubkey ? { ...p, status: 'executed' as const } : p
+      )
 
-    withdraw: (potPubkey: string, amount: number) => {
-      set((state) => {
-        const newPots = new Map(state.pots)
-        const pot = newPots.get(potPubkey)
-
-        if (pot && pot.balance >= amount) {
-          pot.balance -= amount
-          newPots.set(potPubkey, pot)
-        }
-
-        return { pots: newPots }
-      })
-    },
-
-    createProposal: (potPubkey: string, title: string, description: string, action: string) => {
-      set((state) => {
-        const newProposals = new Map(state.proposals)
-        const newPots = new Map(state.pots)
-        const pot = newPots.get(potPubkey)
-
-        if (pot) {
-          const proposal: MockProposal = {
-            id: pot.nextProposalId,
-            potPubkey,
-            title,
-            description,
-            action,
-            votesFor: 0,
-            votesAgainst: 0,
-            executed: false,
-            timestamp: Date.now(),
+      const pots = s.pots.map((p) => {
+        if (p.pubkey !== proposal.potPubkey) return p
+        if (proposal.type === 'swap') {
+          const tradeValue = p.balance * 0.2
+          return {
+            ...p,
+            tradeCount: p.tradeCount + 1,
+            totalVolume: p.totalVolume + tradeValue,
+            balance: p.balance * 1.05,
+            navPerShareBps: Math.floor(p.navPerShareBps * 1.05),
           }
-
-          pot.nextProposalId += 1
-          newPots.set(potPubkey, pot)
-
-          const proposals = newProposals.get(potPubkey) || []
-          proposals.push(proposal)
-          newProposals.set(potPubkey, proposals)
         }
-
-        return { pots: newPots, proposals: newProposals }
-      })
-    },
-
-    vote: (potPubkey: string, proposalId: number, voteFor: boolean) => {
-      set((state) => {
-        const newProposals = new Map(state.proposals)
-        const proposals = newProposals.get(potPubkey) || []
-        const proposal = proposals.find((p) => p.id === proposalId)
-
-        if (proposal) {
-          if (voteFor) {
-            proposal.votesFor += 1
-          } else {
-            proposal.votesAgainst += 1
+        if (proposal.type === 'limitOrder') {
+          const spendMatch = proposal.description.match(/spend\s+([\d.]+)\s*SOL/i)
+          const reserveAmt = spendMatch ? parseFloat(spendMatch[1]) : p.balance * 0.05
+          return {
+            ...p,
+            balance: Math.max(0, p.balance - reserveAmt),
+            tradeCount: p.tradeCount + 1,
+            totalVolume: p.totalVolume + reserveAmt,
           }
-          newProposals.set(potPubkey, proposals)
         }
-
-        return { proposals: newProposals }
-      })
-    },
-
-    executeProposal: (potPubkey: string, proposalId: number) => {
-      set((state) => {
-        const newProposals = new Map(state.proposals)
-        const proposals = newProposals.get(potPubkey) || []
-        const proposal = proposals.find((p) => p.id === proposalId)
-
-        if (proposal && !proposal.executed) {
-          proposal.executed = true
-          newProposals.set(potPubkey, proposals)
+        if (proposal.type === 'dca') {
+          const totalMatch = proposal.description.match(/total\s+([\d.]+)\s*SOL/i)
+          const totalAmt = totalMatch ? parseFloat(totalMatch[1]) : p.balance * 0.1
+          return {
+            ...p,
+            balance: Math.max(0, p.balance - totalAmt),
+            tradeCount: p.tradeCount + 1,
+            totalVolume: p.totalVolume + totalAmt,
+          }
         }
-
-        return { proposals: newProposals }
+        if (proposal.type === 'tokenizePot') {
+          const tickerMatch = proposal.description.match(/\$([A-Z]+)/)
+          const ticker = tickerMatch?.[1] ?? p.name.slice(0, 5).toUpperCase().replace(/\s/g, '')
+          return { ...p, mode: 'tokenized' as const, tokenTicker: ticker }
+        }
+        if (proposal.type === 'depositToYield') {
+          const toDeposit = p.balance * 0.6
+          return { ...p, balance: p.balance - toDeposit, meteoraLpBalance: p.meteoraLpBalance + toDeposit }
+        }
+        if (proposal.type === 'withdrawFromYield') {
+          const toWithdraw = p.meteoraLpBalance * 0.5
+          return { ...p, balance: p.balance + toWithdraw, meteoraLpBalance: p.meteoraLpBalance - toWithdraw }
+        }
+        return p
       })
-    },
 
-    accrueYield: () => {
-      set((state) => {
-        const newPots = new Map(state.pots)
-        const now = Date.now()
+      return { proposals, pots }
+    })
+  },
 
-        newPots.forEach((pot) => {
-          if (pot.yieldStrategy === 0) return  // No yield
+  accrueYield: () => {
+    const now = Date.now()
+    set((s) => ({
+      pots: s.pots.map((pot) => {
+        const { yieldAmount, newNavBps } = computeYieldTick(pot)
+        if (yieldAmount <= 0) return pot
+        return {
+          ...pot,
+          meteoraLpBalance: pot.meteoraLpBalance + yieldAmount,
+          totalYieldEarned: pot.totalYieldEarned + yieldAmount,
+          lastYieldAccrualAt: now,
+          navPerShareBps: newNavBps,
+        }
+      }),
+    }))
+  },
+}))
 
-          const timeDiff = (now - pot.lastYieldAccrual) / 1000  // seconds
-          const apy = YIELD_APY[pot.yieldStrategy]
-          const reservePct = YIELD_RESERVE_PCT[pot.yieldStrategy]
-          const earningBalance = pot.balance * (1 - reservePct)
-          const yieldRate = apy / SECS_PER_YEAR
-          const accrued = earningBalance * yieldRate * timeDiff
-
-          pot.balance += accrued
-          pot.yieldAccrued += accrued
-          pot.lastYieldAccrual = now
-          pot.totalVolume += accrued
-        })
-
-        return { pots: newPots }
-      })
-    },
-  }
-})
+/* ── Yield Keeper — runs in background ───────────────────────────────────────── */
 
 // Only start the interval in the browser (not during SSR)
 if (typeof window !== 'undefined') {
