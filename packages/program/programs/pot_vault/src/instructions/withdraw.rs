@@ -19,7 +19,9 @@ pub struct Withdraw<'info> {
         mut,
         seeds = [b"member", pot.key().as_ref(), withdrawer.key().as_ref()],
         bump = member.bump,
-        has_one = wallet @ PotError::Unauthorized
+        // Verify that member.wallet matches the signer (was has_one = wallet which
+        // requires an account literally named 'wallet' in the struct)
+        constraint = member.wallet == withdrawer.key() @ PotError::Unauthorized
     )]
     pub member: Account<'info, MemberAccount>,
 
@@ -56,7 +58,7 @@ pub fn handler(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
         PotError::InsufficientVaultBalance
     );
 
-    // Transfer SOL from vault PDA to withdrawer
+    // Transfer SOL: vault PDA \u2192 withdrawer
     **ctx.accounts.vault.to_account_info().try_borrow_mut_lamports()? -= lamports_out;
     **ctx.accounts.withdrawer.to_account_info().try_borrow_mut_lamports()? += lamports_out;
 
@@ -68,6 +70,7 @@ pub fn handler(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
     // Update POT
     let pot = &mut ctx.accounts.pot;
     pot.total_shares = pot.total_shares.checked_sub(shares).ok_or(PotError::MathOverflow)?;
+    pot.last_activity_at = clock.unix_timestamp;
 
     if member.shares == 0 {
         pot.member_count = pot.member_count.saturating_sub(1);

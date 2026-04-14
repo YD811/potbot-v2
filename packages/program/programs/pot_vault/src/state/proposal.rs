@@ -57,7 +57,7 @@ pub enum ProposalType {
     AddMember {
         wallet: Pubkey,
     },
-    /// Remove a member (they keep their shares but can't vote/propose)
+    /// Remove a member (they keep their shares but can\'t vote/propose)
     RemoveMember {
         wallet: Pubkey,
     },
@@ -66,7 +66,7 @@ pub enum ProposalType {
         agent: Pubkey,
         max_trade_bps: u16,
     },
-    /// Transfer funds from vault for operational purposes (bounties, expenses)
+    /// Transfer funds from vault for operational purposes
     TransferFunds {
         to: Pubkey,
         amount: u64,
@@ -77,6 +77,20 @@ pub enum ProposalType {
     UpdateRiskConfig {
         max_trade_size_bps: u16,
         max_members: u16,
+    },
+    /// Tokenize the pot into an SPL token (ETF-like, one-way)
+    TokenizePot {
+        max_supply: u64,
+    },
+    /// Deposit idle SOL to a yield protocol (Phase 2: Kamino/Drift CPI)
+    DepositToYield {
+        amount: u64,
+        protocol: u8, // 0=Kamino, 1=Drift, 2=MarginFi
+    },
+    /// Withdraw from yield protocol back to vault (Phase 2)
+    WithdrawFromYield {
+        amount: u64,
+        protocol: u8,
     },
 }
 
@@ -91,9 +105,19 @@ pub enum ProposalStatus {
 
 impl ProposalAccount {
     /// Check if the proposal has reached required approval
-    pub fn check_resolution(&self, required_bps: u16, vote_timeout: i64, now: i64) -> Option<ProposalStatus> {
+    pub fn check_resolution(
+        &self,
+        required_bps: u16,
+        vote_timeout: i64,
+        now: i64,
+    ) -> Option<ProposalStatus> {
         if self.status != ProposalStatus::Active {
             return None;
+        }
+
+        // Guard: can\'t divide by zero
+        if self.total_shares_snapshot == 0 {
+            return Some(ProposalStatus::Expired);
         }
 
         let total_voted = self.yes_shares + self.no_shares;
@@ -103,9 +127,9 @@ impl ProposalAccount {
             if total_voted > 0 {
                 let yes_bps = (self.yes_shares as u128)
                     .checked_mul(10000)
-                    .unwrap()
+                    .unwrap_or(0)
                     .checked_div(self.total_shares_snapshot as u128)
-                    .unwrap() as u16;
+                    .unwrap_or(0) as u16;
                 if yes_bps >= required_bps {
                     return Some(ProposalStatus::Passed);
                 }
@@ -117,32 +141,35 @@ impl ProposalAccount {
         if total_voted >= self.total_shares_snapshot {
             let yes_bps = (self.yes_shares as u128)
                 .checked_mul(10000)
-                .unwrap()
+                .unwrap_or(0)
                 .checked_div(self.total_shares_snapshot as u128)
-                .unwrap() as u16;
-            if yes_bps >= required_bps {
-                return Some(ProposalStatus::Passed);
+                .unwrap_or(0) as u16;
+            return Some(if yes_bps >= required_bps {
+                ProposalStatus::Passed
             } else {
-                return Some(ProposalStatus::Rejected);
-            }
+                ProposalStatus::Rejected
+            });
         }
 
-        // Check early resolution
+        // Check early YES resolution
         let yes_bps = (self.yes_shares as u128)
             .checked_mul(10000)
-            .unwrap()
+            .unwrap_or(0)
             .checked_div(self.total_shares_snapshot as u128)
-            .unwrap() as u16;
+            .unwrap_or(0) as u16;
         if yes_bps >= required_bps {
             return Some(ProposalStatus::Passed);
         }
 
-        let max_possible_yes = self.yes_shares + (self.total_shares_snapshot - total_voted);
+        // Check mathematically impossible (even if all remaining votes are YES, still can\'t pass)
+        let max_possible_yes = self.yes_shares.saturating_add(
+            self.total_shares_snapshot.saturating_sub(total_voted)
+        );
         let max_yes_bps = (max_possible_yes as u128)
             .checked_mul(10000)
-            .unwrap()
+            .unwrap_or(0)
             .checked_div(self.total_shares_snapshot as u128)
-            .unwrap() as u16;
+            .unwrap_or(0) as u16;
         if max_yes_bps < required_bps {
             return Some(ProposalStatus::Rejected);
         }
