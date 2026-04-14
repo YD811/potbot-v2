@@ -12,7 +12,7 @@ pub enum PotError {
     LockupActive,
     #[msg("Not authorized to perform this action")]
     Unauthorized,
-    #[msg("POT is not public \u2014 invite required")]
+    #[msg("POT is not public - invite required")]
     NotPublic,
     #[msg("Proposal is not active")]
     ProposalNotActive,
@@ -38,13 +38,13 @@ pub enum PotError {
     TradeSizeExceeded,
     #[msg("Daily trade limit reached for this vault")]
     DailyTradeLimitReached,
-    #[msg("AI agent is rate limited \u2014 too many proposals today")]
+    #[msg("AI agent is rate limited - too many proposals today")]
     AgentRateLimited,
     #[msg("Vault has reached maximum member count")]
     MaxMembersReached,
     #[msg("AI agent not configured for this POT")]
     AgentNotConfigured,
-    #[msg("Pot is already tokenized \u2014 transition is one-way")]
+    #[msg("Pot is already tokenized - transition is one-way")]
     AlreadyTokenized,
     #[msg("Amount exceeds idle yield allocation limit")]
     ExceedsYieldAllocation,
