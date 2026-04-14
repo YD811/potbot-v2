@@ -28,7 +28,7 @@ cd "$SCRIPT_DIR"
 # 1. Check prerequisites
 # ──────────────────────────────────────────────────────────────────────────────
 log "Checking prerequisites..."
-command -v solana  &>/dev/null || err "Solana CLI not found. Install: sh -c \"\$(curl -sSfL https://release.solana.com/v1.18.0/install)\""
+command -v solana  &>/dev/null || err "Solana CLI not found. Install: sh -c \"$(curl -sSfL https://release.solana.com/v1.18.0/install)\""
 command -v anchor  &>/dev/null || err "Anchor CLI not found. Install: cargo install --git https://github.com/coral-xyz/anchor avm --locked"
 command -v cargo   &>/dev/null || err "Rust/Cargo not found. Install: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 ok "All prerequisites found"
@@ -66,7 +66,7 @@ fi
 # 4. Build
 # ──────────────────────────────────────────────────────────────────────────────
 log "Building Anchor program..."
-anchor build
+RUSTFLAGS="--cfg proc_macro_span" anchor build
 ok "Build successful"
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -87,7 +87,7 @@ if [ -n "$ACTUAL_ID" ] && [ "$ACTUAL_ID" != "$HARDCODED_ID" ]; then
   sed -i.bak "s/$HARDCODED_ID/$ACTUAL_ID/g" Anchor.toml
 
   log "Rebuilding with corrected program ID..."
-  anchor build
+  RUSTFLAGS="--cfg proc_macro_span" anchor build
   ok "Rebuild successful"
 
   PROGRAM_ID="$ACTUAL_ID"
