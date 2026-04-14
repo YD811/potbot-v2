@@ -258,7 +258,7 @@ function OverviewPanel({ potPubkey, pot }: { potPubkey: string; pot: any }) {
             ['Total Balance', `${pot.balance.toFixed(4)} SOL`, 'text-pot-green'],
             ['Total Shares', pot.totalShares.toLocaleString(), ''],
             ['Strategy', ({ 0: 'None', 1: 'Conservative', 2: 'Balanced', 3: 'Aggressive', 4: 'JLP ⚡' } as Record<number,string>)[pot.yieldStrategy] ?? String(pot.yieldStrategy), ''],
-            ['Created', pot.createdAt.toLocaleDateString(), ''],
+            ['Created', new Date(pot.createdAt).toLocaleDateString(), ''],
           ].map(([label, value, color]) => (
             <div key={label as string} className="flex justify-between text-sm">
               <span className="text-pot-muted">{label}</span>
