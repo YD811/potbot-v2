@@ -28,8 +28,7 @@ const queryClient = new QueryClient({
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const endpoint = useMemo(
-    () =>
-      process.env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl('devnet'),
+    () => process.env.NEXT_PUBLIC_RPC_URL || clusterApiUrl('devnet'),
     []
   )
 
@@ -43,7 +42,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      {/* autoConnect: false — prevents the adapter from probing MetaMask/EVM extensions on load */}
+      <WalletProvider wallets={wallets} autoConnect={false}>
         <WalletModalProvider>
           <QueryClientProvider client={queryClient}>
             {children}
