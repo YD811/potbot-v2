@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { usePots } from '@/hooks/usePots'
 import { useMockStore } from '@/lib/mock-store'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
+import SNSRegistrarPanel from '@/components/SNSRegistrarPanel'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -88,6 +89,9 @@ export default function MyPotsPage() {
           </div>
         ))}
       </div>
+
+      {/* ── SNS Identity Panel ── */}
+      <SNSRegistrarPanel />
 
       {/* ── Pots List ── */}
       {isLoading ? (
