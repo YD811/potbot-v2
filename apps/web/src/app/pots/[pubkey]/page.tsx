@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import Link from 'next/link'
 import {
   usePot,
@@ -272,36 +273,81 @@ function OverviewPanel({ potPubkey, pot }: { potPubkey: string; pot: any }) {
       <div className="card p-6">
         <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
         {!connected ? (
-          <p className="text-pot-muted text-sm">Connect wallet to deposit or withdraw</p>
+          <div className="text-center py-4 space-y-3">
+            <div className="text-3xl">🔐</div>
+            <p className="text-pot-muted text-sm">Connect your Solana wallet to deposit or withdraw</p>
+            <WalletMultiButton className="!bg-pot-accent !rounded-xl !text-sm !h-10 !font-medium" />
+          </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-5">
+            {/* Deposit */}
             <div>
-              <label className="text-xs text-pot-muted mb-1.5 block">Deposit SOL</label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-xs text-pot-muted">Deposit SOL</label>
+                <span className="text-xs font-mono text-pot-green">{depositAmount || '0'} SOL</span>
+              </div>
+              {/* Slider */}
+              <input
+                type="range"
+                min="0"
+                max="10"
+                step="0.1"
+                value={depositAmount || 0}
+                onChange={(e) => setDepositAmount(e.target.value)}
+                className="w-full h-2 rounded-full appearance-none cursor-pointer mb-2"
+                style={{ accentColor: '#14F195' }}
+              />
+              {/* Preset amounts */}
+              <div className="flex gap-1 mb-3">
+                {['0.1', '0.5', '1', '2', '5'].map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => setDepositAmount(amt)}
+                    className={`flex-1 text-xs py-1.5 rounded-lg transition font-mono ${
+                      depositAmount === amt
+                        ? 'bg-pot-green/20 text-pot-green border border-pot-green/30'
+                        : 'bg-pot-dark text-pot-muted hover:text-white hover:bg-pot-border'
+                    }`}
+                  >
+                    {amt}
+                  </button>
+                ))}
+              </div>
               <div className="flex gap-2">
                 <input
-                  type="number" step="0.01" min="0" placeholder="Amount in SOL"
+                  type="number" step="0.01" min="0" placeholder="Custom amount"
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
-                  className="input flex-1 !py-2 text-sm"
+                  className="input flex-1 !py-2 text-sm font-mono"
                 />
-                <button onClick={handleDeposit} disabled={deposit.isPending || !depositAmount} className="btn-primary text-sm">
-                  {deposit.isPending ? 'Sending...' : 'Deposit'}
+                <button
+                  onClick={handleDeposit}
+                  disabled={deposit.isPending || !depositAmount || parseFloat(depositAmount) <= 0}
+                  className="btn-primary text-sm px-5 disabled:opacity-50"
+                >
+                  {deposit.isPending ? '⏳' : 'Deposit'}
                 </button>
               </div>
             </div>
+
             <div className="border-t border-pot-border" />
+
+            {/* Withdraw */}
             <div>
-              <label className="text-xs text-pot-muted mb-1.5 block">Withdraw Shares</label>
+              <label className="text-xs text-pot-muted mb-2 block">Withdraw Shares</label>
               <div className="flex gap-2">
                 <input
                   type="number" step="1" min="0" placeholder="Number of shares"
                   value={withdrawShares}
                   onChange={(e) => setWithdrawShares(e.target.value)}
-                  className="input flex-1 !py-2 text-sm"
+                  className="input flex-1 !py-2 text-sm font-mono"
                 />
-                <button onClick={handleWithdraw} disabled={withdraw.isPending || !withdrawShares}
-                  className="rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 px-6 py-2 text-sm font-medium transition disabled:opacity-50">
-                  {withdraw.isPending ? 'Sending...' : 'Withdraw'}
+                <button
+                  onClick={handleWithdraw}
+                  disabled={withdraw.isPending || !withdrawShares}
+                  className="rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 px-5 py-2 text-sm font-medium transition disabled:opacity-50"
+                >
+                  {withdraw.isPending ? '⏳' : 'Withdraw'}
                 </button>
               </div>
             </div>
