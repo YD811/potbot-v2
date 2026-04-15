@@ -3,10 +3,10 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-pot_vault = "Hyi1PNxPMUqwdDukhB2a4fvcBxQHmbXy3CZ95mgyFHA3"
+pot_vault = "ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH"
 
 [programs.devnet]
-pot_vault = "Hyi1PNxPMUqwdDukhB2a4fvcBxQHmbXy3CZ95mgyFHA3"
+pot_vault = "ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH"
 
 [registry]
 url = "https://api.apr.dev"

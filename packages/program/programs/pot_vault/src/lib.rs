@@ -8,7 +8,7 @@ pub mod errors;
 
 use instructions::*;
 
-declare_id!("Hyi1PNxPMUqwdDukhB2a4fvcBxQHmbXy3CZ95mgyFHA3");
+declare_id!("ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH");
 
 #[program]
 pub mod pot_vault {
