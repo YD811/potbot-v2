@@ -1,0 +1,28 @@
+{
+  "name": "@potbot/mcp-server",
+  "version": "1.0.0",
+  "description": "PotBot MCP Server — allows AI agents to manage treasury allocations across Strategy Vaults on Solana",
+  "main": "dist/index.js",
+  "bin": {
+    "potbot-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["potbot", "mcp", "solana", "trading", "vaults"],
+  "author": "YD811",
+  "license": "MIT"
+}

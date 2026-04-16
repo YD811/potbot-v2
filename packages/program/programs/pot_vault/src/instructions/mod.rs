@@ -6,6 +6,7 @@ pub mod vote;
 pub mod execute_proposal;
 pub mod update_tamagotchi;
 pub mod execute_swap;
+pub mod strategy_vault;
 
 pub use create_pot::*;
 pub use deposit::*;
@@ -15,3 +16,4 @@ pub use vote::*;
 pub use execute_proposal::*;
 pub use update_tamagotchi::*;
 pub use execute_swap::*;
+pub use strategy_vault::*;

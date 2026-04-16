@@ -53,4 +53,44 @@ pub mod pot_vault {
     pub fn execute_swap(ctx: Context<ExecuteSwap>, params: ExecuteSwapParams) -> Result<()> {
         instructions::execute_swap::handler(ctx, params)
     }
+
+    // ─── Strategy Vault ──────────────────────────────────────────────────────
+
+    /// Create a tokenized Strategy Vault with creator monetization
+    pub fn create_strategy_vault(
+        ctx: Context<CreateStrategyVault>,
+        pot_name: String,
+        description: String,
+        entry_fee_lamports: u64,
+        performance_fee_bps: u16,
+        management_fee_bps: u16,
+        referral_bps: u16,
+        strategy_config: state::strategy_vault::StrategyConfig,
+    ) -> Result<()> {
+        instructions::strategy_vault::create_strategy_vault(
+            ctx, pot_name, description, entry_fee_lamports,
+            performance_fee_bps, management_fee_bps, referral_bps, strategy_config,
+        )
+    }
+
+    /// Join a Strategy Vault (pays entry fee, records referral)
+    pub fn join_strategy_vault(
+        ctx: Context<JoinStrategyVault>,
+        referrer_wallet: Option<Pubkey>,
+    ) -> Result<()> {
+        instructions::strategy_vault::join_strategy_vault(ctx, referrer_wallet)
+    }
+
+    /// Exit a Strategy Vault (pays performance fee on profit)
+    pub fn exit_strategy_vault(
+        ctx: Context<ExitStrategyVault>,
+        profit_lamports: u64,
+    ) -> Result<()> {
+        instructions::strategy_vault::exit_strategy_vault(ctx, profit_lamports)
+    }
+
+    /// Evolve the Tamagotchi (permissionless — anyone can call)
+    pub fn evolve_tamagotchi(ctx: Context<EvolveTamagotchi>) -> Result<()> {
+        instructions::strategy_vault::evolve_tamagotchi(ctx)
+    }
 }

@@ -48,4 +48,13 @@ pub enum PotError {
     AlreadyTokenized,
     #[msg("Amount exceeds idle yield allocation limit")]
     ExceedsYieldAllocation,
+    // Strategy Vault errors
+    #[msg("Description must be 200 characters or less")]
+    DescriptionTooLong,
+    #[msg("Fee exceeds maximum allowed")]
+    FeeTooHigh,
+    #[msg("Invalid strategy configuration")]
+    InvalidConfig,
+    #[msg("Strategy vault is not active")]
+    VaultNotActive,
 }
