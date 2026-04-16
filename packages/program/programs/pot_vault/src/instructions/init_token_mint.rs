@@ -10,7 +10,7 @@ pub struct InitTokenMint<'info> {
     #[account(
         mut,
         seeds = [b"pot", pot.name.as_bytes(), authority.key().as_ref()],
-        bump = pot.bump,
+        bump = pot.pot_bump,
         has_one = authority,
     )]
     pub pot: Account<'info, PotAccount>,
