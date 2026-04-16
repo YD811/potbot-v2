@@ -4,7 +4,7 @@ import { Navbar } from '@/components/Navbar'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'PotBot — Collective Trading Vaults on Solana',
+  title: 'PotBot v2 — Group Trading Vaults on Solana',
   description: 'Create group trading vaults, govern together, trade together, win together.',
 }
 
