@@ -17,7 +17,7 @@ import {
 import { useMockStore } from '@/lib/mock-store'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 
-const TAMA_EMOJIS = ['\ud83e\udd5a','\ud83d\udc23','\ud83d\udc24','\ud83e\udd85','\ud83d\udc09','\ud83d\udc51']
+const TAMA_EMOJIS = ['🦚','🐓','🐔','🦅','🐉','👑']
 
 /* ── Anchor program instance ── */
 
@@ -89,7 +89,7 @@ export function usePots() {
               return {
                 pubkey: acc.publicKey.toBase58(),
                 name: d.name,
-                emoji: d.emoji || '\ud83e\udeb4',
+                emoji: d.emoji || '🤴',
                 balance,
                 totalShares: d.totalShares.toNumber(),
                 memberCount: d.memberCount,
@@ -101,6 +101,7 @@ export function usePots() {
                 governanceLevel: d.governance.tradeLevel,
                 isPublic: d.config.isPublic,
                 createdAt: new Date(d.createdAt.toNumber() * 1000),
+                sharesPerSol: d.sharesPerSol?.toNumber() ?? 100,
               }
             })
           )
@@ -155,7 +156,7 @@ export function usePot(pubkey?: string) {
           return {
             pubkey,
             name: d.name,
-            emoji: d.emoji || '\ud83e\udeb4',
+            emoji: d.emoji || '🤴',
             balance,
             totalShares: d.totalShares.toNumber(),
             memberCount: d.memberCount,
@@ -172,6 +173,8 @@ export function usePot(pubkey?: string) {
             nextProposalId: d.nextProposalId.toNumber(),
             authority: d.authority.toBase58(),
             createdAt: new Date(d.createdAt.toNumber() * 1000),
+            tokenMint: d.tokenMint?.toBase58() ?? null,
+            sharesPerSol: d.sharesPerSol?.toNumber() ?? 100,
           }
         } catch (e) {
           console.warn('On-chain pot fetch failed:', e)
@@ -359,6 +362,8 @@ export function useCreatePot() {
               yieldChangeLevel: 2,
               voteTimeoutSeconds: new BN(7 * 86400),
               quorumBps: 5001,
+              maxTradeSizeBps: params.maxTradeSizeBps ?? 5000,
+              maxMembers: params.maxMembers ?? 1000,
             })
             .accounts({
               pot: potPda,

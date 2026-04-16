@@ -1,6 +1,5 @@
 /**
- * Hand-crafted IDL matching the pot_vault Anchor program.
- * Replace with auto-generated IDL after `anchor build`.
+ * IDL matching the pot_vault Anchor program — updated to match deployed program.
  */
 export const IDL = {
   version: '0.1.0',
@@ -65,7 +64,9 @@ export const IDL = {
         { name: 'pot', isMut: false, isSigner: false },
         { name: 'proposal', isMut: true, isSigner: false },
         { name: 'member', isMut: false, isSigner: false },
-        { name: 'voter', isMut: false, isSigner: true },
+        { name: 'voterRecord', isMut: true, isSigner: false },
+        { name: 'voter', isMut: true, isSigner: true },
+        { name: 'systemProgram', isMut: false, isSigner: false },
       ],
       args: [{ name: 'approve', type: 'bool' }],
     },
@@ -77,6 +78,25 @@ export const IDL = {
         { name: 'proposal', isMut: true, isSigner: false },
         { name: 'executor', isMut: true, isSigner: true },
         { name: 'systemProgram', isMut: false, isSigner: false },
+      ],
+      args: [],
+    },
+    {
+      name: 'updateTamagotchi',
+      accounts: [
+        { name: 'pot', isMut: true, isSigner: false },
+      ],
+      args: [],
+    },
+    {
+      name: 'initTokenMint',
+      accounts: [
+        { name: 'pot', isMut: true, isSigner: false },
+        { name: 'tokenMint', isMut: true, isSigner: false },
+        { name: 'authority', isMut: true, isSigner: true },
+        { name: 'tokenProgram', isMut: false, isSigner: false },
+        { name: 'systemProgram', isMut: false, isSigner: false },
+        { name: 'rent', isMut: false, isSigner: false },
       ],
       args: [],
     },
@@ -103,6 +123,16 @@ export const IDL = {
           { name: 'governance', type: { defined: 'GovSettings' } },
           { name: 'nextProposalId', type: 'u64' },
           { name: 'createdAt', type: 'i64' },
+          { name: 'highWaterMark', type: 'u64' },
+          { name: 'protocolFeeBps', type: 'u16' },
+          { name: 'lastActivityAt', type: 'i64' },
+          { name: 'agentPubkey', type: { option: 'publicKey' } },
+          { name: 'agentMaxTradeBps', type: 'u16' },
+          { name: 'agentLastProposalAt', type: 'i64' },
+          { name: 'dailyTradesCount', type: 'u8' },
+          { name: 'lastTradeDay', type: 'i64' },
+          { name: 'tokenMint', type: 'publicKey' },
+          { name: 'sharesPerSol', type: 'u64' },
         ],
       },
     },
@@ -142,6 +172,19 @@ export const IDL = {
         ],
       },
     },
+    {
+      name: 'VoterRecord',
+      type: {
+        kind: 'struct',
+        fields: [
+          { name: 'proposal', type: 'publicKey' },
+          { name: 'voter', type: 'publicKey' },
+          { name: 'votedYes', type: 'bool' },
+          { name: 'votedAt', type: 'i64' },
+          { name: 'bump', type: 'u8' },
+        ],
+      },
+    },
   ],
   types: [
     {
@@ -163,6 +206,8 @@ export const IDL = {
           { name: 'yieldChangeLevel', type: 'u8' },
           { name: 'voteTimeoutSeconds', type: 'i64' },
           { name: 'quorumBps', type: 'u16' },
+          { name: 'maxTradeSizeBps', type: 'u16' },
+          { name: 'maxMembers', type: 'u16' },
         ],
       },
     },
@@ -186,6 +231,8 @@ export const IDL = {
           { name: 'lockupSeconds', type: 'i64' },
           { name: 'yieldStrategy', type: { defined: 'YieldStrategy' } },
           { name: 'maxYieldAllocationBps', type: 'u16' },
+          { name: 'maxTradeSizeBps', type: 'u16' },
+          { name: 'maxMembers', type: 'u16' },
         ],
       },
     },
@@ -247,6 +294,54 @@ export const IDL = {
           {
             name: 'ChangeYield',
             fields: [{ name: 'newStrategy', type: 'u8' }],
+          },
+          {
+            name: 'AddMember',
+            fields: [{ name: 'wallet', type: 'publicKey' }],
+          },
+          {
+            name: 'RemoveMember',
+            fields: [{ name: 'wallet', type: 'publicKey' }],
+          },
+          {
+            name: 'SetAgent',
+            fields: [
+              { name: 'agent', type: 'publicKey' },
+              { name: 'maxTradeBps', type: 'u16' },
+            ],
+          },
+          {
+            name: 'TransferFunds',
+            fields: [
+              { name: 'to', type: 'publicKey' },
+              { name: 'amount', type: 'u64' },
+              { name: 'purpose', type: 'string' },
+            ],
+          },
+          {
+            name: 'UpdateRiskConfig',
+            fields: [
+              { name: 'maxTradeSizeBps', type: 'u16' },
+              { name: 'maxMembers', type: 'u16' },
+            ],
+          },
+          {
+            name: 'TokenizePot',
+            fields: [{ name: 'maxSupply', type: 'u64' }],
+          },
+          {
+            name: 'DepositToYield',
+            fields: [
+              { name: 'amount', type: 'u64' },
+              { name: 'protocol', type: 'u8' },
+            ],
+          },
+          {
+            name: 'WithdrawFromYield',
+            fields: [
+              { name: 'amount', type: 'u64' },
+              { name: 'protocol', type: 'u8' },
+            ],
           },
         ],
       },
