@@ -24,10 +24,12 @@ import { GovernanceSettings } from '@/components/GovernanceSettings'
 import { BudgetGrantPanel } from '@/components/BudgetGrantPanel'
 import { JupiterSwapPanel } from '@/components/JupiterSwapPanel'
 import { VaultTab } from '@/components/VaultTab'
+import { DepositPanel } from '@/components/DepositPanel'
+import { SharesTab } from '@/components/SharesTab'
 import { fetchPricesRaw } from '@/lib/useAIAgent-helpers'
 import { reverseSNS, getPotShareText, buildPotDomain } from '@/lib/sns'
 
-const TABS = ['overview', 'shares', 'positions', 'strategy', 'governance', 'agent', 'members', 'vault'] as const
+const TABS = ['overview', 'shares', 'positions', 'strategy', 'governance', 'agent', 'members', 'deposit', 'vault'] as const
 type Tab = (typeof TABS)[number]
 
 const TAB_LABELS: Record<Tab, string> = {
@@ -38,6 +40,7 @@ const TAB_LABELS: Record<Tab, string> = {
   governance: '🏛️ Gov',
   agent:      '🤖 AI',
   members:    'Members',
+  deposit:    '💸 Deposit',
   vault:      '🏦 Vault',
 }
 
@@ -202,7 +205,7 @@ export default function PotDetailPage() {
 
       {/* Panels */}
       {tab === 'overview' && <OverviewPanel potPubkey={pubkey} pot={pot} />}
-      {tab === 'shares' && <SharesPanel potPubkey={pubkey} />}
+      {tab === 'shares' && <SharesTab potPubkey={pubkey} />}
       {tab === 'positions' && (
         <PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} />
       )}
@@ -219,6 +222,7 @@ export default function PotDetailPage() {
         <AIAgentPanel potPubkey={pubkey} pot={pot} />
       )}
       {tab === 'members' && <MembersPanel potPubkey={pubkey} />}
+      {tab === 'deposit' && <DepositPanel potPubkey={pubkey} potName={pot?.name ?? ''} network={process.env.NEXT_PUBLIC_NETWORK ?? 'devnet'} />}
       {tab === 'vault' && (
         <VaultTab potPubkey={pubkey} isCreator={connected && publicKey?.toBase58() === pot?.authority} />
       )}

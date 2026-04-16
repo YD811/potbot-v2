@@ -5,6 +5,7 @@
  * /vault <pubkey>   — vault detail: fees, tamagotchi, PnL
  * /my_vaults        — positions summary with PnL
  * /join <pubkey>    — join a vault (requires wallet)
+ * /deposit <pubkey> — get unique deposit address for a pot
  * /ref_stats        — referral earnings summary
  */
 
@@ -321,6 +322,61 @@ export async function joinVaultCommand(ctx: BotContext) {
 
   const kb = new InlineKeyboard()
   kb.url(`🌐 Open ${vault.emoji} ${vault.name}`, `https://potbot.fun/vaults`)
+
+  await ctx.reply(lines.join('\n'), {
+    parse_mode: 'MarkdownV2',
+    reply_markup: kb,
+  })
+}
+
+// ─── /deposit <pubkey> — get deposit address ────────────────────────────────
+
+export async function depositCommand(ctx: BotContext) {
+  const arg = ctx.match as string | undefined
+  const pubkey = arg?.trim()
+
+  if (!pubkey) {
+    // Show list of vaults if no pubkey provided
+    const sorted = [...MOCK_VAULTS].sort((a, b) => b.aumUsd - a.aumUsd).slice(0, 5)
+    const lines = [
+      '💸 *Deposit to a Pot*',
+      '',
+      'Which pot would you like to deposit to?',
+      '',
+      ...sorted.map((v) => `${v.emoji} ${escMd(v.name)} — \`${escMd(v.pubkey)}\``),
+      '',
+      '_Use: `/deposit <pubkey>`_',
+    ]
+    await ctx.reply(lines.join('\n'), { parse_mode: 'MarkdownV2' })
+    return
+  }
+
+  const vault = MOCK_VAULTS.find((v) => v.pubkey === pubkey)
+  if (!vault) {
+    await ctx.reply(`❌ Pot \`${escMd(pubkey)}\` not found\\.`, {
+      parse_mode: 'MarkdownV2',
+    })
+    return
+  }
+
+  // Mock deposit address (in production, call GET /api/deposit-address/{pubkey})
+  const depositAddress = `deposit_${pubkey}_${Math.random().toString(36).slice(2, 8).toUpperCase()}`
+
+  const lines = [
+    `💸 *Deposit to ${escMd(vault.name)}*`,
+    '',
+    '📬 *Your unique deposit address:*',
+    '',
+    `\`${depositAddress}\``,
+    '',
+    '_Send SOL to this address to deposit into the pot\._',
+    '_Your deposit will be credited automatically within 1-2 minutes\._',
+    '',
+    `🔗 [View on Solscan](https://solscan.io/address/${escMd(depositAddress)})`,
+  ]
+
+  const kb = new InlineKeyboard()
+  kb.url('🌐 Deposit on Web', `https://potbot.fun/pots/${pubkey}`)
 
   await ctx.reply(lines.join('\n'), {
     parse_mode: 'MarkdownV2',
