@@ -9,6 +9,14 @@ import { swapCommand } from './commands/swap.js'
 import { duelCommand } from './commands/duel.js'
 import { helpCommand } from './commands/help.js'
 import { aiCommand, handleAiVoteCallback } from './commands/ai.js'
+import {
+  vaultsCommand,
+  vaultCommand,
+  myVaultsCommand,
+  joinVaultCommand,
+  refStatsCommand,
+  handleVaultCallback,
+} from './commands/vault.js'
 
 // ── Env check ────────────────────────────────────────────────────────────────
 const BOT_TOKEN = process.env.BOT_TOKEN
@@ -18,7 +26,6 @@ if (!BOT_TOKEN) throw new Error('BOT_TOKEN env var is required')
 const bot = new Bot<BotContext>(BOT_TOKEN)
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-// Session — in-memory storage (swap for Redis/Supabase adapter in production)
 bot.use(
   session<SessionData, BotContext>({
     initial: (): SessionData => ({
@@ -30,16 +37,25 @@ bot.use(
 bot.use(conversations())
 
 // ── Commands ──────────────────────────────────────────────────────────────────
-bot.command('start', startCommand)
-bot.command('pot',   potCommand)
-bot.command('swap',  swapCommand)
-bot.command('duel',  duelCommand)
-bot.command('help',  helpCommand)
-bot.command('ai',    aiCommand)
+bot.command('start',     startCommand)
+bot.command('pot',       potCommand)
+bot.command('swap',      swapCommand)
+bot.command('duel',      duelCommand)
+bot.command('help',      helpCommand)
+bot.command('ai',        aiCommand)
+
+// Strategy Vault commands
+bot.command('vaults',    vaultsCommand)
+bot.command('vault',     vaultCommand)
+bot.command('my_vaults', myVaultsCommand)
+bot.command('join',      joinVaultCommand)
+bot.command('ref_stats', refStatsCommand)
 
 // ── Callback queries ──────────────────────────────────────────────────────────
-bot.callbackQuery(/^pot_/,     handlePotCallback)
-bot.callbackQuery(/^ai_vote:/, handleAiVoteCallback)
+bot.callbackQuery(/^pot_/,         handlePotCallback)
+bot.callbackQuery(/^ai_vote:/,     handleAiVoteCallback)
+bot.callbackQuery(/^vault_/,       handleVaultCallback)
+bot.callbackQuery(/^my_vaults:/,   handleVaultCallback)
 
 // ── Error handling ────────────────────────────────────────────────────────────
 bot.catch((err) => {
