@@ -59,6 +59,11 @@ pub struct PotAccount {
     pub daily_trades_count: u8,
     /// UTC midnight timestamp of the current trading day
     pub last_trade_day: i64,
+
+    /// SPL token mint for vault shares (set by init_token_mint)
+    pub token_mint: Pubkey,
+    /// How many share tokens per 1 SOL deposited (default 100)
+    pub shares_per_sol: u64,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]

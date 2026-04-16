@@ -7,6 +7,7 @@ pub mod execute_proposal;
 pub mod update_tamagotchi;
 pub mod execute_swap;
 pub mod strategy_vault;
+pub mod init_token_mint;
 
 pub use create_pot::*;
 pub use deposit::*;
@@ -17,3 +18,4 @@ pub use execute_proposal::*;
 pub use update_tamagotchi::*;
 pub use execute_swap::*;
 pub use strategy_vault::*;
+pub use init_token_mint::*;

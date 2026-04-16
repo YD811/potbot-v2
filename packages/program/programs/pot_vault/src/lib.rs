@@ -54,6 +54,11 @@ pub mod pot_vault {
         instructions::execute_swap::handler(ctx, params)
     }
 
+    /// Initialize an SPL token mint for a pot
+    pub fn init_token_mint(ctx: Context<InitTokenMint>) -> Result<()> {
+        instructions::init_token_mint::handler(ctx)
+    }
+
     // ─── Strategy Vault ──────────────────────────────────────────────────────
 
     /// Create a tokenized Strategy Vault with creator monetization

@@ -97,6 +97,10 @@ pub fn handler(ctx: Context<CreatePot>, params: CreatePotParams) -> Result<()> {
     pot.daily_trades_count = 0;
     pot.last_trade_day     = clock.unix_timestamp;
 
+    // Token mint and shares
+    pot.token_mint = Pubkey::default();
+    pot.shares_per_sol = 100;
+
     pot.config = PotConfig {
         is_public: params.is_public,
         min_deposit: params.min_deposit,
