@@ -1,0 +1,1 @@
+{\n  "framework": "nextjs",\n  "buildCommand": "npm run build --workspace=apps/web",\n  "outputDirectory": "apps/web/.next",\n  "installCommand": "npm install --legacy-peer-deps",\n  "ignoreCommand": "git diff HEAD^ HEAD --quiet apps/web packages/sdk packages/ui"\n}\n
