@@ -1,1 +1,34 @@
-aW1wb3J0IHR5cGUgeyBDb250ZXh0IH0gZnJvbSAnZ3JhbW15JwoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGhlbHBDb21tYW5kKGN0eDogQ29udGV4dCkgewogIGF3YWl0IGN0eC5yZXBseSgKICAgIGBH4oCvIFBvdEJvdCBDb21tYW5kczpcblxu4pm9IFwvc3RhcnQgLSBJbml0aWFsaXplIHlvdXIgdGFtYWdvdGNoaVxu4pm9IFwvcG90IC0gQnJvd3NlIFBPVHNcbuKZvSBcL2R1ZWwgLSBDaGFsbGVuZ2UgYSBwbGF5ZXJcbuKZvSBcL3N3YXAgLSBTd2FwIHRva2Vuc1xuXG7imb0gWm9vbTogaHR0cHM6Ly9wb3Rib3QudmVyY2VsLmFwcApgCiAgKQp9Cg==
+import type { BotContext } from '../types.js'
+import { InlineKeyboard } from 'grammy'
+
+export async function helpCommand(ctx: BotContext) {
+  const lines = [
+    '⚗️ *PotBot Commands*',
+    '',
+    '🪴 *Pots & Trading*',
+    '/start — Initialize your wallet & tamagotchi',
+    '/pot — Browse & manage your pots',
+    '/swap — Swap tokens inside a pot',
+    '/duel — Challenge another player to a 1v1 duel',
+    '/ai — AI agent settings & automation rules',
+    '',
+    '🏦 *Strategy Vaults*',
+    '/vaults — Browse top strategy vaults by PnL',
+    '/vault \\<pubkey\\> — Vault details, fees & tamagotchi',
+    '/my\\_vaults — Your vault positions & portfolio PnL',
+    '/join \\<pubkey\\> — Pre\\-flight check to join a vault',
+    '/ref\\_stats — Your referral earnings summary',
+    '',
+    '🌐 [potbot\\.fun](https://potbot.fun) · [GitHub](https://github.com/YD811/potbot-v2)',
+  ]
+
+  const kb = new InlineKeyboard()
+  kb.url('🏆 Top Vaults', 'https://potbot.fun/vaults').row()
+  kb.url('🤖 MCP for AI Agents', 'https://potbot.fun/for-agents')
+
+  await ctx.reply(lines.join('\n'), {
+    parse_mode: 'MarkdownV2',
+    reply_markup: kb,
+    link_preview_options: { is_disabled: true },
+  })
+}
