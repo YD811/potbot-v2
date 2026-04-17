@@ -18,6 +18,7 @@ import {
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 import { SharesPanel } from '@/components/SharesPanel'
 import { PnLDashboard } from '@/components/PnLDashboard'
+import { VaultAnalyticsStrip } from '@/components/VaultAnalyticsStrip'
 import { StrategyPanel } from '@/components/StrategyPanel'
 import { AIAgentPanel } from '@/components/AIAgentPanel'
 import { GovernanceSettings } from '@/components/GovernanceSettings'
@@ -135,6 +136,7 @@ export default function PotDetailPage() {
               <span>Members: <span className="text-white">{pot.memberCount}</span></span>
               <span>Trades: <span className="text-white">{pot.tradeCount}</span></span>
             </div>
+            <VaultAnalyticsStrip pubkey={pubkey} />
           </div>
 
           {/* Tamagotchi */}
