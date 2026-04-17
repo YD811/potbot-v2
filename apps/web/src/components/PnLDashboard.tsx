@@ -5,6 +5,8 @@ import { useTokenPrices, formatUsd, KNOWN_TOKENS } from '@/lib/prices'
 import { calcPositionPnl, formatPct, SEED_POSITIONS } from '@/lib/positions'
 import type { Position, PositionPnl } from '@/lib/positions'
 import { useSolPrice } from '@/lib/prices'
+import { useVaultAnalytics } from '@/hooks/useAnalytics'
+import type { PositionWithPnl } from '@/lib/api-client'
 
 interface Props {
   potPubkey: string
@@ -18,43 +20,178 @@ const DEFI_ICONS: Record<string, string> = {
   marginfi: '💰',
 }
 
+// ── Real API positions display ──────────────────────────────────────────────
+
+function RealPositionCard({ pos, vaultNavUsd }: { pos: PositionWithPnl; vaultNavUsd: number }) {
+  const [expanded, setExpanded] = useState(false)
+  const allocationPct = vaultNavUsd > 0 ? (pos.currentValue / vaultNavUsd) * 100 : 0
+
+  const pnlColor = pos.unrealizedPnlUsd >= 0 ? 'text-green-400' : 'text-red-400'
+
+  return (
+    <div className="card p-4 border border-pot-border transition-all">
+      <div
+        className="flex items-center justify-between cursor-pointer"
+        onClick={() => setExpanded((v) => !v)}
+      >
+        {/* Token info */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-pot-accent/20 border border-pot-accent/30 flex items-center justify-center text-sm font-bold text-pot-accent">
+            {pos.symbol.slice(0, 2)}
+          </div>
+          <div>
+            <span className="font-semibold text-white">{pos.symbol}</span>
+            <div className="text-xs text-pot-muted font-mono">
+              {pos.amount.toLocaleString(undefined, { maximumFractionDigits: 6 })} {pos.symbol}
+            </div>
+          </div>
+        </div>
+
+        {/* P&L */}
+        <div className="text-right">
+          <div className={`font-bold font-mono text-base ${pnlColor}`}>
+            {pos.unrealizedPnlUsd >= 0 ? '+' : ''}{formatUsd(Math.abs(pos.unrealizedPnlUsd))}
+          </div>
+          <div className={`text-xs font-mono ${pnlColor}`}>
+            {formatPct(pos.unrealizedPnlPct)}
+          </div>
+          <div className="text-xs text-pot-muted">
+            {allocationPct.toFixed(1)}% of vault
+          </div>
+        </div>
+        <span className="text-pot-muted ml-3 text-xs">{expanded ? '▲' : '▼'}</span>
+      </div>
+
+      {expanded && (
+        <div className="mt-4 pt-4 border-t border-pot-border space-y-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-pot-dark rounded-lg p-3 text-center">
+              <div className="text-[10px] text-pot-muted mb-1">Entry Price</div>
+              <div className="text-xs font-mono text-white">
+                ${pos.entryPrice < 0.001 ? pos.entryPrice.toFixed(8) : pos.entryPrice.toFixed(4)}
+              </div>
+            </div>
+            <div className="bg-pot-dark rounded-lg p-3 text-center">
+              <div className="text-[10px] text-pot-muted mb-1">Current Price</div>
+              <div className={`text-xs font-mono ${pnlColor}`}>
+                ${pos.currentPrice < 0.001 ? pos.currentPrice.toFixed(8) : pos.currentPrice.toFixed(4)}
+              </div>
+            </div>
+            <div className="bg-pot-dark rounded-lg p-3 text-center">
+              <div className="text-[10px] text-pot-muted mb-1">Current Value</div>
+              <div className="text-xs font-mono text-white">{formatUsd(pos.currentValue)}</div>
+            </div>
+          </div>
+
+          {/* Price movement bar */}
+          <div>
+            <div className="flex justify-between text-xs mb-1">
+              <span className="text-pot-muted">Price movement from entry</span>
+              <span className={pnlColor}>{formatPct(pos.unrealizedPnlPct)}</span>
+            </div>
+            <div className="h-2 bg-pot-dark rounded-full overflow-hidden relative">
+              <div className="absolute inset-0 flex">
+                <div className="flex-1 border-r border-pot-border/50" />
+              </div>
+              <div
+                className={`h-full rounded-full transition-all ${
+                  pos.unrealizedPnlPct >= 0 ? 'bg-green-500 ml-auto' : 'bg-red-500'
+                }`}
+                style={{ width: `${Math.min(50, Math.abs(pos.unrealizedPnlPct))}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 text-xs text-pot-muted">
+            <span>Cost basis: {formatUsd(pos.entryValue)}</span>
+            <span>•</span>
+            <span>Mint: {pos.mint.slice(0, 6)}…{pos.mint.slice(-4)}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main dashboard ───────────────────────────────────────────────────────────
+
 export function PnLDashboard({ potPubkey, vaultBalanceSol }: Props) {
   const [sortBy, setSortBy] = useState<'pnl' | 'value' | 'allocation'>('value')
   const [showClosed, setShowClosed] = useState(false)
 
-  // Get positions for this pot (in production: from on-chain / indexer)
-  const positions = useMemo(
+  // ── Real API analytics ─────────────────────────────────────────────────────
+  const { data: analytics, isLoading: analyticsLoading } = useVaultAnalytics(potPubkey)
+  const hasRealPositions = (analytics?.positions?.length ?? 0) > 0
+
+  // ── Demo positions fallback (SEED_POSITIONS + live prices) ─────────────────
+  const demoPositions = useMemo(
     () => SEED_POSITIONS.filter((p) => p.potPubkey === potPubkey && (showClosed || p.isOpen)),
     [potPubkey, showClosed]
   )
-
-  const mints = useMemo(() => [...new Set(positions.map((p) => p.tokenMint))], [positions])
-  const { data: prices } = useTokenPrices(mints)
+  const demoMints = useMemo(
+    () => [...new Set(demoPositions.map((p) => p.tokenMint))],
+    [demoPositions]
+  )
+  const { data: demoPrices } = useTokenPrices(demoMints)
   const { price: solPrice } = useSolPrice()
+  const vaultBalanceUsd = solPrice ? vaultBalanceSol * solPrice : (analytics?.solBalanceUsd ?? 0)
 
-  const vaultBalanceUsd = solPrice ? vaultBalanceSol * solPrice : 0
-
-  const pnlItems = useMemo<PositionPnl[]>(() => {
-    return positions.map((pos) => {
-      const currentPrice = prices?.[pos.tokenMint] ?? pos.entryPriceUsd
+  const demoPnlItems = useMemo<PositionPnl[]>(() => {
+    return demoPositions.map((pos) => {
+      const currentPrice = demoPrices?.[pos.tokenMint] ?? pos.entryPriceUsd
       return calcPositionPnl(pos, currentPrice, vaultBalanceUsd)
     })
-  }, [positions, prices, vaultBalanceUsd])
+  }, [demoPositions, demoPrices, vaultBalanceUsd])
 
-  const sorted = useMemo(() => {
-    return [...pnlItems].sort((a, b) => {
-      if (sortBy === 'pnl') return b.pnlPct - a.pnlPct
+  // ── Unified real positions (sorted) ────────────────────────────────────────
+  const realPositionsSorted = useMemo(() => {
+    if (!analytics?.positions) return []
+    const navUsd = analytics.navUsd
+    return [...analytics.positions].sort((a, b) => {
+      if (sortBy === 'pnl')        return b.unrealizedPnlUsd - a.unrealizedPnlUsd
+      if (sortBy === 'value')      return b.currentValue - a.currentValue
+      if (sortBy === 'allocation') {
+        const aAlloc = navUsd > 0 ? a.currentValue / navUsd : 0
+        const bAlloc = navUsd > 0 ? b.currentValue / navUsd : 0
+        return bAlloc - aAlloc
+      }
+      return 0
+    })
+  }, [analytics, sortBy])
+
+  // ── Demo positions (sorted) ─────────────────────────────────────────────────
+  const demoSorted = useMemo(() => {
+    return [...demoPnlItems].sort((a, b) => {
+      if (sortBy === 'pnl')   return b.pnlPct - a.pnlPct
       if (sortBy === 'value') return b.currentValueUsd - a.currentValueUsd
       return b.allocationPct - a.allocationPct
     })
-  }, [pnlItems, sortBy])
+  }, [demoPnlItems, sortBy])
 
-  const totalPnlUsd = pnlItems.reduce((s, p) => s + p.pnlUsd, 0)
-  const totalValueUsd = pnlItems.reduce((s, p) => s + p.currentValueUsd, 0)
-  const totalEntryUsd = pnlItems.reduce((s, p) => s + p.entryValueUsd, 0)
-  const totalPnlPct = totalEntryUsd > 0 ? (totalPnlUsd / totalEntryUsd) * 100 : 0
+  // ── Summary stats ──────────────────────────────────────────────────────────
+  const totalPnlUsd = hasRealPositions
+    ? analytics!.pnlUsd
+    : demoPnlItems.reduce((s, p) => s + p.pnlUsd, 0)
 
-  if (positions.length === 0) {
+  const totalValueUsd = hasRealPositions
+    ? analytics!.navUsd
+    : demoPnlItems.reduce((s, p) => s + p.currentValueUsd, 0)
+
+  const totalPnlPct = hasRealPositions
+    ? analytics!.pnlPct
+    : (() => {
+        const entry = demoPnlItems.reduce((s, p) => s + p.entryValueUsd, 0)
+        return entry > 0 ? (totalPnlUsd / entry) * 100 : 0
+      })()
+
+  const positionCount = hasRealPositions
+    ? analytics!.positions!.length
+    : demoPnlItems.length
+
+  const navUsd = analytics?.navUsd ?? vaultBalanceUsd
+
+  // Empty state
+  if (!analyticsLoading && !hasRealPositions && demoPositions.length === 0) {
     return (
       <div className="card p-12 text-center">
         <div className="text-4xl mb-3">📊</div>
@@ -68,11 +205,26 @@ export function PnLDashboard({ potPubkey, vaultBalanceSol }: Props) {
 
   return (
     <div className="space-y-6">
+      {/* Source indicator */}
+      {hasRealPositions ? (
+        <div className="flex items-center gap-2 text-xs text-pot-muted">
+          <span className="w-1.5 h-1.5 rounded-full bg-pot-green animate-pulse" />
+          <span className="text-pot-green font-medium">Live data</span>
+          <span>· {analytics!.positions!.length} positions from API · updated {new Date(analytics!.updatedAt).toLocaleTimeString()}</span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 text-xs text-pot-muted">
+          <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
+          <span>Demo positions</span>
+          <span>· Connect API backend to see real data</span>
+        </div>
+      )}
+
       {/* Summary bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <SummaryCard
           label="Open Positions"
-          value={String(pnlItems.length)}
+          value={String(positionCount)}
           sub="active trades"
         />
         <SummaryCard
@@ -89,7 +241,7 @@ export function PnLDashboard({ potPubkey, vaultBalanceSol }: Props) {
         />
         <SummaryCard
           label="In Positions"
-          value={`${vaultBalanceUsd > 0 ? (totalValueUsd / vaultBalanceUsd * 100).toFixed(1) : 0}%`}
+          value={`${navUsd > 0 ? (totalValueUsd / navUsd * 100).toFixed(1) : 0}%`}
           sub="of vault in open trades"
         />
       </div>
@@ -111,23 +263,49 @@ export function PnLDashboard({ potPubkey, vaultBalanceSol }: Props) {
             </button>
           ))}
         </div>
-        <button
-          onClick={() => setShowClosed((v) => !v)}
-          className="text-xs px-3 py-1.5 rounded-lg border border-pot-border text-pot-muted hover:text-white transition"
-        >
-          {showClosed ? '🔴 Hide Closed' : '📁 Show Closed'}
-        </button>
+        {!hasRealPositions && (
+          <button
+            onClick={() => setShowClosed((v) => !v)}
+            className="text-xs px-3 py-1.5 rounded-lg border border-pot-border text-pot-muted hover:text-white transition"
+          >
+            {showClosed ? '🔴 Hide Closed' : '📁 Show Closed'}
+          </button>
+        )}
       </div>
 
       {/* Positions */}
       <div className="space-y-3">
-        {sorted.map((item) => (
-          <PositionCard key={item.position.id} item={item} />
-        ))}
+        {hasRealPositions
+          ? realPositionsSorted.map((pos) => (
+              <RealPositionCard key={pos.mint} pos={pos} vaultNavUsd={navUsd} />
+            ))
+          : demoSorted.map((item) => (
+              <PositionCard key={item.position.id} item={item} />
+            ))
+        }
       </div>
+
+      {/* APY strip (real data only) */}
+      {hasRealPositions && analytics!.apy30d > 0 && (
+        <div className="card p-4 flex items-center gap-4">
+          <div>
+            <div className="text-xs text-pot-muted">30d APY</div>
+            <div className="text-lg font-bold text-pot-accent font-mono">{analytics!.apy30d.toFixed(1)}%</div>
+          </div>
+          {analytics!.apy7d != null && (
+            <div>
+              <div className="text-xs text-pot-muted">7d APY</div>
+              <div className="text-lg font-bold text-white font-mono">{analytics!.apy7d.toFixed(1)}%</div>
+            </div>
+          )}
+          <div className="ml-auto text-xs text-pot-muted">Annualized from NAV history</div>
+        </div>
+      )}
     </div>
   )
 }
+
+// ── Legacy demo position card (from SEED_POSITIONS) ─────────────────────────
 
 function PositionCard({ item }: { item: PositionPnl }) {
   const [expanded, setExpanded] = useState(false)
@@ -157,7 +335,6 @@ function PositionCard({ item }: { item: PositionPnl }) {
         className="flex items-center justify-between cursor-pointer"
         onClick={() => setExpanded((v) => !v)}
       >
-        {/* Left: token info */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-pot-accent/20 border border-pot-accent/30 flex items-center justify-center text-sm font-bold text-pot-accent">
             {pos.tokenSymbol.slice(0, 2)}
@@ -182,7 +359,6 @@ function PositionCard({ item }: { item: PositionPnl }) {
           </div>
         </div>
 
-        {/* Right: P&L */}
         <div className="text-right">
           <div className={`font-bold font-mono text-base ${item.pnlUsd >= 0 ? 'text-green-400' : 'text-red-400'}`}>
             {item.pnlUsd >= 0 ? '+' : ''}{formatUsd(Math.abs(item.pnlUsd))}
@@ -198,36 +374,27 @@ function PositionCard({ item }: { item: PositionPnl }) {
         <span className="text-pot-muted ml-3 text-xs">{expanded ? '▲' : '▼'}</span>
       </div>
 
-      {/* Expanded details */}
       {expanded && (
         <div className="mt-4 pt-4 border-t border-pot-border space-y-4">
-          {/* Price grid */}
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-pot-dark rounded-lg p-3 text-center">
               <div className="text-[10px] text-pot-muted mb-1">Entry Price</div>
               <div className="text-xs font-mono text-white">
-                ${pos.entryPriceUsd < 0.001
-                  ? pos.entryPriceUsd.toFixed(8)
-                  : pos.entryPriceUsd.toFixed(4)}
+                ${pos.entryPriceUsd < 0.001 ? pos.entryPriceUsd.toFixed(8) : pos.entryPriceUsd.toFixed(4)}
               </div>
             </div>
             <div className="bg-pot-dark rounded-lg p-3 text-center">
               <div className="text-[10px] text-pot-muted mb-1">Current Price</div>
               <div className={`text-xs font-mono ${item.pnlPct >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                ${item.currentPriceUsd < 0.001
-                  ? item.currentPriceUsd.toFixed(8)
-                  : item.currentPriceUsd.toFixed(4)}
+                ${item.currentPriceUsd < 0.001 ? item.currentPriceUsd.toFixed(8) : item.currentPriceUsd.toFixed(4)}
               </div>
             </div>
             <div className="bg-pot-dark rounded-lg p-3 text-center">
               <div className="text-[10px] text-pot-muted mb-1">Current Value</div>
-              <div className="text-xs font-mono text-white">
-                {formatUsd(item.currentValueUsd)}
-              </div>
+              <div className="text-xs font-mono text-white">{formatUsd(item.currentValueUsd)}</div>
             </div>
           </div>
 
-          {/* Price change bar */}
           <div>
             <div className="flex justify-between text-xs mb-1">
               <span className="text-pot-muted">Price movement from entry</span>
@@ -246,7 +413,6 @@ function PositionCard({ item }: { item: PositionPnl }) {
             </div>
           </div>
 
-          {/* Strategy triggers */}
           {(item.stopLossTriggerUsd || item.takeProfitTriggerUsd) && (
             <div className="grid grid-cols-2 gap-2">
               {item.stopLossTriggerUsd && (

@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { usePots } from '@/hooks/usePots'
 import { useMockStore } from '@/lib/mock-store'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
+import { useSolPrice } from '@/lib/prices'
+import { useVaultAnalyticsBatch } from '@/hooks/useAnalytics'
 import SNSRegistrarPanel from '@/components/SNSRegistrarPanel'
 
 const WalletMultiButton = dynamic(
@@ -25,23 +27,39 @@ const YIELD_LABELS: Record<number, string> = {
 export default function MyPotsPage() {
   const { publicKey, connected } = useWallet()
   const { data: allPots, isLoading } = usePots()
+  const { price: solPrice } = useSolPrice()
   const walletStr = publicKey?.toBase58() ?? ''
 
-  // Get all member records for connected wallet from mock store
   const allMembers = useMockStore.getState().members
   const myMemberships = allMembers.filter((m) => m.wallet === walletStr)
   const myPotPubkeys = new Set(myMemberships.map((m) => m.potPubkey))
 
-  // Filter pots: member OR creator
   const myPots = (allPots ?? []).filter(
     (p: any) => myPotPubkeys.has(p.pubkey) || p.authority === walletStr
   )
 
+  // Fetch analytics for all my pots in parallel
+  const myPotKeys = useMemo(() => myPots.map((p: any) => p.pubkey), [myPots])
+  const { dataMap: analyticsMap, isLoading: analyticsLoading } = useVaultAnalyticsBatch(myPotKeys)
+
   // Portfolio totals
-  const totalBalance = myPots.reduce((s: number, p: any) => s + (p.balance ?? 0), 0)
-  const totalYield   = myPots.reduce((s: number, p: any) => s + ((p as any).totalYieldEarned ?? 0), 0)
-  const totalVolume  = myPots.reduce((s: number, p: any) => s + ((p as any).totalVolume ?? 0), 0)
+  const totalBalanceSol = myPots.reduce((s: number, p: any) => s + (p.balance ?? 0), 0)
+  const totalBalanceUsd = myPots.reduce((s: number, p: any) => {
+    const analytics = analyticsMap[p.pubkey]
+    return s + (analytics?.navUsd ?? (p.balance * (solPrice ?? 0)))
+  }, 0)
+  const totalPnlUsd = myPots.reduce((s: number, p: any) => {
+    const a = analyticsMap[p.pubkey]
+    return s + (a?.pnlUsd ?? 0)
+  }, 0)
   const totalShares  = myMemberships.reduce((s, m) => s + m.shares, 0)
+  const totalYield   = myPots.reduce((s: number, p: any) => s + ((p as any).totalYieldEarned ?? 0), 0)
+
+  function fmtUsd(v: number): string {
+    if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(2)}M`
+    if (v >= 1_000)     return `$${(v / 1_000).toFixed(1)}K`
+    return `$${v.toFixed(0)}`
+  }
 
   /* ── Not connected ── */
   if (!connected) {
@@ -76,18 +94,48 @@ export default function MyPotsPage() {
 
       {/* ── Portfolio Stats ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: 'Total Balance',  value: `${totalBalance.toFixed(3)} SOL`, icon: '◎',  color: 'text-pot-green'  },
-          { label: 'My POTs',        value: String(myPots.length),             icon: '🪴', color: 'text-white'       },
-          { label: 'Yield Earned',   value: `${totalYield.toFixed(4)} SOL`,    icon: '🌱', color: 'text-teal-400'   },
-          { label: 'Total Shares',   value: totalShares.toLocaleString(),      icon: '🪙', color: 'text-pot-accent'  },
-        ].map(({ label, value, icon, color }) => (
-          <div key={label} className="card p-4 text-center">
-            <div className="text-2xl mb-1.5">{icon}</div>
-            <div className={`font-bold font-mono text-lg ${color}`}>{value}</div>
-            <div className="text-xs text-pot-muted mt-1">{label}</div>
+        {/* Total portfolio value */}
+        <div className="card p-4 text-center col-span-2 md:col-span-1">
+          <div className="text-2xl mb-1.5">💰</div>
+          {analyticsLoading && totalBalanceUsd === 0 ? (
+            <div className="h-7 w-20 bg-pot-border rounded animate-pulse mx-auto mb-1" />
+          ) : (
+            <div className="font-bold font-mono text-lg text-pot-green">
+              {totalBalanceUsd > 0 ? fmtUsd(totalBalanceUsd) : `${totalBalanceSol.toFixed(3)} SOL`}
+            </div>
+          )}
+          <div className="text-xs text-pot-muted mt-1">
+            Portfolio Value
+            {totalBalanceSol > 0 && totalBalanceUsd > 0 && (
+              <span className="ml-1 text-pot-border/70">· {totalBalanceSol.toFixed(2)} SOL</span>
+            )}
           </div>
-        ))}
+        </div>
+
+        {/* All-time PnL */}
+        <div className="card p-4 text-center">
+          <div className="text-2xl mb-1.5">📈</div>
+          <div className={`font-bold font-mono text-lg ${
+            totalPnlUsd >= 0 ? 'text-pot-green' : 'text-red-400'
+          }`}>
+            {totalPnlUsd >= 0 ? '+' : ''}{fmtUsd(Math.abs(totalPnlUsd))}
+          </div>
+          <div className="text-xs text-pot-muted mt-1">All-time PnL</div>
+        </div>
+
+        {/* My POTs count */}
+        <div className="card p-4 text-center">
+          <div className="text-2xl mb-1.5">🪴</div>
+          <div className="font-bold font-mono text-lg text-white">{myPots.length}</div>
+          <div className="text-xs text-pot-muted mt-1">My POTs</div>
+        </div>
+
+        {/* Shares */}
+        <div className="card p-4 text-center">
+          <div className="text-2xl mb-1.5">🪙</div>
+          <div className="font-bold font-mono text-lg text-pot-accent">{totalShares.toLocaleString()}</div>
+          <div className="text-xs text-pot-muted mt-1">Total Shares</div>
+        </div>
       </div>
 
       {/* ── SNS Identity Panel ── */}
@@ -113,20 +161,25 @@ export default function MyPotsPage() {
       ) : (
         <div className="space-y-3">
           {myPots.map((pot: any) => {
-            const membership = myMemberships.find((m) => m.potPubkey === pot.pubkey)
-            const isCreator = pot.authority === walletStr
-            const sharesPct = pot.totalShares > 0 && membership
+            const membership    = myMemberships.find((m) => m.potPubkey === pot.pubkey)
+            const analytics     = analyticsMap[pot.pubkey]
+            const isCreator     = pot.authority === walletStr
+            const sharesPct     = pot.totalShares > 0 && membership
               ? (membership.shares / pot.totalShares) * 100
               : 0
-            const navGrowth = pot.navPerShareBps
-              ? ((pot.navPerShareBps / 10000) - 1) * 100
-              : 0
+            // My share of the pot value
+            const myValueUsd    = analytics?.navUsd
+              ? (sharesPct / 100) * analytics.navUsd
+              : (sharesPct / 100) * (pot.balance * (solPrice ?? 0))
+            const pnlPct        = analytics?.pnlPct ?? 0
+            const apy30d        = analytics?.apy30d ?? 0
+
             const tama = calculateTamaStats({
               tradeVolume: (pot.totalVolume ?? pot.tradeCount * 2),
               memberCount: pot.memberCount,
               winRate: 0.6,
               yieldApy: 0.08,
-              ageSeconds: (Date.now() - pot.createdAt) / 1000,
+              ageSeconds: (Date.now() - (typeof pot.createdAt === 'number' ? pot.createdAt : (pot.createdAt as Date)?.getTime() ?? Date.now())) / 1000,
             })
 
             return (
@@ -138,7 +191,6 @@ export default function MyPotsPage() {
 
                   {/* Left */}
                   <div className="flex items-start gap-4 flex-1 min-w-0">
-                    {/* Emoji + tamagotchi */}
                     <div className="relative shrink-0 mt-0.5">
                       <span className="text-3xl">{pot.emoji}</span>
                       <span className="absolute -bottom-1 -right-1 text-sm">{tama.emoji}</span>
@@ -178,31 +230,33 @@ export default function MyPotsPage() {
                             </span>
                           </span>
                         )}
-                        {(pot.totalYieldEarned ?? 0) > 0 && (
+                        {myValueUsd > 0 && (
                           <span>
-                            Yield:{' '}
-                            <span className="text-teal-400 font-mono">+{(pot.totalYieldEarned ?? 0).toFixed(4)} SOL</span>
+                            My value:{' '}
+                            <span className="text-pot-green font-mono">{fmtUsd(myValueUsd)}</span>
                           </span>
                         )}
-                        <span>
-                          {pot.memberCount} member{pot.memberCount !== 1 ? 's' : ''}
-                        </span>
+                        <span>{pot.memberCount} member{pot.memberCount !== 1 ? 's' : ''}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Right: NAV + button */}
+                  {/* Right: analytics + button */}
                   <div className="flex flex-col items-end gap-2 shrink-0">
-                    {navGrowth !== 0 && (
+                    {analyticsLoading ? (
+                      <div className="h-8 w-16 bg-pot-border rounded animate-pulse" />
+                    ) : analytics ? (
                       <div className="text-right">
                         <div className={`text-sm font-mono font-bold ${
-                          navGrowth >= 0 ? 'text-pot-green' : 'text-red-400'
+                          pnlPct >= 0 ? 'text-pot-green' : 'text-red-400'
                         }`}>
-                          {navGrowth >= 0 ? '+' : ''}{navGrowth.toFixed(2)}%
+                          {pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(2)}%
                         </div>
-                        <div className="text-[10px] text-pot-muted">NAV/share</div>
+                        <div className="text-[10px] text-pot-muted">
+                          {apy30d > 0 ? `${apy30d.toFixed(1)}% APY` : 'PnL'}
+                        </div>
                       </div>
-                    )}
+                    ) : null}
                     <Link
                       href={`/pots/${pot.pubkey}`}
                       className="btn-primary text-xs px-4 py-2 whitespace-nowrap group-hover:shadow-lg group-hover:shadow-pot-accent/20 transition-all"
@@ -212,9 +266,35 @@ export default function MyPotsPage() {
                   </div>
                 </div>
 
-                {/* Ownership progress bar */}
+                {/* Analytics bar */}
+                {analytics && (
+                  <div className="mt-3 pt-3 border-t border-pot-border flex flex-wrap gap-4 text-xs">
+                    <div>
+                      <span className="text-pot-muted">NAV </span>
+                      <span className="font-mono text-white">{fmtUsd(analytics.navUsd)}</span>
+                    </div>
+                    {analytics.apy30d > 0 && (
+                      <div>
+                        <span className="text-pot-muted">APY 30d </span>
+                        <span className="font-mono text-pot-accent">{analytics.apy30d.toFixed(1)}%</span>
+                      </div>
+                    )}
+                    {analytics.positions && analytics.positions.length > 0 && (
+                      <div>
+                        <span className="text-pot-muted">Positions </span>
+                        <span className="font-mono text-white">{analytics.positions.length}</span>
+                      </div>
+                    )}
+                    <div className="ml-auto">
+                      <span className="w-1.5 h-1.5 rounded-full bg-pot-green animate-pulse inline-block mr-1" />
+                      <span className="text-pot-muted text-[10px]">Live</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Ownership bar */}
                 {membership && pot.totalShares > 0 && (
-                  <div className="mt-4 pt-3 border-t border-pot-border">
+                  <div className="mt-3 pt-3 border-t border-pot-border">
                     <div className="flex justify-between text-[10px] text-pot-muted mb-1.5">
                       <span>My ownership in pool</span>
                       <span className="font-mono">{sharesPct.toFixed(2)}%</span>

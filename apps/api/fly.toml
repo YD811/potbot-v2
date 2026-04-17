@@ -1,0 +1,39 @@
+# fly.toml — Fly.io deployment for PotBot API
+# Deploy: fly deploy (from apps/api directory)
+# Docs: https://fly.io/docs/reference/configuration/
+
+app = "potbot-api"
+primary_region = "ams"  # Amsterdam — close to EU users
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3001"
+
+[http_service]
+  internal_port = 3001
+  force_https   = true
+  auto_stop_machines  = false  # Keep warm for low latency
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type       = "requests"
+    hard_limit = 1000
+    soft_limit = 800
+
+[[vm]]
+  size   = "shared-cpu-1x"   # Start small, scale up as needed
+  memory = "512mb"
+
+[checks]
+  [checks.health]
+    grace_period  = "10s"
+    interval      = "30s"
+    method        = "GET"
+    path          = "/health"
+    port          = 3001
+    timeout       = "5s"
+    type          = "http"
