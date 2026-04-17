@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import {
   STRATEGY_DESCRIPTIONS,
+  createDefaultConfig,
   type StrategyPreset,
   type AgentConfig,
   type AgentRule,
@@ -167,12 +168,9 @@ function StrategyTab({
   potPubkey: string
   setConfig: (c: AgentConfig) => void
 }) {
-  const { createDefaultConfig } = require('@/lib/ai-agent')
-
   function selectPreset(preset: StrategyPreset) {
     const base = createDefaultConfig(potPubkey, preset)
     if (config) {
-      // Preserve enabled state and global settings
       setConfig({ ...base, enabled: config.enabled })
     } else {
       setConfig(base)
@@ -378,7 +376,6 @@ function RulesTab({
             >
               {/* Rule header */}
               <div className="flex items-center gap-3 p-4">
-                {/* Enable toggle */}
                 <button
                   onClick={() => toggleRule(rule.id)}
                   className={`w-9 h-5 rounded-full shrink-0 transition-colors ${
@@ -418,10 +415,8 @@ function RulesTab({
                 </div>
               </div>
 
-              {/* Expanded rule editor */}
               {isExpanded && (
                 <div className="border-t border-pot-border px-4 py-4 bg-pot-dark space-y-4">
-                  {/* Threshold */}
                   {rule.trigger.threshold !== undefined && rule.trigger.type !== 'time_interval' && (
                     <div>
                       <div className="flex justify-between mb-1.5">
@@ -442,7 +437,6 @@ function RulesTab({
                     </div>
                   )}
 
-                  {/* Time interval */}
                   {rule.trigger.type === 'time_interval' && rule.trigger.threshold !== undefined && (
                     <div>
                       <div className="flex justify-between mb-1.5">
@@ -469,7 +463,6 @@ function RulesTab({
                     </div>
                   )}
 
-                  {/* Amount % */}
                   {rule.action.amountPct !== undefined && (
                     <div>
                       <div className="flex justify-between mb-1.5">
@@ -499,7 +492,6 @@ function RulesTab({
                     </div>
                   )}
 
-                  {/* Cooldown */}
                   <div>
                     <div className="flex justify-between mb-1.5">
                       <span className="text-xs text-pot-muted">Cooldown between firings</span>
@@ -536,10 +528,7 @@ function LogTab({ log, clearLog }: { log: AgentLogEntry[]; clearLog: () => void 
       <div className="flex items-center justify-between px-4 py-3 border-b border-pot-border">
         <span className="text-sm font-semibold text-white">Activity Log</span>
         {log.length > 0 && (
-          <button
-            onClick={clearLog}
-            className="text-xs text-pot-muted hover:text-red-400 transition"
-          >
+          <button onClick={clearLog} className="text-xs text-pot-muted hover:text-red-400 transition">
             Clear
           </button>
         )}
