@@ -1,1 +1,12 @@
-aW1wb3J0IHsgY2xzeCB9IGZyb20gJ2Nsc3gnCgpleHBvcnQgZnVuY3Rpb24gU3Bpbm5lcih7IHNpemUgPSAnbWQnLCBjbGFzc05hbWUgfTogeyBzaXplPzogJ3NtJyB8ICdtZCcgfCAnbGcnOyBjbGFzc05hbWU/OiBzdHJpbmcgfSkgewogIGNvbnN0IHNpemVzID0geyBzbTogJ3ctNCBoLTQnLCBtZDogJ3ctNiBoLTYnLCBsZzogJ3ctMTAgaC0xMCcgfQogIHJldHVybiAoCiAgICA8ZGl2IGNsYXNzTmFtZT17Y2xzeCgKICAgICAgJ2FuaW1hdGUtc3BpbiByb3VuZGVkLWZ1bGwgYm9yZGVyLTIgYm9yZGVyLVsjMUEyMzMyXSBib3JkZXItdC1bIzk5NDVGRl0nLAogICAgICBzaXplc1tzaXplXSwKICAgICAgY2xhc3NOYW1lCiAgICApfSAvPgogICkKfQo=
+import { clsx } from 'clsx'
+
+export function Spinner({ size = 'md', className }: { size?: 'sm' | 'md' | 'lg'; className?: string }) {
+  const sizes = { sm: 'w-4 h-4', md: 'w-6 h-6', lg: 'w-10 h-10' }
+  return (
+    <div className={clsx(
+      'animate-spin rounded-full border-2 border-[#1A2332] border-t-[#9945FF]',
+      sizes[size],
+      className
+    )} />
+  )
+}

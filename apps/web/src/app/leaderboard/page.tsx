@@ -63,7 +63,7 @@ function LiveDot() {
 
 export default function LeaderboardPage() {
   const { data: pots = [], isLoading } = usePots()
-  const solUsd = useSolPrice()
+  const { price: solUsd } = useSolPrice()
   const [sortBy, setSortBy] = useState<SortKey>('tvl')
   const [search, setSearch] = useState('')
   const [snsNames, setSnsNames] = useState<Record<string, string>>({})
