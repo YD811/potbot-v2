@@ -13,6 +13,7 @@ import {
 } from '@/lib/ai-agent'
 import { useCreateProposal, useVote, useProposals } from '@/hooks/usePots'
 import { fetchPricesRaw } from '@/lib/useAIAgent-helpers'
+import { agentApi, type AgentRule as BackendAgentRule } from '@/lib/api-client'
 
 /* ── Per-pot config store (localStorage) ── */
 
@@ -46,6 +47,32 @@ function saveLog(potPubkey: string, log: AgentLogEntry[]) {
   } catch {}
 }
 
+/**
+ * Convert frontend AgentRule → backend BackendAgentRule for API storage.
+ * The backend cron evaluates the subset of trigger types it supports.
+ */
+function toBackendRules(frontendConfig: AgentConfig): BackendAgentRule[] {
+  return frontendConfig.rules.map((r) => ({
+    id:    r.id,
+    name:  r.name,
+    enabled: r.enabled,
+    trigger: {
+      type:      r.trigger.type as BackendAgentRule['trigger']['type'],
+      threshold: r.trigger.threshold,
+      interval:  r.trigger.type === 'time_interval' ? r.trigger.threshold : undefined,
+      token:     r.trigger.tokenSymbol,
+    },
+    action: {
+      type:    r.action.type as BackendAgentRule['action']['type'],
+      amount:  r.action.amountPct,
+      token:   (r.action as any).fromSymbol,
+      toToken: (r.action as any).toSymbol,
+    },
+    cooldownMinutes:  r.cooldownMinutes,
+    lastTriggeredAt:  r.lastFiredAt,
+  }))
+}
+
 /* ── Hook ── */
 
 export interface UseAIAgentReturn {
@@ -59,7 +86,6 @@ export interface UseAIAgentReturn {
   triggerManualCheck: () => Promise<void>
 }
 
-// Mints to watch for price updates
 const WATCH_MINTS = [
   'So11111111111111111111111111111111111111112',    // SOL
   'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
@@ -82,11 +108,45 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
   const prevPricesRef = useRef<Record<string, number>>({})
   const proposalSeenRef = useRef<Set<string>>(new Set())
 
-  /* ── Persist ── */
+  /* ── Persist + API sync ── */
   const setConfig = useCallback((newConfig: AgentConfig) => {
     setConfigState(newConfig)
     saveConfig(newConfig)
-  }, [])
+
+    // Sync rules to backend (fire-and-forget) so the server cron can evaluate them
+    agentApi
+      .updateRules(potPubkey, toBackendRules(newConfig))
+      .catch(() => {})  // silently ignore if API is offline
+  }, [potPubkey])
+
+  /* ── Load from API on mount ── */
+  useEffect(() => {
+    // Merge server logs with local logs
+    agentApi
+      .getLogs(potPubkey, 50)
+      .then(({ logs: apiLogs }) => {
+        if (apiLogs.length === 0) return
+        const converted: AgentLogEntry[] = apiLogs.map((l) => ({
+          id:        l.id,
+          timestamp: l.ts,
+          level:     l.error ? 'error' : l.proposalCreated ? 'success' : 'info',
+          message:   [
+            l.actionDesc,
+            l.triggerDesc ? `(trigger: ${l.triggerDesc})` : '',
+            l.proposalCreated ? '\u2705 Proposal created' : '',
+            l.error ? `❌ ${l.error}` : '',
+          ].filter(Boolean).join(' — '),
+          ruleId:   l.ruleId,
+          ruleName: l.ruleName,
+        }))
+        setLog((prev) => {
+          const existingIds = new Set(prev.map((e) => e.id))
+          const fresh = converted.filter((e) => !existingIds.has(e.id))
+          return [...fresh, ...prev].sort((a, b) => b.timestamp - a.timestamp).slice(0, MAX_LOG)
+        })
+      })
+      .catch(() => {})
+  }, [potPubkey])
 
   /* ── Logging ── */
   const addLog = useCallback((entry: Omit<AgentLogEntry, 'id' | 'timestamp'>) => {
@@ -102,25 +162,23 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
     })
   }, [potPubkey])
 
-  /* ── Main evaluation loop ── */
+  /* ── Main evaluation loop (local, runs in-browser) ── */
   const runCheck = useCallback(async () => {
     if (!config?.enabled || !publicKey) return
     setIsRunning(true)
 
     try {
-      // 1. Fetch current prices
       const mints = [
         ...new Set([
           ...WATCH_MINTS,
           ...config.rules.flatMap((r) => r.trigger.tokenMint ? [r.trigger.tokenMint] : []),
-          ...config.rules.flatMap((r) => [r.action.fromMint, r.action.toMint].filter(Boolean) as string[]),
+          ...config.rules.flatMap((r) => [(r.action as any).fromMint, (r.action as any).toMint].filter(Boolean) as string[]),
         ])
       ]
 
       const prices = await fetchPricesRaw(mints)
       const prevPrices = prevPricesRef.current
 
-      // Compute % changes
       const priceChangePct: Record<string, number> = {}
       for (const [mint, price] of Object.entries(prices)) {
         const prev = prevPrices[mint]
@@ -128,157 +186,68 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
       }
       prevPricesRef.current = prices
 
-      const snapshot: MarketSnapshot = {
-        prices,
-        priceChangePct,
-        timestamp: Date.now(),
-      }
+      const snapshot: MarketSnapshot = { prices, priceChangePct, timestamp: Date.now() }
 
-      // 2. Handle proposal_created rules separately
+      // Proposal-created rules
       if (proposals) {
         const newProposals = proposals.filter(
           (p) => p.status === 'active' && !proposalSeenRef.current.has(p.pubkey)
         )
         for (const proposal of newProposals) {
           proposalSeenRef.current.add(proposal.pubkey)
-
           for (const rule of config.rules) {
             if (!rule.enabled || rule.trigger.type !== 'proposal_created') continue
             if (config.proposeOnly) continue
-
-            const maxImpact = rule.action.maxPriceImpactPct ?? 100
-            // In production: check Jupiter quote for impact
-            // Here we simulate: approve if description doesn't contain "high risk"
-            const shouldVote = rule.action.type === 'vote_yes'
-
-            if (shouldVote) {
-              addLog({
-                level: 'info',
-                message: `🗳️ Auto-voting YES on proposal #${proposal.proposalId}: "${proposal.description}"`,
-                ruleId: rule.id,
-                ruleName: rule.name,
-              })
+            if (rule.action.type === 'vote_yes') {
+              addLog({ level: 'info', message: `🗳️ Auto-voting YES on proposal #${(proposal as any).proposalId}: "${proposal.description}"`, ruleId: rule.id, ruleName: rule.name })
               try {
-                await vote.mutateAsync({
-                  potAddress: potPubkey,
-                  proposalAddress: proposal.pubkey,
-                  approve: true,
-                })
-                addLog({
-                  level: 'success',
-                  message: `✅ Voted YES on proposal #${proposal.proposalId}`,
-                  ruleId: rule.id,
-                  ruleName: rule.name,
-                })
-
-                // Update rule fire count
-                setConfig({
-                  ...config,
-                  rules: config.rules.map((r) =>
-                    r.id === rule.id
-                      ? { ...r, fireCount: r.fireCount + 1, lastFiredAt: Date.now() }
-                      : r
-                  ),
-                })
+                await vote.mutateAsync({ potAddress: potPubkey, proposalAddress: proposal.pubkey, approve: true })
+                addLog({ level: 'success', message: `✅ Voted YES on proposal #${(proposal as any).proposalId}`, ruleId: rule.id, ruleName: rule.name })
+                setConfig({ ...config, rules: config.rules.map((r) => r.id === rule.id ? { ...r, fireCount: r.fireCount + 1, lastFiredAt: Date.now() } : r) })
               } catch (err) {
-                addLog({
-                  level: 'error',
-                  message: `❌ Vote failed: ${err instanceof Error ? err.message : String(err)}`,
-                  ruleId: rule.id,
-                  ruleName: rule.name,
-                })
+                addLog({ level: 'error', message: `❌ Vote failed: ${err instanceof Error ? err.message : String(err)}`, ruleId: rule.id, ruleName: rule.name })
               }
             }
           }
         }
       }
 
-      // 3. Evaluate market-driven rules
+      // Market-driven rules
       for (const rule of config.rules) {
         if (rule.trigger.type === 'proposal_created') continue
-
         const result: EvalResult = evaluateRule(rule, snapshot)
+        if (!result.triggered) continue
 
-        if (!result.triggered) {
-          // Only log if something changed meaningfully
-          continue
-        }
+        addLog({ level: 'info', message: `🔔 Rule triggered: "${rule.name}" — ${result.reason}`, ruleId: rule.id, ruleName: rule.name })
 
-        addLog({
-          level: 'info',
-          message: `🔔 Rule triggered: "${rule.name}" — ${result.reason}`,
-          ruleId: rule.id,
-          ruleName: rule.name,
-        })
-
-        // Execute action
         if (rule.action.type === 'alert') {
-          addLog({
-            level: 'warn',
-            message: `⚠️ Alert: ${rule.action.label}`,
-            ruleId: rule.id,
-            ruleName: rule.name,
-          })
+          addLog({ level: 'warn', message: `⚠️ Alert: ${(rule.action as any).label}`, ruleId: rule.id, ruleName: rule.name })
         } else if (rule.action.type === 'propose_swap') {
-          const amountSol = ((rule.action.amountPct ?? 10) / 100) * (pot?.balance ?? 0)
+          const amountSol = (((rule.action as any).amountPct ?? 10) / 100) * (pot?.balance ?? 0)
           if (amountSol < 0.01) {
-            addLog({
-              level: 'warn',
-              message: `⚠️ Skipped: vault balance too low for proposal`,
-              ruleId: rule.id,
-              ruleName: rule.name,
-            })
+            addLog({ level: 'warn', message: `⚠️ Skipped: vault balance too low for proposal`, ruleId: rule.id, ruleName: rule.name })
             continue
           }
-
-          addLog({
-            level: 'info',
-            message: `📝 Creating proposal: ${rule.action.label} (${amountSol.toFixed(3)} SOL)`,
-            ruleId: rule.id,
-            ruleName: rule.name,
-          })
-
+          addLog({ level: 'info', message: `📝 Creating proposal: ${(rule.action as any).label} (${amountSol.toFixed(3)} SOL)`, ruleId: rule.id, ruleName: rule.name })
           try {
             await createProposal.mutateAsync({
               potAddress: potPubkey,
               nextProposalId: pot?.nextProposalId ?? 0,
               proposalType: {
                 swap: {
-                  fromMint: rule.action.fromMint!,
-                  toMint: rule.action.toMint!,
-                  amountIn: amountSol,
+                  fromMint:     (rule.action as any).fromMint!,
+                  toMint:       (rule.action as any).toMint!,
+                  amountIn:     amountSol,
                   minAmountOut: 0,
                 }
               },
-              description: `[AI] ${rule.action.label} — ${amountSol.toFixed(3)} ${rule.action.fromSymbol}`,
+              description: `[AI] ${(rule.action as any).label} — ${amountSol.toFixed(3)} ${(rule.action as any).fromSymbol}`,
             })
-
-            addLog({
-              level: 'success',
-              message: `✅ Proposal created: "${rule.action.label}"`,
-              ruleId: rule.id,
-              ruleName: rule.name,
-            })
-
-            // Update rule state
-            setConfig({
-              ...config,
-              rules: config.rules.map((r) =>
-                r.id === rule.id
-                  ? { ...r, fireCount: r.fireCount + 1, lastFiredAt: Date.now() }
-                  : r
-              ),
-            })
-
-            // Invalidate proposals cache
+            addLog({ level: 'success', message: `✅ Proposal created: "${(rule.action as any).label}"`, ruleId: rule.id, ruleName: rule.name })
+            setConfig({ ...config, rules: config.rules.map((r) => r.id === rule.id ? { ...r, fireCount: r.fireCount + 1, lastFiredAt: Date.now() } : r) })
             qc.invalidateQueries({ queryKey: ['proposals', potPubkey] })
           } catch (err) {
-            addLog({
-              level: 'error',
-              message: `❌ Proposal failed: ${err instanceof Error ? err.message : String(err)}`,
-              ruleId: rule.id,
-              ruleName: rule.name,
-            })
+            addLog({ level: 'error', message: `❌ Proposal failed: ${err instanceof Error ? err.message : String(err)}`, ruleId: rule.id, ruleName: rule.name })
           }
         }
       }
@@ -291,11 +260,10 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
     }
   }, [config, publicKey, proposals, potPubkey, pot, addLog, setConfig, createProposal, vote, qc])
 
-  /* ── Auto-run every 60 seconds ── */
+  /* ── Auto-run locally every 60s ── */
   useEffect(() => {
     if (!config?.enabled) return
     const interval = setInterval(runCheck, 60_000)
-    // Run immediately on enable
     runCheck()
     return () => clearInterval(interval)
   }, [config?.enabled, runCheck])
@@ -309,10 +277,7 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
     } else {
       const updated = { ...config, enabled: !config.enabled }
       setConfig(updated)
-      addLog({
-        level: 'info',
-        message: updated.enabled ? '🤖 AI Agent started' : '⏹️ AI Agent stopped',
-      })
+      addLog({ level: 'info', message: updated.enabled ? '🤖 AI Agent started' : '⏹️ AI Agent stopped' })
     }
   }, [config, potPubkey, setConfig, addLog])
 
@@ -320,6 +285,22 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
     setLog([])
     saveLog(potPubkey, [])
   }, [potPubkey])
+
+  /**
+   * Manual trigger: first call the backend API to run server-side evaluation,
+   * then also run the local in-browser evaluation as a fallback/supplement.
+   */
+  const triggerManualCheck = useCallback(async () => {
+    // Try server-side trigger first
+    try {
+      const result = await agentApi.trigger(potPubkey)
+      addLog({ level: 'info', message: `🖥️ Server trigger: ${result.message}` })
+    } catch {
+      // API offline — continue to local evaluation
+    }
+    // Always also run local evaluation (proposals require wallet signature)
+    await runCheck()
+  }, [potPubkey, runCheck, addLog])
 
   return {
     config,
@@ -329,6 +310,6 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
     setConfig,
     toggleEnabled,
     clearLog,
-    triggerManualCheck: runCheck,
+    triggerManualCheck,
   }
 }

@@ -6,6 +6,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import dynamic from 'next/dynamic'
 import { usePots } from '@/hooks/usePots'
 import { useMockStore } from '@/lib/mock-store'
+import { useSolPrice } from '@/lib/prices'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -23,12 +24,12 @@ const YIELD_LABELS: Record<number, string> = {
 export default function DashboardPage() {
   const { publicKey, connected } = useWallet()
   const { data: pots, isLoading } = usePots()
+  const { price: solPrice } = useSolPrice()
   const [search, setSearch]     = useState('')
   const [tab, setTab]           = useState<'all' | 'mine'>('all')
 
   const walletStr = publicKey?.toBase58() ?? ''
 
-  // My pot pubkeys via membership + authority
   const myPotPubkeys = useMemo(() => {
     if (!walletStr) return new Set<string>()
     const members = useMockStore.getState().members
@@ -52,7 +53,8 @@ export default function DashboardPage() {
     [basePots, search]
   )
 
-  const totalTvl     = pots?.reduce((sum, p) => sum + p.balance, 0) ?? 0
+  const totalTvlSol  = pots?.reduce((sum, p) => sum + p.balance, 0) ?? 0
+  const totalTvlUsd  = solPrice ? totalTvlSol * solPrice : 0
   const totalMembers = pots?.reduce((sum, p) => sum + p.memberCount, 0) ?? 0
   const totalTrades  = pots?.reduce((sum, p) => sum + p.tradeCount, 0) ?? 0
 
@@ -67,35 +69,61 @@ export default function DashboardPage() {
         <p className="text-pot-muted text-lg max-w-md">
           Create collective trading vaults on Solana. Govern together, trade together, win together.
         </p>
+
+        {/* TVL badge */}
+        {totalTvlSol > 0 && (
+          <div className="flex items-center gap-3 bg-pot-card border border-pot-border rounded-2xl px-5 py-3">
+            <div className="text-center">
+              <div className="text-xl font-bold text-pot-green">
+                {totalTvlUsd > 0 ? `$${totalTvlUsd >= 1000 ? (totalTvlUsd / 1000).toFixed(0) + 'K' : totalTvlUsd.toFixed(0)}` : `${totalTvlSol.toFixed(1)} SOL`}
+              </div>
+              <div className="text-xs text-pot-muted">Total Locked</div>
+            </div>
+            <div className="w-px h-8 bg-pot-border" />
+            <div className="text-center">
+              <div className="text-xl font-bold text-white">{pots?.length ?? 0}</div>
+              <div className="text-xs text-pot-muted">Active Vaults</div>
+            </div>
+            <div className="w-px h-8 bg-pot-border" />
+            <div className="text-center">
+              <div className="text-xl font-bold text-white">{totalMembers}</div>
+              <div className="text-xs text-pot-muted">Members</div>
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-4">
           <WalletMultiButton />
+          <Link href="/vaults" className="btn-secondary text-sm">
+            ⚡ Browse Vaults
+          </Link>
         </div>
 
         {/* Feature cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 max-w-3xl w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 max-w-3xl w-full">
           <div className="card p-5 text-center">
             <div className="text-3xl mb-2">🏦</div>
             <h3 className="font-semibold text-white mb-1">Group Vaults</h3>
             <p className="text-pot-muted text-sm">Pool SOL with friends into shared trading vaults</p>
           </div>
           <div className="card p-5 text-center">
-            <div className="text-3xl mb-2">🗳\ufe0f</div>
+            <div className="text-3xl mb-2">🗾️</div>
             <h3 className="font-semibold text-white mb-1">Governance</h3>
             <p className="text-pot-muted text-sm">Vote on trades with share-weighted governance</p>
           </div>
           <div className="card p-5 text-center">
-            <div className="text-3xl mb-2">🐣</div>
-            <h3 className="font-semibold text-white mb-1">Tamagotchi</h3>
-            <p className="text-pot-muted text-sm">Your vault evolves as it trades and grows</p>
+            <div className="text-3xl mb-2">🤖</div>
+            <h3 className="font-semibold text-white mb-1">AI Agent</h3>
+            <p className="text-pot-muted text-sm">MCP-native agents automate your strategy 24/7</p>
           </div>
         </div>
 
-        <div className="flex gap-3 mt-4">
+        <div className="flex gap-3 mt-2">
           <p className="text-pot-muted text-xs self-center">
             Demo mode active — no wallet needed to explore
           </p>
           <Link href="/leaderboard" className="btn-secondary text-sm flex items-center gap-1.5">
-            🏆 View Leaderboard
+            🏆 Leaderboard
           </Link>
         </div>
       </div>
@@ -112,8 +140,17 @@ export default function DashboardPage() {
           <div className="text-xs text-pot-muted mt-1">Active POTs</div>
         </div>
         <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-white">{totalTvl.toFixed(1)} SOL</div>
-          <div className="text-xs text-pot-muted mt-1">Total TVL</div>
+          <div className="text-2xl font-bold text-white">
+            {totalTvlUsd > 0
+              ? `$${totalTvlUsd >= 1000 ? (totalTvlUsd / 1000).toFixed(1) + 'K' : totalTvlUsd.toFixed(0)}`
+              : `${totalTvlSol.toFixed(1)} SOL`}
+          </div>
+          <div className="text-xs text-pot-muted mt-1">
+            Total TVL
+            {totalTvlUsd > 0 && (
+              <span className="ml-1 text-pot-border">· {totalTvlSol.toFixed(1)} SOL</span>
+            )}
+          </div>
         </div>
         <div className="card p-4 text-center">
           <div className="text-2xl font-bold text-white">{totalMembers}</div>
@@ -139,7 +176,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-        <span className="text-pot-muted text-sm group-hover:text-white transition">View \u2192</span>
+        <span className="text-pot-muted text-sm group-hover:text-white transition">View →</span>
       </Link>
 
       {/* Header + Search + Tabs */}
@@ -188,11 +225,8 @@ export default function DashboardPage() {
           )}
         </button>
         {tab === 'mine' && (
-          <Link
-            href="/my-pots"
-            className="ml-auto text-xs text-pot-muted hover:text-white transition"
-          >
-            Full dashboard \u2192
+          <Link href="/my-pots" className="ml-auto text-xs text-pot-muted hover:text-white transition">
+            Full dashboard →
           </Link>
         )}
       </div>
@@ -236,20 +270,19 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((pot) => {
             const isMine = myPotPubkeys.has(pot.pubkey) || pot.authority === walletStr
+            const balanceUsd = solPrice ? pot.balance * solPrice : 0
             return (
               <Link
                 key={pot.pubkey}
                 href={`/pots/${pot.pubkey}`}
                 className="card p-5 hover:border-pot-green/30 transition-all group relative"
               >
-                {/* Mine badge */}
                 {isMine && tab === 'all' && (
                   <span className="absolute top-3 right-3 text-[10px] px-1.5 py-0.5 rounded-full bg-pot-accent/10 text-pot-accent border border-pot-accent/20">
                     Mine
                   </span>
                 )}
 
-                {/* Header */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl group-hover:animate-float">{pot.emoji}</span>
@@ -263,12 +296,18 @@ export default function DashboardPage() {
                   <span className="text-xl">{pot.tamagotchiEmoji}</span>
                 </div>
 
-                {/* Balance */}
-                <div className="text-xl font-bold text-pot-green mb-3">
-                  {pot.balance.toFixed(2)} SOL
+                {/* Balance in SOL + USD */}
+                <div className="mb-3">
+                  <div className="text-xl font-bold text-pot-green">
+                    {pot.balance.toFixed(2)} SOL
+                  </div>
+                  {balanceUsd > 0 && (
+                    <div className="text-xs text-pot-muted font-mono">
+                      ≈ ${balanceUsd >= 1000 ? (balanceUsd / 1000).toFixed(1) + 'K' : balanceUsd.toFixed(0)}
+                    </div>
+                  )}
                 </div>
 
-                {/* Stats */}
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <div className="bg-pot-dark rounded-lg p-2 text-center">
                     <div className="text-white font-medium">{pot.memberCount}</div>
@@ -286,7 +325,6 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Tags */}
                 <div className="flex gap-2 mt-3">
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
                     pot.isPublic
