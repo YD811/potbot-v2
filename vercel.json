@@ -1,1 +1,25 @@
-{\n  "framework": "nextjs",\n  "buildCommand": "npm run build --workspace=apps/web",\n  "outputDirectory": "apps/web/.next",\n  "installCommand": "npm install --legacy-peer-deps",\n  "ignoreCommand": "git diff HEAD^ HEAD --quiet apps/web packages/sdk packages/ui"\n}\n
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd apps/web && npm run build",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/api/potbot/:path*",
+      "destination": "https://potbot-api.fly.dev/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options",   "value": "nosniff" },
+        { "key": "X-Frame-Options",           "value": "DENY" },
+        { "key": "X-XSS-Protection",          "value": "1; mode=block" },
+        { "key": "Referrer-Policy",           "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ],
+  "regions": ["ams1", "fra1"]
+}
