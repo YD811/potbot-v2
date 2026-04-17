@@ -1,0 +1,29 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /apps/web
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      solana:
+        patterns:
+          - "@solana/*"
+          - "@coral-xyz/*"
+      next:
+        patterns:
+          - "next"
+          - "react"
+          - "react-dom"
+
+  - package-ecosystem: npm
+    directory: /apps/api
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+
+  - package-ecosystem: cargo
+    directory: /packages/program
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
