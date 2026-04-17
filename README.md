@@ -145,7 +145,7 @@ Integrates **x402 micropayments** — agents pay per API call (0.001 USDC/reques
 ## DeFi Integrations
 
 | Protocol | What we use it for |
-|----------|--------------------|
+|----------|--------------------||
 | **Jupiter v6** | All swaps (best route, min slippage), Limit Orders (Eagle+), DCA (Dragon+) |
 | **Kamino** | Yield strategies (lending APY up to 15%), RWA-backed vaults |
 | **Drift** | Perps exposure + lending rates |
@@ -251,21 +251,22 @@ potbot-v2/
 |-----------|--------|-------|
 | Anchor `pot_vault` core | ✅ Complete | All instructions written |
 | Strategy Vault on-chain | ✅ Complete | create/join/exit/evolve + referral |
-| TypeScript SDK | ✅ Complete | PDAs, IDL, client helpers |
-| Next.js DApp | ✅ Running | Mock mode + full UI |
-| `/vaults` discovery page | ✅ Complete | Filter, sort, join UI |
+| TypeScript SDK | ✅ Complete | PDAs, IDL, client helpers, StrategyVault methods |
+| Next.js DApp | ✅ Complete | Full UI — demo mode + on-chain |
+| `/vaults` discovery page | ✅ Complete | Live analytics, USD TVL, sort/filter |
 | `/vaults/create` wizard | ✅ Complete | 5-step wizard |
-| AI Agent UI | ✅ Complete | Rules engine + log tabs |
+| AI Agent UI + API sync | ✅ Complete | Rules engine, server sync, 24/7 cron |
 | Governance + proposals | ✅ Complete | Shares-weighted voting |
-| Leaderboard | ✅ Complete | Public vaults ranking |
-| **Devnet deploy** | 🔴 Blocker | `anchor deploy` pending |
-| **Jupiter swap CPI** | 🔴 Blocker | Real swap (not mock) |
-| **Backend API** (`apps/api`) | 🟡 In progress | Price + PnL + Agent cron |
-| **MCP Server** (`apps/potbot-mcp`) | 🟡 In progress | solana-agent-kit based |
-| E2E test on devnet | 🟡 Next | After deploy |
-| Kamino/Drift yield aggregation | 🟢 Planned | Week of Apr 28 |
-| Metaplex NFT shares (Titan) | 🟢 Planned | Week of Apr 28 |
-| Privy embedded wallet | 🟢 Planned | Week of May 1 |
+| Leaderboard | ✅ Complete | USD TVL, PnL%, APY30d, batch analytics |
+| Live price ticker | ✅ Complete | SOL/USD in navbar, API health dot |
+| **Backend API** (`apps/api`) | ✅ Complete | Price oracle, PnL engine, analytics, agent cron |
+| **MCP Server** (`apps/potbot-mcp`) | ✅ Complete | solana-agent-kit based, 15+ tools |
+| **Devnet deploy** | ✅ Complete | Program live on devnet |
+| Production analytics data layer | ✅ Complete | useVaultAnalyticsBatch, VaultAnalyticsStrip |
+| Pitch deck | ✅ Complete | 11 slides — Solana Frontier 2026 |
+| **Jupiter swap CPI** | 🔴 Blocker | Real swap (not mock) needs executor wallet |
+| E2E test on devnet | 🟡 Next | After executor wallet funded |
+| Kamino/Drift yield aggregation | 🟢 Planned | Post-hackathon |
 | Demo video | 🟢 Planned | May 6–8 |
 | Hackathon submission | 📅 May 11 | colosseum.com/frontier |
 
