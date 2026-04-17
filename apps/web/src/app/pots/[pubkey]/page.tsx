@@ -3,17 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import Link from 'next/link'
 import {
   usePot,
   useMembers,
   useProposals,
-  useDeposit,
-  useWithdraw,
-  useCreateProposal,
-  useVote,
-  useExecuteProposal,
 } from '@/hooks/usePots'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 import { SharesPanel } from '@/components/SharesPanel'
@@ -22,13 +16,10 @@ import { VaultAnalyticsStrip } from '@/components/VaultAnalyticsStrip'
 import { StrategyPanel } from '@/components/StrategyPanel'
 import { AIAgentPanel } from '@/components/AIAgentPanel'
 import { GovernanceSettings } from '@/components/GovernanceSettings'
-import { BudgetGrantPanel } from '@/components/BudgetGrantPanel'
-import { JupiterSwapPanel } from '@/components/JupiterSwapPanel'
 import { VaultTab } from '@/components/VaultTab'
 import DepositPanel from '@/components/DepositPanel'
 import SharesTab from '@/components/SharesTab'
-import { fetchPricesRaw } from '@/lib/useAIAgent-helpers'
-import { reverseSNS, getPotShareText, buildPotDomain } from '@/lib/sns'
+import { reverseSNS } from '@/lib/sns'
 
 const TABS = ['overview', 'shares', 'positions', 'strategy', 'governance', 'agent', 'members', 'deposit', 'vault'] as const
 type Tab = (typeof TABS)[number]
@@ -58,7 +49,6 @@ export default function PotPage() {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [snsName, setSnsName] = useState<string>('')
   const [isMember, setIsMember] = useState(false)
-  const [userShares, setUserShares] = useState<any>(null)
 
   // Fetch SNS name
   useEffect(() => {
@@ -73,7 +63,6 @@ export default function PotPage() {
     if (!userPubkey) return
     const member = members.find((m: any) => m.pubkey === userPubkey.toString())
     setIsMember(!!member)
-    if (member) setUserShares(member.shares)
   }, [members, userPubkey])
 
   if (isPotLoading) {
@@ -102,9 +91,17 @@ export default function PotPage() {
     )
   }
 
-  const isOwner = userPubkey?.toString() === pot.owner
+  const potAny = pot as any
+  const ownerAddress: string = potAny.authority ?? potAny.owner ?? ''
+  const isOwner = userPubkey?.toString() === ownerAddress
   const canManage = isOwner || isMember
-  const tamaStats = calculateTamaStats(pot)
+  const tamaStats = calculateTamaStats({
+    tradeVolume: potAny.totalVolume ?? 0,
+    memberCount: potAny.memberCount ?? 0,
+    winRate: 0.5,
+    yieldApy: 0,
+    ageSeconds: 86400,
+  })
 
   return (
     <div className="min-h-screen bg-pot-dark pb-12">
@@ -142,21 +139,21 @@ export default function PotPage() {
               )}
               <div className="text-right">
                 <div className="text-xs text-pot-muted">Owner</div>
-                <p className="text-xs font-mono text-pot-green break-all max-w-xs text-right">{pot.owner}</p>
+                <p className="text-xs font-mono text-pot-green break-all max-w-xs text-right">{ownerAddress}</p>
               </div>
             </div>
           </div>
 
           {/* Status badges */}
           <div className="flex gap-2 flex-wrap">
-            {pot.isPublic && (
+            {potAny.isPublic && (
               <span className="px-3 py-1 bg-pot-accent/20 text-pot-accent text-xs rounded-full font-semibold">🌍 Public</span>
             )}
-            {pot.isActive && (
+            {potAny.isActive && (
               <span className="px-3 py-1 bg-pot-green/20 text-pot-green text-xs rounded-full font-semibold">✓ Active</span>
             )}
-            {tamaStats.hunger > 70 && (
-              <span className="px-3 py-1 bg-red-500/20 text-red-400 text-xs rounded-full font-semibold">🔥 Hungry!</span>
+            {tamaStats.hp < 30 && (
+              <span className="px-3 py-1 bg-red-500/20 text-red-400 text-xs rounded-full font-semibold">🔥 Low HP!</span>
             )}
           </div>
         </div>
@@ -203,30 +200,33 @@ export default function PotPage() {
                 <div className="text-2xl font-bold text-white">{pot.tradeCount}</div>
               </div>
               <div className="bg-pot-card border border-pot-border rounded-2xl p-4">
-                <div className="text-xs text-pot-muted mb-1">Tamagotchi Health</div>
-                <div className="text-2xl font-bold text-pot-green">{tamaStats.health}/100</div>
+                <div className="text-xs text-pot-muted mb-1">Tamagotchi HP</div>
+                <div className="text-2xl font-bold text-pot-green">{tamaStats.hp}/100</div>
               </div>
             </div>
 
             {/* Main panels */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                <SharesPanel vault={pot} userShares={userShares} />
+                <SharesPanel potPubkey={pubkey} />
               </div>
               <div>
-                <PnLDashboard pubkey={pubkey} />
+                <PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} />
               </div>
             </div>
 
             {/* Strategy callout */}
-            {pot.strategy && (
+            {potAny.yieldStrategy && (
               <div className="bg-pot-card border border-pot-border/50 rounded-2xl p-6">
                 <div className="flex items-start gap-4">
                   <div className="text-3xl">⚙️</div>
                   <div className="flex-1">
                     <h3 className="font-bold text-white mb-2">Active Strategy</h3>
-                    <p className="text-sm text-pot-muted mb-4">This vault runs an automated {pot.strategy} strategy.</p>
-                    <button className="px-4 py-2 bg-pot-accent hover:bg-pot-accent/90 text-white rounded-lg text-sm font-semibold transition">
+                    <p className="text-sm text-pot-muted mb-4">This vault runs an automated {potAny.yieldStrategy} strategy.</p>
+                    <button
+                      onClick={() => setActiveTab('strategy')}
+                      className="px-4 py-2 bg-pot-accent hover:bg-pot-accent/90 text-white rounded-lg text-sm font-semibold transition"
+                    >
                       View Details
                     </button>
                   </div>
@@ -236,11 +236,11 @@ export default function PotPage() {
           </div>
         )}
 
-        {activeTab === 'shares' && <SharesTab pubkey={pubkey} />}
-        {activeTab === 'positions' && <PnLDashboard pubkey={pubkey} />}
-        {activeTab === 'strategy' && <StrategyPanel pubkey={pubkey} />}
-        {activeTab === 'governance' && <GovernanceSettings pubkey={pubkey} proposals={proposals} />}
-        {activeTab === 'agent' && <AIAgentPanel pubkey={pubkey} />}
+        {activeTab === 'shares' && <SharesTab potPubkey={pubkey} />}
+        {activeTab === 'positions' && <PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} />}
+        {activeTab === 'strategy' && <StrategyPanel potPubkey={pubkey} />}
+        {activeTab === 'governance' && <GovernanceSettings isAdmin={isOwner} potPubkey={pubkey} />}
+        {activeTab === 'agent' && <AIAgentPanel potPubkey={pubkey} pot={pot} />}
         {activeTab === 'members' && (
           <div className="space-y-4">
             {members.length === 0 ? (
@@ -265,7 +265,9 @@ export default function PotPage() {
             )}
           </div>
         )}
-        {activeTab === 'deposit' && canManage && <DepositPanel pubkey={pubkey} />}
+        {activeTab === 'deposit' && canManage && (
+          <DepositPanel potPubkey={pubkey} potName={pot.name} vaultBalance={pot.balance} />
+        )}
         {activeTab === 'deposit' && !canManage && (
           <div className="bg-pot-card border border-pot-border rounded-2xl p-8 text-center">
             <p className="text-pot-muted mb-4">You must be a member to access deposits.</p>
@@ -277,7 +279,9 @@ export default function PotPage() {
             </button>
           </div>
         )}
-        {activeTab === 'vault' && canManage && <VaultTab pubkey={pubkey} />}
+        {activeTab === 'vault' && canManage && (
+          <VaultTab potPubkey={pubkey} isCreator={isOwner} />
+        )}
         {activeTab === 'vault' && !canManage && (
           <div className="bg-pot-card border border-pot-border rounded-2xl p-8 text-center">
             <p className="text-pot-muted mb-4">You must be a member to access vault settings.</p>
