@@ -1,11 +1,11 @@
 use anchor_lang::prelude::*;
 
-/// PotBot treasury address (receives all fees)
+/// PotBot treasury address (YD's wallet for fee collection)
 pub const TREASURY_ADDRESS: Pubkey = pubkey!("7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU");
 
 /// Fee constants (in lamports)
 pub const TOKENIZATION_FEE: u64 = 100_000_000;  // 0.1 SOL
-pub const SNS_DOMAIN_FEE: u64 = 500_000_000;     // 0.5 SOL
+pub const SNS_DOMAIN_FEE: u64 = 250_000_000;     // 0.25 SOL (reduced from 0.5)
 pub const TAMAGOTCHI_NFT_FEE: u64 = 50_000_000;  // 0.05 SOL
 
 /// Tamagotchi level thresholds
