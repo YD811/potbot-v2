@@ -73,6 +73,11 @@ const FOR_BUILDERS = [
   { icon: '⚡', title: 'REST API', desc: 'Price oracle, PnL engine, leaderboard — all available as public API endpoints.', href: '/api/leaderboard' },
 ]
 
+function CountUp({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
+  if (value === 0) return <span className="text-pot-muted">—</span>
+  return <>{prefix}{value >= 1000 ? (value / 1000).toFixed(1) + 'K' : value.toLocaleString()}{suffix}</>
+}
+
 export default function LandingPage() {
   const { data: pots } = usePots()
   const { price: solPrice } = useSolPrice()
@@ -120,6 +125,15 @@ export default function LandingPage() {
             <Link href="/leaderboard" className="btn-secondary text-base px-6 py-3">
               🏆 Leaderboard
             </Link>
+            <a
+              href="https://x.com/PotBot_sol"
+              target="_blank"
+              rel="noreferrer"
+              className="btn-secondary text-base px-6 py-3 flex items-center gap-2"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              Follow
+            </a>
           </div>
 
           {/* Live protocol stats */}
@@ -262,8 +276,8 @@ export default function LandingPage() {
           {/* Code snippet teaser */}
           <div className="bg-pot-dark border border-pot-border rounded-2xl p-5 font-mono text-sm max-w-2xl mx-auto">
             <div className="text-pot-muted text-xs mb-3">// Ask Claude to manage your vault</div>
-            <div className="text-pot-green">{'"Hey Claude, if SOL drops below $130,'}</div>
-            <div className="text-pot-green pl-4">{'propose buying 10% more using the vault balance"'}</div>
+            <div className="text-pot-green">{"\"Hey Claude, if SOL drops below $130,"}</div>
+            <div className="text-pot-green pl-4">{"propose buying 10% more using the vault balance\""}</div>
             <div className="text-pot-muted mt-2 text-xs">→ Claude calls <span className="text-pot-accent">create_swap_proposal</span> via MCP → members vote → executed on-chain</div>
           </div>
         </div>
@@ -310,8 +324,12 @@ export default function LandingPage() {
             <Link href="/vaults" className="hover:text-white transition">Vaults</Link>
             <Link href="/for-agents" className="hover:text-white transition">For Agents</Link>
             <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noreferrer" className="hover:text-white transition">GitHub</a>
+            <a href="https://x.com/PotBot_sol" target="_blank" rel="noreferrer" className="hover:text-white transition flex items-center gap-1">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              @PotBot_sol
+            </a>
           </div>
-          <div>Built for Solana Frontier 2026 · @CryptoYDao</div>
+          <div>Built for Solana Frontier 2026</div>
         </div>
       </footer>
 
