@@ -6,6 +6,7 @@ import { healthApi } from '@/lib/api-client'
 
 export function DemoModeBanner() {
   const [dismissed, setDismissed] = useState(false)
+
   const { isError: apiDown } = useQuery({
     queryKey: ['api-health'],
     queryFn: healthApi.check,
@@ -13,7 +14,9 @@ export function DemoModeBanner() {
     retry: 1,
     staleTime: 25_000,
   })
+
   if (!apiDown || dismissed) return null
+
   return (
     <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
