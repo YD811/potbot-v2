@@ -61,15 +61,12 @@ export default function DashboardPage() {
   const totalMembers = pots?.reduce((sum, p) => sum + p.memberCount, 0) ?? 0
   const totalTrades  = pots?.reduce((sum, p) => sum + p.tradeCount, 0) ?? 0
 
-  /* ── Landing (not connected) ── */
   if (!connected) {
     return <LandingPage />
   }
 
-  /* ── Dashboard (connected) ── */
   return (
     <div>
-      {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         <div className="card p-4 text-center glow-green">
           <div className="text-2xl font-bold text-pot-green">{pots?.length ?? 0}</div>
@@ -98,7 +95,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Leaderboard teaser */}
       <Link
         href="/leaderboard"
         className="flex items-center justify-between p-4 mb-6 bg-gradient-to-r from-amber-500/10 to-violet-500/10 border border-amber-500/20 rounded-2xl hover:border-amber-500/40 transition group"
@@ -115,7 +111,6 @@ export default function DashboardPage() {
         <span className="text-pot-muted text-sm group-hover:text-white transition">View →</span>
       </Link>
 
-      {/* Header + Search + Tabs */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
         <h2 className="text-2xl font-bold">POTs</h2>
         <div className="flex gap-3 w-full sm:w-auto">
@@ -132,7 +127,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Tab row */}
       <div className="flex items-center gap-1 mb-6">
         <button
           onClick={() => setTab('all')}
@@ -167,7 +161,6 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* POT Grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
@@ -185,21 +178,13 @@ export default function DashboardPage() {
             {search ? 'No POTs found' : tab === 'mine' ? "You haven't joined any POTs yet" : 'No POTs yet'}
           </h3>
           <p className="text-pot-muted text-sm mb-4">
-            {search
-              ? 'Try a different search term'
-              : tab === 'mine'
-              ? 'Deposit into a public vault to join, or create your own'
-              : 'Create the first collective trading vault!'}
+            {search ? 'Try a different search term' : tab === 'mine' ? 'Deposit into a public vault to join, or create your own' : 'Create the first collective trading vault!'}
           </p>
           <div className="flex gap-3 justify-center">
             {tab === 'mine' && (
-              <button onClick={() => setTab('all')} className="btn-secondary text-sm">
-                Browse All
-              </button>
+              <button onClick={() => setTab('all')} className="btn-secondary text-sm">Browse All</button>
             )}
-            <Link href="/create" className="btn-primary text-sm">
-              Create POT
-            </Link>
+            <Link href="/create" className="btn-primary text-sm">Create POT</Link>
           </div>
         </div>
       ) : (
@@ -218,7 +203,6 @@ export default function DashboardPage() {
                     Mine
                   </span>
                 )}
-
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl group-hover:animate-float">{pot.emoji}</span>
@@ -231,19 +215,14 @@ export default function DashboardPage() {
                   </div>
                   <span className="text-xl">{pot.tamagotchiEmoji}</span>
                 </div>
-
-                {/* Balance in SOL + USD */}
                 <div className="mb-3">
-                  <div className="text-xl font-bold text-pot-green">
-                    {pot.balance.toFixed(2)} SOL
-                  </div>
+                  <div className="text-xl font-bold text-pot-green">{pot.balance.toFixed(2)} SOL</div>
                   {balanceUsd > 0 && (
                     <div className="text-xs text-pot-muted font-mono">
                       ≈ ${balanceUsd >= 1000 ? (balanceUsd / 1000).toFixed(1) + 'K' : balanceUsd.toFixed(0)}
                     </div>
                   )}
                 </div>
-
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <div className="bg-pot-dark rounded-lg p-2 text-center">
                     <div className="text-white font-medium">{pot.memberCount}</div>
@@ -260,12 +239,9 @@ export default function DashboardPage() {
                     <div className="text-pot-muted">Yield</div>
                   </div>
                 </div>
-
                 <div className="flex gap-2 mt-3">
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    pot.isPublic
-                      ? 'bg-pot-green/10 text-pot-green'
-                      : 'bg-pot-accent/10 text-pot-accent'
+                    pot.isPublic ? 'bg-pot-green/10 text-pot-green' : 'bg-pot-accent/10 text-pot-accent'
                   }`}>
                     {pot.isPublic ? 'Public' : 'Private'}
                   </span>
