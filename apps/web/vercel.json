@@ -1,6 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
 
+  "buildCommand": "next build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+
   "crons": [
     {
       "path": "/api/cron/price-refresh",
