@@ -11,18 +11,64 @@ interface TrustBadgeProps {
 }
 
 const TRUST_CONFIG: Record<TrustLevel, {
-  icon: string; label: string; color: string; bg: string; border: string; description: string
+  icon: string
+  label: string
+  color: string
+  bg: string
+  border: string
+  description: string
 }> = {
-  unverified:    { icon: '○', label: 'Unverified',    color: 'text-pot-muted',  bg: 'bg-pot-border/30',   border: 'border-pot-border',      description: 'This vault has not been reviewed' },
-  community:     { icon: '✦', label: 'Community',     color: 'text-blue-400',   bg: 'bg-blue-500/10',     border: 'border-blue-500/30',     description: 'Reviewed by the PotBot community' },
-  audited:       { icon: '✔', label: 'Audited',       color: 'text-pot-green',  bg: 'bg-pot-green/10',    border: 'border-pot-green/30',    description: 'Professionally audited vault' },
-  institutional: { icon: '⬡', label: 'Institutional', color: 'text-pot-accent', bg: 'bg-pot-accent/10',   border: 'border-pot-accent/30',   description: 'Institutional-grade security audit' },
+  unverified: {
+    icon: '○',
+    label: 'Unverified',
+    color: 'text-pot-muted',
+    bg: 'bg-pot-border/30',
+    border: 'border-pot-border',
+    description: 'This vault has not been reviewed',
+  },
+  community: {
+    icon: '✦',
+    label: 'Community',
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10',
+    border: 'border-blue-500/30',
+    description: 'Reviewed by the PotBot community',
+  },
+  audited: {
+    icon: '✔',
+    label: 'Audited',
+    color: 'text-pot-green',
+    bg: 'bg-pot-green/10',
+    border: 'border-pot-green/30',
+    description: 'Professionally audited vault',
+  },
+  institutional: {
+    icon: '⬡',
+    label: 'Institutional',
+    color: 'text-pot-accent',
+    bg: 'bg-pot-accent/10',
+    border: 'border-pot-accent/30',
+    description: 'Institutional-grade security audit',
+  },
 }
 
-export function TrustBadge({ level, verifiedBy, auditUrl, size = 'sm', showLabel = true }: TrustBadgeProps) {
+export function TrustBadge({
+  level,
+  verifiedBy,
+  auditUrl,
+  size = 'sm',
+  showLabel = true,
+}: TrustBadgeProps) {
   if (level === 'unverified') return null
+
   const cfg = TRUST_CONFIG[level]
-  const sizeClass = { sm: 'text-[10px] px-1.5 py-0.5 gap-1', md: 'text-xs px-2 py-1 gap-1.5', lg: 'text-sm px-3 py-1.5 gap-2' }[size]
+
+  const sizeClass = {
+    sm: 'text-[10px] px-1.5 py-0.5 gap-1',
+    md: 'text-xs px-2 py-1 gap-1.5',
+    lg: 'text-sm px-3 py-1.5 gap-2',
+  }[size]
+
   const badge = (
     <span
       className={`inline-flex items-center font-semibold rounded-full border ${cfg.bg} ${cfg.border} ${cfg.color} ${sizeClass}`}
@@ -32,15 +78,34 @@ export function TrustBadge({ level, verifiedBy, auditUrl, size = 'sm', showLabel
       {showLabel && <span>{cfg.label}</span>}
     </span>
   )
-  if (auditUrl) return <a href={auditUrl} target="_blank" rel="noreferrer" className="hover:opacity-80 transition">{badge}</a>
+
+  if (auditUrl) {
+    return (
+      <a href={auditUrl} target="_blank" rel="noreferrer" className="hover:opacity-80 transition">
+        {badge}
+      </a>
+    )
+  }
+
   return badge
 }
 
-export function TrustCard({ level, verifiedBy, verifiedAt, auditUrl, trustNote }: {
-  level: TrustLevel; verifiedBy?: string | null; verifiedAt?: string | null
-  auditUrl?: string | null; trustNote?: string | null
+/** Full trust card — used in pot detail page */
+export function TrustCard({
+  level,
+  verifiedBy,
+  verifiedAt,
+  auditUrl,
+  trustNote,
+}: {
+  level: TrustLevel
+  verifiedBy?: string | null
+  verifiedAt?: string | null
+  auditUrl?: string | null
+  trustNote?: string | null
 }) {
   const cfg = TRUST_CONFIG[level]
+
   return (
     <div className={`rounded-2xl border ${cfg.border} ${cfg.bg} p-4`}>
       <div className="flex items-center justify-between mb-2">
@@ -49,16 +114,38 @@ export function TrustCard({ level, verifiedBy, verifiedAt, auditUrl, trustNote }
           <span>{cfg.label}</span>
         </div>
         {auditUrl && (
-          <a href={auditUrl} target="_blank" rel="noreferrer" className={`text-xs ${cfg.color} underline hover:opacity-80`}>
+          <a
+            href={auditUrl}
+            target="_blank"
+            rel="noreferrer"
+            className={`text-xs ${cfg.color} underline hover:opacity-80`}
+          >
             View Report ↗
           </a>
         )}
       </div>
+
       <p className="text-sm text-pot-muted mb-2">{cfg.description}</p>
-      {trustNote && <p className="text-xs text-white/70 mb-2 italic">"{trustNote}"</p>}
+
+      {trustNote && (
+        <p className="text-xs text-white/70 mb-2 italic">"{trustNote}"</p>
+      )}
+
       <div className="flex flex-wrap gap-3 text-xs text-pot-muted">
-        {verifiedBy && <span><span className="text-white/50">Auditor:</span> <span className="text-white">{verifiedBy}</span></span>}
-        {verifiedAt && <span><span className="text-white/50">Date:</span> <span className="text-white">{new Date(verifiedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span></span>}
+        {verifiedBy && (
+          <span>
+            <span className="text-white/50">Auditor:</span>{' '}
+            <span className="text-white">{verifiedBy}</span>
+          </span>
+        )}
+        {verifiedAt && (
+          <span>
+            <span className="text-white/50">Date:</span>{' '}
+            <span className="text-white">
+              {new Date(verifiedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+            </span>
+          </span>
+        )}
       </div>
     </div>
   )

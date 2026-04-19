@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPot, getMember, upsertMember } from '@/lib/db'
 import { createServerSupabase } from '@/lib/supabase'
+import { getPot, upsertMember, getMember } from '@/lib/db'
 
+/**
+ * POST /api/pots/[pubkey]/deposit
+ * Body: { wallet: string, amountSol: number, referrer?: string }
+ *
+ * Records a deposit: updates member shares, pot balance/member_count, tracks referral.
+ */
 export async function POST(
   req: NextRequest,
   { params }: { params: { pubkey: string } }
@@ -11,14 +17,19 @@ export async function POST(
     if (!wallet || !amountSol || amountSol <= 0) {
       return NextResponse.json({ error: 'wallet and amountSol required' }, { status: 400 })
     }
+
     const potPubkey = params.pubkey
     const pot = await getPot(potPubkey)
-    if (!pot) return NextResponse.json({ error: 'Pot not found' }, { status: 404 })
+    if (!pot) {
+      return NextResponse.json({ error: 'Pot not found' }, { status: 404 })
+    }
 
+    // Calculate shares: NAV = balance / total_shares (or 1 if first deposit)
     const nav = pot.total_shares > 0 ? pot.balance / pot.total_shares : 1
     const newShares = amountSol / nav
-    const existing = await getMember(potPubkey, wallet)
 
+    // Upsert member
+    const existing = await getMember(potPubkey, wallet)
     await upsertMember({
       pot_pubkey: potPubkey,
       wallet,
@@ -26,6 +37,7 @@ export async function POST(
       deposit_total: (existing?.deposit_total ?? 0) + amountSol,
     })
 
+    // Update pot
     const db = createServerSupabase()
     await db.from('pots').update({
       balance: pot.balance + amountSol,
@@ -34,6 +46,7 @@ export async function POST(
       updated_at: new Date().toISOString(),
     }).eq('pubkey', potPubkey)
 
+    // Track referral if present
     if (referrer && referrer !== wallet) {
       const entryFee = amountSol * 0.01
       await db.from('referrals').insert({

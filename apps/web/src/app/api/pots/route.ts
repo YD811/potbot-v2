@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPots, upsertPot } from '@/lib/db'
 
+/** GET /api/pots — list all pots */
 export async function GET() {
   try {
     const pots = await getPots()
@@ -10,6 +11,7 @@ export async function GET() {
   }
 }
 
+/** POST /api/pots — create or update a pot */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()

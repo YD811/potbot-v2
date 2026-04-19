@@ -1,8 +1,12 @@
 -- PotBot v2 — Supabase Schema
 -- Run this in the Supabase SQL Editor
 
+-- Enable UUID extension
 create extension if not exists "pgcrypto";
 
+-- ─────────────────────────────────────────
+-- POTS
+-- ─────────────────────────────────────────
 create table if not exists pots (
   pubkey            text primary key,
   name              text not null,
@@ -22,6 +26,9 @@ create table if not exists pots (
   updated_at        timestamptz not null default now()
 );
 
+-- ─────────────────────────────────────────
+-- MEMBERS
+-- ─────────────────────────────────────────
 create table if not exists members (
   id            uuid primary key default gen_random_uuid(),
   pot_pubkey    text not null references pots(pubkey) on delete cascade,
@@ -32,6 +39,9 @@ create table if not exists members (
   unique(pot_pubkey, wallet)
 );
 
+-- ─────────────────────────────────────────
+-- PROPOSALS
+-- ─────────────────────────────────────────
 create table if not exists proposals (
   pubkey                  text primary key,
   pot_pubkey              text not null references pots(pubkey) on delete cascade,
@@ -49,6 +59,9 @@ create table if not exists proposals (
   executed_at             timestamptz
 );
 
+-- ─────────────────────────────────────────
+-- VOTES
+-- ─────────────────────────────────────────
 create table if not exists votes (
   id               uuid primary key default gen_random_uuid(),
   proposal_pubkey  text not null references proposals(pubkey) on delete cascade,
@@ -59,6 +72,9 @@ create table if not exists votes (
   unique(proposal_pubkey, voter)
 );
 
+-- ─────────────────────────────────────────
+-- REFERRALS
+-- ─────────────────────────────────────────
 create table if not exists referrals (
   id              uuid primary key default gen_random_uuid(),
   pot_pubkey      text not null references pots(pubkey) on delete cascade,
@@ -71,6 +87,9 @@ create table if not exists referrals (
   created_at      timestamptz not null default now()
 );
 
+-- ─────────────────────────────────────────
+-- AGENT RULES
+-- ─────────────────────────────────────────
 create table if not exists agent_rules (
   id                  uuid primary key default gen_random_uuid(),
   pot_pubkey          text not null references pots(pubkey) on delete cascade,
@@ -89,6 +108,9 @@ create table if not exists agent_rules (
   unique(pot_pubkey, rule_id)
 );
 
+-- ─────────────────────────────────────────
+-- PRICE HISTORY
+-- ─────────────────────────────────────────
 create table if not exists price_history (
   id           uuid primary key default gen_random_uuid(),
   token        text not null default 'SOL',
@@ -99,6 +121,9 @@ create table if not exists price_history (
 create index if not exists price_history_token_time
   on price_history(token, recorded_at desc);
 
+-- ─────────────────────────────────────────
+-- GOVERNANCE SETTINGS
+-- ─────────────────────────────────────────
 create table if not exists governance_settings (
   pot_pubkey              text primary key references pots(pubkey) on delete cascade,
   quorum_pct              int not null default 51,
@@ -111,17 +136,18 @@ create table if not exists governance_settings (
   updated_at              timestamptz not null default now()
 );
 
--- RLS
-alter table pots                enable row level security;
-alter table members             enable row level security;
-alter table proposals           enable row level security;
-alter table votes               enable row level security;
-alter table referrals           enable row level security;
-alter table agent_rules         enable row level security;
-alter table price_history       enable row level security;
+-- ─────────────────────────────────────────
+-- ROW LEVEL SECURITY
+-- ─────────────────────────────────────────
+alter table pots               enable row level security;
+alter table members            enable row level security;
+alter table proposals          enable row level security;
+alter table votes              enable row level security;
+alter table referrals          enable row level security;
+alter table agent_rules        enable row level security;
+alter table price_history      enable row level security;
 alter table governance_settings enable row level security;
 
--- Drop existing policies (idempotent re-run)
 drop policy if exists "Public read pots"               on pots;
 drop policy if exists "Public read members"            on members;
 drop policy if exists "Public read proposals"          on proposals;
@@ -139,7 +165,6 @@ drop policy if exists "Service role all governance"    on governance_settings;
 drop policy if exists "Service role all agent_rules"   on agent_rules;
 drop policy if exists "Service role all referrals"     on referrals;
 
--- Public read
 create policy "Public read pots"               on pots               for select using (true);
 create policy "Public read members"            on members            for select using (true);
 create policy "Public read proposals"          on proposals          for select using (true);
@@ -149,7 +174,6 @@ create policy "Public read governance"         on governance_settings for select
 create policy "Public read agent_rules"        on agent_rules        for select using (true);
 create policy "Public read referrals"          on referrals          for select using (true);
 
--- Service role full access
 create policy "Service role all pots"          on pots               for all using (true) with check (true);
 create policy "Service role all members"       on members            for all using (true) with check (true);
 create policy "Service role all proposals"     on proposals          for all using (true) with check (true);
@@ -159,7 +183,9 @@ create policy "Service role all governance"    on governance_settings for all us
 create policy "Service role all agent_rules"   on agent_rules        for all using (true) with check (true);
 create policy "Service role all referrals"     on referrals          for all using (true) with check (true);
 
--- Seed demo pots
+-- ─────────────────────────────────────────
+-- SEED: default demo pots
+-- ─────────────────────────────────────────
 insert into pots (pubkey, name, emoji, authority, balance, total_shares, member_count, trade_count, total_volume, is_public, yield_strategy, governance_level, next_proposal_id, tamagotchi_emoji)
 values
   ('DEMO1111111111111111111111111111111111111111', 'Alpha Wolves', '🐺', 'DEMO_AUTHORITY', 42.5, 1000, 8, 23, 310.2, true, 2, 2, 3, '🌱'),
@@ -167,7 +193,9 @@ values
   ('DEMO3333333333333333333333333333333333333333', 'DeFi DAO', '🏛️', 'DEMO_AUTHORITY', 75.0, 2000, 15, 47, 890.4, true, 3, 3, 5, '🌿')
 on conflict (pubkey) do nothing;
 
--- updated_at triggers
+-- ─────────────────────────────────────────
+-- UPDATED_AT trigger
+-- ─────────────────────────────────────────
 create or replace function update_updated_at()
 returns trigger as $$
 begin
