@@ -33,7 +33,7 @@ pub struct TokenizeShares<'info> {
     )]
     pub authority: Signer<'info>,
     
-    /// PotBot treasury (receives tokenization fee)
+    /// PotBot treasury (YD's wallet receives tokenization fee)
     /// CHECK: Treasury address is hardcoded
     #[account(
         mut,
@@ -56,7 +56,7 @@ pub fn handler(ctx: Context<TokenizeShares>) -> Result<()> {
     // Tokenization fee: 0.1 SOL
     let tokenization_fee = 100_000_000; // 0.1 SOL in lamports
     
-    // Transfer fee to treasury
+    // Transfer fee to YD's treasury
     **ctx.accounts.authority.lamports.borrow_mut() -= tokenization_fee;
     **ctx.accounts.treasury.lamports.borrow_mut() += tokenization_fee;
     
@@ -65,7 +65,7 @@ pub fn handler(ctx: Context<TokenizeShares>) -> Result<()> {
     pot.shares_per_sol = 1000; // 1000 tokens per 1 SOL for better UX
     
     msg!(
-        "Pot {} tokenized! Token mint: {}, Fee paid: {} SOL",
+        "Pot {} tokenized! Token mint: {}, Fee paid to YD: {} SOL",
         pot.name,
         pot.token_mint,
         tokenization_fee as f64 / 1_000_000_000.0
@@ -144,7 +144,7 @@ pub fn mint_tokens_to_member(
             signer_seeds,
         ),
         token_amount,
-    )?;
+    )?
     
     msg!(
         "Minted {} tokens to {} for {} shares",

@@ -63,7 +63,7 @@ pub struct MintTamagotchiNft<'info> {
     )]
     pub authority: Signer<'info>,
     
-    /// PotBot treasury (receives NFT creation fee)
+    /// PotBot treasury (YD's wallet receives NFT creation fee)
     /// CHECK: Treasury address is hardcoded
     #[account(
         mut,
@@ -88,7 +88,7 @@ pub fn handler(ctx: Context<MintTamagotchiNft>) -> Result<()> {
     // NFT creation fee: 0.05 SOL
     let nft_fee = 50_000_000; // 0.05 SOL in lamports
     
-    // Transfer fee to treasury
+    // Transfer fee to YD's treasury
     **ctx.accounts.authority.lamports.borrow_mut() -= nft_fee;
     **ctx.accounts.treasury.lamports.borrow_mut() += nft_fee;
     
@@ -167,7 +167,7 @@ pub fn handler(ctx: Context<MintTamagotchiNft>) -> Result<()> {
     ).invoke_signed(signer_seeds)?;
     
     msg!(
-        "Tamagotchi NFT created for pot {}: mint = {}, level = {}",
+        "Tamagotchi NFT created for pot {}: mint = {}, level = {}, Fee paid to YD: 0.05 SOL",
         pot.name,
         ctx.accounts.tamagotchi_mint.key(),
         pot.tamagotchi_level
