@@ -14,10 +14,12 @@ import { Keypair } from '@solana/web3.js'
 // ── Yield config by strategy ───────────────────────────────────────────────────
 const YIELD_APY: Record<number, number> = {
   0: 0,      // None
-  1: 0.06,   // Conservative  ~6% APY
-  2: 0.15,   // Balanced      ~15% APY
-  3: 0.30,   // Aggressive    ~30% APY
-  4: 0.40,   // JLP           ~40% APY (Jupiter LP + Drift hedge)
+  1: 0.06,   // Conservative      ~6% APY
+  2: 0.15,   // Balanced          ~15% APY
+  3: 0.30,   // Aggressive        ~30% APY
+  4: 0.40,   // JLP               ~40% APY (Jupiter LP + Drift hedge)
+  5: 0.22,   // Exponent PT       ~22% APY (fixed-rate via Principal Tokens)
+  6: 0.35,   // JLP Hedge         ~35% APY (delta-neutral: JLP long + CEX short)
 }
 
 const YIELD_RESERVE_PCT: Record<number, number> = {
@@ -26,6 +28,8 @@ const YIELD_RESERVE_PCT: Record<number, number> = {
   2: 0.40,  // 40% liquid, 60% earning
   3: 0.20,  // 20% liquid, 80% earning
   4: 0.80,  // 20% liquid, 80% in JLP (delta-hedged)
+  5: 0.50,  // 50% liquid, 50% in Exponent PT
+  6: 0.30,  // 30% liquid, 70% delta-neutral position
 }
 
 const YIELD_TICK_MS = 10_000  // accrue yield every 10s (demo speed-up)
@@ -94,6 +98,17 @@ export interface MockProposal {
   totalSharesSnapshot: number
   createdAt: Date
   voters: string[]
+}
+
+export interface MockReferral {
+  potPubkey: string
+  referrer: string       // L1 referrer wallet
+  parentReferrer: string // L2 referrer wallet (who referred the referrer), '' if none
+  referee: string        // new member wallet
+  depositAmount: number  // SOL deposited
+  level1Earning: number  // 10% of entry fee to referrer
+  level2Earning: number  // 2% of entry fee to parentReferrer
+  createdAt: number      // unix ms
 }
 
 /* ── Seed data ──────────────────────────────────────────────────────────────── */
@@ -440,14 +455,35 @@ const SEED_PROPOSALS: MockProposal[] = [
 
 /* ── Store ──────────────────────────────────────────────────────────────────── */
 
+interface ReferralStats {
+  totalReferrals: number
+  level1Count: number
+  level2Count: number
+  level1Earnings: number
+  level2Earnings: number
+  totalEarnings: number
+  referralList: { referee: string; level: number; earnings: number; createdAt: number }[]
+}
+
 interface MockState {
   pots: MockPot[]
   members: MockMember[]
   proposals: MockProposal[]
+  referrals: MockReferral[]
 
   // Selectors
   getMembers: (potPubkey: string) => MockMember[]
   getProposals: (potPubkey: string) => MockProposal[]
+  getReferralStats: (potPubkey: string, wallet: string) => ReferralStats
+
+  // Referral actions
+  trackReferral: (params: {
+    potPubkey: string
+    referrer: string
+    parentReferrer: string
+    referee: string
+    depositAmount: number
+  }) => void
 
   // Actions
   createPot: (params: {
@@ -514,6 +550,7 @@ export const useMockStore = create<MockState>((set, get) => ({
   pots: [...SEED_POTS],
   members: [...SEED_MEMBERS],
   proposals: [...SEED_PROPOSALS],
+  referrals: [],
 
   getMembers: (potPubkey) => {
     return get().members.filter((m) => m.potPubkey === potPubkey)
@@ -521,6 +558,45 @@ export const useMockStore = create<MockState>((set, get) => ({
 
   getProposals: (potPubkey) => {
     return get().proposals.filter((p) => p.potPubkey === potPubkey)
+  },
+
+  getReferralStats: (potPubkey, wallet) => {
+    const refs = get().referrals.filter((r) => r.potPubkey === potPubkey)
+    const l1 = refs.filter((r) => r.referrer === wallet)
+    const l2 = refs.filter((r) => r.parentReferrer === wallet)
+    const l1Earnings = l1.reduce((s, r) => s + r.level1Earning, 0)
+    const l2Earnings = l2.reduce((s, r) => s + r.level2Earning, 0)
+    return {
+      totalReferrals: l1.length + l2.length,
+      level1Count: l1.length,
+      level2Count: l2.length,
+      level1Earnings: l1Earnings,
+      level2Earnings: l2Earnings,
+      totalEarnings: l1Earnings + l2Earnings,
+      referralList: [
+        ...l1.map((r) => ({ referee: r.referee, level: 1, earnings: r.level1Earning, createdAt: r.createdAt })),
+        ...l2.map((r) => ({ referee: r.referee, level: 2, earnings: r.level2Earning, createdAt: r.createdAt })),
+      ].sort((a, b) => b.createdAt - a.createdAt),
+    }
+  },
+
+  trackReferral: (params) => {
+    const ENTRY_FEE_PCT = 0.01
+    const entryFee = params.depositAmount * ENTRY_FEE_PCT
+    const level1Earning = entryFee * 0.10
+    const level2Earning = params.parentReferrer ? entryFee * 0.02 : 0
+
+    const referral: MockReferral = {
+      potPubkey: params.potPubkey,
+      referrer: params.referrer,
+      parentReferrer: params.parentReferrer,
+      referee: params.referee,
+      depositAmount: params.depositAmount,
+      level1Earning,
+      level2Earning,
+      createdAt: Date.now(),
+    }
+    set((s) => ({ referrals: [...s.referrals, referral] }))
   },
 
   createPot: (params) => {

@@ -19,7 +19,9 @@ const YIELD_LABELS: Record<number, string> = {
   1: 'Conservative',
   2: 'Balanced',
   3: 'Aggressive',
-  4: 'JLP',
+  4: 'JLP ⚡',
+  5: 'Exponent PT 🔒',
+  6: 'JLP Hedge 🛡️',
 }
 
 export default function DashboardPage() {
