@@ -3,12 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
-/** Browser / client-side Supabase client (anon key) */
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-/** Server-side Supabase client with full service-role access.
- *  Only use in API routes and cron jobs — never expose to browser.
- */
 export function createServerSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
@@ -17,7 +13,6 @@ export function createServerSupabase() {
   )
 }
 
-/** True when Supabase env vars are configured */
 export const isSupabaseConfigured: boolean = !!(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -29,6 +24,9 @@ export interface DbPot {
   trade_count: number; total_volume: number; is_public: boolean
   yield_strategy: number; governance_level: number; next_proposal_id: number
   tamagotchi_emoji: string; created_at: string; updated_at: string
+  trust_level: 'unverified' | 'community' | 'audited' | 'institutional'
+  verified_at: string | null; verified_by: string | null
+  audit_url: string | null; trust_note: string | null
 }
 export interface DbMember {
   id: string; pot_pubkey: string; wallet: string
