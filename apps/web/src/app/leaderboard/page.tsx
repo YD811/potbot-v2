@@ -63,7 +63,8 @@ function LiveDot() {
 
 export default function LeaderboardPage() {
   const { data: pots = [], isLoading } = usePots()
-  const solUsd = useSolPrice()
+  const solUsdRaw = useSolPrice()
+  const solUsd: number | null = solUsdRaw != null ? Number(solUsdRaw) : null
   const [sortBy, setSortBy] = useState<SortKey>('tvl')
   const [search, setSearch] = useState('')
   const [snsNames, setSnsNames] = useState<Record<string, string>>({})
@@ -93,7 +94,7 @@ export default function LeaderboardPage() {
   const enriched = useMemo(() => {
     return publicPots.map((p: any) => {
       const a = analyticsMap[p.pubkey]
-      const navUsd  = a?.navUsd  ?? (p.balance * (solUsd ?? 0))
+      const navUsd  = a?.navUsd  ?? (Number(p.balance) * (solUsd ?? 0))
       const pnlPct  = a?.pnlPct  ?? 0
       const apy30d  = a?.apy30d  ?? 0
       const hasLive = !!a
@@ -120,7 +121,7 @@ export default function LeaderboardPage() {
 
   // Global stats
   const totalTvlUsd   = enriched.reduce((s: number, p: any) => s + p.navUsd, 0)
-  const totalTvlSol   = publicPots.reduce((s: number, p: any) => s + p.balance, 0)
+  const totalTvlSol   = publicPots.reduce((s: number, p: any) => s + Number(p.balance), 0)
   const totalMembers  = publicPots.reduce((s: number, p: any) => s + p.memberCount, 0)
   const totalTrades   = publicPots.reduce((s: number, p: any) => s + p.tradeCount, 0)
   const avgApy        = enriched.length > 0
@@ -292,10 +293,10 @@ export default function LeaderboardPage() {
                   {/* TVL */}
                   <div className="w-[8rem] text-right">
                     <div className={`text-sm font-bold ${isTop3 ? 'text-pot-green' : 'text-white'}`}>
-                      {solUsd && pot.navUsd > 0 ? fmtUsd(pot.navUsd) : `${pot.balance.toFixed(2)} SOL`}
+                      {solUsd && pot.navUsd > 0 ? fmtUsd(pot.navUsd) : `${Number(pot.balance).toFixed(2)} SOL`}
                     </div>
                     {solUsd && pot.navUsd > 0 && (
-                      <div className="text-[10px] text-pot-muted">{pot.balance.toFixed(2)} SOL</div>
+                      <div className="text-[10px] text-pot-muted">{Number(pot.balance).toFixed(2)} SOL</div>
                     )}
                   </div>
                   {/* PnL */}
@@ -333,7 +334,7 @@ export default function LeaderboardPage() {
                 <div className="flex sm:hidden items-center gap-4 shrink-0">
                   <div className="text-right">
                     <div className="text-sm font-bold text-pot-green">
-                      {solUsd && pot.navUsd > 0 ? fmtUsd(pot.navUsd) : `${pot.balance.toFixed(1)} SOL`}
+                      {solUsd && pot.navUsd > 0 ? fmtUsd(pot.navUsd) : `${Number(pot.balance).toFixed(1)} SOL`}
                     </div>
                     {pot.hasLive && <PnLBadge pct={pot.pnlPct} />}
                   </div>
@@ -382,7 +383,7 @@ export default function LeaderboardPage() {
         <h3 className="text-sm font-semibold text-white mb-1">Want to be on this list?</h3>
         <p className="text-xs text-pot-muted mb-4">
           Create a public vault and start building your on-chain track record.
-          Get your own <code className="bg-pot-dark px-1 rounded">'{'{name}.potbot.sol'}'</code> domain.
+          Get your own <code className="bg-pot-dark px-1 rounded">&apos;{'{name}.potbot.sol'}&apos;</code> domain.
         </p>
         <Link
           href="/create"
