@@ -1,69 +1,117 @@
-import { PublicKey } from '@solana/web3.js'
+import { PublicKey } from '@solana/web3.js';
+import { PROGRAM_ID } from './index';
 
-// Placeholder program IDs — update after `anchor deploy`
-export const POT_PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_POT_PROGRAM_ID ?? 'Hyi1PNxPMUqwdDukhB2a4fvcBxQHmbXy3CZ95mgyFHA3'
-)
-export const DUEL_PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_DUEL_PROGRAM_ID ?? 'Hyi1PNxPMUqwdDukhB2a4fvcBxQHmbXy3CZ95mgyFHA3'
-)
-
-/** PDA for the POT config account */
-export function getPotAddress(authority: PublicKey, name: string, programId = POT_PROGRAM_ID) {
+// Original PDAs
+export function getPotAddress(name: string, authority: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('pot'), authority.toBuffer(), Buffer.from(name)],
-    programId
-  )
+    [Buffer.from('pot'), Buffer.from(name), authority.toBuffer()],
+    PROGRAM_ID
+  );
 }
 
-/** PDA for the SOL vault holding collective funds */
-export function getVaultAddress(potAddress: PublicKey, programId = POT_PROGRAM_ID) {
+export function getVaultAddress(potPubkey: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('vault'), potAddress.toBuffer()],
-    programId
-  )
+    [Buffer.from('vault'), potPubkey.toBuffer()],
+    PROGRAM_ID
+  );
 }
 
-/** PDA for a member account */
-export function getMemberAddress(potAddress: PublicKey, wallet: PublicKey, programId = POT_PROGRAM_ID) {
+export function getMemberAddress(potPubkey: PublicKey, wallet: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('member'), potAddress.toBuffer(), wallet.toBuffer()],
-    programId
-  )
+    [Buffer.from('member'), potPubkey.toBuffer(), wallet.toBuffer()],
+    PROGRAM_ID
+  );
 }
 
-/** PDA for a voter record (prevents double voting) */
-export function getVoterRecordAddress(proposalAddress: PublicKey, voter: PublicKey, programId = POT_PROGRAM_ID) {
+export function getProposalAddress(potPubkey: PublicKey, proposalId: number): [PublicKey, number] {
+  const idBytes = Buffer.allocUnsafe(8);
+  idBytes.writeBigUInt64LE(BigInt(proposalId), 0);
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('voter'), proposalAddress.toBuffer(), voter.toBuffer()],
-    programId
-  )
+    [Buffer.from('proposal'), potPubkey.toBuffer(), idBytes],
+    PROGRAM_ID
+  );
 }
 
-/** PDA for a governance proposal */
-export function getProposalAddress(potAddress: PublicKey, proposalId: number, programId = POT_PROGRAM_ID) {
-  const idBuf = Buffer.alloc(8)
-  idBuf.writeBigUInt64LE(BigInt(proposalId))
+export function getVoterRecordAddress(proposalPubkey: PublicKey, voter: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('proposal'), potAddress.toBuffer(), idBuf],
-    programId
-  )
+    [Buffer.from('voter_record'), proposalPubkey.toBuffer(), voter.toBuffer()],
+    PROGRAM_ID
+  );
 }
 
-/** PDA for a Duel account */
-export function getDuelAddress(challenger: PublicKey, defender: PublicKey, duelId: number, programId = DUEL_PROGRAM_ID) {
-  const idBuf = Buffer.alloc(8)
-  idBuf.writeBigUInt64LE(BigInt(duelId))
+// Strategy Vault PDAs
+export function getStrategyVaultAddress(name: string, creator: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('duel'), challenger.toBuffer(), defender.toBuffer(), idBuf],
-    programId
-  )
+    [Buffer.from('strategy_vault'), Buffer.from(name), creator.toBuffer()],
+    PROGRAM_ID
+  );
 }
 
-/** PDA for a side bet */
-export function getSideBetAddress(duelAddress: PublicKey, bettor: PublicKey, programId = DUEL_PROGRAM_ID) {
+export function getParticipantAddress(strategyVault: PublicKey, wallet: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('sidebet'), duelAddress.toBuffer(), bettor.toBuffer()],
-    programId
-  )
+    [Buffer.from('participant'), strategyVault.toBuffer(), wallet.toBuffer()],
+    PROGRAM_ID
+  );
+}
+
+export function getReferralAddress(strategyVault: PublicKey): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('referral'), strategyVault.toBuffer()],
+    PROGRAM_ID
+  );
+}
+
+// ─── Premium Feature PDAs ───────────────────────────────────────
+
+// Private Pot PDA
+export function getPrivatePotAddress(potPubkey: PublicKey): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('private_pot'), potPubkey.toBuffer()],
+    PROGRAM_ID
+  );
+}
+
+// SNS Domain PDA
+export function getSnsAddress(potPubkey: PublicKey): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('sns'), potPubkey.toBuffer()],
+    PROGRAM_ID
+  );
+}
+
+// Tamagotchi NFT PDA
+export function getTamagotchiNftAddress(potPubkey: PublicKey): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('tamagotchi_nft'), potPubkey.toBuffer()],
+    PROGRAM_ID
+  );
+}
+
+// Token mint PDAs for tokenized shares
+export function getTokenMintAddress(potPubkey: PublicKey): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('token_mint'), potPubkey.toBuffer()],
+    PROGRAM_ID
+  );
+}
+
+// Tamagotchi mint PDA for NFTs
+export function getTamagotchiMintAddress(potPubkey: PublicKey): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('tamagotchi_mint'), potPubkey.toBuffer()],
+    PROGRAM_ID
+  );
+}
+
+// Helper: Get Metaplex metadata PDA
+export function getMetadataAddress(mint: PublicKey): [PublicKey, number] {
+  const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from('metadata'),
+      METADATA_PROGRAM_ID.toBuffer(),
+      mint.toBuffer(),
+    ],
+    METADATA_PROGRAM_ID
+  );
 }
