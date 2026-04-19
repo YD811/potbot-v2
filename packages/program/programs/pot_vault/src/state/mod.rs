@@ -3,9 +3,15 @@ pub mod member;
 pub mod proposal;
 pub mod voter_record;
 pub mod strategy_vault;
+pub mod sns_domain;
+pub mod tamagotchi_nft;
+pub mod private_pot;
 
 pub use pot::*;
 pub use member::*;
 pub use proposal::*;
 pub use voter_record::*;
 pub use strategy_vault::*;
+pub use sns_domain::*;
+pub use tamagotchi_nft::*;
+pub use private_pot::*;
