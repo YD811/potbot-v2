@@ -12,6 +12,7 @@ import { createWebhooksRouter } from './routes/webhooks.js'
 import { warmCache } from './services/price-oracle.js'
 import { startAgentCron } from './services/agent-cron.js'
 import { publicLimiter } from './middleware/rate-limit.js'
+import { analyticsGate } from './middleware/x402.js'
 
 const app = new Hono()
 
@@ -22,22 +23,29 @@ app.use('*', cors({
     return allowed.includes(origin) || origin.endsWith('.vercel.app') ? origin : allowed[0]
   },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-PAYMENT'],
+  exposeHeaders: ['X-PAYMENT-RESPONSE', 'X-RateLimit-Limit', 'X-RateLimit-Remaining'],
   maxAge: 86400,
 }))
 app.use('*', secureHeaders())
 app.use('*', logger())
-app.use('/prices/*', publicLimiter)
+app.use('/prices/*',    publicLimiter)
 app.use('/analytics/*', publicLimiter)
-app.use('/yield/*', publicLimiter)
+app.use('/yield/*',     publicLimiter)
+
+// x402 micropayment gate — activate with X402_ENABLED=true + X402_PAYMENT_ADDRESS=<token_account>
+// When enabled: analytics calls require 0.001 USDC per request
+// When disabled (default): all calls are free
+app.use('/analytics/*', analyticsGate)
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 app.get('/health', (c) => c.json({
-  status: 'ok',
-  version: '1.0.0',
-  name: 'PotBot API',
-  env: process.env.NODE_ENV ?? 'development',
-  ts: Date.now(),
+  status:    'ok',
+  version:   '1.0.0',
+  name:      'PotBot API',
+  env:       process.env.NODE_ENV ?? 'development',
+  x402:      process.env.X402_ENABLED === 'true' ? 'enabled' : 'disabled',
+  ts:        Date.now(),
 }))
 
 app.route('/prices',    pricesRouter)
@@ -62,11 +70,13 @@ startAgentCron()
 serve({ fetch: app.fetch, port: PORT }, () => {
   console.log(`\n🚀 PotBot API v1.0.0`)
   console.log(`   http://localhost:${PORT}`)
-  console.log(`   Env: ${process.env.NODE_ENV ?? 'development'}`)
-  console.log(`   DB:  ${process.env.SUPABASE_URL ? '✅ Supabase' : '⚠️  In-memory (no SUPABASE_URL)'}`)
-  console.log(`   Cache: ${process.env.UPSTASH_REDIS_REST_URL ? '✅ Redis (Upstash)' : '⚠️  In-memory'}`)
-  console.log(`   RPC:   ${process.env.RPC_URL ?? 'https://api.devnet.solana.com'}`)
-  console.log(`   Executor: ${process.env.EXECUTOR_KEYPAIR ? '✅ Loaded' : '⚠️  Not set (swaps simulated)'}\n`)
+  console.log(`   Env:      ${process.env.NODE_ENV ?? 'development'}`)
+  console.log(`   DB:       ${process.env.SUPABASE_URL ? '✅ Supabase' : '⚠️  In-memory'}`)
+  console.log(`   Cache:    ${process.env.UPSTASH_REDIS_REST_URL ? '✅ Redis (Upstash)' : '⚠️  In-memory'}`)
+  console.log(`   RPC:      ${process.env.RPC_URL ?? 'https://api.devnet.solana.com'}`)
+  console.log(`   Executor: ${process.env.EXECUTOR_KEYPAIR ? '✅ Loaded' : '⚠️  Not set (swaps simulated)'}`)
+  console.log(`   x402:     ${process.env.X402_ENABLED === 'true' ? `✅ Enabled (${ process.env.X402_PAYMENT_ADDRESS?.slice(0,8) ?? '?'}...)` : '⚠️  Disabled (set X402_ENABLED=true)'}`)
+  console.log()
 })
 
 export default app
