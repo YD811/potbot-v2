@@ -5,6 +5,7 @@ pub mod instructions;
 
 #[path = "errors/mod.rs"]
 pub mod errors;
+pub mod constants;
 
 use instructions::*;
 
@@ -17,6 +18,16 @@ pub mod pot_vault {
     /// Create a new collective trading vault (POT)
     pub fn create_pot(ctx: Context<CreatePot>, params: CreatePotParams) -> Result<()> {
         instructions::create_pot::handler(ctx, params)
+    }
+
+    /// Create a private pot with invite code access
+    pub fn create_private_pot(ctx: Context<CreatePrivatePot>, params: CreatePrivatePotParams) -> Result<()> {
+        instructions::create_private_pot::handler(ctx, params)
+    }
+
+    /// Join a private pot using invite code
+    pub fn join_private_pot(ctx: Context<JoinPrivatePot>, invite_code: String) -> Result<()> {
+        instructions::join_private_pot::handler(ctx, invite_code)
     }
 
     /// Deposit SOL into a POT and receive proportional shares
@@ -57,6 +68,33 @@ pub mod pot_vault {
     /// Initialize an SPL token mint for a pot
     pub fn init_token_mint(ctx: Context<InitTokenMint>) -> Result<()> {
         instructions::init_token_mint::handler(ctx)
+    }
+
+    // ─── Premium Features (Paid) ────────────────────────────────────────────
+
+    /// Tokenize shares - convert pot shares to SPL tokens (0.1 SOL fee)
+    pub fn tokenize_shares(ctx: Context<TokenizeShares>) -> Result<()> {
+        instructions::tokenize_shares::handler(ctx)
+    }
+
+    /// Mint tokens to existing members (after tokenization)
+    pub fn mint_tokens_to_member(ctx: Context<MintTokensToMember>, shares_amount: u64) -> Result<()> {
+        instructions::tokenize_shares::mint_tokens_to_member(ctx, shares_amount)
+    }
+
+    /// Create SNS subdomain (pot.potbot.sol) - 0.5 SOL fee
+    pub fn create_sns_domain(ctx: Context<CreateSnsDomain>, domain_name: String) -> Result<()> {
+        instructions::create_sns_domain::handler(ctx, domain_name)
+    }
+
+    /// Mint soulbound Tamagotchi NFT - 0.05 SOL fee
+    pub fn mint_tamagotchi_nft(ctx: Context<MintTamagotchiNft>) -> Result<()> {
+        instructions::mint_tamagotchi_nft::handler(ctx)
+    }
+
+    /// Update Tamagotchi NFT metadata on evolution (permissionless)
+    pub fn update_tamagotchi_metadata(ctx: Context<UpdateTamagotchiMetadata>) -> Result<()> {
+        instructions::update_tamagotchi_metadata::handler(ctx)
     }
 
     // ─── Strategy Vault ──────────────────────────────────────────────────────
