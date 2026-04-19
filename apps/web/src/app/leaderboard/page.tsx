@@ -18,11 +18,13 @@ const SORT_OPTIONS: { key: SortKey; label: string; icon: string }[] = [
 ]
 
 const YIELD_LABELS: Record<number | string, string> = {
-  0: 'HODL',       hodl: 'HODL',
-  1: 'Yield',      yield: 'Yield',
-  2: 'AI DCA',     ai_dca: 'AI DCA',
-  3: 'Trend',      trend_following: 'Trend',
-  4: 'Degen ⚡',   degen: 'Degen ⚡',
+  0: 'HODL',            hodl: 'HODL',
+  1: 'Yield',           yield: 'Yield',
+  2: 'AI DCA',          ai_dca: 'AI DCA',
+  3: 'Trend',           trend_following: 'Trend',
+  4: 'JLP ⚡',          degen: 'JLP ⚡',
+  5: 'Exponent PT 🔒',
+  6: 'JLP Hedge 🛡️',
   none: 'None', conservative: 'Conservative', balanced: 'Balanced', aggressive: 'Aggressive',
 }
 
@@ -63,8 +65,7 @@ function LiveDot() {
 
 export default function LeaderboardPage() {
   const { data: pots = [], isLoading } = usePots()
-  const solUsdRaw = useSolPrice()
-  const solUsd: number | null = solUsdRaw != null ? Number(solUsdRaw) : null
+  const { price: solUsd } = useSolPrice()
   const [sortBy, setSortBy] = useState<SortKey>('tvl')
   const [search, setSearch] = useState('')
   const [snsNames, setSnsNames] = useState<Record<string, string>>({})
@@ -76,7 +77,6 @@ export default function LeaderboardPage() {
   const pubkeys = useMemo(() => publicPots.map((p: any) => p.pubkey as string), [publicPots])
   const { dataMap: analyticsMap, isAllSettled } = useVaultAnalyticsBatch(pubkeys)
 
-  // Resolve SNS names
   useEffect(() => {
     Promise.all(
       publicPots.map(async (p: any) => {
@@ -90,11 +90,10 @@ export default function LeaderboardPage() {
     })
   }, [publicPots])
 
-  // Enrich pots with analytics
   const enriched = useMemo(() => {
     return publicPots.map((p: any) => {
       const a = analyticsMap[p.pubkey]
-      const navUsd  = a?.navUsd  ?? (Number(p.balance) * (solUsd ?? 0))
+      const navUsd  = a?.navUsd  ?? (p.balance * (solUsd ?? 0))
       const pnlPct  = a?.pnlPct  ?? 0
       const apy30d  = a?.apy30d  ?? 0
       const hasLive = !!a
@@ -119,20 +118,17 @@ export default function LeaderboardPage() {
     })
   }, [enriched, sortBy, search, snsNames])
 
-  // Global stats
   const totalTvlUsd   = enriched.reduce((s: number, p: any) => s + p.navUsd, 0)
-  const totalTvlSol   = publicPots.reduce((s: number, p: any) => s + Number(p.balance), 0)
+  const totalTvlSol   = publicPots.reduce((s: number, p: any) => s + p.balance, 0)
   const totalMembers  = publicPots.reduce((s: number, p: any) => s + p.memberCount, 0)
   const totalTrades   = publicPots.reduce((s: number, p: any) => s + p.tradeCount, 0)
   const avgApy        = enriched.length > 0
     ? enriched.reduce((s: number, p: any) => s + p.apy30d, 0) / enriched.length
     : 0
-
   const liveCount = enriched.filter((p: any) => p.hasLive).length
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
@@ -151,7 +147,6 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
-      {/* Global stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <div className="bg-pot-card border border-pot-border rounded-2xl p-4 text-center">
           <div className="text-2xl font-bold text-pot-green">{publicPots.length}</div>
@@ -161,9 +156,7 @@ export default function LeaderboardPage() {
           <div className="text-2xl font-bold text-white">
             {solUsd ? fmtUsd(totalTvlUsd) : `${totalTvlSol.toFixed(1)} SOL`}
           </div>
-          {solUsd && (
-            <div className="text-[10px] text-pot-muted">{totalTvlSol.toFixed(1)} SOL</div>
-          )}
+          {solUsd && <div className="text-[10px] text-pot-muted">{totalTvlSol.toFixed(1)} SOL</div>}
           <div className="text-xs text-pot-muted mt-1">Combined TVL</div>
         </div>
         <div className="bg-pot-card border border-pot-border rounded-2xl p-4 text-center">
@@ -174,13 +167,10 @@ export default function LeaderboardPage() {
           <div className={`text-2xl font-bold ${avgApy > 0 ? 'text-pot-green' : 'text-white'}`}>
             {avgApy > 0 ? `${avgApy.toFixed(1)}%` : `${totalTrades}`}
           </div>
-          <div className="text-xs text-pot-muted mt-1">
-            {avgApy > 0 ? 'Avg APY 30d' : 'Total Trades'}
-          </div>
+          <div className="text-xs text-pot-muted mt-1">{avgApy > 0 ? 'Avg APY 30d' : 'Total Trades'}</div>
         </div>
       </div>
 
-      {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <input
           type="text"
@@ -206,21 +196,15 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
-      {/* Table header — desktop */}
       <div className="hidden sm:grid grid-cols-[3rem_1fr_8rem_6rem_6rem_5rem_6rem] gap-3 px-4 py-2 text-[10px] font-medium text-pot-muted uppercase tracking-wider">
-        <div>#</div>
-        <div>Vault</div>
-        <div className="text-right">TVL</div>
-        <div className="text-right">All-time PnL</div>
-        <div className="text-right">APY 30d</div>
-        <div className="text-right">Trades</div>
-        <div className="text-right">Strategy</div>
+        <div>#</div><div>Vault</div><div className="text-right">TVL</div>
+        <div className="text-right">All-time PnL</div><div className="text-right">APY 30d</div>
+        <div className="text-right">Trades</div><div className="text-right">Strategy</div>
       </div>
 
-      {/* Rows */}
       {isLoading ? (
         <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map(i => (
+          {[1,2,3,4,5].map(i => (
             <div key={i} className="bg-pot-card border border-pot-border rounded-2xl p-4 animate-pulse">
               <div className="h-4 bg-pot-border rounded w-1/3" />
             </div>
@@ -233,9 +217,7 @@ export default function LeaderboardPage() {
           <p className="text-pot-muted text-sm mb-4">
             {search ? 'No vaults match your search' : 'Create a public vault to appear here'}
           </p>
-          <Link href="/create" className="btn-primary text-sm">
-            Create a Public Vault
-          </Link>
+          <Link href="/create" className="btn-primary text-sm">Create a Public Vault</Link>
         </div>
       ) : (
         <div className="space-y-2">
@@ -243,7 +225,6 @@ export default function LeaderboardPage() {
             const isTop3    = idx < 3
             const snsName   = snsNames[pot.pubkey]
             const yieldLabel= YIELD_LABELS[pot.yieldStrategy] ?? 'None'
-
             return (
               <Link
                 key={pot.pubkey}
@@ -254,87 +235,49 @@ export default function LeaderboardPage() {
                     : 'bg-pot-card border-pot-border hover:border-pot-accent/30'
                 }`}
               >
-                {/* Rank */}
-                <div className="w-8 flex justify-center shrink-0">
-                  {rankBadge(idx)}
-                </div>
-
-                {/* Identity */}
+                <div className="w-8 flex justify-center shrink-0">{rankBadge(idx)}</div>
                 <div className="flex-1 min-w-0 flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 ${
                     isTop3 ? 'bg-pot-accent/10' : 'bg-pot-dark'
-                  }`}>
-                    {pot.emoji}
-                  </div>
+                  }`}>{pot.emoji}</div>
                   <div className="min-w-0">
-                    <div className="font-semibold text-white text-sm truncate group-hover:text-pot-accent transition">
-                      {pot.name}
-                    </div>
+                    <div className="font-semibold text-white text-sm truncate group-hover:text-pot-accent transition">{pot.name}</div>
                     <div className="text-[10px] text-pot-muted flex items-center gap-1.5">
-                      {snsName && (
-                        <>
-                          <span className="text-pot-green font-mono">{snsName}</span>
-                          <span>·</span>
-                        </>
-                      )}
+                      {snsName && <><span className="text-pot-green font-mono">{snsName}</span><span>·</span></>}
                       <span>{pot.memberCount} members</span>
-                      {pot.hasLive && (
-                        <>
-                          <span>·</span>
-                          <LiveDot />
-                        </>
-                      )}
+                      {pot.hasLive && <><span>·</span><LiveDot /></>}
                     </div>
                   </div>
                 </div>
-
-                {/* Stats — desktop */}
                 <div className="hidden sm:flex items-center gap-3 shrink-0">
-                  {/* TVL */}
                   <div className="w-[8rem] text-right">
                     <div className={`text-sm font-bold ${isTop3 ? 'text-pot-green' : 'text-white'}`}>
-                      {solUsd && pot.navUsd > 0 ? fmtUsd(pot.navUsd) : `${Number(pot.balance).toFixed(2)} SOL`}
+                      {solUsd && pot.navUsd > 0 ? fmtUsd(pot.navUsd) : `${pot.balance.toFixed(2)} SOL`}
                     </div>
-                    {solUsd && pot.navUsd > 0 && (
-                      <div className="text-[10px] text-pot-muted">{Number(pot.balance).toFixed(2)} SOL</div>
-                    )}
+                    {solUsd && pot.navUsd > 0 && <div className="text-[10px] text-pot-muted">{pot.balance.toFixed(2)} SOL</div>}
                   </div>
-                  {/* PnL */}
                   <div className="w-[6rem] text-right">
-                    {pot.hasLive ? (
-                      <PnLBadge pct={pot.pnlPct} />
-                    ) : (
-                      <span className="text-xs text-pot-muted">—</span>
-                    )}
+                    {pot.hasLive ? <PnLBadge pct={pot.pnlPct} /> : <span className="text-xs text-pot-muted">—</span>}
                   </div>
-                  {/* APY */}
                   <div className="w-[6rem] text-right">
                     {pot.hasLive && pot.apy30d !== 0 ? (
                       <span className={`text-sm font-bold ${pot.apy30d >= 0 ? 'text-pot-green' : 'text-red-400'}`}>
                         {pot.apy30d >= 0 ? '+' : ''}{pot.apy30d.toFixed(1)}%
                       </span>
-                    ) : (
-                      <span className="text-xs text-pot-muted">—</span>
-                    )}
+                    ) : <span className="text-xs text-pot-muted">—</span>}
                   </div>
-                  {/* Trades */}
                   <div className="w-[5rem] text-right">
                     <div className="text-sm font-medium text-white">{pot.tradeCount}</div>
                     <div className="text-[10px] text-pot-muted">trades</div>
                   </div>
-                  {/* Strategy */}
                   <div className="w-[6rem] text-right">
-                    <div className="text-xs text-pot-muted px-2 py-0.5 bg-pot-dark rounded-lg inline-block">
-                      {yieldLabel}
-                    </div>
+                    <div className="text-xs text-pot-muted px-2 py-0.5 bg-pot-dark rounded-lg inline-block">{yieldLabel}</div>
                   </div>
                 </div>
-
-                {/* Stats — mobile */}
                 <div className="flex sm:hidden items-center gap-4 shrink-0">
                   <div className="text-right">
                     <div className="text-sm font-bold text-pot-green">
-                      {solUsd && pot.navUsd > 0 ? fmtUsd(pot.navUsd) : `${Number(pot.balance).toFixed(1)} SOL`}
+                      {solUsd && pot.navUsd > 0 ? fmtUsd(pot.navUsd) : `${pot.balance.toFixed(1)} SOL`}
                     </div>
                     {pot.hasLive && <PnLBadge pct={pot.pnlPct} />}
                   </div>
@@ -346,7 +289,6 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {/* Ecosystem Analytics footer */}
       {!isLoading && sorted.length > 0 && (
         <div className="mt-4 bg-pot-card border border-pot-border rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -357,16 +299,12 @@ export default function LeaderboardPage() {
           <div className="grid grid-cols-3 gap-3">
             <div>
               <div className="text-xs text-pot-muted mb-0.5">Combined TVL</div>
-              <div className="text-sm font-bold text-white">
-                {solUsd ? fmtUsd(totalTvlUsd) : `${totalTvlSol.toFixed(1)} SOL`}
-              </div>
+              <div className="text-sm font-bold text-white">{solUsd ? fmtUsd(totalTvlUsd) : `${totalTvlSol.toFixed(1)} SOL`}</div>
             </div>
             <div>
               <div className="text-xs text-pot-muted mb-0.5">Avg Vault Size</div>
               <div className="text-sm font-bold text-white">
-                {publicPots.length > 0
-                  ? (solUsd ? fmtUsd(totalTvlUsd / publicPots.length) : `${(totalTvlSol / publicPots.length).toFixed(1)} SOL`)
-                  : '—'}
+                {publicPots.length > 0 ? (solUsd ? fmtUsd(totalTvlUsd / publicPots.length) : `${(totalTvlSol / publicPots.length).toFixed(1)} SOL`) : '—'}
               </div>
             </div>
             <div>
@@ -377,18 +315,14 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {/* CTA */}
       <div className="mt-6 bg-pot-card border border-dashed border-pot-accent/30 rounded-2xl p-6 text-center">
         <div className="text-2xl mb-2">🚀</div>
         <h3 className="text-sm font-semibold text-white mb-1">Want to be on this list?</h3>
         <p className="text-xs text-pot-muted mb-4">
           Create a public vault and start building your on-chain track record.
-          Get your own <code className="bg-pot-dark px-1 rounded">&apos;{'{name}.potbot.sol'}&apos;</code> domain.
+          Get your own <code className="bg-pot-dark px-1 rounded">{'{name}.potbot.sol'}</code> domain.
         </p>
-        <Link
-          href="/create"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-pot-accent hover:bg-pot-accent/90 text-white rounded-xl text-sm font-semibold transition"
-        >
+        <Link href="/create" className="inline-flex items-center gap-2 px-4 py-2 bg-pot-accent hover:bg-pot-accent/90 text-white rounded-xl text-sm font-semibold transition">
           🪴 Create a Vault
         </Link>
       </div>
