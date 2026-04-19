@@ -1,12 +1,8 @@
 -- PotBot v2 — Supabase Schema
 -- Run this in the Supabase SQL Editor
 
--- Enable UUID extension
 create extension if not exists "pgcrypto";
 
--- ─────────────────────────────────────────
--- POTS
--- ─────────────────────────────────────────
 create table if not exists pots (
   pubkey            text primary key,
   name              text not null,
@@ -116,15 +112,34 @@ create table if not exists governance_settings (
 );
 
 -- RLS
-alter table pots               enable row level security;
-alter table members            enable row level security;
-alter table proposals          enable row level security;
-alter table votes              enable row level security;
-alter table referrals          enable row level security;
-alter table agent_rules        enable row level security;
-alter table price_history      enable row level security;
+alter table pots                enable row level security;
+alter table members             enable row level security;
+alter table proposals           enable row level security;
+alter table votes               enable row level security;
+alter table referrals           enable row level security;
+alter table agent_rules         enable row level security;
+alter table price_history       enable row level security;
 alter table governance_settings enable row level security;
 
+-- Drop existing policies (idempotent re-run)
+drop policy if exists "Public read pots"               on pots;
+drop policy if exists "Public read members"            on members;
+drop policy if exists "Public read proposals"          on proposals;
+drop policy if exists "Public read votes"              on votes;
+drop policy if exists "Public read price_history"      on price_history;
+drop policy if exists "Public read governance"         on governance_settings;
+drop policy if exists "Public read agent_rules"        on agent_rules;
+drop policy if exists "Public read referrals"          on referrals;
+drop policy if exists "Service role all pots"          on pots;
+drop policy if exists "Service role all members"       on members;
+drop policy if exists "Service role all proposals"     on proposals;
+drop policy if exists "Service role all votes"         on votes;
+drop policy if exists "Service role all price_history" on price_history;
+drop policy if exists "Service role all governance"    on governance_settings;
+drop policy if exists "Service role all agent_rules"   on agent_rules;
+drop policy if exists "Service role all referrals"     on referrals;
+
+-- Public read
 create policy "Public read pots"               on pots               for select using (true);
 create policy "Public read members"            on members            for select using (true);
 create policy "Public read proposals"          on proposals          for select using (true);
@@ -134,6 +149,7 @@ create policy "Public read governance"         on governance_settings for select
 create policy "Public read agent_rules"        on agent_rules        for select using (true);
 create policy "Public read referrals"          on referrals          for select using (true);
 
+-- Service role full access
 create policy "Service role all pots"          on pots               for all using (true) with check (true);
 create policy "Service role all members"       on members            for all using (true) with check (true);
 create policy "Service role all proposals"     on proposals          for all using (true) with check (true);
@@ -160,10 +176,12 @@ begin
 end;
 $$ language plpgsql;
 
+drop trigger if exists pots_updated_at on pots;
 create trigger pots_updated_at
   before update on pots
   for each row execute function update_updated_at();
 
+drop trigger if exists governance_updated_at on governance_settings;
 create trigger governance_updated_at
   before update on governance_settings
   for each row execute function update_updated_at();
