@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum PotError {
+pub enum ErrorCode {
     #[msg("Name must be 1-32 characters")]
-    InvalidName,
+    InvalidPotName,
     #[msg("Deposit below minimum")]
     DepositTooSmall,
     #[msg("Insufficient shares for withdrawal")]
@@ -11,7 +11,7 @@ pub enum PotError {
     #[msg("Lockup period has not elapsed")]
     LockupActive,
     #[msg("Not authorized to perform this action")]
-    Unauthorized,
+    UnauthorizedAccess,
     #[msg("POT is not public - invite required")]
     NotPublic,
     #[msg("Proposal is not active")]
@@ -25,7 +25,7 @@ pub enum PotError {
     #[msg("Governance level does not permit this action")]
     GovernanceBlocked,
     #[msg("Arithmetic overflow")]
-    MathOverflow,
+    ArithmeticOverflow,
     #[msg("Vault balance too low")]
     InsufficientVaultBalance,
     #[msg("Member not found in this POT")]
@@ -54,7 +54,35 @@ pub enum PotError {
     #[msg("Fee exceeds maximum allowed")]
     FeeTooHigh,
     #[msg("Invalid strategy configuration")]
-    InvalidConfig,
+    InvalidStrategyConfig,
     #[msg("Strategy vault is not active")]
     VaultNotActive,
+    
+    // ─── Premium Feature Errors ─────────────────────────────────────────
+    
+    // Tokenization
+    #[msg("Pot shares are not tokenized yet")]
+    NotTokenized,
+    
+    // Private Pots
+    #[msg("Invalid invite code - must be 6 alphanumeric characters")]
+    InvalidInviteCode,
+    #[msg("Already a member of this pot")]
+    AlreadyMember,
+    #[msg("Invite limit reached for this private pot")]
+    InviteLimitReached,
+    #[msg("This pot is not private")]
+    NotPrivatePot,
+    
+    // SNS Domains
+    #[msg("Invalid domain name - 3-32 chars, alphanumeric + hyphens only")]
+    InvalidDomainName,
+    #[msg("SNS domain already exists for this pot")]
+    DomainAlreadyExists,
+    
+    // Tamagotchi NFT
+    #[msg("Tamagotchi NFT already created for this pot")]
+    TamagotchiAlreadyExists,
+    #[msg("Tamagotchi level has not changed")]
+    TamagotchiNotEvolved,
 }
