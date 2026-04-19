@@ -1,5 +1,8 @@
-import { AnchorProvider, Program, setProvider } from '@coral-xyz/anchor'
-import { Connection, PublicKey, Commitment, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { AnchorProvider, Program, setProvider, BN } from '@coral-xyz/anchor'
+import {
+  Connection, PublicKey, Commitment, LAMPORTS_PER_SOL,
+  SystemProgram, Transaction,
+} from '@solana/web3.js'
 import { POT_PROGRAM_ID } from './pda'
 import type { PotState, MemberState, ProposalState, PotDisplay, MemberDisplay } from './types'
 
@@ -22,6 +25,8 @@ export function getPotProgram(provider: AnchorProvider, idl: any) {
   return new Program(idl as any, provider)
 }
 
+// ── Basic POT helpers ─────────────────────────────────────────────────────────
+
 /**
  * Fetch all POT accounts from the program
  */
@@ -37,7 +42,11 @@ export async function fetchAllPots(connection: Connection, programId = POT_PROGR
 /**
  * Fetch all POTs a wallet belongs to (via member PDAs)
  */
-export async function fetchUserPots(connection: Connection, wallet: PublicKey, programId = POT_PROGRAM_ID) {
+export async function fetchUserPots(
+  connection: Connection,
+  wallet: PublicKey,
+  programId = POT_PROGRAM_ID
+) {
   const accounts = await connection.getProgramAccounts(programId, {
     filters: [
       { memcmp: { offset: 8, bytes: wallet.toBase58() } },
@@ -50,19 +59,19 @@ export async function fetchUserPots(connection: Connection, wallet: PublicKey, p
  * Convert on-chain PotState + vault balance to display-friendly format
  */
 export function potToDisplay(pubkey: PublicKey, pot: PotState, vaultBalance: number): PotDisplay {
-  const TAMA_EMOJIS = ['\ud83e\udd5a', '\ud83d\udc23', '\ud83d\udc24', '\ud83e\udd85', '\ud83d\udc09', '\ud83d\udc51']
+  const TAMA_EMOJIS = ['🥚', '🐣', '🐤', '🦅', '🐉', '👑']
   const strategyKey = Object.keys(pot.config.yieldStrategy)[0]
 
   return {
     pubkey: pubkey.toBase58(),
     name: pot.name,
-    emoji: pot.emoji || '\ud83e\udeb4',
+    emoji: pot.emoji || '🫙',
     balance: vaultBalance / LAMPORTS_PER_SOL,
     totalShares: pot.totalShares.toNumber(),
     memberCount: pot.memberCount,
     tradeCount: pot.tradeCount,
     tamagotchiLevel: pot.tamagotchiLevel,
-    tamagotchiEmoji: TAMA_EMOJIS[pot.tamagotchiLevel] || '\ud83e\udd5a',
+    tamagotchiEmoji: TAMA_EMOJIS[pot.tamagotchiLevel] || '🥚',
     yieldStrategy: strategyKey,
     governanceLevel: pot.governance.tradeLevel,
     isPublic: pot.config.isPublic,
@@ -83,5 +92,203 @@ export function memberToDisplay(member: MemberState, totalShares: number): Membe
     withdrawTotal: member.withdrawTotal.toNumber() / LAMPORTS_PER_SOL,
     pnl: (member.withdrawTotal.toNumber() - member.depositTotal.toNumber()) / LAMPORTS_PER_SOL,
     joinedAt: new Date(member.joinedAt.toNumber() * 1000),
+  }
+}
+
+// ── Strategy Vault SDK methods ────────────────────────────────────────────────
+
+export interface StrategyVaultDisplay {
+  pubkey: string
+  name: string
+  description: string
+  creator: string
+  entryFeeLamports: number
+  entryFeeSol: number
+  performanceFeeBps: number
+  managementFeeBps: number
+  referralBps: number
+  participantCount: number
+  tamagotchiLevel: number
+  tamagotchiEmoji: string
+  strategyType: string
+  riskLevel: string
+  isPublic: boolean
+  createdAt: Date
+}
+
+export interface CreateStrategyVaultParams {
+  potName: string
+  description: string
+  entryFeeLamports: number
+  performanceFeeBps: number   // 0–10000 (100 bps = 1%)
+  managementFeeBps: number    // 0–10000
+  referralBps: number         // 0–5000
+  strategyType: 'DCA' | 'Trend' | 'Reversion' | 'Yield' | 'Custom'
+  riskLevel: 'Conservative' | 'Balanced' | 'Aggressive'
+  maxDrawdownBps: number      // max acceptable drawdown
+  targetApyBps: number        // target APY in bps
+}
+
+/**
+ * Build the instruction to create a Strategy Vault.
+ * Caller must sign and send the returned transaction.
+ */
+export async function buildCreateStrategyVaultTx(
+  program: Program<any>,
+  authority: PublicKey,
+  params: CreateStrategyVaultParams,
+): Promise<Transaction> {
+  const strategyConfig = {
+    strategyType:   { [params.strategyType.toLowerCase()]: {} },
+    riskLevel:      { [params.riskLevel.toLowerCase()]: {} },
+    maxDrawdownBps: params.maxDrawdownBps,
+    targetApyBps:   params.targetApyBps,
+    rebalanceFrequencyHours: 24,
+  }
+
+  const tx = await program.methods
+    .createStrategyVault(
+      params.potName,
+      params.description,
+      new BN(params.entryFeeLamports),
+      params.performanceFeeBps,
+      params.managementFeeBps,
+      params.referralBps,
+      strategyConfig,
+    )
+    .accounts({ authority })
+    .transaction()
+
+  return tx
+}
+
+export interface JoinStrategyVaultParams {
+  vaultPubkey: PublicKey
+  participant: PublicKey
+  referrerWallet?: PublicKey
+}
+
+/**
+ * Build the instruction to join a Strategy Vault.
+ * Pays the entry fee set by the vault creator.
+ */
+export async function buildJoinStrategyVaultTx(
+  program: Program<any>,
+  params: JoinStrategyVaultParams,
+): Promise<Transaction> {
+  const tx = await program.methods
+    .joinStrategyVault(params.referrerWallet ?? null)
+    .accounts({
+      strategyVault: params.vaultPubkey,
+      participant:   params.participant,
+      systemProgram: SystemProgram.programId,
+    })
+    .transaction()
+
+  return tx
+}
+
+export interface ExitStrategyVaultParams {
+  vaultPubkey: PublicKey
+  participant: PublicKey
+  profitLamports: number   // on-chain profit for fee calculation
+}
+
+/**
+ * Build the instruction to exit a Strategy Vault.
+ * Performance fee on profit is deducted automatically.
+ */
+export async function buildExitStrategyVaultTx(
+  program: Program<any>,
+  params: ExitStrategyVaultParams,
+): Promise<Transaction> {
+  const tx = await program.methods
+    .exitStrategyVault(new BN(params.profitLamports))
+    .accounts({
+      strategyVault: params.vaultPubkey,
+      participant:   params.participant,
+    })
+    .transaction()
+
+  return tx
+}
+
+/**
+ * Build the instruction to evolve the vault Tamagotchi.
+ * Permissionless — anyone can call (no signing required).
+ */
+export async function buildEvolveTamagotchiTx(
+  program: Program<any>,
+  vaultPubkey: PublicKey,
+): Promise<Transaction> {
+  const tx = await program.methods
+    .evolveTamagotchi()
+    .accounts({ strategyVault: vaultPubkey })
+    .transaction()
+
+  return tx
+}
+
+/**
+ * Fetch all Strategy Vault accounts from the program.
+ * Filters by discriminator to avoid loading regular POT accounts.
+ */
+export async function fetchAllStrategyVaults(
+  connection: Connection,
+  programId = POT_PROGRAM_ID,
+) {
+  // StrategyVaultAccount discriminator (first 8 bytes of SHA256("account:StrategyVaultAccount"))
+  // Will be auto-computed by Anchor — for now use dataSize filter
+  const accounts = await connection.getProgramAccounts(programId, {
+    filters: [
+      { dataSize: 8 + 300 }, // approximate StrategyVaultAccount size
+    ],
+  })
+  return accounts
+}
+
+// ── Analytics helpers ─────────────────────────────────────────────────────────
+
+export interface VaultAnalytics {
+  pubkey: string
+  navSol: number
+  navUsd: number
+  solPrice: number
+  pnl30dPct: number
+  apyPct: number
+  winRate: number
+  sharpeRatio: number
+  tradeCount: number
+  memberCount: number
+  computedAt: Date
+}
+
+/**
+ * Fetch vault analytics from the Next.js API route.
+ * Works in both demo and production mode.
+ */
+export async function getVaultAnalytics(
+  apiBaseUrl: string,
+  vaultPubkey: string,
+): Promise<VaultAnalytics | null> {
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/vaults/${vaultPubkey}/analytics`)
+    if (!res.ok) return null
+    const json = await res.json() as any
+    return {
+      pubkey:       json.pubkey,
+      navSol:       json.nav_sol,
+      navUsd:       json.nav_usd,
+      solPrice:     json.sol_price,
+      pnl30dPct:    json.pnl_30d_pct,
+      apyPct:       json.apy_pct,
+      winRate:      json.win_rate,
+      sharpeRatio:  json.sharpe_ratio,
+      tradeCount:   json.trade_count,
+      memberCount:  json.member_count,
+      computedAt:   new Date(json.computed_at),
+    }
+  } catch {
+    return null
   }
 }

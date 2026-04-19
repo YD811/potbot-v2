@@ -1,25 +1,25 @@
 {
   "name": "@potbot/mcp",
-  "version": "1.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "PotBot MCP server — AI agent interface for on-chain group vaults",
   "type": "module",
+  "main": "dist/index.js",
   "bin": {
-    "potbot-mcp": "./dist/index.js"
+    "potbot-mcp": "dist/index.js"
   },
   "scripts": {
-    "dev": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
-    "lint": "tsc --noEmit"
+    "start": "node dist/index.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.10.0",
-    "@solana/web3.js": "^1.98.0",
-    "dotenv": "^16.4.5"
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@solana/web3.js": "^1.91.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "tsx": "^4.16.2",
-    "typescript": "^5.5.3"
+    "@types/node": "^20.14.0",
+    "tsx": "^4.15.6",
+    "typescript": "^5.4.5"
   }
 }
