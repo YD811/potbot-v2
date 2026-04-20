@@ -70,6 +70,9 @@ export function Navbar() {
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
 
+  // Hide the Waitlist CTA on the signup page itself — no point linking to where we are.
+  const showWaitlistCta = !pathname.startsWith('/signup')
+
   return (
     <nav className="sticky top-0 z-50 border-b border-pot-border bg-pot-dark/80 backdrop-blur-xl">
       <LivePriceTicker />
@@ -93,6 +96,16 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Waitlist / Early-Access CTA — visible on every page */}
+          {showWaitlistCta && (
+            <Link
+              href="/signup"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-pot-green px-4 py-1.5 text-sm font-bold text-pot-dark shadow-[0_0_18px_rgba(20,241,149,0.35)] hover:brightness-110 transition whitespace-nowrap"
+            >
+              🚀 Waitlist
+            </Link>
+          )}
+
           {publicKey && (
             <span className="hidden md:block rounded-lg bg-pot-card px-3 py-1.5 text-xs font-mono text-pot-muted">
               {publicKey.toBase58().slice(0, 4)}…{publicKey.toBase58().slice(-4)}
@@ -116,6 +129,17 @@ export function Navbar() {
 
       {menuOpen && (
         <div className="sm:hidden border-t border-pot-border bg-pot-dark/95 backdrop-blur-xl px-4 py-3 space-y-1">
+          {/* Mobile Waitlist CTA — top of the drawer so it's impossible to miss */}
+          {showWaitlistCta && (
+            <Link
+              href="/signup"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-pot-green px-4 py-3 text-sm font-bold text-pot-dark shadow-[0_0_18px_rgba(20,241,149,0.35)] hover:brightness-110 transition mb-2"
+            >
+              🚀 Join the Waitlist
+            </Link>
+          )}
+
           {NAV_LINKS.map(({ href, label }) => (
             <Link key={href} href={href} onClick={() => setMenuOpen(false)}
               className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
