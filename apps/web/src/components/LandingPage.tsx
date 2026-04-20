@@ -91,7 +91,7 @@ function WaitlistSection() {
       const res = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: email.trim(), source: 'landing' }),
       })
       const data = await res.json()
       if (!res.ok) { setStatus('error'); return }
@@ -120,39 +120,64 @@ function WaitlistSection() {
             <div className="text-4xl">🎉</div>
             <p className="text-pot-green font-bold text-lg">You're on the list!</p>
             <p className="text-pot-muted text-sm">We'll email you when mainnet goes live.</p>
+            <Link
+              href="/signup"
+              className="text-xs text-pot-accent hover:underline mt-2"
+            >
+              Want the founding-member NFT? Add your wallet →
+            </Link>
           </div>
         ) : status === 'duplicate' ? (
           <div className="flex flex-col items-center gap-3">
             <div className="text-4xl">✅</div>
             <p className="text-white font-bold text-lg">Already registered!</p>
             <p className="text-pot-muted text-sm">You're already on the waitlist. We'll reach out soon.</p>
+            <Link
+              href="/signup"
+              className="text-xs text-pot-accent hover:underline mt-2"
+            >
+              Update your profile (twitter / wallet) →
+            </Link>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              required
-              className="input flex-1 py-3 px-4 text-base"
-              disabled={status === 'loading'}
-            />
-            <button
-              type="submit"
-              disabled={status === 'loading' || !email.trim()}
-              className="btn-primary px-6 py-3 text-base whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {status === 'loading' ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Joining...
-                </span>
-              ) : (
-                '🚀 Join Waitlist'
-              )}
-            </button>
-          </form>
+          <>
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                required
+                className="input flex-1 py-3 px-4 text-base"
+                disabled={status === 'loading'}
+              />
+              <button
+                type="submit"
+                disabled={status === 'loading' || !email.trim()}
+                className="btn-primary px-6 py-3 text-base whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {status === 'loading' ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Joining...
+                  </span>
+                ) : (
+                  '🚀 Join Waitlist'
+                )}
+              </button>
+            </form>
+
+            {/* Fuller signup CTA */}
+            <div className="mt-6 text-sm text-pot-muted">
+              Want founding-member perks (NFT badge, lower fees)?{' '}
+              <Link
+                href="/signup"
+                className="text-pot-green font-semibold hover:underline inline-flex items-center gap-1"
+              >
+                Full sign-up →
+              </Link>
+            </div>
+          </>
         )}
 
         {status === 'error' && (
@@ -205,6 +230,13 @@ export default function LandingPage() {
 
           {/* CTA buttons */}
           <div className="flex flex-wrap gap-4 justify-center mb-12">
+            {/* Primary CTA — the new signup page */}
+            <Link
+              href="/signup"
+              className="btn-primary text-base px-6 py-3 glow-green flex items-center gap-2"
+            >
+              🚀 Get Early Access
+            </Link>
             <WalletMultiButton />
             <Link href="/vaults" className="btn-secondary text-base px-6 py-3">
               ⚡ Browse Strategy Vaults
@@ -384,8 +416,11 @@ export default function LandingPage() {
           Open source and free to use on Solana devnet.
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
-          <Link href="/create" className="btn-primary text-lg px-8 py-4">
-            🚀 Create Your Vault
+          <Link href="/signup" className="btn-primary text-lg px-8 py-4 glow-green">
+            🚀 Get Early Access
+          </Link>
+          <Link href="/create" className="btn-secondary text-lg px-8 py-4">
+            🪴 Create Your Vault
           </Link>
           <a
             href="https://github.com/YD811/potbot-v2"
@@ -410,6 +445,7 @@ export default function LandingPage() {
             <span>· Group DeFi Vaults on Solana</span>
           </div>
           <div className="flex gap-6">
+            <Link href="/signup" className="hover:text-pot-green transition">Early Access</Link>
             <Link href="/leaderboard" className="hover:text-white transition">Leaderboard</Link>
             <Link href="/vaults" className="hover:text-white transition">Vaults</Link>
             <Link href="/for-agents" className="hover:text-white transition">For Agents</Link>
