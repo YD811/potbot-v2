@@ -120,7 +120,15 @@ export function usePots() {
           yieldApy: p.yieldStrategy === 3 ? 0.30 : p.yieldStrategy === 2 ? 0.15 : p.yieldStrategy === 1 ? 0.06 : 0,
           ageSeconds: 7 * 86400,
         })
-        return { ...p, tamagotchiLevel: tama.level, tamagotchiEmoji: tama.emoji, tamagotchiXp: tama.xp }
+        return {
+          ...p,
+          tamagotchiLevel: tama.level,
+          tamagotchiEmoji: tama.emoji,
+          tamagotchiXp: tama.xp,
+          trustLevel: p.trustLevel ?? 'unverified',
+          verifiedBy: p.verifiedBy ?? null,
+          auditUrl: p.auditUrl ?? null,
+        }
       })
     },
     staleTime: 5_000,
@@ -378,7 +386,6 @@ export function useCreatePot() {
         }
       }
 
-      // Always use .getState() in async callbacks to avoid stale closure
       const potAddress = useMockStore.getState().createPot({
         authority: publicKey.toBase58(),
         ...params,

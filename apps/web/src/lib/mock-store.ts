@@ -74,6 +74,11 @@ export interface MockPot {
   mode: 'virtual' | 'tokenized'
   tokenTicker: string         // set when tokenized
   navPerShareBps: number      // 10000 = 1.0x, no change; grows with yield/profit
+
+  // ── Trust / Verification ─────────────────────────────────────────────────
+  trustLevel?: 'unverified' | 'community' | 'audited' | 'institutional'
+  verifiedBy?: string
+  auditUrl?: string
 }
 
 export interface MockMember {
@@ -142,6 +147,8 @@ const SEED_POTS: MockPot[] = [
     mode: 'virtual',
     tokenTicker: '',
     navPerShareBps: 10098,
+    trustLevel: 'community',
+    verifiedBy: 'PotBot Community',
   },
   {
     pubkey: 'DemoPoT2222222222222222222222222222222222222',
@@ -230,6 +237,9 @@ const SEED_POTS: MockPot[] = [
     mode: 'tokenized',
     tokenTicker: 'ALPHA',
     navPerShareBps: 10840,
+    trustLevel: 'audited',
+    verifiedBy: 'OtterSec',
+    auditUrl: 'https://github.com/YD811/potbot-v2',
   },
   {
     pubkey: 'DemoPoT5555555555555555555555555555555555555',
@@ -319,6 +329,9 @@ const SEED_POTS: MockPot[] = [
     mode: 'virtual',
     tokenTicker: '',
     navPerShareBps: 10342,
+    trustLevel: 'institutional',
+    verifiedBy: 'Halborn',
+    auditUrl: 'https://github.com/YD811/potbot-v2',
   },
 ]
 
@@ -471,10 +484,12 @@ interface MockState {
   proposals: MockProposal[]
   referrals: MockReferral[]
 
+  // Selectors
   getMembers: (potPubkey: string) => MockMember[]
   getProposals: (potPubkey: string) => MockProposal[]
   getReferralStats: (potPubkey: string, wallet: string) => ReferralStats
 
+  // Referral actions
   trackReferral: (params: {
     potPubkey: string
     referrer: string
@@ -483,6 +498,7 @@ interface MockState {
     depositAmount: number
   }) => void
 
+  // Actions
   createPot: (params: {
     authority: string
     name: string
@@ -508,12 +524,16 @@ interface MockState {
 
   vote: (proposalPubkey: string, voter: string, approve: boolean) => void
   executeProposal: (proposalPubkey: string) => void
+
+  /** Accrue yield for all pots — called by the yield keeper interval */
   accrueYield: () => void
 }
 
 function mockPubkey(): string {
   return Keypair.generate().publicKey.toBase58()
 }
+
+/* ── Yield accrual helper ────────────────────────────────────────────────────── */
 
 function computeYieldTick(pot: MockPot): { yieldAmount: number; newNavBps: number } {
   const apy = YIELD_APY[pot.yieldStrategy] ?? 0
@@ -537,14 +557,21 @@ function computeYieldTick(pot: MockPot): { yieldAmount: number; newNavBps: numbe
   return { yieldAmount, newNavBps }
 }
 
+/* ── Store implementation ────────────────────────────────────────────────────── */
+
 export const useMockStore = create<MockState>((set, get) => ({
   pots: [...SEED_POTS],
   members: [...SEED_MEMBERS],
   proposals: [...SEED_PROPOSALS],
   referrals: [],
 
-  getMembers: (potPubkey) => get().members.filter((m) => m.potPubkey === potPubkey),
-  getProposals: (potPubkey) => get().proposals.filter((p) => p.potPubkey === potPubkey),
+  getMembers: (potPubkey) => {
+    return get().members.filter((m) => m.potPubkey === potPubkey)
+  },
+
+  getProposals: (potPubkey) => {
+    return get().proposals.filter((p) => p.potPubkey === potPubkey)
+  },
 
   getReferralStats: (potPubkey, wallet) => {
     const refs = get().referrals.filter((r) => r.potPubkey === potPubkey)
@@ -571,6 +598,7 @@ export const useMockStore = create<MockState>((set, get) => ({
     const entryFee = params.depositAmount * ENTRY_FEE_PCT
     const level1Earning = entryFee * 0.10
     const level2Earning = params.parentReferrer ? entryFee * 0.02 : 0
+
     const referral: MockReferral = {
       potPubkey: params.potPubkey,
       referrer: params.referrer,
@@ -643,7 +671,9 @@ export const useMockStore = create<MockState>((set, get) => ({
           : p
       )
 
-      const existingIdx = s.members.findIndex((m) => m.potPubkey === potPubkey && m.wallet === wallet)
+      const existingIdx = s.members.findIndex(
+        (m) => m.potPubkey === potPubkey && m.wallet === wallet
+      )
       const members: MockMember[] = existingIdx >= 0
         ? s.members.map((m, i) =>
             i === existingIdx
@@ -667,19 +697,27 @@ export const useMockStore = create<MockState>((set, get) => ({
 
       const totalValue = pot.balance + pot.meteoraLpBalance
       const solAmount = pot.totalShares > 0 ? (shares / pot.totalShares) * totalValue : 0
+
       const fromLiquid = Math.min(solAmount, pot.balance)
       const fromMeteora = Math.max(0, solAmount - fromLiquid)
 
       const pots = s.pots.map((p) =>
         p.pubkey === potPubkey
-          ? { ...p, balance: Math.max(0, p.balance - fromLiquid), meteoraLpBalance: Math.max(0, p.meteoraLpBalance - fromMeteora), totalShares: p.totalShares - shares }
+          ? {
+              ...p,
+              balance: Math.max(0, p.balance - fromLiquid),
+              meteoraLpBalance: Math.max(0, p.meteoraLpBalance - fromMeteora),
+              totalShares: p.totalShares - shares,
+            }
           : p
       )
+
       const members = s.members.map((m) =>
         m.potPubkey === potPubkey && m.wallet === wallet
           ? { ...m, shares: m.shares - shares, withdrawTotal: m.withdrawTotal + solAmount }
           : m
       )
+
       return { pots, members }
     })
   },
@@ -710,6 +748,7 @@ export const useMockStore = create<MockState>((set, get) => ({
         p.pubkey === params.potPubkey ? { ...p, nextProposalId: p.nextProposalId + 1 } : p
       ),
     }))
+
     return pubkey
   },
 
@@ -726,11 +765,14 @@ export const useMockStore = create<MockState>((set, get) => ({
         if (p.pubkey !== proposalPubkey) return p
         const newYes = approve ? p.yesShares + voterShares : p.yesShares
         const newNo  = !approve ? p.noShares + voterShares : p.noShares
+
         let newStatus = p.status
         if (newYes > p.totalSharesSnapshot * 0.5) newStatus = 'passed'
         else if (newNo >= p.totalSharesSnapshot * 0.5) newStatus = 'rejected'
+
         return { ...p, yesShares: newYes, noShares: newNo, status: newStatus as MockProposal['status'], voters: [...p.voters, voter] }
       })
+
       return { proposals }
     })
   },
@@ -748,17 +790,33 @@ export const useMockStore = create<MockState>((set, get) => ({
         if (p.pubkey !== proposal.potPubkey) return p
         if (proposal.type === 'swap') {
           const tradeValue = p.balance * 0.2
-          return { ...p, tradeCount: p.tradeCount + 1, totalVolume: p.totalVolume + tradeValue, balance: p.balance * 1.05, navPerShareBps: Math.floor(p.navPerShareBps * 1.05) }
+          return {
+            ...p,
+            tradeCount: p.tradeCount + 1,
+            totalVolume: p.totalVolume + tradeValue,
+            balance: p.balance * 1.05,
+            navPerShareBps: Math.floor(p.navPerShareBps * 1.05),
+          }
         }
         if (proposal.type === 'limitOrder') {
           const spendMatch = proposal.description.match(/spend\s+([\d.]+)\s*SOL/i)
           const reserveAmt = spendMatch ? parseFloat(spendMatch[1]) : p.balance * 0.05
-          return { ...p, balance: Math.max(0, p.balance - reserveAmt), tradeCount: p.tradeCount + 1, totalVolume: p.totalVolume + reserveAmt }
+          return {
+            ...p,
+            balance: Math.max(0, p.balance - reserveAmt),
+            tradeCount: p.tradeCount + 1,
+            totalVolume: p.totalVolume + reserveAmt,
+          }
         }
         if (proposal.type === 'dca') {
           const totalMatch = proposal.description.match(/total\s+([\d.]+)\s*SOL/i)
           const totalAmt = totalMatch ? parseFloat(totalMatch[1]) : p.balance * 0.1
-          return { ...p, balance: Math.max(0, p.balance - totalAmt), tradeCount: p.tradeCount + 1, totalVolume: p.totalVolume + totalAmt }
+          return {
+            ...p,
+            balance: Math.max(0, p.balance - totalAmt),
+            tradeCount: p.tradeCount + 1,
+            totalVolume: p.totalVolume + totalAmt,
+          }
         }
         if (proposal.type === 'tokenizePot') {
           const tickerMatch = proposal.description.match(/\$([A-Z]+)/)
@@ -786,12 +844,23 @@ export const useMockStore = create<MockState>((set, get) => ({
       pots: s.pots.map((pot) => {
         const { yieldAmount, newNavBps } = computeYieldTick(pot)
         if (yieldAmount <= 0) return pot
-        return { ...pot, meteoraLpBalance: pot.meteoraLpBalance + yieldAmount, totalYieldEarned: pot.totalYieldEarned + yieldAmount, lastYieldAccrualAt: now, navPerShareBps: newNavBps }
+        return {
+          ...pot,
+          meteoraLpBalance: pot.meteoraLpBalance + yieldAmount,
+          totalYieldEarned: pot.totalYieldEarned + yieldAmount,
+          lastYieldAccrualAt: now,
+          navPerShareBps: newNavBps,
+        }
       }),
     }))
   },
 }))
 
+/* ── Yield Keeper — runs in background ───────────────────────────────────────── */
+
+// Only start the interval in the browser (not during SSR)
 if (typeof window !== 'undefined') {
-  setInterval(() => { useMockStore.getState().accrueYield() }, YIELD_TICK_MS)
+  setInterval(() => {
+    useMockStore.getState().accrueYield()
+  }, YIELD_TICK_MS)
 }
