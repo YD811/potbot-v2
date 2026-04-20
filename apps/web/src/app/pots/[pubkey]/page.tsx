@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import Link from 'next/link'
 import {
@@ -24,14 +24,11 @@ import DepositPanel from '@/components/DepositPanel'
 import SharesTab from '@/components/SharesTab'
 import { JupiterSwapPanel } from '@/components/JupiterSwapPanel'
 import { BudgetGrantPanel } from '@/components/BudgetGrantPanel'
-import { LimitOrderPanel } from '@/components/LimitOrderPanel'
-import { DCAPanel } from '@/components/DCAPanel'
+import ReferralPanel from '@/components/ReferralPanel'
 import { reverseSNS } from '@/lib/sns'
+import SwapExecuteButton from '@/components/SwapExecuteButton'
 
-const TABS = [
-  'overview', 'proposals', 'shares', 'positions', 'strategy',
-  'governance', 'agent', 'orders', 'dca', 'members', 'deposit', 'vault',
-] as const
+const TABS = ['overview', 'proposals', 'shares', 'positions', 'strategy', 'governance', 'agent', 'members', 'deposit', 'referral', 'vault'] as const
 type Tab = (typeof TABS)[number]
 
 const TAB_LABELS: Record<Tab, string> = {
@@ -42,10 +39,9 @@ const TAB_LABELS: Record<Tab, string> = {
   strategy:   '⚙️ Strategy',
   governance: '🏛️ Gov',
   agent:      '🤖 AI',
-  orders:     '📋 Orders',
-  dca:        '📈 DCA',
   members:    'Members',
   deposit:    '💰 Deposit',
+  referral:   '🔗 Referral',
   vault:      '🏠 Vault',
 }
 
@@ -140,13 +136,13 @@ function ProposalCard({
         </div>
       )}
       {canExecute && proposal.status === 'passed' && (
-        <button
-          onClick={() => execute.mutate({ potAddress, proposalAddress: proposal.pubkey })}
-          disabled={execute.isPending}
-          className="w-full py-2 rounded-xl text-sm font-bold bg-pot-accent hover:bg-pot-accent/90 text-white transition disabled:opacity-50"
-        >
-          🚀 Execute Proposal
-        </button>
+        <div className="pt-1">
+          {/* Swap proposals: Jupiter execute flow with Solscan link */}
+          <SwapExecuteButton
+            proposalPubkey={proposal.pubkey}
+            potAddress={potAddress}
+          />
+        </div>
       )}
     </div>
   )
@@ -154,9 +150,19 @@ function ProposalCard({
 
 export default function PotPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const { publicKey: userPubkey } = useWallet()
 
   const pubkey = params.pubkey as string
+
+  // Track referral from ?ref= URL param
+  useEffect(() => {
+    const ref = searchParams.get('ref')
+    if (ref && pubkey) {
+      // Store referrer in localStorage keyed by pot
+      localStorage.setItem(`potbot-ref-${pubkey}`, ref)
+    }
+  }, [searchParams, pubkey])
   const { data: pot, isLoading: isPotLoading } = usePot(pubkey)
   const { data: members = [] } = useMembers(pubkey)
   const { data: proposals = [] } = useProposals(pubkey)
@@ -171,13 +177,13 @@ export default function PotPage() {
 
   // Fetch SNS name
   useEffect(() => {
-    ;(async () => {
+    (async () => {
       const name = await reverseSNS(pubkey)
       setSnsName(name)
     })()
   }, [pubkey])
 
-  // Check membership
+  // Check membership — mock data uses m.wallet, on-chain uses m.wallet too
   useEffect(() => {
     if (!userPubkey) { setIsMember(false); return }
     const userStr = userPubkey.toString()
@@ -215,24 +221,25 @@ export default function PotPage() {
 
   const potAny = pot as any
   const ownerAddress: string = potAny.authority ?? potAny.owner ?? ''
-  const isOwner    = userPubkey?.toString() === ownerAddress
-  const canManage  = isOwner || isMember
-  const canVote    = canManage
-  const canExecute = isOwner
+  const isOwner = userPubkey?.toString() === ownerAddress
+  const canManage = isOwner || isMember
+  const canVote = canManage  // members + owner can vote
+  const canExecute = isOwner // only owner can execute proposals
 
   const tamaStats = calculateTamaStats({
-    tradeVolume:  potAny.totalVolume ?? 0,
-    memberCount:  potAny.memberCount ?? 0,
-    winRate:      0.5,
-    yieldApy:     0,
-    ageSeconds:   86400,
+    tradeVolume: potAny.totalVolume ?? 0,
+    memberCount: potAny.memberCount ?? 0,
+    winRate: 0.5,
+    yieldApy: 0,
+    ageSeconds: 86400,
   })
 
+  // nextProposalId for creating proposals
   const nextProposalId = (potAny.nextProposalId ?? proposals.length) as number
 
   return (
     <div className="min-h-screen bg-pot-dark pb-12">
-      {/* ── Header ─────────────────────────────────────────────────────── */}
+      {/* Header */}
       <div className="bg-gradient-to-b from-pot-card to-pot-dark border-b border-pot-border px-6 py-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-start justify-between mb-4">
@@ -303,7 +310,7 @@ export default function PotPage() {
       {/* Analytics strip — members only */}
       {canManage && <VaultAnalyticsStrip pubkey={pubkey} />}
 
-      {/* ── Tabs ───────────────────────────────────────────────────────── */}
+      {/* Tabs */}
       <div className="border-b border-pot-border bg-pot-dark sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-6 flex gap-1 overflow-x-auto">
           {TABS.map((tab) => (
@@ -322,10 +329,10 @@ export default function PotPage() {
         </div>
       </div>
 
-      {/* ── Content ────────────────────────────────────────────────────── */}
+      {/* Content */}
       <div className="max-w-6xl mx-auto px-6 py-8">
 
-        {/* Overview */}
+        {/* ── Overview ── */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -372,34 +379,6 @@ export default function PotPage() {
               </div>
             )}
 
-            {/* Jupiter tools quick-access */}
-            {canManage && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button
-                  onClick={() => setActiveTab('orders')}
-                  className="bg-pot-card border border-pot-border hover:border-pot-accent/50 rounded-2xl p-4 text-left transition group"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">📋</span>
-                    <span className="text-white font-semibold group-hover:text-pot-accent transition">Limit Orders</span>
-                    <span className="ml-auto text-xs text-pot-green border border-pot-green/30 px-2 py-0.5 rounded-full">Jupiter Trigger</span>
-                  </div>
-                  <p className="text-xs text-pot-muted">Place limit orders that execute when price targets are hit</p>
-                </button>
-                <button
-                  onClick={() => setActiveTab('dca')}
-                  className="bg-pot-card border border-pot-border hover:border-pot-accent/50 rounded-2xl p-4 text-left transition group"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">📈</span>
-                    <span className="text-white font-semibold group-hover:text-pot-accent transition">DCA Strategy</span>
-                    <span className="ml-auto text-xs text-pot-green border border-pot-green/30 px-2 py-0.5 rounded-full">Jupiter DCA</span>
-                  </div>
-                  <p className="text-xs text-pot-muted">Dollar-cost average into any token automatically</p>
-                </button>
-              </div>
-            )}
-
             {potAny.yieldStrategy && (
               <div className="bg-pot-card border border-pot-border/50 rounded-2xl p-6">
                 <div className="flex items-start gap-4">
@@ -420,9 +399,10 @@ export default function PotPage() {
           </div>
         )}
 
-        {/* Proposals */}
+        {/* ── Proposals ── */}
         {activeTab === 'proposals' && (
           <div className="space-y-6">
+            {/* Create proposal actions */}
             {canManage && (
               <div className="flex flex-wrap gap-3">
                 <button
@@ -440,6 +420,7 @@ export default function PotPage() {
               </div>
             )}
 
+            {/* Swap proposal form */}
             {showSwapProposal && canManage && (
               <div className="bg-pot-card border border-pot-border rounded-2xl overflow-hidden">
                 <div className="px-5 pt-5 pb-2 border-b border-pot-border flex items-center justify-between">
@@ -451,11 +432,19 @@ export default function PotPage() {
                   potPubkey={pubkey}
                   vaultBalance={pot.balance}
                   onPropose={async ({ fromMint, toMint, amountSol, description }) => {
+                    const amountLamports = Math.round(amountSol * 1e9)
                     await createProposal.mutateAsync({
                       potAddress: pubkey,
                       nextProposalId,
-                      proposalType: { swap: { fromMint, toMint, amount: Math.round(amountSol * 1e9) } },
+                      proposalType: { swap: { fromMint, toMint, amount: amountLamports } },
                       description,
+                      swapMeta: {
+                        inputMint: fromMint,
+                        outputMint: toMint,
+                        amountLamports,
+                        inputSymbol: description.split(' ')[2] ?? 'SOL',
+                        outputSymbol: description.split('→')[1]?.trim() ?? '?',
+                      },
                     })
                     setShowSwapProposal(false)
                   }}
@@ -463,6 +452,7 @@ export default function PotPage() {
               </div>
             )}
 
+            {/* Budget grant form */}
             {showBudgetGrant && canManage && (
               <div className="bg-pot-card border border-pot-border rounded-2xl overflow-hidden">
                 <div className="px-5 pt-5 pb-2 border-b border-pot-border flex items-center justify-between">
@@ -477,6 +467,7 @@ export default function PotPage() {
               </div>
             )}
 
+            {/* Proposals list */}
             {proposals.length === 0 ? (
               <div className="text-center py-16 bg-pot-card border border-pot-border rounded-2xl">
                 <div className="text-5xl mb-4">🗳️</div>
@@ -501,58 +492,22 @@ export default function PotPage() {
           </div>
         )}
 
-        {/* Shares */}
+        {/* ── Shares ── */}
         {activeTab === 'shares' && <SharesTab potPubkey={pubkey} />}
 
-        {/* P&L */}
+        {/* ── Positions / P&L ── */}
         {activeTab === 'positions' && <PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} />}
 
-        {/* Strategy */}
+        {/* ── Strategy ── */}
         {activeTab === 'strategy' && <StrategyPanel potPubkey={pubkey} />}
 
-        {/* Governance */}
+        {/* ── Governance Settings ── */}
         {activeTab === 'governance' && <GovernanceSettings isAdmin={isOwner} potPubkey={pubkey} />}
 
-        {/* AI Agent */}
+        {/* ── AI Agent ── */}
         {activeTab === 'agent' && <AIAgentPanel potPubkey={pubkey} pot={pot} />}
 
-        {/* Limit Orders — members only */}
-        {activeTab === 'orders' && canManage && (
-          <LimitOrderPanel potPubkey={pubkey} />
-        )}
-        {activeTab === 'orders' && !canManage && (
-          <div className="bg-pot-card border border-pot-border rounded-2xl p-8 text-center">
-            <div className="text-4xl mb-4">🔒</div>
-            <p className="text-white font-semibold mb-2">Members only</p>
-            <p className="text-pot-muted text-sm mb-4">Join this vault to place limit orders via Jupiter Trigger.</p>
-            <button
-              onClick={() => setActiveTab('deposit')}
-              className="px-4 py-2 bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold rounded-lg transition"
-            >
-              Deposit to Join
-            </button>
-          </div>
-        )}
-
-        {/* DCA — members only */}
-        {activeTab === 'dca' && canManage && (
-          <DCAPanel potPubkey={pubkey} />
-        )}
-        {activeTab === 'dca' && !canManage && (
-          <div className="bg-pot-card border border-pot-border rounded-2xl p-8 text-center">
-            <div className="text-4xl mb-4">🔒</div>
-            <p className="text-white font-semibold mb-2">Members only</p>
-            <p className="text-pot-muted text-sm mb-4">Join this vault to set up DCA strategies via Jupiter DCA.</p>
-            <button
-              onClick={() => setActiveTab('deposit')}
-              className="px-4 py-2 bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold rounded-lg transition"
-            >
-              Deposit to Join
-            </button>
-          </div>
-        )}
-
-        {/* Members */}
+        {/* ── Members ── */}
         {activeTab === 'members' && (
           <div className="space-y-4">
             {members.length === 0 ? (
@@ -588,7 +543,7 @@ export default function PotPage() {
           </div>
         )}
 
-        {/* Deposit — open to any connected wallet */}
+        {/* ── Deposit ── open to ANY connected wallet so non-members can join */}
         {activeTab === 'deposit' && userPubkey && (
           <DepositPanel potPubkey={pubkey} potName={pot.name} vaultBalance={pot.balance} />
         )}
@@ -600,7 +555,12 @@ export default function PotPage() {
           </div>
         )}
 
-        {/* Vault — members/owner only */}
+        {/* ── Referral ── */}
+        {activeTab === 'referral' && (
+          <ReferralPanel potPubkey={pubkey} potName={pot.name} />
+        )}
+
+        {/* ── Vault ── members / owner only */}
         {activeTab === 'vault' && canManage && (
           <VaultTab potPubkey={pubkey} isCreator={isOwner} />
         )}

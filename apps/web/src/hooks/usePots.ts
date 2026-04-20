@@ -386,6 +386,7 @@ export function useCreatePot() {
         }
       }
 
+      // Always use .getState() in async callbacks to avoid stale closure
       const potAddress = useMockStore.getState().createPot({
         authority: publicKey.toBase58(),
         ...params,
@@ -495,6 +496,8 @@ export function useCreateProposal() {
       nextProposalId: number
       proposalType: Record<string, any>
       description: string
+      /** Optional: persisted to localStorage for Jupiter execute flow */
+      swapMeta?: { inputMint: string; outputMint: string; amountLamports: number; inputSymbol?: string; outputSymbol?: string }
     }) => {
       if (!publicKey) throw new Error('Wallet not connected')
 
@@ -516,7 +519,11 @@ export function useCreateProposal() {
               systemProgram: SystemProgram.programId,
             })
             .rpc()
-          return { proposalAddress: proposalPda.toBase58(), tx }
+          const proposalAddress = proposalPda.toBase58()
+          if (params.swapMeta) {
+            try { localStorage.setItem(`prop-swap-meta-${proposalAddress}`, JSON.stringify(params.swapMeta)) } catch {}
+          }
+          return { proposalAddress, tx }
         } catch (e) {
           console.warn('On-chain createProposal failed, falling back to mock:', e)
         }
@@ -529,6 +536,9 @@ export function useCreateProposal() {
         type: typeKey,
         description: params.description,
       })
+      if (params.swapMeta) {
+        try { localStorage.setItem(`prop-swap-meta-${proposalAddress}`, JSON.stringify(params.swapMeta)) } catch {}
+      }
       return { proposalAddress, tx: 'mock-tx-' + Date.now() }
     },
     onSuccess: (_, vars) => {
