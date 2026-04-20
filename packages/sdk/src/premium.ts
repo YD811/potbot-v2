@@ -61,7 +61,7 @@ export class PotSDK {
     this.program = new Program(PotVaultIDL as any, this.programId, provider);
   }
 
-  // ─── Premium Feature Methods ────────────────────────────────────
+  // ─── Premium Feature Methods ─────────────────────────────────────────────
 
   /**
    * Create a private pot with invite code
@@ -144,8 +144,8 @@ export class PotSDK {
     const [vault] = getVaultAddress(potPubkey);
     const [tokenMint] = getTokenMintAddress(potPubkey);
     
-    // Treasury address that receives fees
-    const treasury = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU');
+    // PotBot v2 treasury that receives fees
+    const treasury = new PublicKey('2LeG86xuss12WrYsamTGk4zLfBbXJpWZpr1yFrUqN98o');
 
     const instruction = await this.program.methods
       .tokenizeShares()
@@ -174,7 +174,7 @@ export class PotSDK {
   ): Promise<Transaction> {
     const authority = this.wallet.publicKey;
     const [snsAccount] = getSnsAddress(potPubkey);
-    const treasury = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU');
+    const treasury = new PublicKey('2LeG86xuss12WrYsamTGk4zLfBbXJpWZpr1yFrUqN98o');
 
     const instruction = await this.program.methods
       .createSnsDomain(domainName.toLowerCase())
@@ -204,7 +204,7 @@ export class PotSDK {
       authority
     );
     
-    const treasury = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU');
+    const treasury = new PublicKey('2LeG86xuss12WrYsamTGk4zLfBbXJpWZpr1yFrUqN98o');
     const metadataProgramId = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 
     const instruction = await this.program.methods
@@ -228,7 +228,7 @@ export class PotSDK {
     return new Transaction().add(instruction);
   }
 
-  // ─── Fetch Methods for Premium Features ─────────────────────────
+  // ─── Fetch Methods for Premium Features ─────────────────────────────────
 
   /**
    * Fetch private pot account
@@ -293,7 +293,7 @@ export class PotSDK {
     }
   }
 
-  // ─── Existing Methods (unchanged) ───────────────────────────────
+  // ─── Existing Methods (unchanged) ───────────────────────────────────────
   
   async buildCreatePotTx(params: CreatePotParams): Promise<Transaction> {
     const authority = this.wallet.publicKey;

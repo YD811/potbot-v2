@@ -1,1 +1,45 @@
-#!/bin/bash\n\n# PotBot v2 Premium Features Deployment Script\n# Deploys updated Anchor program with new premium instructions\n\nset -e\n\necho \"🚀 Deploying PotBot v2 Premium Features...\"\n\n# 1. Build the program\necho \"📦 Building Anchor program...\"\ncd packages/program\nanchor build\n\n# 2. Generate new IDL\necho \"🔧 Updating IDL...\"\nanchor idl init -f target/idl/pot_vault.json ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH || \\\nanchor idl upgrade -f target/idl/pot_vault.json ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH\n\n# 3. Deploy to devnet\necho \"🌐 Deploying to devnet...\"\nsolana config set --url devnet\nanchor deploy --provider.cluster devnet\n\n# 4. Update SDK with new IDL\necho \"🔄 Updating SDK...\"\ncp target/idl/pot_vault.json ../sdk/src/idl/\ncd ../sdk\nnpm run build\n\n# 5. Build frontend with new features\necho \"🎨 Building frontend...\"\ncd ../../apps/web\nnpm run build\n\necho \"✅ Deployment complete!\"\necho \"📋 Next steps:\"\necho \"   1. Test premium features on devnet\"\necho \"   2. Deploy API backend for metadata\"\necho \"   3. Update frontend with live program\"\necho \"   4. Create demo video\"\necho \"   5. Submit to Solana Frontier Hackathon\"\necho \"\"\necho \"🔗 Program ID: ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH\"\necho \"💰 Treasury: 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU\"
+#!/bin/bash
+
+# PotBot v2 Premium Features Deployment Script
+# Deploys updated Anchor program with new premium instructions
+
+set -e
+
+echo "🚀 Deploying PotBot v2 Premium Features..."
+
+# 1. Build the program
+echo "📦 Building Anchor program..."
+cd packages/program
+anchor build
+
+# 2. Generate new IDL
+echo "🔧 Updating IDL..."
+anchor idl init -f target/idl/pot_vault.json ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH || \
+anchor idl upgrade -f target/idl/pot_vault.json ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH
+
+# 3. Deploy to devnet
+echo "🌐 Deploying to devnet..."
+solana config set --url devnet
+anchor deploy --provider.cluster devnet
+
+# 4. Update SDK with new IDL
+echo "🔄 Updating SDK..."
+cp target/idl/pot_vault.json ../sdk/src/idl/
+cd ../sdk
+npm run build
+
+# 5. Build frontend with new features
+echo "🎨 Building frontend..."
+cd ../../apps/web
+npm run build
+
+echo "✅ Deployment complete!"
+echo "📋 Next steps:"
+echo "   1. Test premium features on devnet"
+echo "   2. Deploy API backend for metadata"
+echo "   3. Update frontend with live program"
+echo "   4. Create demo video"
+echo "   5. Submit to Solana Frontier Hackathon"
+echo ""
+echo "🔗 Program ID: ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH"
+echo "💰 Treasury: 2LeG86xuss12WrYsamTGk4zLfBbXJpWZpr1yFrUqN98o"
