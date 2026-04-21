@@ -8,7 +8,7 @@ pub struct Vote<'info> {
 
     #[account(
         mut,
-        has_one = pot @ PotError::Unauthorized
+        has_one = pot @ PotError::UnauthorizedAccess
     )]
     pub proposal: Account<'info, ProposalAccount>,
 
@@ -57,12 +57,12 @@ pub fn handler(ctx: Context<Vote>, approve: bool) -> Result<()> {
         proposal.yes_shares = proposal
             .yes_shares
             .checked_add(member.shares)
-            .ok_or(PotError::MathOverflow)?;
+            .ok_or(PotError::ArithmeticOverflow)?;
     } else {
         proposal.no_shares = proposal
             .no_shares
             .checked_add(member.shares)
-            .ok_or(PotError::MathOverflow)?;
+            .ok_or(PotError::ArithmeticOverflow)?;
     }
 
     // Determine governance level for this proposal type

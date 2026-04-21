@@ -54,7 +54,7 @@ pub struct CreatePot<'info> {
 pub fn handler(ctx: Context<CreatePot>, params: CreatePotParams) -> Result<()> {
     require!(
         !params.name.is_empty() && params.name.len() <= 32,
-        PotError::InvalidName
+        PotError::InvalidPotName
     );
 
     let yield_strategy = match params.yield_strategy {

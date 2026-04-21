@@ -17,7 +17,7 @@ pub struct ExecuteProposal<'info> {
 
     #[account(
         mut,
-        has_one = pot @ PotError::Unauthorized,
+        has_one = pot @ PotError::UnauthorizedAccess,
     )]
     pub proposal: Account<'info, ProposalAccount>,
 

@@ -3,7 +3,7 @@ use crate::errors::PotError;
 use crate::state::pot::PotAccount;
 use crate::state::strategy_vault::*;
 
-// ─── CREATE STRATEGY VAULT ────────────────────────────────────────────────────
+// ─── CREATE STRATEGY VAULT ────────────────────────────────────────────────────────────────────────────────
 
 #[derive(Accounts)]
 #[instruction(pot_name: String)]
@@ -43,7 +43,7 @@ pub fn create_strategy_vault(
     require!(performance_fee_bps <= 5000, PotError::FeeTooHigh);
     require!(management_fee_bps <= 500,   PotError::FeeTooHigh);
     require!(referral_bps <= 3000,         PotError::FeeTooHigh);
-    require!(strategy_config.max_swap_pct <= 100, PotError::InvalidConfig);
+    require!(strategy_config.max_swap_pct <= 100, PotError::InvalidStrategyConfig);
 
     let vault = &mut ctx.accounts.strategy_vault;
     let clock = Clock::get()?;
@@ -79,7 +79,7 @@ pub fn create_strategy_vault(
     Ok(())
 }
 
-// ─── JOIN STRATEGY VAULT ──────────────────────────────────────────────────────
+// ─── JOIN STRATEGY VAULT ─────────────────────────────────────────────────────────────────────────────────
 
 #[derive(Accounts)]
 pub struct JoinStrategyVault<'info> {
@@ -96,7 +96,7 @@ pub struct JoinStrategyVault<'info> {
 
     #[account(
         mut,
-        constraint = strategy_vault.creator == creator.key() @ PotError::Unauthorized,
+        constraint = strategy_vault.creator == creator.key() @ PotError::UnauthorizedAccess,
     )]
     pub strategy_vault: Account<'info, StrategyVaultAccount>,
 
@@ -160,7 +160,7 @@ pub fn join_strategy_vault(
     Ok(())
 }
 
-// ─── EXIT STRATEGY VAULT ──────────────────────────────────────────────────────
+// ─── EXIT STRATEGY VAULT ─────────────────────────────────────────────────────────────────────────────────
 
 #[derive(Accounts)]
 pub struct ExitStrategyVault<'info> {
@@ -173,7 +173,7 @@ pub struct ExitStrategyVault<'info> {
 
     #[account(
         mut,
-        constraint = strategy_vault.creator == creator.key() @ PotError::Unauthorized,
+        constraint = strategy_vault.creator == creator.key() @ PotError::UnauthorizedAccess,
     )]
     pub strategy_vault: Account<'info, StrategyVaultAccount>,
 
@@ -213,7 +213,7 @@ pub fn exit_strategy_vault(
     Ok(())
 }
 
-// ─── EVOLVE TAMAGOTCHI (permissionless) ──────────────────────────────────────
+// ─── EVOLVE TAMAGOTCHI (permissionless) ────────────────────────────────────────────────────────────────
 
 #[derive(Accounts)]
 pub struct EvolveTamagotchi<'info> {
@@ -251,7 +251,7 @@ pub fn evolve_tamagotchi(ctx: Context<EvolveTamagotchi>) -> Result<()> {
     Ok(())
 }
 
-// ─── EVENTS ───────────────────────────────────────────────────────────────────
+// ─── EVENTS ────────────────────────────────────────────────────────────────────────────────────
 
 #[event]
 pub struct StrategyVaultCreated {

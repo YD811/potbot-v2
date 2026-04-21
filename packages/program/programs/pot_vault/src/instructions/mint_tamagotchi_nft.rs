@@ -5,7 +5,7 @@ use mpl_token_metadata::instructions::{
     CreateMetadataAccountV3Cpi, CreateMetadataAccountV3CpiAccounts,
     CreateMetadataAccountV3InstructionArgs,
 };
-use mpl_token_metadata::types::{DataV2, CreatorV2, CollectionDetailsV2};
+use mpl_token_metadata::types::{DataV2, Creator};
 
 use crate::state::pot::PotAccount;
 use crate::state::tamagotchi_nft::TamagotchiNftAccount;
@@ -138,7 +138,7 @@ pub fn handler(ctx: Context<MintTamagotchiNft>) -> Result<()> {
         uri: metadata_uri,
         seller_fee_basis_points: 0, // No royalties for soulbound
         creators: Some(vec![
-            CreatorV2 {
+            Creator {
                 address: pot.key(),
                 verified: true,
                 share: 100,
@@ -148,16 +148,25 @@ pub fn handler(ctx: Context<MintTamagotchiNft>) -> Result<()> {
         uses: None,
     };
     
+    // Bind account infos to local variables to avoid temporary value borrows
+    let pot_info      = ctx.accounts.pot.to_account_info();
+    let mint_info     = ctx.accounts.tamagotchi_mint.to_account_info();
+    let metadata_info = ctx.accounts.metadata_account.to_account_info();
+    let auth_info     = ctx.accounts.authority.to_account_info();
+    let meta_prog_info = ctx.accounts.metadata_program.to_account_info();
+    let sys_info      = ctx.accounts.system_program.to_account_info();
+    let rent_info     = ctx.accounts.rent.to_account_info();
+
     CreateMetadataAccountV3Cpi::new(
-        &ctx.accounts.metadata_program,
+        &meta_prog_info,
         CreateMetadataAccountV3CpiAccounts {
-            metadata: &ctx.accounts.metadata_account,
-            mint: &ctx.accounts.tamagotchi_mint,
-            mint_authority: &ctx.accounts.pot.to_account_info(),
-            payer: &ctx.accounts.authority,
-            update_authority: (&ctx.accounts.pot.to_account_info(), true),
-            system_program: &ctx.accounts.system_program,
-            rent: Some(&ctx.accounts.rent),
+            metadata: &metadata_info,
+            mint: &mint_info,
+            mint_authority: &pot_info,
+            payer: &auth_info,
+            update_authority: (&pot_info, true),
+            system_program: &sys_info,
+            rent: Some(&rent_info),
         },
         CreateMetadataAccountV3InstructionArgs {
             data: metadata,

@@ -144,7 +144,7 @@ pub fn mint_tokens_to_member(
             signer_seeds,
         ),
         token_amount,
-    )?
+    )?;
     
     msg!(
         "Minted {} tokens to {} for {} shares",

@@ -24,7 +24,7 @@ pub struct ExecuteSwap<'info> {
     pub vault: SystemAccount<'info>,
 
     /// Authority (pot creator or approved executor)
-    #[account(constraint = authority.key() == pot.authority @ PotError::Unauthorized)]
+    #[account(constraint = authority.key() == pot.authority @ PotError::UnauthorizedAccess)]
     pub authority: Signer<'info>,
 
     pub system_program: Program<'info, System>,
@@ -49,8 +49,8 @@ pub fn handler(ctx: Context<ExecuteSwap>, params: ExecuteSwapParams) -> Result<(
     }
 
     // Update stats
-    pot.trade_count  = pot.trade_count.checked_add(1).ok_or(PotError::MathOverflow)?;
-    pot.total_volume = pot.total_volume.checked_add(params.amount_in).ok_or(PotError::MathOverflow)?;
+    pot.trade_count  = pot.trade_count.checked_add(1).ok_or(PotError::ArithmeticOverflow)?;
+    pot.total_volume = pot.total_volume.checked_add(params.amount_in).ok_or(PotError::ArithmeticOverflow)?;
     pot.last_activity_at = clock.unix_timestamp;
 
     // Update high-water mark

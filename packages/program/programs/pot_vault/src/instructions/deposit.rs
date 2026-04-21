@@ -56,7 +56,7 @@ pub fn handler(ctx: Context<Deposit>, lamports: u64) -> Result<()> {
 
     // Calculate shares
     let shares = pot.lamports_to_shares(lamports, vault_lamports);
-    require!(shares > 0, PotError::MathOverflow);
+    require!(shares > 0, PotError::ArithmeticOverflow);
 
     // Transfer SOL: depositor → vault
     system_program::transfer(
@@ -81,16 +81,16 @@ pub fn handler(ctx: Context<Deposit>, lamports: u64) -> Result<()> {
         member.bump          = ctx.bumps.member;
     }
 
-    member.shares           = member.shares.checked_add(shares).ok_or(PotError::MathOverflow)?;
-    member.deposit_total    = member.deposit_total.checked_add(lamports).ok_or(PotError::MathOverflow)?;
+    member.shares           = member.shares.checked_add(shares).ok_or(PotError::ArithmeticOverflow)?;
+    member.deposit_total    = member.deposit_total.checked_add(lamports).ok_or(PotError::ArithmeticOverflow)?;
     member.last_deposit_at  = clock.unix_timestamp;
 
     // Update POT
     let pot = &mut ctx.accounts.pot;
-    pot.total_shares     = pot.total_shares.checked_add(shares).ok_or(PotError::MathOverflow)?;
+    pot.total_shares     = pot.total_shares.checked_add(shares).ok_or(PotError::ArithmeticOverflow)?;
     pot.last_activity_at = clock.unix_timestamp;
     if is_new_member {
-        pot.member_count = pot.member_count.checked_add(1).ok_or(PotError::MathOverflow)?;
+        pot.member_count = pot.member_count.checked_add(1).ok_or(PotError::ArithmeticOverflow)?;
     }
     pot.recalculate_tamagotchi();
 

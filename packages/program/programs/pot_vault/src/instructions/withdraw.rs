@@ -19,7 +19,7 @@ pub struct Withdraw<'info> {
         mut,
         seeds = [b"member", pot.key().as_ref(), withdrawer.key().as_ref()],
         bump = member.bump,
-        constraint = member.wallet == withdrawer.key() @ PotError::Unauthorized
+        constraint = member.wallet == withdrawer.key() @ PotError::UnauthorizedAccess
     )]
     pub member: Account<'info, MemberAccount>,
 
@@ -43,7 +43,7 @@ pub fn handler(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
 
     let vault_lamports = ctx.accounts.vault.lamports();
     let lamports_out = pot.shares_to_lamports(shares, vault_lamports);
-    require!(lamports_out > 0, PotError::MathOverflow);
+    require!(lamports_out > 0, PotError::ArithmeticOverflow);
 
     let rent = Rent::get()?;
     let min_balance = rent.minimum_balance(0);
@@ -56,11 +56,11 @@ pub fn handler(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
     **ctx.accounts.withdrawer.to_account_info().try_borrow_mut_lamports()? += lamports_out;
 
     let member = &mut ctx.accounts.member;
-    member.shares = member.shares.checked_sub(shares).ok_or(PotError::MathOverflow)?;
-    member.withdraw_total = member.withdraw_total.checked_add(lamports_out).ok_or(PotError::MathOverflow)?;
+    member.shares = member.shares.checked_sub(shares).ok_or(PotError::ArithmeticOverflow)?;
+    member.withdraw_total = member.withdraw_total.checked_add(lamports_out).ok_or(PotError::ArithmeticOverflow)?;
 
     let pot = &mut ctx.accounts.pot;
-    pot.total_shares = pot.total_shares.checked_sub(shares).ok_or(PotError::MathOverflow)?;
+    pot.total_shares = pot.total_shares.checked_sub(shares).ok_or(PotError::ArithmeticOverflow)?;
     pot.last_activity_at = clock.unix_timestamp;
 
     if member.shares == 0 {

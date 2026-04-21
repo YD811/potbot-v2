@@ -58,7 +58,7 @@ pub enum ErrorCode {
     #[msg("Strategy vault is not active")]
     VaultNotActive,
     
-    // ─── Premium Feature Errors ─────────────────────────────────────────
+    // ─── Premium Feature Errors ──────────────────────────────────────────
     
     // Tokenization
     #[msg("Pot shares are not tokenized yet")]
@@ -86,3 +86,6 @@ pub enum ErrorCode {
     #[msg("Tamagotchi level has not changed")]
     TamagotchiNotEvolved,
 }
+
+/// Alias used throughout instruction handlers
+pub type PotError = ErrorCode;

@@ -53,7 +53,7 @@ pub fn handler(ctx: Context<CreateProposal>, params: CreateProposalParams) -> Re
     let vault_lamports = ctx.accounts.vault.lamports();
     let proposer_key = ctx.accounts.proposer.key();
 
-    // ── Swap-specific validations ──────────────────────────────────────
+    // ── Swap-specific validations ─────────────────────────────────────────────
     if let ProposalType::Swap { amount_in, .. } = &params.proposal_type {
         // 1. Enforce max trade size
         if pot.config.max_trade_size_bps > 0 {
@@ -87,7 +87,7 @@ pub fn handler(ctx: Context<CreateProposal>, params: CreateProposalParams) -> Re
         }
     }
 
-    // ── Initialise proposal ────────────────────────────────────────────
+    // ── Initialise proposal ─────────────────────────────────────────────────────
     let proposal = &mut ctx.accounts.proposal;
     proposal.pot                   = pot.key();
     proposal.proposal_id           = pot.next_proposal_id;
@@ -102,7 +102,7 @@ pub fn handler(ctx: Context<CreateProposal>, params: CreateProposalParams) -> Re
     proposal.resolved_at           = 0;
     proposal.bump                  = ctx.bumps.proposal;
 
-    // ── Governance level for auto-pass check ──────────────────────────
+    // ── Governance level for auto-pass check ─────────────────────────────────
     let gov_level = match &proposal.proposal_type {
         ProposalType::Swap { .. }             => pot.governance.trade_level,
         ProposalType::Withdraw { .. }         => pot.governance.withdraw_level,
@@ -127,7 +127,7 @@ pub fn handler(ctx: Context<CreateProposal>, params: CreateProposalParams) -> Re
         msg!("Proposal {} auto-passed (autocracy)", proposal.proposal_id);
     }
 
-    pot.next_proposal_id = pot.next_proposal_id.checked_add(1).ok_or(PotError::MathOverflow)?;
+    pot.next_proposal_id = pot.next_proposal_id.checked_add(1).ok_or(PotError::ArithmeticOverflow)?;
     pot.last_activity_at = clock.unix_timestamp;
 
     msg!("Proposal {} created in POT {}", proposal.proposal_id, pot.name);
