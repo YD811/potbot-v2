@@ -53,9 +53,8 @@ pub fn handler(ctx: Context<CreateProposal>, params: CreateProposalParams) -> Re
     let vault_lamports = ctx.accounts.vault.lamports();
     let proposer_key = ctx.accounts.proposer.key();
 
-    // ── Swap-specific validations ─────────────────────────────────────────────
+    // ── Swap-specific validations ──────────────────────────────────────
     if let ProposalType::Swap { amount_in, .. } = &params.proposal_type {
-        // 1. Enforce max trade size
         if pot.config.max_trade_size_bps > 0 {
             let max_trade = (vault_lamports as u128)
                 .checked_mul(pot.config.max_trade_size_bps as u128)
@@ -65,15 +64,13 @@ pub fn handler(ctx: Context<CreateProposal>, params: CreateProposalParams) -> Re
             require!(*amount_in <= max_trade, PotError::TradeSizeExceeded);
         }
 
-        // 2. AI agent rate limit (4h cooldown per proposal)
         if let Some(agent_pk) = pot.agent_pubkey {
             if proposer_key == agent_pk {
-                let cooldown_secs = 14400i64; // 4 hours
+                let cooldown_secs = 14400i64;
                 require!(
                     clock.unix_timestamp - pot.agent_last_proposal_at >= cooldown_secs,
                     PotError::AgentRateLimited
                 );
-                // Agent trade cap (separate, tighter limit than global max)
                 if pot.agent_max_trade_bps > 0 {
                     let agent_max = (vault_lamports as u128)
                         .checked_mul(pot.agent_max_trade_bps as u128)
@@ -87,7 +84,7 @@ pub fn handler(ctx: Context<CreateProposal>, params: CreateProposalParams) -> Re
         }
     }
 
-    // ── Initialise proposal ─────────────────────────────────────────────────────
+    // ── Initialise proposal ────────────────────────────────────────────
     let proposal = &mut ctx.accounts.proposal;
     proposal.pot                   = pot.key();
     proposal.proposal_id           = pot.next_proposal_id;
@@ -100,9 +97,10 @@ pub fn handler(ctx: Context<CreateProposal>, params: CreateProposalParams) -> Re
     proposal.total_shares_snapshot = pot.total_shares;
     proposal.created_at            = clock.unix_timestamp;
     proposal.resolved_at           = 0;
+    proposal.passed_at             = 0;
     proposal.bump                  = ctx.bumps.proposal;
 
-    // ── Governance level for auto-pass check ─────────────────────────────────
+    // ── Governance level for auto-pass check ──────────────────────────
     let gov_level = match &proposal.proposal_type {
         ProposalType::Swap { .. }             => pot.governance.trade_level,
         ProposalType::Withdraw { .. }         => pot.governance.withdraw_level,
@@ -113,9 +111,7 @@ pub fn handler(ctx: Context<CreateProposal>, params: CreateProposalParams) -> Re
         ProposalType::AddMember { .. }        => pot.governance.member_change_level,
         ProposalType::RemoveMember { .. }     => pot.governance.member_change_level,
         ProposalType::SetAgent { .. }         => pot.governance.settings_change_level,
-        // ETF tokenization: irreversible — require settings_change_level (supermajority recommended)
         ProposalType::TokenizePot { .. }      => pot.governance.settings_change_level,
-        // Yield management
         ProposalType::DepositToYield { .. }   => pot.governance.yield_change_level,
         ProposalType::WithdrawFromYield { .. } => pot.governance.yield_change_level,
     };
@@ -123,6 +119,7 @@ pub fn handler(ctx: Context<CreateProposal>, params: CreateProposalParams) -> Re
     // Auto-pass in autocracy mode when authority proposes
     if pot.is_autocracy(gov_level) && proposer_key == pot.authority {
         proposal.status      = ProposalStatus::Passed;
+        proposal.passed_at   = clock.unix_timestamp; // set for timelock
         proposal.resolved_at = clock.unix_timestamp;
         msg!("Proposal {} auto-passed (autocracy)", proposal.proposal_id);
     }

@@ -12,8 +12,8 @@ pub struct CreatePotParams {
     pub lockup_seconds: i64,
     pub yield_strategy: u8,
     pub max_yield_allocation_bps: u16,
-    pub max_trade_size_bps: u16,   // e.g. 2000 = 20% max per swap
-    pub max_members: u16,          // 0 = unlimited
+    pub max_trade_size_bps: u16,
+    pub max_members: u16,
     // Governance
     pub trade_level: u8,
     pub withdraw_level: u8,
@@ -22,7 +22,9 @@ pub struct CreatePotParams {
     pub yield_change_level: u8,
     pub vote_timeout_seconds: i64,
     pub quorum_bps: u16,
-    // Optional: protocol fee (0-1000 bps)
+    /// Delay (seconds) between proposal passing and execution. 0 = instant.
+    /// Recommended: 0 for autocracy, 3600-86400 for democracy.
+    pub timelock_seconds: i64,
     pub protocol_fee_bps: u16,
 }
 
@@ -82,22 +84,14 @@ pub fn handler(ctx: Context<CreatePot>, params: CreatePotParams) -> Result<()> {
     pot.community_token_mint  = Pubkey::default();
     pot.next_proposal_id      = 0;
     pot.created_at            = clock.unix_timestamp;
-
-    // Risk & performance
     pot.high_water_mark        = 0;
-    pot.protocol_fee_bps       = params.protocol_fee_bps.min(1000); // cap at 10%
+    pot.protocol_fee_bps       = params.protocol_fee_bps.min(1000);
     pot.last_activity_at       = clock.unix_timestamp;
-
-    // AI agent (disabled by default)
     pot.agent_pubkey           = None;
     pot.agent_max_trade_bps    = 0;
     pot.agent_last_proposal_at = 0;
-
-    // Daily trade tracking
     pot.daily_trades_count = 0;
     pot.last_trade_day     = clock.unix_timestamp;
-
-    // Token mint and shares
     pot.token_mint = Pubkey::default();
     pot.shares_per_sol = 100;
 
@@ -112,16 +106,17 @@ pub fn handler(ctx: Context<CreatePot>, params: CreatePotParams) -> Result<()> {
     };
 
     pot.governance = GovSettings {
-        trade_level:          params.trade_level,
-        withdraw_level:       params.withdraw_level,
-        member_change_level:  params.member_change_level,
+        trade_level:           params.trade_level,
+        withdraw_level:        params.withdraw_level,
+        member_change_level:   params.member_change_level,
         settings_change_level: params.settings_change_level,
-        yield_change_level:   params.yield_change_level,
-        vote_timeout_seconds: params.vote_timeout_seconds,
-        quorum_bps:           params.quorum_bps,
+        yield_change_level:    params.yield_change_level,
+        vote_timeout_seconds:  params.vote_timeout_seconds,
+        quorum_bps:            params.quorum_bps,
+        timelock_seconds:      params.timelock_seconds,
     };
 
-    msg!("POT \"{}\" created by {} (public={}, max_trade_bps={})",
-        pot.name, pot.authority, pot.config.is_public, pot.config.max_trade_size_bps);
+    msg!("POT \"{}\" created by {} (public={}, timelock={}s)",
+        pot.name, pot.authority, pot.config.is_public, pot.governance.timelock_seconds);
     Ok(())
 }

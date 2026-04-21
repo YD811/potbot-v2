@@ -33,6 +33,7 @@ pub fn handler(ctx: Context<ExecuteProposal>) -> Result<()> {
 
     require!(proposal.status == ProposalStatus::Passed, PotError::ProposalNotPassed);
 
+    // ── Quorum check ──────────────────────────────────────────────────────
     if proposal.total_shares_snapshot > 0 {
         let total_voted = proposal.yes_shares + proposal.no_shares;
         let quorum_threshold = (pot.governance.quorum_bps as u128)
@@ -42,9 +43,19 @@ pub fn handler(ctx: Context<ExecuteProposal>) -> Result<()> {
         require!(total_voted >= quorum_threshold, PotError::QuorumNotReached);
     }
 
-    proposal.status = ProposalStatus::Executed;
-
+    // ── Timelock check ────────────────────────────────────────────────────
+    // If timelock_seconds > 0 and proposal has a passed_at timestamp,
+    // enforce the delay. Autocracy (passed_at == created_at) can still
+    // be subject to timelock if the pot owner configured one.
     let clock = Clock::get()?;
+    if pot.governance.timelock_seconds > 0 && proposal.passed_at > 0 {
+        require!(
+            clock.unix_timestamp >= proposal.passed_at + pot.governance.timelock_seconds,
+            PotError::TimelockNotExpired
+        );
+    }
+
+    proposal.status = ProposalStatus::Executed;
     pot.last_activity_at = clock.unix_timestamp;
 
     match &proposal.proposal_type.clone() {
@@ -110,13 +121,8 @@ pub fn handler(ctx: Context<ExecuteProposal>) -> Result<()> {
             msg!("Risk config updated: max_trade_bps={}, max_members={}", max_trade_size_bps, max_members);
         }
 
-        ProposalType::AddMember { wallet } => {
-            msg!("Member invited: {}", wallet);
-        }
-
-        ProposalType::RemoveMember { wallet } => {
-            msg!("Member removed: {}", wallet);
-        }
+        ProposalType::AddMember { wallet }   => { msg!("Member invited: {}", wallet); }
+        ProposalType::RemoveMember { wallet } => { msg!("Member removed: {}", wallet); }
 
         ProposalType::SetAgent { agent, max_trade_bps } => {
             pot.agent_pubkey           = Some(*agent);

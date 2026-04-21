@@ -15,6 +15,9 @@ pub struct ProposalAccount {
     pub total_shares_snapshot: u64,
     pub created_at: i64,
     pub resolved_at: i64,
+    /// Timestamp when proposal transitioned to Passed — used for timelock enforcement.
+    /// 0 if not yet passed.
+    pub passed_at: i64,
     pub bump: u8,
 }
 

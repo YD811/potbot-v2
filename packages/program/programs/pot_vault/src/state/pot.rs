@@ -101,6 +101,9 @@ pub struct GovSettings {
     pub vote_timeout_seconds: i64,
     /// Quorum in basis points (e.g. 5000 = 50%)
     pub quorum_bps: u16,
+    /// Timelock: seconds to wait after proposal passes before it can be executed.
+    /// 0 = instant execution (no timelock). Recommended: 3600–86400 for democracy modes.
+    pub timelock_seconds: i64,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace, PartialEq)]
@@ -186,7 +189,6 @@ impl PotAccount {
     }
 
     /// Check and reset daily trade counter if a new UTC day has started.
-    /// Returns false if daily limit is reached.
     pub fn check_daily_trade_limit(&mut self, now: i64, limit: u8) -> bool {
         let current_day = now / 86400;
         let last_day = self.last_trade_day / 86400;
@@ -197,7 +199,6 @@ impl PotAccount {
         }
 
         if limit == 0 {
-            // No limit configured
             self.daily_trades_count = self.daily_trades_count.saturating_add(1);
             return true;
         }

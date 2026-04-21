@@ -48,6 +48,8 @@ pub enum ErrorCode {
     AlreadyTokenized,
     #[msg("Amount exceeds idle yield allocation limit")]
     ExceedsYieldAllocation,
+    #[msg("Timelock period has not elapsed — wait before executing this proposal")]
+    TimelockNotExpired,
     // Strategy Vault errors
     #[msg("Description must be 200 characters or less")]
     DescriptionTooLong,
@@ -57,14 +59,9 @@ pub enum ErrorCode {
     InvalidStrategyConfig,
     #[msg("Strategy vault is not active")]
     VaultNotActive,
-    
-    // ─── Premium Feature Errors ──────────────────────────────────────────
-    
-    // Tokenization
+    // Premium Feature Errors
     #[msg("Pot shares are not tokenized yet")]
     NotTokenized,
-    
-    // Private Pots
     #[msg("Invalid invite code - must be 6 alphanumeric characters")]
     InvalidInviteCode,
     #[msg("Already a member of this pot")]
@@ -73,14 +70,10 @@ pub enum ErrorCode {
     InviteLimitReached,
     #[msg("This pot is not private")]
     NotPrivatePot,
-    
-    // SNS Domains
     #[msg("Invalid domain name - 3-32 chars, alphanumeric + hyphens only")]
     InvalidDomainName,
     #[msg("SNS domain already exists for this pot")]
     DomainAlreadyExists,
-    
-    // Tamagotchi NFT
     #[msg("Tamagotchi NFT already created for this pot")]
     TamagotchiAlreadyExists,
     #[msg("Tamagotchi level has not changed")]

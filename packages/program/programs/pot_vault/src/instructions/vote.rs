@@ -89,6 +89,10 @@ pub fn handler(ctx: Context<Vote>, approve: bool) -> Result<()> {
         pot.governance.vote_timeout_seconds,
         clock.unix_timestamp,
     ) {
+        // Record passed_at timestamp for timelock enforcement
+        if new_status == ProposalStatus::Passed {
+            proposal.passed_at = clock.unix_timestamp;
+        }
         proposal.status = new_status;
         proposal.resolved_at = clock.unix_timestamp;
         msg!("Proposal {} resolved: {:?}", proposal.proposal_id, proposal.status);
