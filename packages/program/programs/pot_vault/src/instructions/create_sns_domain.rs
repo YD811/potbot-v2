@@ -1,1 +1,84 @@
-use anchor_lang::prelude::*;\n\nuse crate::state::pot::PotAccount;\nuse crate::state::sns_domain::SnsAccount;\nuse crate::errors::ErrorCode;\n\n#[derive(Accounts)]\n#[instruction(domain_name: String)]\npub struct CreateSnsDomain<'info> {\n    #[account(mut)]\n    pub pot: Account<'info, PotAccount>,\n    \n    #[account(\n        init,\n        payer = authority,\n        space = 8 + SnsAccount::INIT_SPACE,\n        seeds = [b\"sns\", pot.key().as_ref()],\n        bump\n    )]\n    pub sns_account: Account<'info, SnsAccount>,\n    \n    #[account(\n        mut,\n        constraint = authority.key() == pot.authority @ ErrorCode::UnauthorizedAccess\n    )]\n    pub authority: Signer<'info>,\n    \n    /// PotBot treasury (YD's wallet receives SNS fee)\n    /// CHECK: Treasury address is hardcoded\n    #[account(\n        mut,\n        address = crate::constants::TREASURY_ADDRESS\n    )]\n    pub treasury: AccountInfo<'info>,\n    \n    pub system_program: Program<'info, System>,\n}\n\npub fn handler(ctx: Context<CreateSnsDomain>, domain_name: String) -> Result<()> {\n    let pot = &mut ctx.accounts.pot;\n    let sns_account = &mut ctx.accounts.sns_account;\n    \n    // Validate domain name (lowercase, alphanumeric + hyphens only)\n    require!(\n        domain_name.len() >= 3 && domain_name.len() <= 32,\n        ErrorCode::InvalidDomainName\n    );\n    \n    require!(\n        domain_name.chars().all(|c| c.is_alphanumeric() || c == '-'),\n        ErrorCode::InvalidDomainName\n    );\n    \n    require!(\n        !domain_name.starts_with('-') && !domain_name.ends_with('-'),\n        ErrorCode::InvalidDomainName\n    );\n    \n    // SNS domain fee: 0.25 SOL (reduced from 0.5)\n    let sns_fee = 250_000_000; // 0.25 SOL in lamports\n    \n    // Transfer fee to YD's treasury\n    **ctx.accounts.authority.lamports.borrow_mut() -= sns_fee;\n    **ctx.accounts.treasury.lamports.borrow_mut() += sns_fee;\n    \n    // Initialize SNS account\n    sns_account.pot = pot.key();\n    sns_account.domain_name = domain_name.clone();\n    sns_account.full_domain = format!(\"{}.potbot.sol\", domain_name);\n    sns_account.created_at = Clock::get()?.unix_timestamp;\n    sns_account.bump = ctx.bumps.sns_account;\n    \n    msg!(\n        \"SNS domain created: {} for pot {} (Fee: 0.25 SOL)\",\n        sns_account.full_domain,\n        pot.name\n    );\n    \n    Ok!()\n}"
+use anchor_lang::prelude::*;
+
+use crate::state::pot::PotAccount;
+use crate::state::sns_domain::SnsAccount;
+use crate::errors::ErrorCode;
+
+#[derive(Accounts)]
+#[instruction(domain_name: String)]
+pub struct CreateSnsDomain<'info> {
+    #[account(mut)]
+    pub pot: Account<'info, PotAccount>,
+
+    #[account(
+        init,
+        payer = authority,
+        space = 8 + SnsAccount::INIT_SPACE,
+        seeds = [b"sns", pot.key().as_ref()],
+        bump
+    )]
+    pub sns_account: Account<'info, SnsAccount>,
+
+    #[account(
+        mut,
+        constraint = authority.key() == pot.authority @ ErrorCode::UnauthorizedAccess
+    )]
+    pub authority: Signer<'info>,
+
+    /// PotBot treasury (YD's wallet receives SNS fee)
+    /// CHECK: Treasury address is hardcoded
+    #[account(
+        mut,
+        address = crate::constants::TREASURY_ADDRESS
+    )]
+    pub treasury: AccountInfo<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+pub fn handler(ctx: Context<CreateSnsDomain>, domain_name: String) -> Result<()> {
+    let pot = &mut ctx.accounts.pot;
+    let sns_account = &mut ctx.accounts.sns_account;
+
+    // Validate domain name (lowercase, alphanumeric + hyphens only)
+    require!(
+        domain_name.len() >= 3 && domain_name.len() <= 32,
+        ErrorCode::InvalidDomainName
+    );
+
+    require!(
+        domain_name.chars().all(|c| c.is_alphanumeric() || c == '-'),
+        ErrorCode::InvalidDomainName
+    );
+
+    require!(
+        !domain_name.starts_with('-') && !domain_name.ends_with('-'),
+        ErrorCode::InvalidDomainName
+    );
+
+    // SNS domain fee: 0.25 SOL
+    let sns_fee = 250_000_000u64;
+
+    // Transfer fee to treasury
+    let pot_info = pot.to_account_info();
+    let treasury_info = ctx.accounts.treasury.to_account_info();
+    let authority_info = ctx.accounts.authority.to_account_info();
+
+    **authority_info.try_borrow_mut_lamports()? -= sns_fee;
+    **treasury_info.try_borrow_mut_lamports()? += sns_fee;
+
+    // Initialize SNS account
+    sns_account.pot = pot_info.key();
+    sns_account.domain_name = domain_name.clone();
+    sns_account.full_domain = format!("{}.potbot.sol", domain_name);
+    sns_account.created_at = Clock::get()?.unix_timestamp;
+    sns_account.bump = ctx.bumps.sns_account;
+
+    msg!(
+        "SNS domain created: {} for pot {} (Fee: 0.25 SOL)",
+        sns_account.full_domain,
+        pot.name
+    );
+
+    Ok(())
+}
