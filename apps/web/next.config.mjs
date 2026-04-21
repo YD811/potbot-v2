@@ -7,13 +7,11 @@ const config = {
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
   webpack: (config) => {
-    // Explicit aliases for Solana/Anchor peer deps that aren't auto-resolved
     config.resolve.alias = {
       ...config.resolve.alias,
       'bs58': require.resolve('bs58'),
     }
 
-    // Node.js polyfill fallbacks for browser bundle
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
@@ -24,6 +22,7 @@ const config = {
       zlib: false,
       net: false,
       tls: false,
+      toml: false,
     }
 
     return config

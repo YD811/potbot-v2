@@ -21,8 +21,12 @@ pub mod pot_vault {
     }
 
     /// Create a private pot with invite code access
-    pub fn create_private_pot(ctx: Context<CreatePrivatePot>, params: CreatePrivatePotParams) -> Result<()> {
-        instructions::create_private_pot::handler(ctx, params)
+    pub fn create_private_pot(
+        ctx: Context<CreatePrivatePot>,
+        name: String,
+        params: CreatePrivatePotParams,
+    ) -> Result<()> {
+        instructions::create_private_pot::handler(ctx, name, params)
     }
 
     /// Join a private pot using invite code
@@ -82,7 +86,7 @@ pub mod pot_vault {
         instructions::tokenize_shares::mint_tokens_to_member(ctx, shares_amount)
     }
 
-    /// Create SNS subdomain (pot.potbot.sol) - 0.5 SOL fee
+    /// Create SNS subdomain (pot.potbot.sol) - 0.25 SOL fee
     pub fn create_sns_domain(ctx: Context<CreateSnsDomain>, domain_name: String) -> Result<()> {
         instructions::create_sns_domain::handler(ctx, domain_name)
     }
