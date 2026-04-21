@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePots } from '@/hooks/usePots'
 import { useSolPrice } from '@/lib/prices'
 import { useMockStore } from '@/lib/mock-store'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 
 // ── Password gate ─────────────────────────────────────────────────────────────
 const ADMIN_PASSWORD =
@@ -89,20 +90,24 @@ function AdminDashboard() {
     return () => clearInterval(id)
   }, [])
 
-  // Load agent configs from localStorage (stored per-vault by useAIAgent hook)
+  // Load agent configs from Supabase (migrated from localStorage)
   useEffect(() => {
-    if (!pots) return
-    const loaded: any[] = []
-    for (const pot of pots) {
-      const raw = localStorage.getItem(`potbot-agent-${pot.pubkey}`)
-      if (raw) {
-        try {
-          const cfg = JSON.parse(raw)
-          loaded.push({ ...cfg, potPubkey: pot.pubkey })
-        } catch {}
-      }
-    }
-    setAgents(loaded)
+    if (!pots || !isSupabaseConfigured) return
+    const pubkeys = pots.map((p) => p.pubkey)
+    if (pubkeys.length === 0) return
+    supabase
+      .from('agent_configs')
+      .select('pot_pubkey, config_json')
+      .in('pot_pubkey', pubkeys)
+      .then(({ data }) => {
+        if (!data) return
+        const loaded = data.map((row) => ({
+          ...(row.config_json as any),
+          potPubkey: row.pot_pubkey,
+        }))
+        setAgents(loaded)
+      })
+      .catch(() => {})
   }, [pots])
 
   // Aggregate stats

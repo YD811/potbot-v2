@@ -26,6 +26,7 @@ import { JupiterSwapPanel } from '@/components/JupiterSwapPanel'
 import { BudgetGrantPanel } from '@/components/BudgetGrantPanel'
 import ReferralPanel from '@/components/ReferralPanel'
 import { reverseSNS } from '@/lib/sns'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import SwapExecuteButton from '@/components/SwapExecuteButton'
 
 const TABS = ['overview', 'proposals', 'shares', 'positions', 'strategy', 'governance', 'agent', 'members', 'deposit', 'referral', 'vault'] as const
@@ -155,14 +156,16 @@ export default function PotPage() {
 
   const pubkey = params.pubkey as string
 
-  // Track referral from ?ref= URL param
+  // Track referral in Supabase (replaces localStorage)
   useEffect(() => {
     const ref = searchParams.get('ref')
-    if (ref && pubkey) {
-      // Store referrer in localStorage keyed by pot
-      localStorage.setItem(`potbot-ref-${pubkey}`, ref)
-    }
+    if (!ref || !pubkey || !isSupabaseConfigured) return
+    supabase.from('referrals').upsert(
+      { pot_pubkey: pubkey, referrer_code: ref, visited_at: new Date().toISOString() },
+      { onConflict: 'pot_pubkey,referrer_code' },
+    ).catch(() => {})
   }, [searchParams, pubkey])
+
   const { data: pot, isLoading: isPotLoading } = usePot(pubkey)
   const { data: members = [] } = useMembers(pubkey)
   const { data: proposals = [] } = useProposals(pubkey)
