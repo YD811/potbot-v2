@@ -1,43 +1,32 @@
 import { useQuery } from '@tanstack/react-query'
 
-// Jupiter Price API v2
-const JUPITER_PRICE_API = 'https://api.jup.ag/price/v2'
+// Route via /api/jupiter proxy — adds Authorization header server-side
+const JUPITER_PRICE_API = '/api/jupiter/price/v2'
 
 export const KNOWN_TOKENS: Record<string, { symbol: string; name: string; decimals: number }> = {
   So11111111111111111111111111111111111111112: {
-    symbol: 'SOL',
-    name: 'Solana',
-    decimals: 9,
+    symbol: 'SOL', name: 'Solana', decimals: 9,
   },
   EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v: {
-    symbol: 'USDC',
-    name: 'USD Coin',
-    decimals: 6,
+    symbol: 'USDC', name: 'USD Coin', decimals: 6,
   },
   Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB: {
-    symbol: 'USDT',
-    name: 'Tether USD',
-    decimals: 6,
+    symbol: 'USDT', name: 'Tether USD', decimals: 6,
   },
   DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263: {
-    symbol: 'BONK',
-    name: 'Bonk',
-    decimals: 5,
+    symbol: 'BONK', name: 'Bonk', decimals: 5,
   },
   'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn': {
-    symbol: 'JitoSOL',
-    name: 'Jito Staked SOL',
-    decimals: 9,
+    symbol: 'JitoSOL', name: 'Jito Staked SOL', decimals: 9,
   },
   mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So: {
-    symbol: 'mSOL',
-    name: 'Marinade Staked SOL',
-    decimals: 9,
+    symbol: 'mSOL', name: 'Marinade Staked SOL', decimals: 9,
   },
-  WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk: {
-    symbol: 'WEN',
-    name: 'Wen',
-    decimals: 5,
+  'JUPyiwrYJFskUPiHa7hkeR8NqtwybKv5LqYjTrsixO7': {
+    symbol: 'JUP', name: 'Jupiter', decimals: 6,
+  },
+  'EKpQGSKe94Fp3gWQrW1zYvbwDiQMqFEuer5pVUeX3mQ': {
+    symbol: 'WIF', name: 'dogwifhat', decimals: 6,
   },
 }
 
@@ -70,11 +59,11 @@ async function fetchPrices(mints: string[]): Promise<Record<string, number>> {
 /** Hook to fetch prices for a list of mints */
 export function useTokenPrices(mints: string[]) {
   return useQuery({
-    queryKey: ['jupiter-prices', ...mints.sort()],
-    queryFn: () => fetchPrices(mints),
-    enabled: mints.length > 0,
-    staleTime: 15_000,   // 15 seconds
-    refetchInterval: 30_000, // 30 seconds
+    queryKey:       ['jupiter-prices', ...mints.sort()],
+    queryFn:        () => fetchPrices(mints),
+    enabled:        mints.length > 0,
+    staleTime:      15_000,
+    refetchInterval: 30_000,
     retry: 2,
   })
 }
@@ -98,7 +87,7 @@ export function lamportsToUsd(lamports: number, solPriceUsd: number): number {
 /** Format USD amount */
 export function formatUsd(amount: number): string {
   if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(2)}M`
-  if (amount >= 1_000) return `$${(amount / 1_000).toFixed(2)}K`
+  if (amount >= 1_000)     return `$${(amount / 1_000).toFixed(2)}K`
   return `$${amount.toFixed(2)}`
 }
 

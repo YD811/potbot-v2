@@ -1,9 +1,12 @@
 /**
  * Standalone price fetcher for the AI agent (no React hooks — runs in async context)
+ * Routes through /api/jupiter proxy so the API key stays server-side.
  */
-const JUPITER_PRICE_API = 'https://api.jup.ag/price/v2'
+const JUPITER_PRICE_API = '/api/jupiter/price/v2'
 
-export async function fetchPricesRaw(mints: string[]): Promise<Record<string, number>> {
+export async function fetchPricesRaw(
+  mints: string[],
+): Promise<Record<string, number>> {
   if (mints.length === 0) return {}
   try {
     const ids = mints.join(',')
@@ -11,7 +14,9 @@ export async function fetchPricesRaw(mints: string[]): Promise<Record<string, nu
     if (!res.ok) return {}
     const json = await res.json()
     const result: Record<string, number> = {}
-    for (const [mint, data] of Object.entries(json.data as Record<string, { price: string }>)) {
+    for (const [mint, data] of Object.entries(
+      json.data as Record<string, { price: string }>,
+    )) {
       result[mint] = parseFloat(data.price)
     }
     return result

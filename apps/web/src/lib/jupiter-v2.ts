@@ -7,6 +7,9 @@
  *  3. Recurring — DCA orders (Jupiter Recurring/DCA API)
  *  4. Price v2 — real-time token prices
  *
+ * All api.jup.ag calls are routed through /api/jupiter/* proxy so the
+ * JUPITER_API_KEY stays server-side and is never exposed to the browser.
+ *
  * Docs:
  *  - https://dev.jup.ag/docs/swap-api
  *  - https://dev.jup.ag/docs/trigger-api
@@ -19,20 +22,21 @@ import {
   VersionedTransaction,
 } from '@solana/web3.js'
 
-// ── Base URLs ──────────────────────────────────────────────────────────────────
-export const JUP_SWAP_V2_BASE  = 'https://api.jup.ag/swap/v2'
-export const JUP_TRIGGER_BASE  = 'https://api.jup.ag/limit/v2'
-export const JUP_DCA_BASE      = 'https://api.jup.ag/dca/v2'
-export const JUP_PRICE_BASE    = 'https://api.jup.ag/price/v2'
-export const JUP_TOKENS_BASE   = 'https://tokens.jup.ag'
+// ── Base paths (via /api/jupiter proxy — adds Authorization header server-side)
+// tokens.jup.ag is a different domain and does not require auth
+export const JUP_SWAP_V2_BASE  = '/api/jupiter/swap/v2'
+export const JUP_TRIGGER_BASE  = '/api/jupiter/limit/v2'
+export const JUP_DCA_BASE      = '/api/jupiter/dca/v2'
+export const JUP_PRICE_BASE    = '/api/jupiter/price/v2'
+export const JUP_TOKENS_BASE   = 'https://tokens.jup.ag'   // direct — no auth needed
 
 // ── Known mints ────────────────────────────────────────────────────────────────
-export const SOL_MINT  = 'So11111111111111111111111111111111111111112'
-export const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
-export const USDT_MINT = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
-export const JUP_MINT  = 'JUPyiwrYJFskUPiHa7hkeR8NqtwybKv5LqYjTrsixO7'
-export const WIF_MINT  = 'EKpQGSKe94Fp3gWQrW1zYvbwDiQMqFEuer5pVUeX3mQ'
-export const BONK_MINT = 'DezXAZ8z7PnrnRJjz3wXBoRgixVrtVZvWr8Alfred89u'
+export const SOL_MINT    = 'So11111111111111111111111111111111111111112'
+export const USDC_MINT   = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+export const USDT_MINT   = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
+export const JUP_MINT    = 'JUPyiwrYJFskUPiHa7hkeR8NqtwybKv5LqYjTrsixO7'
+export const WIF_MINT    = 'EKpQGSKe94Fp3gWQrW1zYvbwDiQMqFEuer5pVUeX3mQ'
+export const BONK_MINT   = 'DezXAZ8z7PnrnRJjz3wXBoRgixVrtVZvWr8Alfred89u'
 export const JITOSL_MINT = 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn'
 export const MSOL_MINT   = 'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So'
 
@@ -81,48 +85,46 @@ export interface SwapV2OrderParams {
 }
 
 export interface SwapV2OrderResult {
-  transaction: string     // base64-encoded VersionedTransaction
-  inputMint: string
-  outputMint: string
-  inAmount: string
-  outAmount: string
+  transaction:    string   // base64-encoded VersionedTransaction
+  inputMint:      string
+  outputMint:     string
+  inAmount:       string
+  outAmount:      string
   priceImpactPct: string
-  routePlan: Array<{ label: string; percent: number }>
-  minOutAmount: string
+  routePlan:      Array<{ label: string; percent: number }>
+  minOutAmount:   string
 }
 
 /**
  * Get a swap order from Jupiter Swap V2 (unified API)
- * Returns serialized transaction ready to sign and execute.
+ * Returns a serialized transaction ready to sign and execute.
  */
 export async function getSwapV2Order(
   params: SwapV2OrderParams,
 ): Promise<SwapV2OrderResult | null> {
   try {
     const res = await fetch(`${JUP_SWAP_V2_BASE}/order`, {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        inputMint: params.inputMint,
-        outputMint: params.outputMint,
-        amount: String(params.amount),
-        slippageBps: params.slippageBps ?? 50,
-        userPublicKey: params.userPublicKey,
-        dynamicSlippage: params.dynamicSlippage ?? true,
-        dynamicComputeUnitLimit: true,
+        inputMint:                params.inputMint,
+        outputMint:               params.outputMint,
+        amount:                   String(params.amount),
+        slippageBps:              params.slippageBps ?? 50,
+        userPublicKey:            params.userPublicKey,
+        dynamicSlippage:          params.dynamicSlippage ?? true,
+        dynamicComputeUnitLimit:  true,
         prioritizationFeeLamports: 'auto',
-        wrapAndUnwrapSol: true,
+        wrapAndUnwrapSol:         true,
       }),
     })
-
     if (!res.ok) return null
     const data = await res.json()
-
     return {
       transaction:    data.transaction,
       inputMint:      params.inputMint,
       outputMint:     params.outputMint,
-      inAmount:       data.inputAmount ?? String(params.amount),
+      inAmount:       data.inputAmount  ?? String(params.amount),
       outAmount:      data.outputAmount ?? '0',
       priceImpactPct: data.priceImpactPct ?? '0',
       routePlan:      data.routePlan ?? [],
@@ -134,7 +136,8 @@ export async function getSwapV2Order(
 }
 
 /**
- * Execute a Swap V2 order (sign + send via /execute endpoint)
+ * Execute a Swap V2 order — sign + send via /execute endpoint.
+ * Falls back to direct sendRawTransaction if /execute returns an error.
  */
 export async function executeSwapV2(
   connection: Connection,
@@ -142,26 +145,27 @@ export async function executeSwapV2(
   userPublicKey: PublicKey,
   signTransaction: (tx: VersionedTransaction) => Promise<VersionedTransaction>,
 ): Promise<string> {
-  const txBytes = Buffer.from(orderResult.transaction, 'base64')
-  const tx = VersionedTransaction.deserialize(txBytes)
-  const signedTx = await signTransaction(tx)
-  const signedBase64 = Buffer.from(signedTx.serialize()).toString('base64')
+  const txBytes   = Buffer.from(orderResult.transaction, 'base64')
+  const tx        = VersionedTransaction.deserialize(txBytes)
+  const signedTx  = await signTransaction(tx)
+  const signedB64 = Buffer.from(signedTx.serialize()).toString('base64')
 
   const execRes = await fetch(`${JUP_SWAP_V2_BASE}/execute`, {
-    method: 'POST',
+    method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      signedTransaction: signedBase64,
+      signedTransaction: signedB64,
       requestId: crypto.randomUUID(),
     }),
   })
 
   if (!execRes.ok) {
-    const rawTx = signedTx.serialize()
+    // Fallback: send directly via RPC
+    const rawTx    = signedTx.serialize()
     const signature = await connection.sendRawTransaction(rawTx, {
-      skipPreflight: false,
-      preflightCommitment: 'confirmed',
-      maxRetries: 3,
+      skipPreflight:        false,
+      preflightCommitment:  'confirmed',
+      maxRetries:           3,
     })
     const lbh = await connection.getLatestBlockhash()
     await connection.confirmTransaction({ signature, ...lbh }, 'confirmed')
@@ -178,17 +182,28 @@ export async function executeSwapV2(
 // ══════════════════════════════════════════════════════════════════════════════
 
 export interface TriggerOrderParams {
-  inputMint: string
+  inputMint:  string
   outputMint: string
-  inAmount: string
-  outAmount: string
-  maker: string
-  expiredAt?: number
+  inAmount:   string   // raw input amount
+  outAmount:  string   // raw desired output amount (encodes target price)
+  maker:      string   // vault pubkey
+  expiredAt?: number   // unix timestamp
 }
 
 export interface TriggerOrderResult {
-  order: string
-  tx: string
+  order: string        // order account pubkey
+  tx:    string        // base64 transaction to sign
+}
+
+export interface TriggerOrderData {
+  orderKey:          string
+  inputMint:         string
+  outputMint:        string
+  inAmount:          string
+  outAmount:         string
+  remainingInAmount: string
+  status:            'open' | 'filled' | 'cancelled' | 'expired'
+  createdAt:         number
 }
 
 export async function createTriggerOrder(
@@ -196,7 +211,7 @@ export async function createTriggerOrder(
 ): Promise<TriggerOrderResult | null> {
   try {
     const res = await fetch(`${JUP_TRIGGER_BASE}/createOrder`, {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         inputMint:  params.inputMint,
@@ -222,38 +237,27 @@ export async function getTriggerOrders(walletPubkey: string): Promise<TriggerOrd
     if (!res.ok) return []
     const data = await res.json()
     return (data.orders ?? []).map((o: any) => ({
-      orderKey:   o.orderKey ?? o.order,
-      inputMint:  o.inputMint,
-      outputMint: o.outputMint,
-      inAmount:   o.inAmount,
-      outAmount:  o.outAmount,
+      orderKey:          o.orderKey ?? o.order,
+      inputMint:         o.inputMint,
+      outputMint:        o.outputMint,
+      inAmount:          o.inAmount,
+      outAmount:         o.outAmount,
       remainingInAmount: o.remainingInAmount ?? o.inAmount,
-      status:     'open' as const,
-      createdAt:  o.createdAt,
+      status:            'open' as const,
+      createdAt:         o.createdAt,
     }))
   } catch {
     return []
   }
 }
 
-export interface TriggerOrderData {
-  orderKey:   string
-  inputMint:  string
-  outputMint: string
-  inAmount:   string
-  outAmount:  string
-  remainingInAmount: string
-  status:     'open' | 'filled' | 'cancelled' | 'expired'
-  createdAt:  number
-}
-
 export async function cancelTriggerOrder(
   orderKey: string,
-  maker: string,
+  maker:     string,
 ): Promise<string | null> {
   try {
     const res = await fetch(`${JUP_TRIGGER_BASE}/cancelOrder`, {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ order: orderKey, maker }),
     })
@@ -271,19 +275,32 @@ export async function cancelTriggerOrder(
 // ══════════════════════════════════════════════════════════════════════════════
 
 export interface DCAOrderParams {
-  inputMint: string
-  outputMint: string
-  inAmount: string
-  inAmountPerCycle: string
-  cycleSecondsApart: number
-  payer: string
+  inputMint:           string
+  outputMint:          string
+  inAmount:            string   // total raw amount
+  inAmountPerCycle:    string   // raw amount per execution
+  cycleSecondsApart:   number   // 3600=hourly, 86400=daily, 604800=weekly
+  payer:               string   // vault pubkey
   minOutAmountPerCycle?: string
   maxOutAmountPerCycle?: string
 }
 
 export interface DCAOrderResult {
   dcaKey: string
-  tx: string
+  tx:     string
+}
+
+export interface DCAOrderData {
+  dcaKey:            string
+  inputMint:         string
+  outputMint:        string
+  inAmountPerCycle:  string
+  cycleSecondsApart: number
+  inDeposited:       string
+  inWithdrawn:       string
+  outWithdrawn:      string
+  nextCycleAt:       number
+  status:            'active' | 'closed'
 }
 
 export async function createDCAOrder(
@@ -291,16 +308,16 @@ export async function createDCAOrder(
 ): Promise<DCAOrderResult | null> {
   try {
     const res = await fetch(`${JUP_DCA_BASE}/createDca`, {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        payer:              params.payer,
-        user:               params.payer,
-        inputMint:          params.inputMint,
-        outputMint:         params.outputMint,
-        inAmount:           params.inAmount,
-        inAmountPerCycle:   params.inAmountPerCycle,
-        cycleSecondsApart:  params.cycleSecondsApart,
+        payer:               params.payer,
+        user:                params.payer,
+        inputMint:           params.inputMint,
+        outputMint:          params.outputMint,
+        inAmount:            params.inAmount,
+        inAmountPerCycle:    params.inAmountPerCycle,
+        cycleSecondsApart:   params.cycleSecondsApart,
         minOutAmountPerCycle: params.minOutAmountPerCycle ?? null,
         maxOutAmountPerCycle: params.maxOutAmountPerCycle ?? null,
       }),
@@ -319,40 +336,28 @@ export async function getDCAOrders(walletPubkey: string): Promise<DCAOrderData[]
     if (!res.ok) return []
     const data = await res.json()
     return (data.dcaAccounts ?? []).map((d: any) => ({
-      dcaKey:           d.publicKey ?? d.dcaKey,
-      inputMint:        d.inputMint,
-      outputMint:       d.outputMint,
-      inAmountPerCycle: d.inAmountPerCycle,
+      dcaKey:            d.publicKey ?? d.dcaKey,
+      inputMint:         d.inputMint,
+      outputMint:        d.outputMint,
+      inAmountPerCycle:  d.inAmountPerCycle,
       cycleSecondsApart: d.cycleSecondsApart,
-      inDeposited:      d.inDeposited,
-      inWithdrawn:      d.inWithdrawn,
-      outWithdrawn:     d.outWithdrawn,
-      nextCycleAt:      d.nextCycleAt,
-      status:           d.status ?? 'active',
+      inDeposited:       d.inDeposited,
+      inWithdrawn:       d.inWithdrawn,
+      outWithdrawn:      d.outWithdrawn,
+      nextCycleAt:       d.nextCycleAt,
+      status:            d.status ?? 'active',
     }))
   } catch {
     return []
   }
 }
 
-export interface DCAOrderData {
-  dcaKey:           string
-  inputMint:        string
-  outputMint:       string
-  inAmountPerCycle: string
-  cycleSecondsApart: number
-  inDeposited:      string
-  inWithdrawn:      string
-  outWithdrawn:     string
-  nextCycleAt:      number
-  status:           'active' | 'closed'
-}
-
+/** Human-readable DCA description for proposal title */
 export function describeDCA(params: {
-  inputSymbol: string
-  outputSymbol: string
-  amountPerCycle: number
-  totalCycles: number
+  inputSymbol:       string
+  outputSymbol:      string
+  amountPerCycle:    number
+  totalCycles:       number
   cycleSecondsApart: number
 }): string {
   const interval =
@@ -368,9 +373,9 @@ export function describeDCA(params: {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export interface TokenPrice {
-  mint: string
-  price: number
-  confidence: number
+  mint:       string
+  price:      number
+  confidence: number  // 1 = high, 0.7 = medium, 0.4 = low
 }
 
 export async function getTokenPrices(
@@ -387,8 +392,9 @@ export async function getTokenPrices(
       result[mint] = {
         mint,
         price:      data.price ?? 0,
-        confidence: data.extraInfo?.confidenceLevel === 'high' ? 1 :
-                    data.extraInfo?.confidenceLevel === 'medium' ? 0.7 : 0.4,
+        confidence:
+          data.extraInfo?.confidenceLevel === 'high'   ? 1   :
+          data.extraInfo?.confidenceLevel === 'medium' ? 0.7 : 0.4,
       }
     }
     return result
@@ -400,7 +406,7 @@ export async function getTokenPrices(
 export async function getPortfolioUSD(
   holdings: Array<{ mint: string; amount: number }>,
 ): Promise<{ total: number; byMint: Record<string, number> }> {
-  const mints = [...new Set(holdings.map(h => h.mint))]
+  const mints  = [...new Set(holdings.map(h => h.mint))]
   const prices = await getTokenPrices(mints)
   let total = 0
   const byMint: Record<string, number> = {}
@@ -443,20 +449,27 @@ export interface DCAProposalMeta {
   cycleSecondsApart: number; totalAmountUi: number
 }
 
-export type JupiterProposalMeta = SwapProposalMeta | LimitOrderProposalMeta | DCAProposalMeta
+export type JupiterProposalMeta =
+  | SwapProposalMeta
+  | LimitOrderProposalMeta
+  | DCAProposalMeta
 
 export function buildProposalDescription(meta: JupiterProposalMeta): string {
   switch (meta.type) {
     case 'Swap':
       return `Swap ${meta.amountUi} ${meta.inputSymbol} → ${meta.outputSymbol}`
     case 'LimitOrder':
-      return `Limit Order: Buy ${meta.outAmountUi.toFixed(2)} ${meta.outputSymbol} ` +
-             `when 1 ${meta.outputSymbol} ≤ ${meta.triggerPriceUi.toFixed(4)} ${meta.inputSymbol} ` +
-             `(spend ${meta.inAmountUi} ${meta.inputSymbol})`
+      return (
+        `Limit Order: Buy ${meta.outAmountUi.toFixed(2)} ${meta.outputSymbol} ` +
+        `when 1 ${meta.outputSymbol} ≤ ${meta.triggerPriceUi.toFixed(4)} ${meta.inputSymbol} ` +
+        `(spend ${meta.inAmountUi} ${meta.inputSymbol})`
+      )
     case 'DCA':
       return describeDCA({
-        inputSymbol: meta.inputSymbol, outputSymbol: meta.outputSymbol,
-        amountPerCycle: meta.amountPerCycleUi, totalCycles: meta.totalCycles,
+        inputSymbol:       meta.inputSymbol,
+        outputSymbol:      meta.outputSymbol,
+        amountPerCycle:    meta.amountPerCycleUi,
+        totalCycles:       meta.totalCycles,
         cycleSecondsApart: meta.cycleSecondsApart,
       })
   }
