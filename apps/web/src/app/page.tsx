@@ -64,7 +64,25 @@ export default function DashboardPage() {
 
   /* ── Landing (not connected) ── */
   if (!connected) {
-    return <LandingPage />
+    return (
+      <>
+        <LandingPage />
+        <a
+          href="/hackathon"
+          style={{
+            position: 'fixed', bottom: 24, right: 24, zIndex: 50,
+            background: 'linear-gradient(135deg, #7048E8, #5a3acf)',
+            color: '#fff', fontWeight: 700, fontSize: 13,
+            padding: '10px 18px', borderRadius: 100,
+            textDecoration: 'none', boxShadow: '0 4px 24px #7048E840',
+            display: 'flex', alignItems: 'center', gap: 8,
+            border: '1px solid #9d6fff40',
+          }}
+        >
+          🏆 Hackathon
+        </a>
+      </>
+    )
   }
 
   /* ── Dashboard (connected) ── */
@@ -98,6 +116,21 @@ export default function DashboardPage() {
           <div className="text-xs text-pot-muted mt-1">Total Trades</div>
         </div>
       </div>
+
+      {/* Hackathon banner */}
+      <Link
+        href="/hackathon"
+        className="flex items-center justify-between p-4 mb-4 bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 rounded-2xl hover:border-violet-500/40 transition group"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🏆</span>
+          <div>
+            <div className="text-sm font-semibold text-white">Solana Frontier Hackathon 2026</div>
+            <div className="text-xs text-pot-muted">See what we built — $40K+ in bounty tracks</div>
+          </div>
+        </div>
+        <span className="text-pot-muted text-sm group-hover:text-white transition">Details →</span>
+      </Link>
 
       {/* Leaderboard teaser */}
       <Link
