@@ -1,28 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { withTxToast } from '@/components/TxToast'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 
 /* ── Types ── */
 
 export type RiskLevel = 'conservative' | 'moderate' | 'aggressive'
 
 export interface GovSettings {
-  // Quorum: minimum % of shares that must vote for a proposal to be valid
   quorumPct: number
-  // Approval: % of YES votes (of votes cast) needed to pass
   approvalPct: number
-  // Voting window in hours
   votingWindowHours: number
-  // Risk profile: limits what proposals can be submitted
   riskLevel: RiskLevel
-  // Max single swap as % of vault
   maxSwapPct: number
-  // Max allocation per user (budget grant) as % of vault
   maxBudgetGrantPct: number
-  // Require 2-of-N admin co-sign for large swaps
   requireAdminCoSign: boolean
-  // Threshold above which co-sign kicks in
   coSignThresholdPct: number
 }
 
@@ -64,8 +57,7 @@ const DEFAULT_SETTINGS: GovSettings = {
 /* ── Helpers ── */
 
 function Slider({
-  label, hint, value, min, max, step = 1, suffix = '%',
-  onChange,
+  label, hint, value, min, max, step = 1, suffix = '%', onChange,
 }: {
   label: string; hint?: string; value: number; min: number; max: number; step?: number; suffix?: string
   onChange: (v: number) => void
@@ -94,21 +86,44 @@ function Slider({
 /* ── Main component ── */
 
 interface Props {
-  isAdmin: boolean   // only pot creator can edit
+  isAdmin: boolean
   potPubkey: string
 }
 
 export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
-  // Load from localStorage (in production: on-chain config account)
-  const storageKey = `potbot-gov-${potPubkey}`
-  const [settings, setSettingsState] = useState<GovSettings>(() => {
-    try {
-      const raw = localStorage.getItem(storageKey)
-      return raw ? JSON.parse(raw) : DEFAULT_SETTINGS
-    } catch { return DEFAULT_SETTINGS }
-  })
+  const [settings, setSettingsState] = useState<GovSettings>(DEFAULT_SETTINGS)
+  const [loading, setLoading] = useState(true)
   const [saved, setSaved] = useState(false)
   const [activeSection, setActiveSection] = useState<'democracy' | 'risk' | 'budgets'>('democracy')
+
+  // Load governance settings from Supabase on mount (replaces localStorage)
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setLoading(false)
+      return
+    }
+    supabase
+      .from('governance_settings')
+      .select('*')
+      .eq('pot_pubkey', potPubkey)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setSettingsState({
+            quorumPct:          data.quorum_pct          ?? DEFAULT_SETTINGS.quorumPct,
+            approvalPct:        data.approval_pct        ?? DEFAULT_SETTINGS.approvalPct,
+            votingWindowHours:  data.voting_window_hours ?? DEFAULT_SETTINGS.votingWindowHours,
+            riskLevel:          (data.risk_level as RiskLevel) ?? DEFAULT_SETTINGS.riskLevel,
+            maxSwapPct:         data.max_swap_pct        ?? DEFAULT_SETTINGS.maxSwapPct,
+            maxBudgetGrantPct:  data.max_budget_grant_pct ?? DEFAULT_SETTINGS.maxBudgetGrantPct,
+            requireAdminCoSign: data.require_admin_cosign ?? DEFAULT_SETTINGS.requireAdminCoSign,
+            coSignThresholdPct: data.cosign_threshold_pct ?? DEFAULT_SETTINGS.coSignThresholdPct,
+          })
+        }
+      })
+      .catch(() => { /* no existing config — use defaults */ })
+      .finally(() => setLoading(false))
+  }, [potPubkey])
 
   function setSettings(s: GovSettings) {
     setSettingsState(s)
@@ -123,8 +138,20 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
   async function saveSettings() {
     await withTxToast(
       async () => {
-        // In production: call program instruction update_gov_settings
-        localStorage.setItem(storageKey, JSON.stringify(settings))
+        if (!isSupabaseConfigured) return
+        const { error } = await supabase.from('governance_settings').upsert({
+          pot_pubkey:           potPubkey,
+          quorum_pct:           settings.quorumPct,
+          approval_pct:         settings.approvalPct,
+          voting_window_hours:  settings.votingWindowHours,
+          risk_level:           settings.riskLevel,
+          max_swap_pct:         settings.maxSwapPct,
+          max_budget_grant_pct: settings.maxBudgetGrantPct,
+          require_admin_cosign: settings.requireAdminCoSign,
+          cosign_threshold_pct: settings.coSignThresholdPct,
+          updated_at:           new Date().toISOString(),
+        }, { onConflict: 'pot_pubkey' })
+        if (error) throw new Error(error.message)
       },
       'Saving governance settings…',
       'Governance settings updated ✅',
@@ -133,6 +160,14 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
   }
 
   const readOnly = !isAdmin
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-6 h-6 border-2 border-pot-accent/30 border-t-pot-accent rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -197,7 +232,6 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
       {activeSection === 'democracy' && (
         <div className="bg-pot-card border border-pot-border rounded-2xl p-5 space-y-5">
           <h3 className="text-sm font-semibold text-white">Voting Rules</h3>
-
           <Slider
             label="Quorum"
             hint="minimum % of total shares that must participate"
@@ -205,7 +239,6 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
             min={10} max={75}
             onChange={(v) => !readOnly && setSettings({ ...settings, quorumPct: v })}
           />
-
           <Slider
             label="Approval Threshold"
             hint="% of YES votes (of those cast) needed to pass"
@@ -213,7 +246,6 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
             min={51} max={90}
             onChange={(v) => !readOnly && setSettings({ ...settings, approvalPct: v })}
           />
-
           <Slider
             label="Voting Window"
             hint="hours members have to vote before a proposal expires"
@@ -221,8 +253,6 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
             min={1} max={168} suffix="h"
             onChange={(v) => !readOnly && setSettings({ ...settings, votingWindowHours: v })}
           />
-
-          {/* Quick democracy presets */}
           {isAdmin && (
             <div>
               <div className="text-xs text-pot-muted mb-2">Quick presets</div>
@@ -251,7 +281,6 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
       {/* Risk section */}
       {activeSection === 'risk' && (
         <div className="space-y-4">
-          {/* Risk profile cards */}
           <div className="bg-pot-card border border-pot-border rounded-2xl p-5">
             <h3 className="text-sm font-semibold text-white mb-3">Risk Profile</h3>
             <div className="space-y-2">
@@ -280,11 +309,8 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
               ))}
             </div>
           </div>
-
-          {/* Fine-tune risk limits */}
           <div className="bg-pot-card border border-pot-border rounded-2xl p-5 space-y-5">
             <h3 className="text-sm font-semibold text-white">Proposal Limits</h3>
-
             <Slider
               label="Max Single Swap"
               hint="of vault balance per proposal"
@@ -292,8 +318,6 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
               min={1} max={100}
               onChange={(v) => !readOnly && setSettings({ ...settings, maxSwapPct: v })}
             />
-
-            {/* Admin co-sign */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <div>
@@ -314,7 +338,6 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
                   }`} />
                 </button>
               </div>
-
               {settings.requireAdminCoSign && (
                 <Slider
                   label="Co-sign threshold"
@@ -340,7 +363,6 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
                 They can swap freely within their budget, and unspent funds return to the vault.
               </p>
             </div>
-
             <Slider
               label="Max Budget Per Grant"
               hint="of vault per proposal"
@@ -348,8 +370,6 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
               min={1} max={100}
               onChange={(v) => !readOnly && setSettings({ ...settings, maxBudgetGrantPct: v })}
             />
-
-            {/* Example budget grants */}
             <div className="bg-pot-dark rounded-xl p-4 border border-pot-border/50">
               <div className="text-xs font-medium text-white mb-3">📋 Budget Grant Template</div>
               <div className="space-y-2 text-xs text-pot-muted">
@@ -375,7 +395,6 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
                 </div>
               </div>
             </div>
-
             <div className="text-[11px] text-pot-muted bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-3">
               💡 Example: Propose to allocate 20% of vault (~2.4 SOL) to Alice for 7 days of active trading.
               Alice can swap in and out within that budget. After 7 days, unused SOL returns automatically.
@@ -401,5 +420,4 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
   )
 }
 
-/* ── Export default settings for use elsewhere ── */
 export { DEFAULT_SETTINGS }

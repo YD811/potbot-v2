@@ -16,37 +16,36 @@ export interface SwapMeta {
 interface Props {
   proposalPubkey: string
   potAddress: string
-  /** If provided, skip localStorage lookup */
+  /** If provided, skip API lookup */
   swapMeta?: SwapMeta
   onSuccess?: (txSig: string) => void
 }
 
-const SOLSCAN = (sig: string) => `https://solscan.io/tx/${sig}`
+const SOLSCAN        = (sig: string) => `https://solscan.io/tx/${sig}`
 const DEVNET_SOLSCAN = (sig: string) => `https://solscan.io/tx/${sig}?cluster=devnet`
 
 export default function SwapExecuteButton({ proposalPubkey, potAddress, swapMeta: propsMeta, onSuccess }: Props) {
   const { connection } = useConnection()
   const { publicKey, signTransaction } = useWallet()
 
-  const [meta, setMeta] = useState<SwapMeta | null>(propsMeta ?? null)
-  const [status, setStatus] = useState<'idle' | 'quoting' | 'signing' | 'sending' | 'done' | 'error'>('idle')
-  const [txSig, setTxSig] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [meta,    setMeta]    = useState<SwapMeta | null>(propsMeta ?? null)
+  const [status,  setStatus]  = useState<'idle' | 'quoting' | 'signing' | 'sending' | 'done' | 'error'>('idle')
+  const [txSig,   setTxSig]   = useState<string | null>(null)
+  const [error,   setError]   = useState<string | null>(null)
   const [preview, setPreview] = useState<{ route: string; outAmount: string; priceImpact: string } | null>(null)
 
-  // Load swap meta from localStorage if not passed as props
+  // Load swap meta from server (replaces localStorage)
   useEffect(() => {
-    if (!propsMeta) {
-      try {
-        const raw = localStorage.getItem(`prop-swap-meta-${proposalPubkey}`)
-        if (raw) setMeta(JSON.parse(raw))
-      } catch {}
-    }
+    if (propsMeta) return
+    fetch(`/api/proposals/${proposalPubkey}/meta`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data) setMeta(data) })
+      .catch(() => {})
   }, [proposalPubkey, propsMeta])
 
-  if (!meta) return null  // Not a swap proposal with stored meta
+  if (!meta) return null
 
-  const inDecimals  = getDecimals(meta.inputMint)
+  const inDecimals = getDecimals(meta.inputMint)
   const outDecimals = getDecimals(meta.outputMint)
   const inUi = meta.amountLamports / Math.pow(10, inDecimals)
 
@@ -64,10 +63,10 @@ export default function SwapExecuteButton({ proposalPubkey, potAddress, swapMeta
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          inputMint: meta!.inputMint,
-          outputMint: meta!.outputMint,
-          amountLamports: meta!.amountLamports,
-          slippageBps: 50,
+          inputMint:       meta!.inputMint,
+          outputMint:      meta!.outputMint,
+          amountLamports:  meta!.amountLamports,
+          slippageBps:     50,
           signerPublicKey: publicKey.toBase58(),
         }),
       })
@@ -78,8 +77,8 @@ export default function SwapExecuteButton({ proposalPubkey, potAddress, swapMeta
       }
 
       setPreview({
-        route: data.route,
-        outAmount: (Number(data.outAmount) / Math.pow(10, outDecimals)).toFixed(4),
+        route:       data.route,
+        outAmount:   (Number(data.outAmount) / Math.pow(10, outDecimals)).toFixed(4),
         priceImpact: (parseFloat(data.priceImpactPct) * 100).toFixed(3),
       })
 
@@ -93,9 +92,9 @@ export default function SwapExecuteButton({ proposalPubkey, potAddress, swapMeta
       setStatus('sending')
       const rawTx = signedTx.serialize()
       const sig = await connection.sendRawTransaction(rawTx, {
-        skipPreflight: false,
-        preflightCommitment: 'confirmed',
-        maxRetries: 3,
+        skipPreflight:        false,
+        preflightCommitment:  'confirmed',
+        maxRetries:           3,
       })
 
       const lbh = await connection.getLatestBlockhash()
@@ -105,8 +104,8 @@ export default function SwapExecuteButton({ proposalPubkey, potAddress, swapMeta
       setStatus('done')
       onSuccess?.(sig)
 
-      // Clean up meta from localStorage
-      try { localStorage.removeItem(`prop-swap-meta-${proposalPubkey}`) } catch {}
+      // Clean up meta from server
+      fetch(`/api/proposals/${proposalPubkey}/meta`, { method: 'DELETE' }).catch(() => {})
     } catch (e: any) {
       console.error('Swap execute error:', e)
       setError(e?.message ?? String(e))

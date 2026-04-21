@@ -496,7 +496,7 @@ export function useCreateProposal() {
       nextProposalId: number
       proposalType: Record<string, any>
       description: string
-      /** Optional: persisted to localStorage for Jupiter execute flow */
+      /** Optional: persisted to Supabase for Jupiter execute flow */
       swapMeta?: { inputMint: string; outputMint: string; amountLamports: number; inputSymbol?: string; outputSymbol?: string }
     }) => {
       if (!publicKey) throw new Error('Wallet not connected')
@@ -521,7 +521,11 @@ export function useCreateProposal() {
             .rpc()
           const proposalAddress = proposalPda.toBase58()
           if (params.swapMeta) {
-            try { localStorage.setItem(`prop-swap-meta-${proposalAddress}`, JSON.stringify(params.swapMeta)) } catch {}
+            fetch(`/api/proposals/${proposalAddress}/meta`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(params.swapMeta),
+            }).catch(() => {})
           }
           return { proposalAddress, tx }
         } catch (e) {
@@ -537,7 +541,11 @@ export function useCreateProposal() {
         description: params.description,
       })
       if (params.swapMeta) {
-        try { localStorage.setItem(`prop-swap-meta-${proposalAddress}`, JSON.stringify(params.swapMeta)) } catch {}
+        fetch(`/api/proposals/${proposalAddress}/meta`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(params.swapMeta),
+        }).catch(() => {})
       }
       return { proposalAddress, tx: 'mock-tx-' + Date.now() }
     },

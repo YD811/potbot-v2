@@ -21,38 +21,13 @@ import {
   type LimitOrderProposalMeta,
   type DCAProposalMeta,
 } from '@/lib/jupiter-v2'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 
-/* ── Per-pot config store (localStorage) ── */
+/* ── Constants ── */
 
-const CONFIG_KEY = (pot: string) => `potbot-agent-${pot}`
-const LOG_KEY    = (pot: string) => `potbot-agent-log-${pot}`
-const MAX_LOG    = 50
+const MAX_LOG = 50
 
-function loadConfig(potPubkey: string): AgentConfig | null {
-  try {
-    const raw = localStorage.getItem(CONFIG_KEY(potPubkey))
-    return raw ? JSON.parse(raw) : null
-  } catch { return null }
-}
-
-function saveConfig(config: AgentConfig) {
-  try {
-    localStorage.setItem(CONFIG_KEY(config.potPubkey), JSON.stringify(config))
-  } catch {}
-}
-
-function loadLog(potPubkey: string): AgentLogEntry[] {
-  try {
-    const raw = localStorage.getItem(LOG_KEY(potPubkey))
-    return raw ? JSON.parse(raw) : []
-  } catch { return [] }
-}
-
-function saveLog(potPubkey: string, log: AgentLogEntry[]) {
-  try {
-    localStorage.setItem(LOG_KEY(potPubkey), JSON.stringify(log.slice(0, MAX_LOG)))
-  } catch {}
-}
+/* ── Backend rule mapper ── */
 
 function toBackendRules(frontendConfig: AgentConfig): BackendAgentRule[] {
   return frontendConfig.rules.map((r) => ({
@@ -79,13 +54,13 @@ function toBackendRules(frontendConfig: AgentConfig): BackendAgentRule[] {
 /* ── Hook ── */
 
 export interface UseAIAgentReturn {
-  config:            AgentConfig | null
-  log:               AgentLogEntry[]
-  isRunning:         boolean
-  lastCheck:         Date | null
-  setConfig:         (config: AgentConfig) => void
-  toggleEnabled:     () => void
-  clearLog:          () => void
+  config:             AgentConfig | null
+  log:                AgentLogEntry[]
+  isRunning:          boolean
+  lastCheck:          Date | null
+  setConfig:          (config: AgentConfig) => void
+  toggleEnabled:      () => void
+  clearLog:           () => void
   triggerManualCheck: () => Promise<void>
 }
 
@@ -103,18 +78,41 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
   const vote = useVote()
   const { data: proposals } = useProposals(potPubkey)
 
-  const [config, setConfigState] = useState<AgentConfig | null>(() => loadConfig(potPubkey))
-  const [log,    setLog]         = useState<AgentLogEntry[]>(() => loadLog(potPubkey))
+  // Start with null/empty — load from Supabase async (no localStorage)
+  const [config, setConfigState] = useState<AgentConfig | null>(null)
+  const [log,    setLog]         = useState<AgentLogEntry[]>([])
   const [isRunning, setIsRunning] = useState(false)
   const [lastCheck, setLastCheck] = useState<Date | null>(null)
 
   const prevPricesRef   = useRef<Record<string, number>>({})
   const proposalSeenRef = useRef<Set<string>>(new Set())
 
-  /* ── Persist + API sync ── */
+  /* ── Load config from Supabase on mount ── */
+  useEffect(() => {
+    if (!isSupabaseConfigured) return
+    supabase
+      .from('agent_configs')
+      .select('config_json')
+      .eq('pot_pubkey', potPubkey)
+      .single()
+      .then(({ data }) => {
+        if (data?.config_json) {
+          setConfigState(data.config_json as AgentConfig)
+        }
+      })
+      .catch(() => {})
+  }, [potPubkey])
+
+  /* ── Persist to Supabase + sync rules to API ── */
   const setConfig = useCallback((newConfig: AgentConfig) => {
     setConfigState(newConfig)
-    saveConfig(newConfig)
+    if (isSupabaseConfigured) {
+      supabase.from('agent_configs').upsert({
+        pot_pubkey:  potPubkey,
+        config_json: newConfig,
+        updated_at:  new Date().toISOString(),
+      }, { onConflict: 'pot_pubkey' }).catch(() => {})
+    }
     agentApi.updateRules(potPubkey, toBackendRules(newConfig)).catch(() => {})
   }, [potPubkey])
 
@@ -145,19 +143,15 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
     }).catch(() => {})
   }, [potPubkey])
 
-  /* ── Logging ── */
+  /* ── In-memory log (no localStorage) ── */
   const addLog = useCallback((entry: Omit<AgentLogEntry, 'id' | 'timestamp'>) => {
     const full: AgentLogEntry = {
       id:        Math.random().toString(36).slice(2),
       timestamp: Date.now(),
       ...entry,
     }
-    setLog((prev) => {
-      const next = [full, ...prev].slice(0, MAX_LOG)
-      saveLog(potPubkey, next)
-      return next
-    })
-  }, [potPubkey])
+    setLog((prev) => [full, ...prev].slice(0, MAX_LOG))
+  }, [])
 
   /* ── Main evaluation loop ── */
   const runCheck = useCallback(async () => {
@@ -248,7 +242,6 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
           ruleName: rule.name,
         })
 
-        // ── Alert ──
         if (rule.action.type === 'alert') {
           addLog({
             level:    'warn',
@@ -257,15 +250,10 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
             ruleName: rule.name,
           })
 
-        // ── Propose Swap ──
         } else if (rule.action.type === 'propose_swap') {
           const amountSol = (((rule.action as any).amountPct ?? 10) / 100) * (pot?.balance ?? 0)
           if (amountSol < 0.01) {
-            addLog({
-              level: 'warn',
-              message: `⚠️ Skipped: vault balance too low for swap proposal`,
-              ruleId: rule.id, ruleName: rule.name,
-            })
+            addLog({ level: 'warn', message: `⚠️ Skipped: vault balance too low for swap proposal`, ruleId: rule.id, ruleName: rule.name })
             continue
           }
           addLog({
@@ -288,181 +276,74 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
               },
               description: `[AI] ${(rule.action as any).label} — ${amountSol.toFixed(3)} ${(rule.action as any).fromSymbol}`,
             })
-            addLog({
-              level:    'success',
-              message:  `✅ Swap proposal created: "${(rule.action as any).label}"`,
-              ruleId:   rule.id,
-              ruleName: rule.name,
-            })
+            addLog({ level: 'success', message: `✅ Swap proposal created: "${(rule.action as any).label}"`, ruleId: rule.id, ruleName: rule.name })
             setConfig({
               ...config,
               rules: config.rules.map((r) =>
-                r.id === rule.id
-                  ? { ...r, fireCount: r.fireCount + 1, lastFiredAt: Date.now() }
-                  : r
+                r.id === rule.id ? { ...r, fireCount: r.fireCount + 1, lastFiredAt: Date.now() } : r
               ),
             })
             qc.invalidateQueries({ queryKey: ['proposals', potPubkey] })
           } catch (err) {
-            addLog({
-              level:    'error',
-              message:  `❌ Swap proposal failed: ${err instanceof Error ? err.message : String(err)}`,
-              ruleId:   rule.id,
-              ruleName: rule.name,
-            })
+            addLog({ level: 'error', message: `❌ Swap proposal failed: ${err instanceof Error ? err.message : String(err)}`, ruleId: rule.id, ruleName: rule.name })
           }
 
-        // ── Propose Limit Order (Jupiter Trigger) ──
         } else if (rule.action.type === 'propose_limit_order') {
           const action = rule.action as any
           const amountSol = ((action.amountPct ?? 10) / 100) * (pot?.balance ?? 0)
           if (amountSol < 0.01) {
-            addLog({
-              level: 'warn',
-              message: `⚠️ Skipped: vault balance too low for limit order`,
-              ruleId: rule.id, ruleName: rule.name,
-            })
+            addLog({ level: 'warn', message: `⚠️ Skipped: vault balance too low for limit order`, ruleId: rule.id, ruleName: rule.name })
             continue
           }
-
           const inAmountRaw  = toRawAmount(amountSol, action.fromMint)
-          const outAmountRaw = toRawAmount(
-            amountSol / (action.triggerPriceUi ?? 1),
-            action.toMint,
-          )
-
+          const outAmountRaw = toRawAmount(amountSol / (action.triggerPriceUi ?? 1), action.toMint)
           const meta: LimitOrderProposalMeta = {
-            type:           'LimitOrder',
-            inputMint:      action.fromMint,
-            outputMint:     action.toMint,
-            inputSymbol:    action.fromSymbol ?? 'SOL',
-            outputSymbol:   action.toSymbol  ?? '???',
-            inAmountUi:     amountSol,
-            triggerPriceUi: action.triggerPriceUi ?? 0,
-            outAmountUi:    amountSol / (action.triggerPriceUi ?? 1),
-            expiredAt:      action.expiredAt,
+            type: 'LimitOrder', inputMint: action.fromMint, outputMint: action.toMint,
+            inputSymbol: action.fromSymbol ?? 'SOL', outputSymbol: action.toSymbol ?? '???',
+            inAmountUi: amountSol, triggerPriceUi: action.triggerPriceUi ?? 0,
+            outAmountUi: amountSol / (action.triggerPriceUi ?? 1), expiredAt: action.expiredAt,
           }
-
-          addLog({
-            level:    'info',
-            message:  `📝 Creating limit order proposal (${amountSol.toFixed(3)} ${meta.inputSymbol} @ ${meta.triggerPriceUi} ${meta.outputSymbol}/${meta.inputSymbol})`,
-            ruleId:   rule.id,
-            ruleName: rule.name,
-          })
-
+          addLog({ level: 'info', message: `📝 Creating limit order proposal (${amountSol.toFixed(3)} ${meta.inputSymbol} @ ${meta.triggerPriceUi} ${meta.outputSymbol}/${meta.inputSymbol})`, ruleId: rule.id, ruleName: rule.name })
           try {
             await createProposal.mutateAsync({
-              potAddress:     potPubkey,
-              nextProposalId: pot?.nextProposalId ?? 0,
-              proposalType: {
-                limitOrder: {
-                  fromMint:    action.fromMint,
-                  toMint:      action.toMint,
-                  inAmount:    String(inAmountRaw),
-                  outAmount:   String(outAmountRaw),
-                  expiredAt:   action.expiredAt,
-                },
-              },
+              potAddress: potPubkey, nextProposalId: pot?.nextProposalId ?? 0,
+              proposalType: { limitOrder: { fromMint: action.fromMint, toMint: action.toMint, inAmount: String(inAmountRaw), outAmount: String(outAmountRaw), expiredAt: action.expiredAt } },
               description: `[AI] ${buildProposalDescription(meta)}`,
             })
-            addLog({
-              level:    'success',
-              message:  `✅ Limit order proposal created`,
-              ruleId:   rule.id,
-              ruleName: rule.name,
-            })
-            setConfig({
-              ...config,
-              rules: config.rules.map((r) =>
-                r.id === rule.id
-                  ? { ...r, fireCount: r.fireCount + 1, lastFiredAt: Date.now() }
-                  : r
-              ),
-            })
+            addLog({ level: 'success', message: `✅ Limit order proposal created`, ruleId: rule.id, ruleName: rule.name })
+            setConfig({ ...config, rules: config.rules.map((r) => r.id === rule.id ? { ...r, fireCount: r.fireCount + 1, lastFiredAt: Date.now() } : r) })
             qc.invalidateQueries({ queryKey: ['proposals', potPubkey] })
           } catch (err) {
-            addLog({
-              level:    'error',
-              message:  `❌ Limit order proposal failed: ${err instanceof Error ? err.message : String(err)}`,
-              ruleId:   rule.id,
-              ruleName: rule.name,
-            })
+            addLog({ level: 'error', message: `❌ Limit order proposal failed: ${err instanceof Error ? err.message : String(err)}`, ruleId: rule.id, ruleName: rule.name })
           }
 
-        // ── Propose DCA ──
         } else if (rule.action.type === 'propose_dca') {
           const action = rule.action as any
           const totalAmountSol    = ((action.amountPct ?? 20) / 100) * (pot?.balance ?? 0)
           const totalCycles       = action.totalCycles ?? 7
-          const cycleSecondsApart = action.cycleSecondsApart ?? 86400  // daily
+          const cycleSecondsApart = action.cycleSecondsApart ?? 86400
           const amountPerCycle    = totalAmountSol / totalCycles
-
           if (totalAmountSol < 0.05) {
-            addLog({
-              level: 'warn',
-              message: `⚠️ Skipped: vault balance too low for DCA proposal`,
-              ruleId: rule.id, ruleName: rule.name,
-            })
+            addLog({ level: 'warn', message: `⚠️ Skipped: vault balance too low for DCA proposal`, ruleId: rule.id, ruleName: rule.name })
             continue
           }
-
           const meta: DCAProposalMeta = {
-            type:              'DCA',
-            inputMint:         action.fromMint,
-            outputMint:        action.toMint,
-            inputSymbol:       action.fromSymbol ?? 'SOL',
-            outputSymbol:      action.toSymbol   ?? '???',
-            amountPerCycleUi:  amountPerCycle,
-            totalCycles,
-            cycleSecondsApart,
-            totalAmountUi:     totalAmountSol,
+            type: 'DCA', inputMint: action.fromMint, outputMint: action.toMint,
+            inputSymbol: action.fromSymbol ?? 'SOL', outputSymbol: action.toSymbol ?? '???',
+            amountPerCycleUi: amountPerCycle, totalCycles, cycleSecondsApart, totalAmountUi: totalAmountSol,
           }
-
-          addLog({
-            level:    'info',
-            message:  `📝 Creating DCA proposal: ${describeDCA({ inputSymbol: meta.inputSymbol, outputSymbol: meta.outputSymbol, amountPerCycle, totalCycles, cycleSecondsApart })}`,
-            ruleId:   rule.id,
-            ruleName: rule.name,
-          })
-
+          addLog({ level: 'info', message: `📝 Creating DCA proposal: ${describeDCA({ inputSymbol: meta.inputSymbol, outputSymbol: meta.outputSymbol, amountPerCycle, totalCycles, cycleSecondsApart })}`, ruleId: rule.id, ruleName: rule.name })
           try {
             await createProposal.mutateAsync({
-              potAddress:     potPubkey,
-              nextProposalId: pot?.nextProposalId ?? 0,
-              proposalType: {
-                dca: {
-                  fromMint:          action.fromMint,
-                  toMint:            action.toMint,
-                  totalAmount:       String(toRawAmount(totalAmountSol, action.fromMint)),
-                  amountPerCycle:    String(toRawAmount(amountPerCycle, action.fromMint)),
-                  cycleSecondsApart,
-                  totalCycles,
-                },
-              },
+              potAddress: potPubkey, nextProposalId: pot?.nextProposalId ?? 0,
+              proposalType: { dca: { fromMint: action.fromMint, toMint: action.toMint, totalAmount: String(toRawAmount(totalAmountSol, action.fromMint)), amountPerCycle: String(toRawAmount(amountPerCycle, action.fromMint)), cycleSecondsApart, totalCycles } },
               description: `[AI] ${buildProposalDescription(meta)}`,
             })
-            addLog({
-              level:    'success',
-              message:  `✅ DCA proposal created: ${describeDCA({ inputSymbol: meta.inputSymbol, outputSymbol: meta.outputSymbol, amountPerCycle, totalCycles, cycleSecondsApart })}`,
-              ruleId:   rule.id,
-              ruleName: rule.name,
-            })
-            setConfig({
-              ...config,
-              rules: config.rules.map((r) =>
-                r.id === rule.id
-                  ? { ...r, fireCount: r.fireCount + 1, lastFiredAt: Date.now() }
-                  : r
-              ),
-            })
+            addLog({ level: 'success', message: `✅ DCA proposal created: ${describeDCA({ inputSymbol: meta.inputSymbol, outputSymbol: meta.outputSymbol, amountPerCycle, totalCycles, cycleSecondsApart })}`, ruleId: rule.id, ruleName: rule.name })
+            setConfig({ ...config, rules: config.rules.map((r) => r.id === rule.id ? { ...r, fireCount: r.fireCount + 1, lastFiredAt: Date.now() } : r) })
             qc.invalidateQueries({ queryKey: ['proposals', potPubkey] })
           } catch (err) {
-            addLog({
-              level:    'error',
-              message:  `❌ DCA proposal failed: ${err instanceof Error ? err.message : String(err)}`,
-              ruleId:   rule.id,
-              ruleName: rule.name,
-            })
+            addLog({ level: 'error', message: `❌ DCA proposal failed: ${err instanceof Error ? err.message : String(err)}`, ruleId: rule.id, ruleName: rule.name })
           }
         }
       }
@@ -492,17 +373,13 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
     } else {
       const updated = { ...config, enabled: !config.enabled }
       setConfig(updated)
-      addLog({
-        level:   'info',
-        message: updated.enabled ? '🤖 AI Agent started' : '⏹️ AI Agent stopped',
-      })
+      addLog({ level: 'info', message: updated.enabled ? '🤖 AI Agent started' : '⏹️ AI Agent stopped' })
     }
   }, [config, potPubkey, setConfig, addLog])
 
   const clearLog = useCallback(() => {
     setLog([])
-    saveLog(potPubkey, [])
-  }, [potPubkey])
+  }, [])
 
   const triggerManualCheck = useCallback(async () => {
     try {
