@@ -68,13 +68,15 @@ pub fn handler(ctx: Context<UpdateTamagotchiMetadata>) -> Result<()> {
             uses: None,
         };
 
-        let seeds = &[
-            b"pot" as &[u8],
+        // Explicit types to avoid fixed-size array coercion issues
+        let bump_bytes = [pot.pot_bump];
+        let seeds: &[&[u8]] = &[
+            b"pot",
             pot.name.as_bytes(),
             pot.authority.as_ref(),
-            &[pot.pot_bump],
+            &bump_bytes,
         ];
-        let signer_seeds = &[seeds];
+        let signer_seeds: &[&[&[u8]]] = &[seeds];
 
         let metadata_info = ctx.accounts.metadata_account.to_account_info();
         let update_authority_info = ctx.accounts.pot.to_account_info();
@@ -99,7 +101,7 @@ pub fn handler(ctx: Context<UpdateTamagotchiMetadata>) -> Result<()> {
         tamagotchi_nft.last_evolved_at = Clock::get()?.unix_timestamp;
 
         msg!(
-            "Tamagotchi evolved! Pot: {}, New Level: {}, XP: {}",
+            "Tamagotchi evolved! Pot: {}, Level: {}, XP: {}",
             pot.name,
             pot.tamagotchi_level,
             pot.tamagotchi_xp
