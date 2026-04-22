@@ -8,13 +8,31 @@ export const metadata: Metadata = {
   description: 'Create group trading vaults, govern together, trade together, win together.',
 }
 
+// Runs before React hydrates — prevents light/dark flash on first paint.
+const THEME_BOOTSTRAP = `
+(function(){
+  try {
+    var stored = localStorage.getItem('pot-theme');
+    var theme = stored === 'light' || stored === 'dark'
+      ? stored
+      : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', theme);
+  } catch (e) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+`.trim()
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
+      </head>
       <body className="min-h-screen bg-pot-dark text-white antialiased">
         <AppProviders>
           <Navbar />

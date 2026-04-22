@@ -67,3 +67,88 @@
 .wallet-adapter-modal-title {
   @apply !text-white;
 }
+
+/* ──────────────────────────────────────────────────────────── */
+/*  LIGHT THEME OVERRIDES                                        */
+/*  Triggered by <html data-theme="light"> (set by ThemeToggle)  */
+/*  Covers the landing + all pot-* tokens used across the app.   */
+/* ──────────────────────────────────────────────────────────── */
+
+html[data-theme="light"] {
+  color-scheme: light;
+}
+
+html[data-theme="light"] body,
+html[data-theme="light"] .bg-pot-dark {
+  background-color: #f5f7fa !important;
+  color: #0d1117 !important;
+}
+
+html[data-theme="light"] .bg-pot-card {
+  background-color: #ffffff !important;
+}
+
+html[data-theme="light"] .border-pot-border,
+html[data-theme="light"] .border-pot-border\/40,
+html[data-theme="light"] .border-pot-border\/50 {
+  border-color: #e5e7eb !important;
+}
+
+html[data-theme="light"] .bg-pot-border {
+  background-color: #e5e7eb !important;
+}
+
+/* White text → near-black in light mode */
+html[data-theme="light"] .text-white {
+  color: #0d1117 !important;
+}
+
+/* Muted greys stay muted but shift warmer */
+html[data-theme="light"] .text-pot-muted {
+  color: #57606a !important;
+}
+html[data-theme="light"] .text-gray-400 {
+  color: #6b7280 !important;
+}
+
+/* Transparent / alpha backgrounds used by nav/hero glow */
+html[data-theme="light"] .bg-pot-dark\/60,
+html[data-theme="light"] .bg-pot-dark\/80,
+html[data-theme="light"] .bg-pot-dark\/95 {
+  background-color: rgba(245, 247, 250, 0.85) !important;
+}
+html[data-theme="light"] .bg-pot-card\/50 {
+  background-color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Gradients on Waitlist section + For-builders */
+html[data-theme="light"] .from-pot-accent\/10 { --tw-gradient-from: rgba(139, 92, 246, 0.08) !important; }
+html[data-theme="light"] .via-pot-card        { --tw-gradient-via: #ffffff !important; }
+html[data-theme="light"] .to-pot-green\/10    { --tw-gradient-to: rgba(0, 255, 136, 0.08) !important; }
+html[data-theme="light"] .from-pot-card       { --tw-gradient-from: #ffffff !important; }
+html[data-theme="light"] .to-pot-dark         { --tw-gradient-to: #f5f7fa !important; }
+html[data-theme="light"] .from-pot-green\/5   { --tw-gradient-from: rgba(0, 255, 136, 0.05) !important; }
+html[data-theme="light"] .to-pot-accent\/5    { --tw-gradient-to: rgba(139, 92, 246, 0.05) !important; }
+
+/* btn-secondary: dark card → white card with dark text */
+html[data-theme="light"] .btn-secondary {
+  background-color: #ffffff !important;
+  color: #0d1117 !important;
+  border-color: #e5e7eb !important;
+}
+
+/* Input gets a soft background, not pot-dark */
+html[data-theme="light"] .input {
+  background-color: #ffffff !important;
+  color: #0d1117 !important;
+  border-color: #e5e7eb !important;
+}
+
+/* Scrollbar */
+html[data-theme="light"] ::-webkit-scrollbar-track { background: #f5f7fa; }
+html[data-theme="light"] ::-webkit-scrollbar-thumb { background: #d1d5db; }
+
+/* Smooth the theme swap */
+html, body, nav, section, footer, .card, .btn-secondary, .input {
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+}
