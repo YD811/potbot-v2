@@ -8,6 +8,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { useQuery } from '@tanstack/react-query'
 import { useSolPrice } from '@/lib/prices'
 import { healthApi } from '@/lib/api-client'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 const WalletMultiButtonDynamic = dynamic(
   async () =>
@@ -96,6 +97,9 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Theme slider (dark ↔ light) */}
+          <ThemeToggle />
+
           {/* Waitlist / Early-Access CTA — visible on every page */}
           {showWaitlistCta && (
             <Link
