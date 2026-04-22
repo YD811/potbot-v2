@@ -68,87 +68,129 @@
   @apply !text-white;
 }
 
-/* ──────────────────────────────────────────────────────────── */
-/*  LIGHT THEME OVERRIDES                                        */
-/*  Triggered by <html data-theme="light"> (set by ThemeToggle)  */
-/*  Covers the landing + all pot-* tokens used across the app.   */
-/* ──────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════ */
+/*  LIGHT THEME                                                        */
+/*  Triggered by <html data-theme="light"> (set by ThemeToggle).       */
+/*  Strategy: surgical overrides for the design tokens actually used   */
+/*  across the app, using `!important` to beat Tailwind utility order. */
+/* ══════════════════════════════════════════════════════════════════ */
 
 html[data-theme="light"] {
   color-scheme: light;
+  --pot-ink: #0d1117;
+  --pot-ink-muted: #57606a;
+  --pot-ink-subtle: #8b949e;
+  --pot-bg: #f5f7fa;
+  --pot-bg-2: #ffffff;
+  --pot-border: #e5e7eb;
+  --pot-border-strong: #d1d5db;
 }
 
-html[data-theme="light"] body,
-html[data-theme="light"] .bg-pot-dark {
-  background-color: #f5f7fa !important;
-  color: #0d1117 !important;
+/* ── Body & scrollbar ── */
+html[data-theme="light"] body {
+  background-color: var(--pot-bg) !important;
+  color: var(--pot-ink) !important;
 }
+html[data-theme="light"] ::-webkit-scrollbar-track { background: var(--pot-bg) !important; }
+html[data-theme="light"] ::-webkit-scrollbar-thumb { background: var(--pot-border-strong) !important; }
 
-html[data-theme="light"] .bg-pot-card {
-  background-color: #ffffff !important;
-}
-
-html[data-theme="light"] .border-pot-border,
-html[data-theme="light"] .border-pot-border\/40,
-html[data-theme="light"] .border-pot-border\/50 {
-  border-color: #e5e7eb !important;
-}
-
-html[data-theme="light"] .bg-pot-border {
-  background-color: #e5e7eb !important;
-}
-
-/* White text → near-black in light mode */
-html[data-theme="light"] .text-white {
-  color: #0d1117 !important;
-}
-
-/* Muted greys stay muted but shift warmer */
-html[data-theme="light"] .text-pot-muted {
-  color: #57606a !important;
-}
-html[data-theme="light"] .text-gray-400 {
-  color: #6b7280 !important;
-}
-
-/* Transparent / alpha backgrounds used by nav/hero glow */
+/* ── Background tokens ── */
+html[data-theme="light"] .bg-pot-dark,
 html[data-theme="light"] .bg-pot-dark\/60,
 html[data-theme="light"] .bg-pot-dark\/80,
 html[data-theme="light"] .bg-pot-dark\/95 {
-  background-color: rgba(245, 247, 250, 0.85) !important;
+  background-color: rgba(245, 247, 250, 0.92) !important;
 }
+html[data-theme="light"] .bg-pot-card,
 html[data-theme="light"] .bg-pot-card\/50 {
-  background-color: rgba(255, 255, 255, 0.6) !important;
+  background-color: var(--pot-bg-2) !important;
+}
+html[data-theme="light"] .bg-pot-border {
+  background-color: var(--pot-border) !important;
 }
 
-/* Gradients on Waitlist section + For-builders */
-html[data-theme="light"] .from-pot-accent\/10 { --tw-gradient-from: rgba(139, 92, 246, 0.08) !important; }
-html[data-theme="light"] .via-pot-card        { --tw-gradient-via: #ffffff !important; }
+/* ── Border tokens ── */
+html[data-theme="light"] .border-pot-border,
+html[data-theme="light"] .border-pot-border\/40,
+html[data-theme="light"] .border-pot-border\/50 {
+  border-color: var(--pot-border) !important;
+}
+
+/* ── Text tokens ── */
+html[data-theme="light"] .text-white { color: var(--pot-ink) !important; }
+html[data-theme="light"] .text-pot-muted { color: var(--pot-ink-muted) !important; }
+html[data-theme="light"] .text-pot-muted\/70 { color: rgba(87, 96, 106, 0.7) !important; }
+html[data-theme="light"] .text-pot-muted\/50 { color: rgba(87, 96, 106, 0.5) !important; }
+html[data-theme="light"] .text-gray-400 { color: var(--pot-ink-muted) !important; }
+
+/* pot-green & pot-accent stay vibrant in both themes — no override */
+
+/* ── Gradient stops used by landing ── */
+html[data-theme="light"] .from-pot-accent\/10 { --tw-gradient-from: rgba(139, 92, 246, 0.08) !important; --tw-gradient-to: rgba(139, 92, 246, 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+html[data-theme="light"] .via-pot-card        { --tw-gradient-via: var(--pot-bg-2) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to) !important; }
 html[data-theme="light"] .to-pot-green\/10    { --tw-gradient-to: rgba(0, 255, 136, 0.08) !important; }
-html[data-theme="light"] .from-pot-card       { --tw-gradient-from: #ffffff !important; }
-html[data-theme="light"] .to-pot-dark         { --tw-gradient-to: #f5f7fa !important; }
-html[data-theme="light"] .from-pot-green\/5   { --tw-gradient-from: rgba(0, 255, 136, 0.05) !important; }
-html[data-theme="light"] .to-pot-accent\/5    { --tw-gradient-to: rgba(139, 92, 246, 0.05) !important; }
+html[data-theme="light"] .from-pot-card       { --tw-gradient-from: var(--pot-bg-2) !important; --tw-gradient-to: rgba(255, 255, 255, 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+html[data-theme="light"] .to-pot-dark         { --tw-gradient-to: var(--pot-bg) !important; }
+html[data-theme="light"] .from-pot-green\/5   { --tw-gradient-from: rgba(0, 200, 110, 0.06) !important; --tw-gradient-to: rgba(0, 200, 110, 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+html[data-theme="light"] .to-pot-accent\/5    { --tw-gradient-to: rgba(139, 92, 246, 0.06) !important; }
 
-/* btn-secondary: dark card → white card with dark text */
+/* ── Component-level tweaks ── */
+
+/* btn-primary: background stays pot-green, but its text uses `text-pot-dark`
+   which would otherwise become our light bg. Lock ink color. */
+html[data-theme="light"] .btn-primary,
+html[data-theme="light"] .text-pot-dark {
+  color: #0a0e17 !important;
+}
+
+/* btn-secondary: reverse for readability */
 html[data-theme="light"] .btn-secondary {
-  background-color: #ffffff !important;
-  color: #0d1117 !important;
-  border-color: #e5e7eb !important;
+  background-color: var(--pot-bg-2) !important;
+  color: var(--pot-ink) !important;
+  border-color: var(--pot-border) !important;
+}
+html[data-theme="light"] .btn-secondary:hover {
+  border-color: var(--pot-border-strong) !important;
 }
 
-/* Input gets a soft background, not pot-dark */
+/* Input: white card bg, dark text */
 html[data-theme="light"] .input {
-  background-color: #ffffff !important;
-  color: #0d1117 !important;
-  border-color: #e5e7eb !important;
+  background-color: var(--pot-bg-2) !important;
+  color: var(--pot-ink) !important;
+  border-color: var(--pot-border) !important;
+}
+html[data-theme="light"] .input::placeholder {
+  color: var(--pot-ink-subtle) !important;
 }
 
-/* Scrollbar */
-html[data-theme="light"] ::-webkit-scrollbar-track { background: #f5f7fa; }
-html[data-theme="light"] ::-webkit-scrollbar-thumb { background: #d1d5db; }
+/* Wallet adapter modal in light mode */
+html[data-theme="light"] .wallet-adapter-modal-wrapper {
+  background-color: var(--pot-bg-2) !important;
+  border-color: var(--pot-border) !important;
+}
+html[data-theme="light"] .wallet-adapter-modal-title {
+  color: var(--pot-ink) !important;
+}
+html[data-theme="light"] .wallet-adapter-modal-list li {
+  background-color: var(--pot-bg) !important;
+  color: var(--pot-ink) !important;
+}
 
-/* Smooth the theme swap */
-html, body, nav, section, footer, .card, .btn-secondary, .input {
+/* Navbar brand — keep "Pot" readable in light mode */
+html[data-theme="light"] nav .text-white { color: var(--pot-ink) !important; }
+
+/* Card hover borders adjust slightly for light contrast */
+html[data-theme="light"] .hover\:border-pot-green\/20:hover { border-color: rgba(0, 200, 110, 0.35) !important; }
+html[data-theme="light"] .hover\:border-pot-green\/30:hover { border-color: rgba(0, 200, 110, 0.4) !important; }
+html[data-theme="light"] .hover\:border-pot-accent\/30:hover { border-color: rgba(139, 92, 246, 0.4) !important; }
+
+/* Hero glow circles a bit softer in light to avoid milky wash */
+html[data-theme="light"] .bg-pot-green\/5 { background-color: rgba(0, 200, 110, 0.07) !important; }
+html[data-theme="light"] .bg-pot-accent\/5 { background-color: rgba(139, 92, 246, 0.07) !important; }
+
+/* ── Smooth theme swap ── */
+html, body, nav, section, footer, .card, .btn-primary, .btn-secondary, .input,
+.bg-pot-dark, .bg-pot-card, .bg-pot-border,
+.text-white, .text-pot-muted {
   transition: background-color .2s ease, color .2s ease, border-color .2s ease;
 }
