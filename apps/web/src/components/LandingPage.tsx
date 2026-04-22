@@ -33,9 +33,9 @@ const FEATURES = [
     desc: 'Deposit SOL → receive SPL tokens at current NAV. Redeem anytime. Trade shares on-chain like a real ETF.',
   },
   {
-    icon: '🐾',
-    title: 'Tamagotchi Mascot',
-    desc: 'Your vault grows from 🥚 Egg to ⚡ Titan. Higher levels unlock lower swap fees and exclusive benefits.',
+    icon: '🌱',
+    title: 'Tamagotchi Plant',
+    desc: 'Your vault grows from 🌱 Seedling to 🌳 Mature Tree. Higher levels unlock lower swap fees and exclusive benefits.',
   },
   {
     icon: '💰',
@@ -224,8 +224,12 @@ export default function LandingPage() {
             <span className="text-pot-green">on Solana</span>
           </h1>
 
-          <p className="text-xl text-pot-muted max-w-2xl mx-auto mb-8 leading-relaxed">
+          <p className="text-xl text-pot-muted max-w-2xl mx-auto mb-4 leading-relaxed">
             Pool SOL with your community. Vote on trades together. Let AI agents automate your strategy 24/7.
+          </p>
+
+          <p className="text-sm text-pot-muted/70 italic max-w-xl mx-auto mb-8">
+            For teams who'd rather decide together than argue in group chats.
           </p>
 
           {/* CTA buttons */}
@@ -269,6 +273,13 @@ export default function LandingPage() {
                 { label: 'Active Vaults', value: String(pots?.length ?? 0), color: 'text-white' },
                 { label: 'Members', value: String(totalMembers), color: 'text-white' },
                 { label: 'Total Trades', value: String(totalTrades), color: 'text-pot-accent' },
+                {
+                  label: 'TVL POTs',
+                  value: totalTvlUsd > 0
+                    ? `$${totalTvlUsd >= 1000 ? (totalTvlUsd / 1000).toFixed(1) + 'K' : totalTvlUsd.toFixed(0)}`
+                    : '—',
+                  color: 'text-pot-green',
+                },
               ].map((s, i, arr) => (
                 <div key={s.label} className={`px-6 py-4 text-center ${i < arr.length - 1 ? 'border-r border-pot-border' : ''}`}>
                   <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
@@ -295,6 +306,32 @@ export default function LandingPage() {
               <p className="text-pot-muted text-sm leading-relaxed">{f.desc}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ── Plant evolution strip ── */}
+      <section className="max-w-6xl mx-auto px-4 pb-16">
+        <div className="card p-6 bg-gradient-to-r from-pot-green/5 via-pot-card to-pot-accent/5">
+          <div className="text-center mb-6">
+            <h3 className="text-xl font-bold text-white mb-1">Watch your vault grow</h3>
+            <p className="text-pot-muted text-sm">Every trade, every member — your Tamagotchi plant levels up</p>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            {[
+              { emoji: '🌱', label: 'Seedling', tier: 'L1' },
+              { emoji: '🌿', label: 'Sprout', tier: 'L2' },
+              { emoji: '🍀', label: 'Bud', tier: 'L3' },
+              { emoji: '🌾', label: 'Bloom', tier: 'L4' },
+              { emoji: '🌺', label: 'Full Bloom', tier: 'L5' },
+              { emoji: '🌳', label: 'Mature Tree', tier: 'L6' },
+            ].map((stage) => (
+              <div key={stage.label} className="text-center">
+                <div className="text-4xl mb-1">{stage.emoji}</div>
+                <div className="text-xs font-bold text-white">{stage.label}</div>
+                <div className="text-[10px] text-pot-muted">{stage.tier}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -444,7 +481,7 @@ export default function LandingPage() {
             <span className="font-semibold text-white">PotBot v2</span>
             <span>· Group DeFi Vaults on Solana</span>
           </div>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
             <Link href="/signup" className="hover:text-pot-green transition">Early Access</Link>
             <Link href="/leaderboard" className="hover:text-white transition">Leaderboard</Link>
             <Link href="/vaults" className="hover:text-white transition">Vaults</Link>
@@ -453,6 +490,9 @@ export default function LandingPage() {
             <a href="https://x.com/PotBot_sol" target="_blank" rel="noreferrer" className="hover:text-white transition flex items-center gap-1">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
               @PotBot_sol
+            </a>
+            <a href="https://t.me/PotBot_v1_bot" target="_blank" rel="noreferrer" className="hover:text-pot-accent transition">
+              PotBot v1 (Telegram)
             </a>
           </div>
           <div>Built for Solana Frontier 2026</div>
