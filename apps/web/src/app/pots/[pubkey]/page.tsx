@@ -9,11 +9,11 @@ import {
   usePot,
   useMembers,
   useProposals,
-  useCreateProposal,
   useVote,
 } from '@/hooks/usePots'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 import { PnLDashboard } from '@/components/PnLDashboard'
+import { SharesPanel } from '@/components/SharesPanel'
 import { VaultAnalyticsStrip } from '@/components/VaultAnalyticsStrip'
 import { StrategyPanel } from '@/components/StrategyPanel'
 import { AIAgentPanel } from '@/components/AIAgentPanel'
@@ -21,12 +21,11 @@ import { GovernanceSettings } from '@/components/GovernanceSettings'
 import { VaultTab } from '@/components/VaultTab'
 import DepositPanel from '@/components/DepositPanel'
 import SharesTab from '@/components/SharesTab'
-import { JupiterSwapPanel } from '@/components/JupiterSwapPanel'
-import { BudgetGrantPanel } from '@/components/BudgetGrantPanel'
 import ReferralPanel from '@/components/ReferralPanel'
 import { reverseSNS } from '@/lib/sns'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import SwapExecuteButton from '@/components/SwapExecuteButton'
+import CreateProposalModal from '@/components/pot/CreateProposalModal'
 
 // SSR-safe wallet button (same pattern as Navbar)
 const WalletMultiButtonDynamic = dynamic(
@@ -302,10 +301,7 @@ export default function PotPage() {
   const [activeTab, setActiveTab] = useState<Tab>('deposit')
   const [snsName, setSnsName] = useState<string>('')
   const [isMember, setIsMember] = useState(false)
-  const [showSwapProposal, setShowSwapProposal] = useState(false)
-  const [showBudgetGrant, setShowBudgetGrant] = useState(false)
-
-  const createProposal = useCreateProposal()
+  const [proposalModalOpen, setProposalModalOpen] = useState(false)
 
   useEffect(() => {
     (async () => {
@@ -442,13 +438,6 @@ export default function PotPage() {
               {TAB_LABELS[tab]}
             </button>
           ))}
-          {/* Docs — external link, not a tab (full doc page at /docs lands in Phase 6) */}
-          <Link
-            href="/docs"
-            className="ml-auto px-4 py-3 text-sm font-medium whitespace-nowrap text-pot-muted hover:text-pot-green border-b-2 border-transparent hover:border-pot-green/40 transition"
-          >
-            📖 Docs →
-          </Link>
         </div>
       </div>
 
@@ -466,38 +455,30 @@ export default function PotPage() {
           </WalletGate>
         )}
 
-        {/* ── Overview ── compact dashboard. No SharesPanel/PnLDashboard duplicates (those live on /shares and /positions). */}
+        {/* ── Overview ── key metrics + user's shares + P&L + active proposals.
+             NO tab-link duplication — the top tab bar already handles nav. */}
         {activeTab === 'overview' && (
           <div className="space-y-6 w-full">
-            {/* Metric tiles — sized for 8-char values, tabular-nums */}
+            {/* Metric tiles — min-w-[132px] sized for 8-char values, tabular-nums */}
             <div className="flex gap-4 flex-wrap">
-              <MetricTile label="TVL (SOL)"   value={pot.balance.toFixed(2)} />
-              <MetricTile label="Members"     value={String(pot.memberCount ?? 0)} />
-              <MetricTile label="Proposals"   value={String(proposals.length)} accent={activeProposalsCount ? 'accent' : undefined} />
-              <MetricTile label="Active"      value={String(activeProposalsCount)} accent="accent" />
-              <MetricTile label="Trades"      value={String(pot.tradeCount ?? 0)} />
+              <MetricTile label="TVL (SOL)"    value={pot.balance.toFixed(2)} />
+              <MetricTile label="Members"      value={String(pot.memberCount ?? 0)} />
+              <MetricTile label="Proposals"    value={String(proposals.length)} accent={activeProposalsCount ? 'accent' : undefined} />
+              <MetricTile label="Active"       value={String(activeProposalsCount)} accent="accent" />
+              <MetricTile label="Trades"       value={String(pot.tradeCount ?? 0)} />
               <MetricTile label="Total Shares" value={(pot.totalShares ?? 0).toLocaleString()} />
-              <MetricTile label="🌱 Tama HP"  value={`${tamaStats.hp}/100`} accent="green" />
+              <MetricTile label="🌱 Tama HP"   value={`${tamaStats.hp}/100`} accent="green" />
             </div>
 
-            {/* Quick actions — each jumps to its tab */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              {([
-                ['deposit',    '💰 Deposit'],
-                ['vault',      '🏠 Vault'],
-                ['proposals',  '🗳️ Vote'],
-                ['shares',     '🪙 Shares'],
-                ['tamagotchi', '🌱 Tama'],
-                ['positions',  '📊 P&L'],
-              ] as [Tab, string][]).map(([t, label]) => (
-                <button
-                  key={t}
-                  onClick={() => setActiveTab(t)}
-                  className="px-3 py-3 rounded-xl border border-pot-border bg-pot-card hover:border-pot-accent/40 text-sm font-medium text-white transition"
-                >
-                  {label}
-                </button>
-              ))}
+            {/* Your position & P&L — shown inline as dashboard summary.
+               Full management still lives in /shares and /positions tabs. */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+              <div className="lg:col-span-2 w-full">
+                <SharesPanel potPubkey={pubkey} />
+              </div>
+              <div className="w-full">
+                <PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} />
+              </div>
             </div>
 
             {/* Active proposals callout */}
@@ -562,23 +543,24 @@ export default function PotPage() {
           )
         )}
 
-        {/* ── Proposals ── */}
+        {/* ── Proposals ── single "+ Create Proposal" opens categorized modal (Phase 2).
+             Modal maps each category to the right on-chain ProposalType. */}
         {activeTab === 'proposals' && (
           <div className="space-y-6 w-full">
-            {/* Create proposal actions — Phase 2 will replace with categorized modal */}
+            {/* Header row with single CTA */}
             {canManage && (
-              <div className="flex flex-wrap gap-3">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="min-w-0">
+                  <h2 className="text-lg font-bold text-white">Proposals</h2>
+                  <p className="text-sm text-pot-muted">
+                    Propose a change, everyone with shares votes Yes/No.
+                  </p>
+                </div>
                 <button
-                  onClick={() => { setShowSwapProposal(!showSwapProposal); setShowBudgetGrant(false) }}
-                  className="px-4 py-2 bg-pot-accent hover:bg-pot-accent/90 text-white rounded-xl text-sm font-bold transition"
+                  onClick={() => setProposalModalOpen(true)}
+                  className="px-5 py-2.5 bg-pot-accent hover:bg-pot-accent/90 text-white rounded-xl text-sm font-bold transition shrink-0"
                 >
-                  🔄 Propose Swap
-                </button>
-                <button
-                  onClick={() => { setShowBudgetGrant(!showBudgetGrant); setShowSwapProposal(false) }}
-                  className="px-4 py-2 bg-pot-green/20 hover:bg-pot-green/30 text-pot-green border border-pot-green/30 rounded-xl text-sm font-bold transition"
-                >
-                  💸 Budget Grant
+                  + Create Proposal
                 </button>
               </div>
             )}
@@ -603,59 +585,13 @@ export default function PotPage() {
               >{null}</WalletGate>
             )}
 
-            {/* Swap proposal form */}
-            {showSwapProposal && canManage && (
-              <div className="bg-pot-card border border-pot-border rounded-2xl overflow-hidden w-full">
-                <div className="px-5 pt-5 pb-2 border-b border-pot-border flex items-center justify-between">
-                  <h3 className="font-bold text-white">Propose Swap</h3>
-                  <button onClick={() => setShowSwapProposal(false)} className="text-pot-muted hover:text-white text-lg">✕</button>
-                </div>
-                <JupiterSwapPanel
-                  mode="vault"
-                  potPubkey={pubkey}
-                  vaultBalance={pot.balance}
-                  onPropose={async ({ fromMint, toMint, amountSol, description }) => {
-                    const amountLamports = Math.round(amountSol * 1e9)
-                    await createProposal.mutateAsync({
-                      potAddress: pubkey,
-                      nextProposalId,
-                      proposalType: { swap: { fromMint, toMint, amount: amountLamports } },
-                      description,
-                      swapMeta: {
-                        inputMint: fromMint,
-                        outputMint: toMint,
-                        amountLamports,
-                        inputSymbol: description.split(' ')[2] ?? 'SOL',
-                        outputSymbol: description.split('→')[1]?.trim() ?? '?',
-                      },
-                    })
-                    setShowSwapProposal(false)
-                  }}
-                />
-              </div>
-            )}
-
-            {showBudgetGrant && canManage && (
-              <div className="bg-pot-card border border-pot-border rounded-2xl overflow-hidden w-full">
-                <div className="px-5 pt-5 pb-2 border-b border-pot-border flex items-center justify-between">
-                  <h3 className="font-bold text-white">Budget Grant</h3>
-                  <button onClick={() => setShowBudgetGrant(false)} className="text-pot-muted hover:text-white text-lg">✕</button>
-                </div>
-                <BudgetGrantPanel
-                  potPubkey={pubkey}
-                  pot={{ ...potAny, nextProposalId }}
-                  currentUserPubkey={userPubkey?.toString()}
-                />
-              </div>
-            )}
-
             {/* Proposals list */}
             {proposals.length === 0 ? (
               <div className="text-center py-16 bg-pot-card border border-pot-border rounded-2xl w-full">
                 <div className="text-5xl mb-4">🗳️</div>
                 <p className="text-white font-semibold mb-1">No proposals yet</p>
                 <p className="text-pot-muted text-sm">
-                  {canManage ? 'Create the first proposal above.' : 'Join the vault to create proposals.'}
+                  {canManage ? 'Click "+ Create Proposal" to submit the first one.' : 'Join the vault to create proposals.'}
                 </p>
               </div>
             ) : (
@@ -671,6 +607,17 @@ export default function PotPage() {
                 ))}
               </div>
             )}
+
+            {/* Modal */}
+            <CreateProposalModal
+              open={proposalModalOpen}
+              onClose={() => setProposalModalOpen(false)}
+              potPubkey={pubkey}
+              nextProposalId={nextProposalId}
+              vaultBalance={pot.balance}
+              potForBudgetGrant={potAny}
+              currentUserPubkey={userPubkey?.toString()}
+            />
           </div>
         )}
 
