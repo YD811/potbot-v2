@@ -69,11 +69,30 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════ */
-/*  LIGHT THEME                                                        */
-/*  Triggered by <html data-theme="light"> (set by ThemeToggle).       */
-/*  Strategy: surgical overrides for the design tokens actually used   */
-/*  across the app, using `!important` to beat Tailwind utility order. */
+/*  THEME TOKENS                                                       */
+/*  Root defaults = dark; `[data-theme="light"]` flips the palette.    */
+/*  Pages that still use inline styles (e.g. /vaults) should consume   */
+/*  these via `var(--c-*)` so they follow the theme without rewrites.  */
 /* ══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Legacy pot-* tokens used by light-theme overrides below */
+  --pot-ink: #ffffff;
+  --pot-ink-muted: #8B9BB4;
+  --pot-ink-subtle: #6B7A8F;
+  --pot-bg: #0D1117;
+  --pot-bg-2: #111827;
+  --pot-border: #1A2332;
+  --pot-border-strong: #2A3342;
+  /* Inline-style palette (consumed by var(--c-*) in .tsx inline styles) */
+  --c-bg: #0D1117;
+  --c-card: #111827;
+  --c-card-2: #0F1929;
+  --c-border: #1A2332;
+  --c-border-2: #24324A;
+  --c-text: #ffffff;
+  --c-muted: #8B9BB4;
+}
 
 html[data-theme="light"] {
   color-scheme: light;
@@ -84,6 +103,14 @@ html[data-theme="light"] {
   --pot-bg-2: #ffffff;
   --pot-border: #e5e7eb;
   --pot-border-strong: #d1d5db;
+  /* Inline-style palette flips to light */
+  --c-bg: #f5f7fa;
+  --c-card: #ffffff;
+  --c-card-2: #f9fafb;
+  --c-border: #e5e7eb;
+  --c-border-2: #d1d5db;
+  --c-text: #0d1117;
+  --c-muted: #57606a;
 }
 
 /* ── Body & scrollbar ── */
@@ -119,9 +146,14 @@ html[data-theme="light"] .border-pot-border\/50 {
 /* ── Text tokens ── */
 html[data-theme="light"] .text-white { color: var(--pot-ink) !important; }
 html[data-theme="light"] .text-pot-muted { color: var(--pot-ink-muted) !important; }
-html[data-theme="light"] .text-pot-muted\/70 { color: rgba(87, 96, 106, 0.7) !important; }
-html[data-theme="light"] .text-pot-muted\/50 { color: rgba(87, 96, 106, 0.5) !important; }
+html[data-theme="light"] .text-pot-muted\/70 { color: rgba(55, 65, 81, 0.85) !important; }
+html[data-theme="light"] .text-pot-muted\/50 { color: rgba(55, 65, 81, 0.7) !important; }
 html[data-theme="light"] .text-gray-400 { color: var(--pot-ink-muted) !important; }
+html[data-theme="light"] .text-gray-500 { color: var(--pot-ink-muted) !important; }
+html[data-theme="light"] .text-gray-300 { color: var(--pot-ink) !important; }
+
+/* Dark theme: bump low-contrast mutes a touch for readability */
+html:not([data-theme="light"]) .text-pot-muted\/50 { color: rgba(139, 155, 180, 0.75) !important; }
 
 /* pot-green & pot-accent stay vibrant in both themes — no override */
 

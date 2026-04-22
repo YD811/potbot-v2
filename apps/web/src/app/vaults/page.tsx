@@ -124,14 +124,16 @@ export default function VaultsPage() {
   const totalMembers = allVaults.reduce((s, v) => s + v.memberCount, 0);
 
   return (
-    <div style={{ backgroundColor: '#0D1117', color: 'white', minHeight: '100vh', fontFamily: 'Geist, sans-serif' }}>
-      {/* Top Nav */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 100, backgroundColor: '#0D1117', borderBottom: '1px solid #1A2332', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backdropFilter: 'blur(10px)' }}>
+    <div style={{ minHeight: '100vh', fontFamily: 'Geist, sans-serif', color: 'var(--c-text)' }}>
+      {/* Page header — NOT sticky (global <Navbar/> in layout.tsx already is;
+          two sticky headers at top:0 caused z-fighting and the global nav
+          disappearing on scroll). */}
+      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Link href="/" style={{ color: '#8B9BB4', textDecoration: 'none', fontSize: '14px' }}>← Back</Link>
+          <Link href="/" style={{ color: 'var(--c-muted)', textDecoration: 'none', fontSize: '14px' }}>← Back</Link>
           <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>⚡ PotBot Vaults</h1>
           {/* Live / Demo badge */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#8B9BB4' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--c-muted)' }}>
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: isLiveData ? '#14F195' : '#F59E0B', animation: isLiveData ? 'pulse 2s infinite' : 'none' }} />
             <span style={{ color: isLiveData ? '#14F195' : '#F59E0B' }}>{isLiveData ? 'Live data' : 'Demo'}</span>
           </div>
@@ -140,7 +142,7 @@ export default function VaultsPage() {
       </div>
 
       {/* Stats strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', padding: '24px', borderBottom: '1px solid #1A2332', maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', padding: '24px', borderBottom: '1px solid var(--c-border)', maxWidth: '1400px', margin: '0 auto' }}>
         <StatCard label="Total AUM" value={totalAum >= 1_000_000 ? `$${(totalAum/1_000_000).toFixed(1)}M` : `$${(totalAum/1000).toFixed(0)}K`} loading={potsLoading} />
         <StatCard label="Active Vaults" value={String(allVaults.length)} loading={potsLoading} />
         <StatCard label="Total Members" value={totalMembers.toLocaleString()} loading={potsLoading} />
@@ -157,23 +159,23 @@ export default function VaultsPage() {
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {['all', 'ai_dca', 'trend_following', 'mean_reversion', 'hodl', 'degen', 'yield'].map((strategy) => (
-            <button key={strategy} onClick={() => setSelectedStrategy(strategy)} style={{ padding: '6px 12px', borderRadius: '20px', border: '1px solid #1A2332', backgroundColor: selectedStrategy === strategy ? '#14F195' : 'transparent', color: selectedStrategy === strategy ? '#0D1117' : 'white', fontSize: '13px', cursor: 'pointer', fontWeight: selectedStrategy === strategy ? '600' : '400' }}>
+            <button key={strategy} onClick={() => setSelectedStrategy(strategy)} style={{ padding: '6px 12px', borderRadius: '20px', border: '1px solid var(--c-border)', backgroundColor: selectedStrategy === strategy ? '#14F195' : 'transparent', color: selectedStrategy === strategy ? '#0D1117' : 'var(--c-text)', fontSize: '13px', cursor: 'pointer', fontWeight: selectedStrategy === strategy ? '600' : '400' }}>
               {strategy === 'all' ? 'All' : STRATEGY_LABELS[strategy]}
             </button>
           ))}
         </div>
         <div style={{ display: 'flex', gap: '16px', marginLeft: 'auto' }}>
-          <select value={creatorFilter} onChange={(e) => setCreatorFilter(e.target.value)} style={{ backgroundColor: '#111827', border: '1px solid #1A2332', color: 'white', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
+          <select value={creatorFilter} onChange={(e) => setCreatorFilter(e.target.value)} style={{ backgroundColor: 'var(--c-card)', border: '1px solid var(--c-border)', color: 'var(--c-text)', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
             <option value="all">All Types</option>
             <option value="ai_agents">AI Agents Only</option>
             <option value="human">Human Traders</option>
           </select>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ backgroundColor: '#111827', border: '1px solid #1A2332', color: 'white', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ backgroundColor: 'var(--c-card)', border: '1px solid var(--c-border)', color: 'var(--c-text)', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
             <option value="returns">Best Returns</option>
             <option value="aum">Biggest AUM</option>
             <option value="members">Most Members</option>
           </select>
-          <input type="text" placeholder="Search vaults..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ backgroundColor: '#111827', border: '1px solid #1A2332', color: 'white', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', minWidth: '200px' }} />
+          <input type="text" placeholder="Search vaults..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ backgroundColor: 'var(--c-card)', border: '1px solid var(--c-border)', color: 'var(--c-text)', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', minWidth: '200px' }} />
         </div>
       </div>
 
@@ -181,7 +183,7 @@ export default function VaultsPage() {
       {potsLoading ? (
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px 40px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
           {[1,2,3,4,5,6].map(i => (
-            <div key={i} style={{ backgroundColor: '#111827', border: '1px solid #1A2332', borderRadius: '8px', height: '220px', animation: 'pulse 2s infinite' }} />
+            <div key={i} style={{ backgroundColor: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: '8px', height: '220px', animation: 'pulse 2s infinite' }} />
           ))}
         </div>
       ) : (
@@ -197,7 +199,7 @@ export default function VaultsPage() {
       )}
 
       {/* Strategy legend */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px 24px', borderTop: '1px solid #1A2332' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px 24px', borderTop: '1px solid var(--c-border)' }}>
         <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '24px' }}>Strategy Types</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
           {[
@@ -208,9 +210,9 @@ export default function VaultsPage() {
             { key: 'degen',           label: '🎰 Degen',             desc: 'High-risk, high-reward experimental strategies' },
             { key: 'yield',           label: '🌾 Yield Farming',     desc: 'Maximize yield through DeFi protocols' },
           ].map((s) => (
-            <div key={s.key} style={{ backgroundColor: '#111827', border: `1px solid ${STRATEGY_COLORS[s.key]}`, borderRadius: '8px', padding: '16px' }}>
+            <div key={s.key} style={{ backgroundColor: 'var(--c-card)', border: `1px solid ${STRATEGY_COLORS[s.key]}`, borderRadius: '8px', padding: '16px' }}>
               <div style={{ fontWeight: '600', fontSize: '14px', marginBottom: '8px' }}>{s.label}</div>
-              <div style={{ fontSize: '13px', color: '#8B9BB4' }}>{s.desc}</div>
+              <div style={{ fontSize: '13px', color: 'var(--c-muted)' }}>{s.desc}</div>
             </div>
           ))}
         </div>
@@ -223,12 +225,12 @@ export default function VaultsPage() {
 
 function StatCard({ label, value, loading, color }: { label: string; value: string; loading?: boolean; color?: string }) {
   return (
-    <div style={{ backgroundColor: '#111827', padding: '16px', borderRadius: '8px', border: '1px solid #1A2332' }}>
-      <div style={{ fontSize: '12px', color: '#8B9BB4', marginBottom: '8px' }}>{label}</div>
+    <div style={{ backgroundColor: 'var(--c-card)', padding: '16px', borderRadius: '8px', border: '1px solid var(--c-border)' }}>
+      <div style={{ fontSize: '12px', color: 'var(--c-muted)', marginBottom: '8px' }}>{label}</div>
       {loading ? (
-        <div style={{ height: '28px', width: '60px', backgroundColor: '#1A2332', borderRadius: '4px' }} />
+        <div style={{ height: '28px', width: '60px', backgroundColor: 'var(--c-border)', borderRadius: '4px' }} />
       ) : (
-        <div style={{ fontSize: '20px', fontWeight: '700', color: color ?? 'white' }}>{value}</div>
+        <div style={{ fontSize: '20px', fontWeight: '700', color: color ?? 'var(--c-text)' }}>{value}</div>
       )}
     </div>
   );
@@ -243,12 +245,12 @@ function VaultCard({ vault, analyticsLoading }: { vault: any; analyticsLoading: 
       href={vault.isDemo ? '#' : `/pots/${vault.pubkey}`}
       style={{ textDecoration: 'none' }}
     >
-      <div style={{ backgroundColor: '#111827', border: '1px solid #1A2332', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', cursor: 'pointer', transition: 'border-color 0.15s' }}>
+      <div style={{ backgroundColor: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', cursor: 'pointer', transition: 'border-color 0.15s' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '24px' }}>{vault.emoji}</span>
-            <div style={{ fontWeight: '600', fontSize: '14px', color: 'white' }}>{vault.name}</div>
+            <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--c-text)' }}>{vault.name}</div>
           </div>
           <span style={{ fontSize: '20px' }}>{vault.tamagotchiEmoji}</span>
         </div>
@@ -259,30 +261,30 @@ function VaultCard({ vault, analyticsLoading }: { vault: any; analyticsLoading: 
         </div>
 
         {/* Creator */}
-        <div style={{ fontSize: '13px', color: '#8B9BB4' }}>
+        <div style={{ fontSize: '13px', color: 'var(--c-muted)' }}>
           {vault.isAiAgent ? '🤖 ' : '@'}{vault.creatorHandle}
         </div>
 
         {/* Stats grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', fontSize: '12px' }}>
           <div>
-            <div style={{ color: '#8B9BB4', marginBottom: '4px' }}>Members</div>
-            <div style={{ fontWeight: '600', color: 'white' }}>{vault.memberCount}</div>
+            <div style={{ color: 'var(--c-muted)', marginBottom: '4px' }}>Members</div>
+            <div style={{ fontWeight: '600', color: 'var(--c-text)' }}>{vault.memberCount}</div>
           </div>
           <div>
-            <div style={{ color: '#8B9BB4', marginBottom: '4px' }}>AUM</div>
+            <div style={{ color: 'var(--c-muted)', marginBottom: '4px' }}>AUM</div>
             {analyticsLoading ? (
-              <div style={{ height: '16px', width: '40px', backgroundColor: '#1A2332', borderRadius: '3px' }} />
+              <div style={{ height: '16px', width: '40px', backgroundColor: 'var(--c-border)', borderRadius: '3px' }} />
             ) : (
-              <div style={{ fontWeight: '600', color: 'white' }}>
+              <div style={{ fontWeight: '600', color: 'var(--c-text)' }}>
                 {vault.aumUsd >= 1_000 ? `$${(vault.aumUsd/1_000).toFixed(1)}K` : `$${vault.aumUsd.toFixed(0)}`}
               </div>
             )}
           </div>
           <div>
-            <div style={{ color: '#8B9BB4', marginBottom: '4px' }}>PnL</div>
+            <div style={{ color: 'var(--c-muted)', marginBottom: '4px' }}>PnL</div>
             {analyticsLoading ? (
-              <div style={{ height: '16px', width: '40px', backgroundColor: '#1A2332', borderRadius: '3px' }} />
+              <div style={{ height: '16px', width: '40px', backgroundColor: 'var(--c-border)', borderRadius: '3px' }} />
             ) : (
               <div style={{ fontWeight: '600', color: pnlColor }}>
                 {vault.pnl30d >= 0 ? '+' : ''}{vault.pnl30d}%
@@ -294,7 +296,7 @@ function VaultCard({ vault, analyticsLoading }: { vault: any; analyticsLoading: 
         {/* APY row (live data only) */}
         {!vault.isDemo && vault.apy30d > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-            <span style={{ color: '#8B9BB4' }}>APY 30d:</span>
+            <span style={{ color: 'var(--c-muted)' }}>APY 30d:</span>
             <span style={{ fontWeight: '700', color: apyColor }}>{vault.apy30d.toFixed(1)}%</span>
           </div>
         )}
@@ -310,7 +312,7 @@ function VaultCard({ vault, analyticsLoading }: { vault: any; analyticsLoading: 
         </div>
 
         {/* Fee info */}
-        <div style={{ fontSize: '12px', color: '#8B9BB4', marginTop: '4px' }}>
+        <div style={{ fontSize: '12px', color: 'var(--c-muted)', marginTop: '4px' }}>
           {vault.entryFeeUsd === 0 ? 'Free entry' : `$${vault.entryFeeUsd} entry`}
           {vault.performanceFeeBps > 0 && ` · ${(vault.performanceFeeBps / 100).toFixed(1)}% perf fee`}
         </div>
