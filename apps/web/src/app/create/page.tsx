@@ -22,6 +22,11 @@ const YIELD_STRATEGIES = [
   { value: 3, label: 'Aggressive', desc: 'High yield, higher risk' },
 ]
 
+const LOCKUP_MAX = 365           // days, hard cap
+const MIN_DEPOSIT_FLOOR = 0.001  // SOL, must be strictly > 0
+
+const LOCKUP_PRESETS = [0, 7, 30, 90, 180, 365]
+
 export default function CreatePotPage() {
   const router = useRouter()
   const { publicKey } = useWallet()
@@ -41,13 +46,20 @@ export default function CreatePotPage() {
   const update = (key: string, value: any) =>
     setForm((prev) => ({ ...prev, [key]: value }))
 
+  // --- validation ------------------------------------------------------------
+  const nameOk       = form.name.trim().length > 0
+  const minDepositOk = Number.isFinite(form.minDeposit) && form.minDeposit >= MIN_DEPOSIT_FLOOR
+  const lockupOk     = Number.isInteger(form.lockupDays) && form.lockupDays >= 0 && form.lockupDays <= LOCKUP_MAX
+
+  const canSubmit = nameOk && minDepositOk && lockupOk && !createPot.isPending
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!publicKey) return
+    if (!publicKey || !canSubmit) return
 
     try {
       const result = await createPot.mutateAsync({
-        name: form.name,
+        name: form.name.trim(),
         emoji: form.emoji,
         isPublic: form.isPublic,
         minDeposit: form.minDeposit,
@@ -129,7 +141,7 @@ export default function CreatePotPage() {
         </div>
 
         {/* Config */}
-        <div className="rounded-2xl border border-pot-border bg-pot-card p-6 space-y-4">
+        <div className="rounded-2xl border border-pot-border bg-pot-card p-6 space-y-5">
           <h2 className="text-lg font-semibold text-white">Configuration</h2>
 
           {/* Public toggle */}
@@ -163,28 +175,98 @@ export default function CreatePotPage() {
             <input
               type="number"
               step="0.001"
-              min="0"
+              min={MIN_DEPOSIT_FLOOR}
+              required
               value={form.minDeposit}
-              onChange={(e) => update('minDeposit', parseFloat(e.target.value))}
-              className="w-full rounded-xl border border-pot-border bg-pot-dark px-4 py-3 text-white focus:border-pot-green focus:outline-none focus:ring-1 focus:ring-pot-green/50"
+              onChange={(e) => {
+                const v = parseFloat(e.target.value)
+                update('minDeposit', Number.isFinite(v) ? v : 0)
+              }}
+              className={`w-full rounded-xl border bg-pot-dark px-4 py-3 text-white focus:outline-none focus:ring-1 ${
+                minDepositOk
+                  ? 'border-pot-border focus:border-pot-green focus:ring-pot-green/50'
+                  : 'border-red-500/60 focus:border-red-500 focus:ring-red-500/40'
+              }`}
             />
+            {minDepositOk ? (
+              <span className="text-xs text-pot-muted mt-1 block">
+                Must be at least {MIN_DEPOSIT_FLOOR} SOL
+              </span>
+            ) : (
+              <span className="text-xs text-red-400 mt-1 block">
+                Minimum deposit must be greater than 0 (≥ {MIN_DEPOSIT_FLOOR} SOL)
+              </span>
+            )}
           </div>
 
-          {/* Lockup */}
+          {/* Lockup — slider + numeric input, capped at 365 */}
           <div>
-            <label className="block text-sm text-pot-muted mb-1.5">
-              Lockup Period (Days)
-            </label>
-            <input
-              type="number"
-              min="0"
-              value={form.lockupDays}
-              onChange={(e) => update('lockupDays', parseInt(e.target.value) || 0)}
-              className="w-full rounded-xl border border-pot-border bg-pot-dark px-4 py-3 text-white focus:border-pot-green focus:outline-none focus:ring-1 focus:ring-pot-green/50"
-            />
-            <span className="text-xs text-pot-muted mt-1">
-              0 = no lockup, members can withdraw anytime
+            <div className="flex items-end justify-between mb-1.5">
+              <label className="block text-sm text-pot-muted">
+                Lockup Period (Days)
+              </label>
+              <span className="text-xs text-pot-muted">
+                max {LOCKUP_MAX} days (1 year)
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min={0}
+                max={LOCKUP_MAX}
+                step={1}
+                value={form.lockupDays}
+                onChange={(e) => update('lockupDays', parseInt(e.target.value, 10) || 0)}
+                className="flex-1 accent-pot-green h-2 rounded-full bg-pot-dark cursor-pointer"
+              />
+              <input
+                type="number"
+                min={0}
+                max={LOCKUP_MAX}
+                step={1}
+                value={form.lockupDays}
+                onChange={(e) => {
+                  const n = parseInt(e.target.value, 10)
+                  if (!Number.isFinite(n)) { update('lockupDays', 0); return }
+                  update('lockupDays', Math.max(0, Math.min(LOCKUP_MAX, n)))
+                }}
+                className={`w-24 rounded-lg border bg-pot-dark px-3 py-2 text-right font-mono text-white tabular-nums focus:outline-none focus:ring-1 ${
+                  lockupOk
+                    ? 'border-pot-border focus:border-pot-green focus:ring-pot-green/50'
+                    : 'border-red-500/60 focus:border-red-500 focus:ring-red-500/40'
+                }`}
+              />
+            </div>
+
+            {/* Presets — quick snap */}
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {LOCKUP_PRESETS.map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => update('lockupDays', d)}
+                  className={`text-xs px-2.5 py-1 rounded-lg border transition ${
+                    form.lockupDays === d
+                      ? 'border-pot-green text-pot-green bg-pot-green/10'
+                      : 'border-pot-border text-pot-muted hover:text-white hover:border-pot-muted'
+                  }`}
+                >
+                  {d === 0 ? 'None' : `${d}d`}
+                </button>
+              ))}
+            </div>
+
+            <span className="text-xs text-pot-muted mt-2 block">
+              {form.lockupDays === 0
+                ? 'No lockup — members can withdraw anytime'
+                : `Members can't withdraw for ${form.lockupDays} day${form.lockupDays === 1 ? '' : 's'} after deposit`}
             </span>
+            {!lockupOk && (
+              <span className="text-xs text-red-400 mt-1 block">
+                Lockup must be between 0 and {LOCKUP_MAX} days
+              </span>
+            )}
           </div>
         </div>
 
@@ -291,10 +373,22 @@ export default function CreatePotPage() {
           </div>
         </div>
 
+        {/* Validation summary (only when blocked) */}
+        {!canSubmit && (nameOk || form.name.length > 0) && (!minDepositOk || !lockupOk) && (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300 space-y-1">
+            {!minDepositOk && (
+              <p>• Minimum deposit must be ≥ {MIN_DEPOSIT_FLOOR} SOL (cannot be 0)</p>
+            )}
+            {!lockupOk && (
+              <p>• Lockup must be between 0 and {LOCKUP_MAX} days</p>
+            )}
+          </div>
+        )}
+
         {/* Submit */}
         <button
           type="submit"
-          disabled={!form.name || createPot.isPending}
+          disabled={!canSubmit}
           className="w-full rounded-xl bg-pot-green py-4 text-lg font-bold text-pot-dark transition hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {createPot.isPending ? (
