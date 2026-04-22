@@ -47,6 +47,9 @@ function LivePriceTicker() {
           </span>
         </div>
         <div className="ml-auto flex items-center gap-3 text-[11px] text-pot-muted">
+          <Link href="/docs" className="hover:text-pot-green transition">
+            📖 Docs
+          </Link>
           <Link href="/for-agents" className="hover:text-pot-green transition hidden sm:block">
             🤖 For AI Agents
           </Link>
@@ -61,6 +64,7 @@ const NAV_LINKS = [
   { href: '/leaderboard', label: '🏆 Leaderboard' },
   { href: '/vaults',      label: '⚡ Vaults' },
   { href: '/create',      label: '+ Create' },
+  { href: '/docs',        label: '📖 Docs' },
 ]
 
 export function Navbar() {
