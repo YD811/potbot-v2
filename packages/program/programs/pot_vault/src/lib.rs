@@ -9,7 +9,7 @@ pub mod constants;
 
 use instructions::*;
 
-declare_id!("ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH");
+declare_id!("2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL");
 
 #[program]
 pub mod pot_vault {

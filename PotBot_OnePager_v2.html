@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PotBot — Collective Trading Vaults on Solana</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0d0d0d;
+    color: #f0f0f0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+    padding: 40px;
+  }
+  .page {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .logo { font-size: 52px; font-weight: 800; color: #fff; letter-spacing: -2px; }
+  .subtitle { font-size: 18px; color: #9945FF; font-weight: 600; margin-top: 4px; }
+  .github { font-size: 13px; color: #555; margin-top: 4px; }
+  .badge {
+    background: transparent;
+    border: 2px solid #9945FF;
+    color: #c4a0ff;
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 4px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  /* TAGLINE */
+  .tagline {
+    text-align: center;
+    font-size: 26px;
+    font-style: italic;
+    color: #ccc;
+    margin: 24px 0 32px;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+  }
+
+  /* GRID */
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: #151515;
+    border-radius: 8px;
+    padding: 22px;
+    border-top: 3px solid transparent;
+  }
+  .card.purple { border-top-color: #9945FF; }
+  .card.green  { border-top-color: #14F195; }
+  .card.orange { border-top-color: #FF6B35; }
+  .card.blue   { border-top-color: #4D9FFF; }
+  .card.gold   { border-top-color: #FFD700; }
+
+  .card h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .card.purple h3 { color: #9945FF; }
+  .card.green  h3 { color: #14F195; }
+  .card.orange h3 { color: #FF6B35; }
+  .card.blue   h3 { color: #4D9FFF; }
+  .card.gold   h3 { color: #FFD700; }
+
+  .card ul { list-style: none; }
+  .card ul li {
+    font-size: 13.5px;
+    color: #c8c8c8;
+    margin-bottom: 7px;
+    padding-left: 14px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .card ul li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: #555;
+  }
+
+  /* POT DUELS FEATURE — FULL WIDTH */
+  .duel-card {
+    background: linear-gradient(135deg, #151515 0%, #1a1015 100%);
+    border-radius: 8px;
+    padding: 26px 30px;
+    border: 1px solid #FF6B3533;
+    border-left: 4px solid #FF6B35;
+    margin-bottom: 20px;
+  }
+  .duel-card h3 {
+    font-size: 18px;
+    font-weight: 800;
+    color: #FF6B35;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .duel-tagline {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 18px;
+    font-style: italic;
+  }
+  .duel-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 14px;
+  }
+  .duel-step {
+    flex: 1;
+    background: #1e1e1e;
+    padding: 14px 16px;
+    position: relative;
+  }
+  .duel-step:first-child { border-radius: 6px 0 0 6px; }
+  .duel-step:last-child  { border-radius: 0 6px 6px 0; }
+  .duel-step .num {
+    font-size: 10px;
+    color: #FF6B35;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+  }
+  .duel-step .label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f0f0f0;
+    margin-bottom: 3px;
+  }
+  .duel-step .desc {
+    font-size: 12px;
+    color: #888;
+    line-height: 1.4;
+  }
+  .arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    color: #FF6B3580;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .duel-highlights {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .duel-pill {
+    background: #FF6B3515;
+    border: 1px solid #FF6B3530;
+    color: #FF9966;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    background: #111;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .stat {
+    flex: 1;
+    padding: 20px;
+    text-align: center;
+    border-right: 1px solid #1e1e1e;
+  }
+  .stat:last-child { border-right: none; }
+  .stat .num {
+    font-size: 30px;
+    font-weight: 800;
+    color: #14F195;
+    letter-spacing: -1px;
+  }
+  .stat .label {
+    font-size: 11px;
+    color: #555;
+    margin-top: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* FLYWHEEL */
+  .flywheel {
+    background: #151515;
+    border-radius: 8px;
+    padding: 22px;
+    margin-bottom: 20px;
+    border-top: 3px solid #14F195;
+  }
+  .flywheel h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #14F195;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+  }
+  .flywheel-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .fw-item {
+    background: #1e1e1e;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    color: #ccc;
+    white-space: nowrap;
+  }
+  .fw-arrow {
+    color: #14F195;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  /* FOOTER */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid #1e1e1e;
+    margin-top: 4px;
+  }
+  .ask {
+    font-size: 22px;
+    font-weight: 800;
+    color: #14F195;
+  }
+  .ask span { color: #555; font-size: 14px; font-weight: 400; margin-left: 8px; }
+  .links { text-align: right; }
+  .links a {
+    display: block;
+    font-size: 13px;
+    color: #9945FF;
+    text-decoration: none;
+    margin-bottom: 3px;
+  }
+  .links .name { font-weight: 700; color: #fff; font-size: 15px; margin-bottom: 4px; }
+
+  @media print {
+    body { background: #0d0d0d !important; -webkit-print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="logo">PotBot</div>
+      <div class="subtitle">Collective Trading Vaults on Solana</div>
+      <div class="github">github.com/YD811/potbot-v2</div>
+    </div>
+    <div class="badge">Solana Frontier 2026<br>EasyA Amsterdam</div>
+  </div>
+
+  <div class="tagline">One vault. One crew. One on-chain identity.</div>
+
+  <!-- TOP CARDS: Problem / Solution / Shipped -->
+  <div class="grid-3">
+    <div class="card purple">
+      <h3>The Problem</h3>
+      <ul>
+        <li>Group trading has no on-chain rails</li>
+        <li>Funds rely on one wallet's trust</li>
+        <li>No coordination primitive exists</li>
+        <li>No accountability for group decisions</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>PotBot POT</h3>
+      <ul>
+        <li>Shared PDA vault — program is custodian</li>
+        <li>Configurable governance: L0 Autocracy → L4 Full Consensus</li>
+        <li>Jupiter v6 swaps with member voting</li>
+        <li>DeFi yield via Kamino / Marginfi</li>
+        <li>Tamagotchi mascot grows with XP</li>
+        <li>Mobile-first via Telegram bot</li>
+      </ul>
+    </div>
+    <div class="card blue">
+      <h3>Shipped</h3>
+      <ul>
+        <li>Anchor: pot_vault + pot_duel programs</li>
+        <li>Next.js 14 frontend — 5-tab POT page</li>
+        <li>3-step vault creation wizard</li>
+        <li>grammY Telegram bot with session</li>
+        <li>Turborepo monorepo (5 packages)</li>
+        <li>Devnet deploy pipeline script</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- POT DUELS — STAR FEATURE -->
+  <div class="duel-card">
+    <h3>⚔️ POT Duels — Group DeFi as Sport</h3>
+    <div class="duel-tagline">Two vaults. One challenge. Spectators bet on the outcome. Winner claims it all. On-chain.</div>
+    <div class="duel-flow">
+      <div class="duel-step">
+        <div class="num">01 Challenge</div>
+        <div class="label">POT issues duel</div>
+        <div class="desc">Challenger proposes stake_bps &amp; duration. Members vote to accept.</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="duel-step">
+        <div class="num">02 Lock Stake</div>
+        <div class="label">SOL into escrow</div>
+        <div class="desc">Both POTs lock % of vault into on-chain escrow PDA. Permissionless.</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="duel-step">
+        <div class="num">03 Side Bets</div>
+        <div class="label">Spectators pile in</div>
+        <div class="desc">Any Telegram user bets SOL on a side. Stakes held in escrow.</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="duel-step">
+        <div class="num">04 Settle</div>
+        <div class="label">Permissionless close</div>
+        <div class="desc">After duration: better return wins. Stake + side bets pay out on-chain. Tamagotchi levels up.</div>
+      </div>
+    </div>
+    <div class="duel-highlights">
+      <div class="duel-pill">⚡ Permissionless settlement</div>
+      <div class="duel-pill">👥 Side bets = spectators become participants</div>
+      <div class="duel-pill">🔥 Viral: winners share results in Telegram</div>
+      <div class="duel-pill">💰 Protocol fee on duel volume</div>
+      <div class="duel-pill">🏆 Leaderboard: best-performing POTs</div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat">
+      <div class="num">$2.1T</div>
+      <div class="label">Crypto trading volume 2024</div>
+    </div>
+    <div class="stat">
+      <div class="num">85M+</div>
+      <div class="label">DeFi active wallets</div>
+    </div>
+    <div class="stat">
+      <div class="num">40M+</div>
+      <div class="label">Telegram crypto users</div>
+    </div>
+    <div class="stat">
+      <div class="num">$0</div>
+      <div class="label">Dedicated group trading infra on Solana</div>
+    </div>
+  </div>
+
+  <!-- GROWTH FLYWHEEL -->
+  <div class="flywheel">
+    <h3>📈 Growth Flywheel</h3>
+    <div class="flywheel-row">
+      <div class="fw-item">POT trades</div>
+      <div class="fw-arrow">→</div>
+      <div class="fw-item">Tamagotchi levels up</div>
+      <div class="fw-arrow">→</div>
+      <div class="fw-item">Shared in Telegram</div>
+      <div class="fw-arrow">→</div>
+      <div class="fw-item">Friends join POT</div>
+      <div class="fw-arrow">→</div>
+      <div class="fw-item">POT issues Duel</div>
+      <div class="fw-arrow">→</div>
+      <div class="fw-item">Spectators bet</div>
+      <div class="fw-arrow">→</div>
+      <div class="fw-item">Winners share results</div>
+      <div class="fw-arrow">→</div>
+      <div class="fw-item">New POTs created</div>
+      <div class="fw-arrow">♻</div>
+    </div>
+  </div>
+
+  <!-- GOVERNANCE + YIELD -->
+  <div class="grid-2">
+    <div class="card purple">
+      <h3>Governance Levels</h3>
+      <ul>
+        <li><strong style="color:#f0f0f0">L0 Autocracy</strong> — founder decides, instant execution</li>
+        <li><strong style="color:#f0f0f0">L1 Simple Majority</strong> — &gt;50% of members</li>
+        <li><strong style="color:#f0f0f0">L2 Supermajority</strong> — 2/3 agreement</li>
+        <li><strong style="color:#f0f0f0">L3 Qualified Consensus</strong> — 80% threshold</li>
+        <li><strong style="color:#f0f0f0">L4 Full Consensus</strong> — unanimous vote</li>
+      </ul>
+    </div>
+    <div class="card gold">
+      <h3>Revenue Model</h3>
+      <ul>
+        <li>10–20 bps on Jupiter swap volume through POTs</li>
+        <li>Fee on duel stake + side bet volume</li>
+        <li>Premium governance tiers (future)</li>
+        <li>SNS subdomain sales per POT name</li>
+        <li>Aligned incentives: Tamagotchi growth → more trading → more fees</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div>
+      <div class="ask">Seeking $10K Kickstart Grant <span>equity-free</span></div>
+      <div style="font-size:13px; color:#555; margin-top:6px;">
+        $2K mainnet deploy &nbsp;·&nbsp; $5K UX + Tamagotchi animations &nbsp;·&nbsp; $3K community
+      </div>
+    </div>
+    <div class="links">
+      <div class="name">@YD811 (X/Twitter)</div>
+      <a href="https://github.com/YD811/potbot-v2">github.com/YD811/potbot-v2</a>
+      <a href="https://potbot.fun">potbot.fun</a>
+      <a href="https://t.me/PotBot">t.me/PotBot</a>
+      <div style="font-size:12px; color:#555; margin-top:4px;">Solana Frontier 2026 · Amsterdam</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
