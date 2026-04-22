@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import dynamic from 'next/dynamic'
 import { useState } from 'react'
 import { usePots } from '@/hooks/usePots'
