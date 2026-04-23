@@ -66,6 +66,40 @@ capture SDK/endpoint best practices that drift out of date in tutorials.
 Local copies live in `POTBOT_OPUS/.claude/skills/sendai/` so Claude can read the
 SKILL.md files directly even without the marketplace installed.
 
+## solana.new journey skills (superstack)
+Installed via `curl -fsSL https://www.solana.new/setup.sh | bash` into
+`~/.claude/skills/` and `~/.codex/skills/`. 33 interactive skills that walk
+through idea → build → launch. Trigger via slash-command in Claude Code.
+
+**Most relevant to PotBot right now (hackathon deadline 2026-05-11):**
+
+| Slash command | When to use |
+|---------------|-------------|
+| `/submit-to-hackathon` | Prepare Solana Frontier / Colosseum entry — project description, demo video plan, judging-criteria mapping |
+| `/create-pitch-deck`   | Investor-grade deck for Superteam NL grant + hackathon |
+| `/deploy-to-mainnet`   | Phase-5 mainnet cut checklist (audit, Squads, Helius) |
+| `/apply-grant`         | Superteam NL grant application |
+| `/marketing-video`     | Demo video script + shot list (< 3 min, judges) |
+| `/video-craft`         | Produce the demo video (editing guidance) |
+| `/roast-my-product`    | Brutal critique of the current dApp to surface holes before judges do |
+| `/product-review`      | Full product review — UX, technical, positioning |
+| `/review-and-iterate`  | Post-critique iteration loop |
+| `/debug-program`       | Anchor program debugging (Phase 5 catches, account shape drift) |
+| `/build-defi-protocol` | Reference patterns when adding yield strategies / new primitives |
+| `/frontend-design-guidelines` | UI polish pass before submission |
+| `/design-taste`        | Design-quality check |
+| `/number-formatting`   | Numbers/currency formatting consistency (common judge gripe) |
+| `/page-load-animations`| Perceived-performance polish |
+| `/cso`                 | Chief Security Officer review — vulnerability pass before mainnet |
+
+**Not relevant for PotBot now** (idea/scaffold already done):
+`/find-next-crypto-idea`, `/validate-idea`, `/scaffold-project`, `/launch-token`,
+`/build-mobile`, `/build-data-pipeline`.
+
+Full catalog lives at https://github.com/sendaifun/solana-new.
+Ecosystem data under `~/.claude/skills/data/` (colosseum, defi, ideas,
+solana-knowledge, specs) — Claude can read those directly for grounded context.
+
 ## Статус
 - Mock режим: ✅ полностью работает (6 seed-потов)
 - Leaderboard: ✅ /leaderboard
