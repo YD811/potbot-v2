@@ -147,6 +147,19 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
+      {/* Devnet preview banner — honest framing until mainnet cut. */}
+      {liveCount === 0 && (
+        <div className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-start gap-3">
+          <span className="text-lg">⚠️</span>
+          <div className="text-sm text-pot-muted">
+            <strong className="text-white">Devnet preview.</strong> Vaults shown
+            below are demonstrative — real PnL/APY reporting starts after
+            mainnet launch (target: May 2026). You can still create a pot on
+            devnet today.
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <div className="bg-pot-card border border-pot-border rounded-2xl p-4 text-center">
           <div className="text-2xl font-bold text-pot-green">{publicPots.length}</div>

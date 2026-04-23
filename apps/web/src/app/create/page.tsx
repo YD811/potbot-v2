@@ -1,9 +1,17 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useCreatePot } from '@/hooks/usePots'
+
+// SSR-safe — keeps the wallet-adapter-react-ui bundle out of the initial
+// render so non-connected users can see the wizard immediately.
+const WalletMultiButtonDynamic = dynamic(
+  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
+  { ssr: false },
+)
 
 const EMOJIS = ['🪴', '🌊', '🔥', '🚀', '💎', '🌙', '⚡', '🎯', '🦊', '🐸', '🦁', '🐋']
 
@@ -51,7 +59,11 @@ export default function CreatePotPage() {
   const minDepositOk = Number.isFinite(form.minDeposit) && form.minDeposit >= MIN_DEPOSIT_FLOOR
   const lockupOk     = Number.isInteger(form.lockupDays) && form.lockupDays >= 0 && form.lockupDays <= LOCKUP_MAX
 
-  const canSubmit = nameOk && minDepositOk && lockupOk && !createPot.isPending
+  // Wizard itself doesn't require a wallet — only the final deploy step does.
+  // Form is valid as soon as name/minDeposit/lockup pass; wallet-gate is a
+  // separate concern enforced in `handleSubmit` and on the submit button.
+  const formValid = nameOk && minDepositOk && lockupOk
+  const canSubmit = formValid && !!publicKey && !createPot.isPending
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -74,19 +86,9 @@ export default function CreatePotPage() {
     }
   }
 
-  if (!publicKey) {
-    return (
-      <div className="text-center py-20">
-        <span className="text-5xl mb-4 block">🔌</span>
-        <h2 className="text-2xl font-bold text-white mb-2">
-          Connect Your Wallet
-        </h2>
-        <p className="text-pot-muted">
-          You need a connected wallet to create a POT
-        </p>
-      </div>
-    )
-  }
+  // NOTE: we deliberately do NOT early-return on `!publicKey` — the full
+  // wizard stays usable without a wallet so visitors can see what they're
+  // about to create. Connect is only required on final Submit (see below).
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -95,6 +97,25 @@ export default function CreatePotPage() {
         Set up your collective trading vault. You&apos;ll be the first member
         and authority.
       </p>
+
+      {/* Wallet banner — only shown when form is otherwise valid but wallet
+          is missing, so the user isn't nagged until the very last step. */}
+      {!publicKey && (
+        <div className="mb-6 rounded-2xl border border-pot-accent/30 bg-pot-accent/10 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-white">
+                Connect wallet to deploy on-chain
+              </p>
+              <p className="text-xs text-pot-muted mt-0.5">
+                Build the pot first — wallet is only required for the final
+                transaction. Estimated cost: ~0.02 SOL (devnet airdrop works).
+              </p>
+            </div>
+            <WalletMultiButtonDynamic />
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Name + Emoji */}
@@ -385,7 +406,7 @@ export default function CreatePotPage() {
           </div>
         )}
 
-        {/* Submit */}
+        {/* Submit — gated on wallet presence AND form validity. */}
         <button
           type="submit"
           disabled={!canSubmit}
@@ -395,10 +416,30 @@ export default function CreatePotPage() {
             <span className="inline-flex items-center gap-2">
               <span className="animate-spin">🪴</span> Creating...
             </span>
+          ) : !publicKey && formValid ? (
+            'Connect wallet to deploy'
           ) : (
             `Create ${form.emoji} ${form.name || 'POT'}`
           )}
         </button>
+
+        {/* Cost preview — always shown, independent of wallet state. */}
+        {formValid && (
+          <div className="rounded-xl border border-pot-border bg-pot-card/50 p-4 text-sm text-pot-muted">
+            <div className="flex items-center justify-between mb-1">
+              <span>Estimated deploy cost</span>
+              <span className="text-white font-mono">~0.02 SOL</span>
+            </div>
+            <div className="flex items-center justify-between mb-1">
+              <span>Protocol fee on swaps</span>
+              <span className="text-white font-mono">0.30%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Your role</span>
+              <span className="text-white">first member + authority</span>
+            </div>
+          </div>
+        )}
 
         {createPot.error && (
           <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-center text-sm text-red-400">

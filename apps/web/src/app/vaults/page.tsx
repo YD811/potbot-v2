@@ -135,18 +135,36 @@ export default function VaultsPage() {
           {/* Live / Demo badge */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--c-muted)' }}>
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: isLiveData ? '#14F195' : '#F59E0B', animation: isLiveData ? 'pulse 2s infinite' : 'none' }} />
-            <span style={{ color: isLiveData ? '#14F195' : '#F59E0B' }}>{isLiveData ? 'Live data' : 'Demo'}</span>
+            <span style={{ color: isLiveData ? '#14F195' : '#F59E0B' }}>{isLiveData ? 'Live data' : 'Devnet preview'}</span>
           </div>
         </div>
         <Link href="/create" style={{ backgroundColor: '#14F195', color: '#0D1117', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: '600', fontSize: '14px', textDecoration: 'none' }}>+ Create Vault</Link>
       </div>
+
+      {/* Devnet-preview banner — honest framing until mainnet cut. */}
+      {!isLiveData && (
+        <div style={{ maxWidth: '1400px', margin: '16px auto 0', padding: '12px 16px', backgroundColor: '#F59E0B1A', border: '1px solid #F59E0B40', borderRadius: '8px', fontSize: '13px', color: 'var(--c-text)', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+          <span style={{ fontSize: '16px' }}>⚠️</span>
+          <span>
+            <strong>Devnet preview.</strong> The vaults below are demonstrative —
+            real performance data reports after mainnet launch (target: May 2026).
+            You can still create your own pot on devnet today to explore the full flow.
+          </span>
+        </div>
+      )}
 
       {/* Stats strip */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', padding: '24px', borderBottom: '1px solid var(--c-border)', maxWidth: '1400px', margin: '0 auto' }}>
         <StatCard label="Total AUM" value={totalAum >= 1_000_000 ? `$${(totalAum/1_000_000).toFixed(1)}M` : `$${(totalAum/1000).toFixed(0)}K`} loading={potsLoading} />
         <StatCard label="Active Vaults" value={String(allVaults.length)} loading={potsLoading} />
         <StatCard label="Total Members" value={totalMembers.toLocaleString()} loading={potsLoading} />
-        <StatCard label="Avg PnL" value={`${Number(avgReturn) >= 0 ? '+' : ''}${avgReturn}%`} loading={potsLoading} color="#14F195" />
+        {/* Don't show "+0.0%" — replace with honest placeholder until mainnet. */}
+        <StatCard
+          label="Avg PnL (30d)"
+          value={isLiveData && Number(avgReturn) !== 0 ? `${Number(avgReturn) >= 0 ? '+' : ''}${avgReturn}%` : '—'}
+          loading={potsLoading}
+          color="#14F195"
+        />
       </div>
 
       {/* AI Agents banner */}
@@ -245,7 +263,14 @@ function VaultCard({ vault, analyticsLoading }: { vault: any; analyticsLoading: 
       href={vault.isDemo ? '#' : `/pots/${vault.pubkey}`}
       style={{ textDecoration: 'none' }}
     >
-      <div style={{ backgroundColor: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', cursor: 'pointer', transition: 'border-color 0.15s' }}>
+      <div style={{ backgroundColor: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', cursor: 'pointer', transition: 'border-color 0.15s', position: 'relative' }}>
+        {/* Demo badge — corner ribbon so it's obvious this isn't a real vault yet. */}
+        {vault.isDemo && (
+          <span style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#F59E0B', color: '#0D1117', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', letterSpacing: '0.5px' }}>
+            DEMO
+          </span>
+        )}
+
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

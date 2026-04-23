@@ -402,6 +402,84 @@ export default function LandingPage() {
         </section>
       )}
 
+      {/* ── Why now / Why crypto / How we earn ── */}
+      <section className="max-w-6xl mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-black text-white mb-3">Why PotBot, why now</h2>
+          <p className="text-pot-muted max-w-2xl mx-auto">
+            Three questions every judge, investor and early user asks. Straight answers.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="card p-6">
+            <div className="text-2xl mb-3">🔓</div>
+            <h3 className="font-bold text-white text-lg mb-2">Why crypto (not Postgres)</h3>
+            <p className="text-pot-muted text-sm leading-relaxed">
+              A group vault needs <strong className="text-white">shared custody with no
+              trusted middleman</strong>. On Solana the vault <em>is</em> the account —
+              deposits, votes, proposals, and fills all live on-chain. Replace the
+              blockchain with a database and you have… Revolut, with new failure modes.
+            </p>
+          </div>
+          <div className="card p-6">
+            <div className="text-2xl mb-3">⏰</div>
+            <h3 className="font-bold text-white text-lg mb-2">Why now</h3>
+            <p className="text-pot-muted text-sm leading-relaxed">
+              MCP is standardizing how AI agents touch real systems. Solana has the
+              throughput + Jupiter has the routing + Pyth has the prices — the full
+              stack for <strong className="text-white">agent-driven group trading</strong>
+              exists in 2026. Nobody has shipped the coordination layer. We are.
+            </p>
+          </div>
+          <div className="card p-6">
+            <div className="text-2xl mb-3">💰</div>
+            <h3 className="font-bold text-white text-lg mb-2">How we earn</h3>
+            <p className="text-pot-muted text-sm leading-relaxed">
+              <strong className="text-white">0.30% protocol fee</strong> on every swap
+              routed through a pot. <strong className="text-white">10% performance fee</strong>
+              on Strategy Vaults (split with creator). No token, no airdrop farming —
+              if usage goes to zero, revenue goes to zero. Honest unit economics.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Privacy layer (STAMPPOT) ── */}
+      <section className="bg-gradient-to-br from-pot-accent/10 to-pot-card border-y border-pot-border py-16 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-pot-dark border border-pot-accent/30 rounded-full px-4 py-1.5 text-xs text-pot-accent mb-4">
+                🥷 STAMPPOT · Privacy layer
+              </div>
+              <h2 className="text-3xl font-black text-white mb-3">
+                Public governance, <span className="text-pot-accent">private balances</span>
+              </h2>
+              <p className="text-pot-muted leading-relaxed mb-4">
+                Retail investors don't want their wallet tracked every time they join a
+                pot. STAMPPOT wraps deposits in <strong className="text-white">
+                PrivacyCash ZK proofs</strong> — members prove shares ownership without
+                exposing their address. Governance votes and swaps still settle on-chain
+                publicly; only the wallet-to-share link is hidden.
+              </p>
+              <p className="text-pot-muted text-sm">
+                Opt-in per pot. Transparency on demand.
+              </p>
+            </div>
+            <div className="bg-pot-dark border border-pot-border rounded-2xl p-6 font-mono text-xs">
+              <div className="text-pot-muted mb-2">// What an auditor sees</div>
+              <div className="text-pot-green">✓ Pot treasury: <span className="text-white">184 SOL</span></div>
+              <div className="text-pot-green">✓ Members: <span className="text-white">12</span></div>
+              <div className="text-pot-green">✓ Last trade: <span className="text-white">SOL → JUP, 8m ago</span></div>
+              <div className="text-pot-muted mt-3">// What stays private</div>
+              <div className="text-pot-accent">✗ Which wallet owns which shares</div>
+              <div className="text-pot-accent">✗ Individual deposit timing</div>
+              <div className="text-pot-accent">✗ Exit amounts per member</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── For builders ── */}
       <section className="bg-gradient-to-b from-pot-card to-pot-dark border-y border-pot-border py-16 px-4">
         <div className="max-w-5xl mx-auto">
