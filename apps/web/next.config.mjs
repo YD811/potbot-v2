@@ -23,6 +23,12 @@ const config = {
       net: false,
       tls: false,
       toml: false,
+      // `bigint-buffer` is a native addon pulled in transitively by
+      // @solana/spl-token → @solana/buffer-layout-utils. Web-side callers
+      // (SnsModal / TamagotchiNftModal / TokenizeSharesModal via @potbot/sdk)
+      // don't hit the code paths that need it, so stub it out to avoid a
+      // Module-not-found build error.
+      'bigint-buffer': false,
     }
 
     return config
