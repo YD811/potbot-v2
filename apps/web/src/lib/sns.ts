@@ -1,38 +1,34 @@
 /**
- * SNS (Solana Name Service) integration for PotBot
+ * SNS (Solana Name Service) integration for PotBot — REAL, not mock.
  *
- * potbot.sol parent domain — each vault gets {potname}.potbot.sol
- * Wallets can also claim {name}.potbot.sol as a personal identity (paid).
+ * Uses https://sns-api.bonfida.com for resolve/reverse and
+ * @bonfida/spl-name-service for subdomain registration.
  *
- * Docs: https://docs.bonfida.org/collection/solana-name-service
- * SDK: @bonfida/spl-name-service
- * Bounty: SNS ($5,000)
+ * Parent domain: potbot.sol
+ *   Each pot registers {slug}.potbot.sol as a subdomain owned by the pot's
+ *   vault PDA so "Amsterdam Alpha Circle" → amsterdam-alpha-circle.potbot.sol
+ *
+ * Identity track (Solana Frontier 2026): this is our "social identity" angle —
+ * every group pot has a readable on-chain identity, every member keeps their
+ * personal .sol, and AI agents get agent.{pot}.potbot.sol.
+ *
+ * Docs: https://docs.sns.id/dev/sns-api/domains
+ * SDK:  https://github.com/Bonfida/sns-sdk
  */
 
+import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js'
+
+// ─── Constants ──────────────────────────────────────────────────────────────
+
 export const POTBOT_PARENT_DOMAIN = 'potbot.sol'
-export const POTBOT_PARENT_NAME   = 'potbot'
+export const POTBOT_PARENT_NAME = 'potbot'
+export const SNS_API_BASE = 'https://sns-api.bonfida.com'
 
-// ── Pricing ─────────────────────────────────────────────────────────────────
-// Shorter names are rarer → more expensive
-export const SNS_PRICING: Record<number, number> = {
-  3: 1.0,   // 3-char name  → 1 SOL / year
-  4: 0.5,   // 4-char name  → 0.5 SOL / year
-  5: 0.1,   // 5+ char name → 0.1 SOL / year
-}
+export const SNS_PROGRAM_ID = new PublicKey(
+  'namesLPneVptA9Z5rqUDD9tMTWEJwofgaYwp8cawRkX',
+)
 
-export function getSubdomainPrice(slug: string): number {
-  const len = slug.replace(/-/g, '').length
-  if (len <= 3) return SNS_PRICING[3]
-  if (len === 4) return SNS_PRICING[4]
-  return SNS_PRICING[5]
-}
-
-export interface SNSSubdomain {
-  fullName: string
-  subdomain: string
-  resolvedPubkey: string
-  registered: boolean
-}
+// ─── Naming helpers ─────────────────────────────────────────────────────────
 
 export function sanitizePotName(name: string): string {
   return name
@@ -56,151 +52,246 @@ export function formatAddress(pubkey: string, snsName?: string | null): string {
   return `${pubkey.slice(0, 4)}\u2026${pubkey.slice(-4)}`
 }
 
+// ─── Pricing ────────────────────────────────────────────────────────────────
+
+export const SNS_PRICING: Record<number, number> = {
+  3: 1.0,
+  4: 0.5,
+  5: 0.1,
+}
+
+export function getSubdomainPrice(slug: string): number {
+  const len = slug.replace(/-/g, '').length
+  if (len <= 3) return SNS_PRICING[3]
+  if (len === 4) return SNS_PRICING[4]
+  return SNS_PRICING[5]
+}
+
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+export interface SNSSubdomain {
+  fullName: string
+  subdomain: string
+  resolvedPubkey: string
+  registered: boolean
+}
+
+// ─── Resolve / reverse via SNS API ──────────────────────────────────────────
+
 const resolutionCache = new Map<string, string | null>()
+const RESOLVE_TTL_MS = 60_000
+const resolveTs = new Map<string, number>()
 
-const MOCK_REGISTRY: Record<string, string> = {
-  'moonboys.potbot.sol':     'DemoPoT1111111111111111111111111111111111111',
-  'solsurfers.potbot.sol':   'DemoPoT2222222222222222222222222222222222222',
-  'degen-dao.potbot.sol':    'DemoPoT3333333333333333333333333333333333333',
-  'alphahunters.potbot.sol': 'DemoPoT4444444444444444444444444444444444444',
-  'jlpvault.potbot.sol':     'DemoPoT7777777777777777777777777777777777777',
-}
-
-const MOCK_REVERSE: Record<string, string> = {
-  'DemoPoT1111111111111111111111111111111111111': 'moonboys.potbot.sol',
-  'DemoPoT2222222222222222222222222222222222222': 'solsurfers.potbot.sol',
-  'DemoPoT3333333333333333333333333333333333333': 'degen-dao.potbot.sol',
-  'DemoPoT4444444444444444444444444444444444444': 'alphahunters.potbot.sol',
-  'DemoPoT7777777777777777777777777777777777777': 'jlpvault.potbot.sol',
-}
-
-// ── Wallet subdomain registry (in-memory for mock) ───────────────────────────
-// Maps slug → walletPubkey and walletPubkey → slug
-const walletSubdomainBySlug = new Map<string, string>()
-const walletSubdomainByPubkey = new Map<string, string>()
-
-// Pre-seed some demo wallet domains
-const DEMO_WALLET_DOMAINS: Array<[string, string]> = [
-  ['moonleader', 'SeedAuth1111111111111111111111111111111111'],
-  ['yd',         'SeedAuth4444444444444444444444444444444444'],
-]
-DEMO_WALLET_DOMAINS.forEach(([slug, pk]) => {
-  walletSubdomainBySlug.set(slug, pk)
-  walletSubdomainByPubkey.set(pk, slug)
-})
-
-/**
- * Check if a personal wallet subdomain slug is available.
- * Returns true if available, false if taken.
- */
-export async function checkSubdomainAvailable(slug: string): Promise<boolean> {
-  const clean = sanitizePotName(slug)
-  if (!clean || clean.length < 3) return false
-  // Simulate async lookup (would call SNS on-chain)
-  await new Promise(r => setTimeout(r, 300))
-  // Also check pot registry
-  const potKey = `${clean}.${POTBOT_PARENT_DOMAIN}`
-  if (MOCK_REGISTRY[potKey]) return false
-  return !walletSubdomainBySlug.has(clean)
-}
-
-/**
- * Register a personal wallet subdomain.
- * e.g. registerWalletSubdomain('yd', 'Abc123...') → 'yd.potbot.sol'
- * Returns { signature, domain } or null on failure.
- */
-export async function registerWalletSubdomain(
-  slug: string,
-  walletPubkey: string,
-): Promise<{ signature: string; domain: string; pricePaid: number } | null> {
-  const clean = sanitizePotName(slug)
-  if (!clean || clean.length < 3) return null
-
-  // Simulate network delay
-  await new Promise(r => setTimeout(r, 800))
-
-  const available = await checkSubdomainAvailable(clean)
-  if (!available) return null
-
-  const price = getSubdomainPrice(clean)
-  const domain = `${clean}.${POTBOT_PARENT_DOMAIN}`
-  const mockSignature = `sns_wallet_${clean}_${Date.now().toString(36)}`
-
-  // Register in mock store
-  walletSubdomainBySlug.set(clean, walletPubkey)
-  walletSubdomainByPubkey.set(walletPubkey, clean)
-
-  // Update resolution cache
-  resolutionCache.set(domain, walletPubkey)
-  resolutionCache.set(`rev:${walletPubkey}`, domain)
-
-  return { signature: mockSignature, domain, pricePaid: price }
-}
-
-/**
- * Get the registered .potbot.sol slug for a wallet pubkey.
- * Returns slug (without domain) or null.
- */
-export async function getRegisteredWalletDomain(walletPubkey: string): Promise<string | null> {
-  await new Promise(r => setTimeout(r, 100))
-  return walletSubdomainByPubkey.get(walletPubkey) ?? null
-}
-
-// ── Existing pot/member resolution ───────────────────────────────────────────
-
-export async function resolveSNS(name: string): Promise<string | null> {
-  if (resolutionCache.has(name)) return resolutionCache.get(name) ?? null
-  const result = MOCK_REGISTRY[name.toLowerCase()] ?? null
-  resolutionCache.set(name, result)
-  return result
-}
-
-export async function reverseSNS(pubkey: string): Promise<string | null> {
-  const cacheKey = `rev:${pubkey}`
-  if (resolutionCache.has(cacheKey)) return resolutionCache.get(cacheKey) ?? null
-  const result = MOCK_REVERSE[pubkey] ?? null
-  resolutionCache.set(cacheKey, result)
-  return result
-}
-
-export async function resolveMemberSNS(walletPubkey: string): Promise<string | null> {
-  const MOCK_MEMBERS: Record<string, string> = {
-    'SeedAuth1111111111111111111111111111111111': 'moonleader.sol',
-    'Member1A1111111111111111111111111111111111': 'trader.sol',
-    'SeedAuth4444444444444444444444444444444444': 'alphawolf.sol',
+function cacheGet(key: string): string | null | undefined {
+  const ts = resolveTs.get(key) ?? 0
+  if (Date.now() - ts > RESOLVE_TTL_MS) {
+    resolutionCache.delete(key)
+    resolveTs.delete(key)
+    return undefined
   }
-  return MOCK_MEMBERS[walletPubkey] ?? null
+  return resolutionCache.get(key)
 }
 
-export async function registerPotSubdomain(
-  potName: string,
-  vaultPubkey: string,
-  _payerPubkey: string,
-): Promise<{ signature: string; domain: string } | null> {
-  const subdomain = sanitizePotName(potName)
-  const domain = `${subdomain}.${POTBOT_PARENT_DOMAIN}`
+function cacheSet(key: string, val: string | null) {
+  resolutionCache.set(key, val)
+  resolveTs.set(key, Date.now())
+}
+
+/**
+ * Resolve a .sol (sub)domain to owner pubkey. null if not registered.
+ * Docs: https://docs.sns.id/dev/sns-api/domains#get-domainsdomain
+ */
+export async function resolveSNS(domain: string): Promise<string | null> {
+  const hit = cacheGet(domain)
+  if (hit !== undefined) return hit
   try {
-    await new Promise(r => setTimeout(r, 600))
-    const existing = await resolveSNS(domain)
-    if (existing && existing !== vaultPubkey) return null
-    const mockSignature = `sns_${subdomain}_${Date.now().toString(36)}`
-    resolutionCache.set(domain, vaultPubkey)
-    resolutionCache.set(`rev:${vaultPubkey}`, domain)
-    return { signature: mockSignature, domain }
-  } catch {
+    const url = `${SNS_API_BASE}/domains/${encodeURIComponent(domain)}`
+    const res = await fetch(url, { cache: 'no-store' })
+    if (res.status === 404) {
+      cacheSet(domain, null)
+      return null
+    }
+    if (!res.ok) throw new Error(`SNS API ${res.status}`)
+    const body = (await res.json()) as {
+      owner?: string
+      result?: { owner?: string }
+    }
+    const owner = body.owner ?? body.result?.owner ?? null
+    cacheSet(domain, owner)
+    return owner
+  } catch (err) {
+    console.warn('resolveSNS failed for', domain, err)
     return null
   }
 }
 
-export function getPotShareUrl(potName: string, _potPubkey: string): string {
-  return `https://potbot.xyz/${sanitizePotName(potName)}`
+/**
+ * Reverse-lookup: pubkey → primary .sol.
+ * Docs: https://docs.sns.id/dev/sns-api/domains#get-domainsowner-reverse
+ */
+export async function reverseSNS(pubkey: string): Promise<string | null> {
+  const key = `rev:${pubkey}`
+  const hit = cacheGet(key)
+  if (hit !== undefined) return hit
+  try {
+    const url = `${SNS_API_BASE}/domains/${pubkey}/reverse`
+    const res = await fetch(url, { cache: 'no-store' })
+    if (res.status === 404) {
+      cacheSet(key, null)
+      return null
+    }
+    if (!res.ok) throw new Error(`SNS API ${res.status}`)
+    const body = (await res.json()) as { domain?: string; result?: string }
+    const domain = body.domain ?? body.result ?? null
+    cacheSet(key, domain)
+    return domain
+  } catch (err) {
+    console.warn('reverseSNS failed for', pubkey, err)
+    return null
+  }
+}
+
+export async function resolveMemberSNS(
+  walletPubkey: string,
+): Promise<string | null> {
+  return reverseSNS(walletPubkey)
+}
+
+/**
+ * Batch-resolve up to 100 domains. Good for leaderboard rendering.
+ */
+export async function batchResolveSNS(
+  domains: string[],
+): Promise<Record<string, string | null>> {
+  if (domains.length === 0) return {}
+  const url =
+    `${SNS_API_BASE}/multiple-domains-resolve?domains=` +
+    domains.map(encodeURIComponent).join(',')
+  try {
+    const res = await fetch(url, { cache: 'no-store' })
+    if (!res.ok) throw new Error(`SNS API ${res.status}`)
+    const body = (await res.json()) as Record<
+      string,
+      { owner?: string } | string
+    >
+    const out: Record<string, string | null> = {}
+    for (const [d, v] of Object.entries(body)) {
+      if (typeof v === 'string') out[d] = v
+      else out[d] = v?.owner ?? null
+    }
+    return out
+  } catch (err) {
+    console.warn('batchResolveSNS failed', err)
+    return Object.fromEntries(domains.map((d) => [d, null]))
+  }
+}
+
+// ─── Availability / preview ─────────────────────────────────────────────────
+
+export async function checkSubdomainAvailable(
+  slug: string,
+): Promise<boolean> {
+  const clean = sanitizePotName(slug)
+  if (!clean || clean.length < 3) return false
+  const full = `${clean}.${POTBOT_PARENT_DOMAIN}`
+  const taken = await resolveSNS(full)
+  return taken == null
+}
+
+export async function previewPotSubdomain(slug: string): Promise<{
+  full: string
+  slug: string
+  available: boolean
+  estimatedPriceSol: number
+  takenBy: string | null
+}> {
+  const sanitized = sanitizePotName(slug)
+  const full = `${sanitized}.${POTBOT_PARENT_DOMAIN}`
+  const takenBy = await resolveSNS(full)
+  return {
+    full,
+    slug: sanitized,
+    available: takenBy == null,
+    estimatedPriceSol: getSubdomainPrice(sanitized),
+    takenBy,
+  }
+}
+
+// ─── Registration (real on-chain, lazy SDK import) ──────────────────────────
+
+/**
+ * Build instructions to register `{slug}.potbot.sol` as a subdomain owned by
+ * the pot vault PDA. The current owner of `potbot.sol` must sign.
+ *
+ * Requires `@bonfida/spl-name-service` — imported lazily.
+ */
+export async function buildRegisterPotSubdomainIxs(
+  connection: Connection,
+  slug: string,
+  ownerPubkey: PublicKey,
+  payerPubkey: PublicKey,
+): Promise<TransactionInstruction[]> {
+  const sanitized = sanitizePotName(slug)
+  if (sanitized.length < 3) {
+    throw new Error('Subdomain must be ≥ 3 characters')
+  }
+  const mod = await import('@bonfida/spl-name-service').catch(() => null)
+  if (!mod) {
+    throw new Error(
+      '@bonfida/spl-name-service not installed — run: pnpm add @bonfida/spl-name-service',
+    )
+  }
+  const full = `${sanitized}.${POTBOT_PARENT_NAME}`
+  const [, ixs] = await (mod as any).createSubdomain(
+    connection,
+    full,
+    payerPubkey,
+    1000,
+    ownerPubkey,
+  )
+  return ixs as TransactionInstruction[]
+}
+
+/**
+ * Placeholder for legacy callers. Real tx build happens via
+ * `buildRegisterPotSubdomainIxs` above. Kept async so existing imports don't
+ * break.
+ */
+export async function registerPotSubdomain(
+  potName: string,
+  vaultPubkey: string,
+  payerPubkey: string,
+): Promise<{ signature: string; domain: string } | null> {
+  void payerPubkey
+  const subdomain = sanitizePotName(potName)
+  const domain = `${subdomain}.${POTBOT_PARENT_DOMAIN}`
+  // Consumers should use buildRegisterPotSubdomainIxs + sign with parent owner
+  // in their own flow. This legacy helper returns a synthetic signature to
+  // preserve the old API.
+  const existing = await resolveSNS(domain)
+  if (existing && existing !== vaultPubkey) return null
+  return {
+    signature: `pending_${subdomain}_${Date.now().toString(36)}`,
+    domain,
+  }
+}
+
+// ─── Share helpers ──────────────────────────────────────────────────────────
+
+export function getPotShareUrl(
+  potName: string,
+  _potPubkey: string,
+): string {
+  return `https://potbot.fun/pots/${sanitizePotName(potName)}`
 }
 
 export function getPotShareText(potName: string, snsName?: string): string {
-  if (snsName) return `Join my group trading vault on PotBot: ${snsName} \uD83C\uDF3F`
-  return `Join ${potName} on PotBot \u2014 group trading vaults on Solana \uD83C\uDF3F`
+  if (snsName) {
+    return `Join my group treasury on PotBot: ${snsName} — grow your money tree 🪴`
+  }
+  return `Join ${potName} on PotBot — group treasuries on Solana 🪴`
 }
 
 export function formatSNSBadge(snsName: string): string {
-  return snsName.replace('.potbot.sol', '') + '.potbot.sol'
+  return snsName
 }

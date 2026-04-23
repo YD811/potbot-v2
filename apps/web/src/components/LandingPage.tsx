@@ -13,34 +13,34 @@ const WalletMultiButton = dynamic(
 
 const FEATURES = [
   {
-    icon: '🏦',
-    title: 'Group Vaults',
-    desc: 'Pool SOL with friends into a shared on-chain vault. Every member gets proportional shares — like a crypto ETF.',
+    icon: '🪴',
+    title: 'Group Treasury (POT)',
+    desc: 'Pool SOL with your group into a shared on-chain treasury. Every member holds SPL-tokenized shares proportional to NAV — no middleman, no custody risk.',
   },
   {
     icon: '🏛️',
     title: 'On-Chain Governance',
-    desc: 'Every trade, withdrawal or strategy change requires a vote. Configure quorum, approval %, and voting windows.',
+    desc: 'Every trade, withdrawal or strategy change requires a vote. Autocracy → Advisory → Majority → Supermajority → Consensus. Configure quorum, approval %, timelock.',
   },
   {
     icon: '🤖',
-    title: 'AI Trading Agent',
-    desc: 'Set IF/THEN rules — "if SOL drops 5%, buy 10%". The MCP-native agent creates proposals and votes automatically.',
+    title: 'AI Execution (BOT)',
+    desc: 'Set IF/THEN rules — "if SOL drops 5%, buy 10%." The MCP-native agent creates proposals and executes after votes pass. Any LLM can drive it.',
   },
   {
-    icon: '🪙',
-    title: 'Tokenized Shares',
-    desc: 'Deposit SOL → receive SPL tokens at current NAV. Redeem anytime. Trade shares on-chain like a real ETF.',
+    icon: '🆔',
+    title: 'SNS Identity — .potbot.sol',
+    desc: 'Every group gets a readable on-chain identity: amsterdam-alpha.potbot.sol. Reverse-lookup works across Solana apps. Agents get agent.{pot}.potbot.sol.',
   },
   {
     icon: '🌱',
-    title: 'Tamagotchi Plant',
-    desc: 'Your vault grows from 🌱 Seedling to 🌳 Mature Tree. Higher levels unlock lower swap fees and exclusive benefits.',
+    title: 'Money Tree evolution',
+    desc: 'Your treasury grows 🌱 Seedling → 🌿 Sprout → 🍀 Bud → 🌾 Bloom → 🌺 Full Bloom → 🌳 Mature Tree. Higher levels unlock lower fees and perks.',
   },
   {
-    icon: '💰',
-    title: 'Creator Economy',
-    desc: 'Launch a Strategy Vault, set entry/performance fees, and earn from investors following your strategy.',
+    icon: '🥷',
+    title: 'Privacy layer (STAMPPOT)',
+    desc: 'Optional per-pot: wrap deposits in PrivacyCash ZK proofs. Public governance, private balances. Transparent on demand.',
   },
 ]
 
@@ -220,16 +220,19 @@ export default function LandingPage() {
           <div className="text-8xl mb-6 animate-float">🪴</div>
 
           <h1 className="text-5xl sm:text-6xl font-black text-white leading-tight mb-4">
-            Group DeFi Vaults<br />
-            <span className="text-pot-green">on Solana</span>
+            Group Treasury.<br />
+            <span className="text-pot-green">AI execution.</span><br />
+            <span className="text-pot-accent">Money tree that grows.</span>
           </h1>
 
           <p className="text-xl text-pot-muted max-w-2xl mx-auto mb-4 leading-relaxed">
-            Pool SOL with your community. Vote on trades together. Let AI agents automate your strategy 24/7.
+            <strong className="text-white">POT</strong> = on-chain group treasury.{' '}
+            <strong className="text-white">BOT</strong> = AI execution through MCP. 🪴 =
+            your money tree grows with every trade.
           </p>
 
           <p className="text-sm text-pot-muted/70 italic max-w-xl mx-auto mb-8">
-            For teams who'd rather decide together than argue in group chats.
+            For groups who'd rather decide together than argue in group chats.
           </p>
 
           {/* CTA buttons */}

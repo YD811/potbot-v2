@@ -8,6 +8,16 @@ pot_vault = "2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL"
 [programs.devnet]
 pot_vault = "2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL"
 
+# ──────────────────────────────────────────────────────────────────────────
+# MAINNET — replace placeholder below with the pubkey of
+# target/deploy/pot_vault-mainnet.json AFTER running:
+#   solana-keygen new -o target/deploy/pot_vault-mainnet.json --no-bip39-passphrase
+#   solana-keygen pubkey target/deploy/pot_vault-mainnet.json
+# `deploy-mainnet.sh` will auto-sync this value with declare_id! in lib.rs.
+# ──────────────────────────────────────────────────────────────────────────
+[programs.mainnet]
+pot_vault = "REPLACE_WITH_MAINNET_PROGRAM_ID_AFTER_KEYGEN"
+
 [registry]
 url = "https://api.apr.dev"
 
