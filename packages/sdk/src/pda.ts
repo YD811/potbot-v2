@@ -1,5 +1,17 @@
 import { PublicKey } from '@solana/web3.js';
-import { PROGRAM_ID } from './index';
+
+// ─── Program ID ────────────────────────────────────────────────────────────
+// Source of truth. Must match `declare_id!` in
+// `packages/program/programs/pot_vault/src/lib.rs` and `Anchor.toml`.
+// Override at runtime via NEXT_PUBLIC_PROGRAM_ID if deploying a fresh build
+// to a different address.
+export const PROGRAM_ID = new PublicKey(
+  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_PROGRAM_ID) ||
+  '2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL'
+);
+
+// Back-compat alias — some callers import this name.
+export const POT_PROGRAM_ID = PROGRAM_ID;
 
 // Original PDAs
 export function getPotAddress(name: string, authority: PublicKey): [PublicKey, number] {

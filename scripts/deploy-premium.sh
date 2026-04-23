@@ -14,8 +14,8 @@ anchor build
 
 # 2. Generate new IDL
 echo "🔧 Updating IDL..."
-anchor idl init -f target/idl/pot_vault.json ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH || \
-anchor idl upgrade -f target/idl/pot_vault.json ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH
+anchor idl init -f target/idl/pot_vault.json 2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL || \
+anchor idl upgrade -f target/idl/pot_vault.json 2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL
 
 # 3. Deploy to devnet
 echo "🌐 Deploying to devnet..."
@@ -41,5 +41,5 @@ echo "   3. Update frontend with live program"
 echo "   4. Create demo video"
 echo "   5. Submit to Solana Frontier Hackathon"
 echo ""
-echo "🔗 Program ID: ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH"
+echo "🔗 Program ID: 2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL"
 echo "💰 Treasury: 2LeG86xuss12WrYsamTGk4zLfBbXJpWZpr1yFrUqN98o"

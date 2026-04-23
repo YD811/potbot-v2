@@ -32,7 +32,7 @@ import {
 const POTBOT_API  = process.env.POTBOT_API_URL  ?? 'https://app.potbot.fun'
 const RPC_URL     = process.env.SOLANA_RPC_URL  ?? 'https://api.devnet.solana.com'
 const NETWORK     = process.env.SOLANA_NETWORK  ?? 'devnet'
-const PROGRAM_ID  = process.env.PROGRAM_ID      ?? 'ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH'
+const PROGRAM_ID  = process.env.PROGRAM_ID      ?? '2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL'
 
 const JUP_PRICE_URL = 'https://api.jup.ag/price/v2'
 

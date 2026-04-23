@@ -25,10 +25,16 @@ import {
   getTamagotchiMintAddress,
   getMetadataAddress,
 } from './pda';
-import { PotVaultIDL } from './idl/pot_vault';
-import { PROGRAM_ID } from './index';
+import { IDL as PotVaultIDL } from './idl/pot_vault';
+import { PROGRAM_ID } from './pda';
 
-export interface CreatePotParams {
+// NOTE: These interface names are intentionally scoped with a Premium prefix
+// so they don't collide with the same-named public exports in
+// `./instructions/pot` (CreatePotParams) and `./client` (PotSDKConfig).
+// External callers that currently reference the unprefixed names are
+// preserved via re-export aliases at the bottom of this file.
+
+export interface PremiumCreatePotParams {
   name: string;
   emoji: string;
   isPublic: boolean;
@@ -36,11 +42,11 @@ export interface CreatePotParams {
   yieldStrategy: 'None' | 'Conservative' | 'Balanced' | 'Aggressive';
 }
 
-export interface CreatePrivatePotParams extends CreatePotParams {
+export interface CreatePrivatePotParams extends PremiumCreatePotParams {
   inviteCode: string; // 6-character code
 }
 
-export interface PotSDKConfig {
+export interface PotSDKPremiumConfig {
   connection: Connection;
   wallet: any;
   programId?: PublicKey;
@@ -52,13 +58,20 @@ export class PotSDK {
   private program: Program;
   private programId: PublicKey;
 
-  constructor(config: PotSDKConfig) {
+  constructor(config: PotSDKPremiumConfig) {
     this.connection = config.connection;
     this.wallet = config.wallet;
     this.programId = config.programId || PROGRAM_ID;
     
     const provider = new AnchorProvider(this.connection, this.wallet, {});
-    this.program = new Program(PotVaultIDL as any, this.programId, provider);
+    // Anchor 0.30 Program constructor is (idl, provider) — programId is
+    // read from idl.address. Splice the resolved programId in so callers
+    // can still override via `config.programId` at construction time.
+    const idlWithAddress = {
+      ...(PotVaultIDL as any),
+      address: this.programId.toBase58(),
+    };
+    this.program = new Program(idlWithAddress, provider);
   }
 
   // ─── Premium Feature Methods ─────────────────────────────────────────────
@@ -295,7 +308,7 @@ export class PotSDK {
 
   // ─── Existing Methods (unchanged) ───────────────────────────────────────
   
-  async buildCreatePotTx(params: CreatePotParams): Promise<Transaction> {
+  async buildCreatePotTx(params: PremiumCreatePotParams): Promise<Transaction> {
     const authority = this.wallet.publicKey;
     const [pot] = getPotAddress(params.name, authority);
     const [vault] = getVaultAddress(pot);

@@ -35,7 +35,7 @@ analyticsRouter.get('/:pubkey', async (c) => {
     // Try to find the vault PDA (seeds: ["vault", potPubkey])
     const [vaultPda] = PublicKey.findProgramAddressSync(
       [Buffer.from('vault'), new PublicKey(pubkey).toBuffer()],
-      new PublicKey(process.env.PROGRAM_ID ?? 'ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH')
+      new PublicKey(process.env.PROGRAM_ID ?? '2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL')
     )
     solBalanceLamports = await conn.getBalance(vaultPda)
   } catch (e) {

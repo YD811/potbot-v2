@@ -41,6 +41,6 @@
   "env": {
     "NEXT_PUBLIC_SOLANA_NETWORK": "devnet",
     "NEXT_PUBLIC_RPC_URL": "https://api.devnet.solana.com",
-    "NEXT_PUBLIC_PROGRAM_ID": "ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH"
+    "NEXT_PUBLIC_PROGRAM_ID": "2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL"
   }
 }

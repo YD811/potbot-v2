@@ -14,7 +14,7 @@ export function createWebhooksRouter() {
 
   const processor = new HeliusProcessor(
     executor,
-    process.env.PROGRAM_ID ?? 'ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH',
+    process.env.PROGRAM_ID ?? '2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL',
     process.env.HELIUS_WEBHOOK_SECRET
   )
 
@@ -70,7 +70,7 @@ export function createWebhooksRouter() {
       await registerHeliusWebhook({
         apiKey,
         webhookUrl: `${webhookUrl}/webhooks/helius`,
-        programId: process.env.PROGRAM_ID ?? 'ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH',
+        programId: process.env.PROGRAM_ID ?? '2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL',
       })
       return c.json({ ok: true, webhookUrl: `${webhookUrl}/webhooks/helius` })
     } catch (e) {

@@ -56,7 +56,7 @@ Or add to `claude_desktop_config.json`:
 | `POTBOT_API_URL` | `https://app.potbot.fun` | PotBot dApp API URL |
 | `SOLANA_RPC_URL` | `https://api.devnet.solana.com` | Solana RPC endpoint |
 | `SOLANA_NETWORK` | `devnet` | Network name |
-| `PROGRAM_ID` | `ED4zhABMV97...` | Anchor program ID |
+| `PROGRAM_ID` | `2ywztkP4gaJr...` | Anchor program ID (matches `declare_id!` in pot_vault) |
 
 ## Development
 

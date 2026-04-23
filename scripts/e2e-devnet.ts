@@ -37,7 +37,7 @@ import * as os from 'os'
 // ─── Config ───────────────────────────────────────────────────────────────
 
 const RPC_URL    = process.env.RPC_URL ?? 'https://api.devnet.solana.com'
-const PROGRAM_ID = process.env.PROGRAM_ID ?? 'ED4zhABMV97obJSD5bzasUPaNVmc3qwA3WhwqoGVCDvH'
+const PROGRAM_ID = process.env.PROGRAM_ID ?? '2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL'
 const API_URL    = process.env.API_URL ?? 'http://localhost:3001'
 
 // Load default Solana CLI keypair

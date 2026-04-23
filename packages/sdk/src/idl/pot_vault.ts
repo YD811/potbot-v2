@@ -2,8 +2,19 @@
  * IDL matching the pot_vault Anchor program — updated to match deployed program.
  */
 export const IDL = {
+  // Anchor 0.30 requires `address` on the root IDL object — it's what
+  // `new Program(idl, provider)` reads to resolve the program's public key.
+  // Must match `declare_id!` in programs/pot_vault/src/lib.rs and the
+  // value in root vercel.json (NEXT_PUBLIC_PROGRAM_ID).
+  address: '2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL',
   version: '0.1.0',
   name: 'pot_vault',
+  metadata: {
+    address: '2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL',
+    name: 'pot_vault',
+    version: '0.1.0',
+    spec: '0.1.0',
+  },
   instructions: [
     {
       name: 'createPot',
