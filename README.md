@@ -1,8 +1,12 @@
 # 🪴 PotBot v2
 
-**Tokenized DeFi strategy vaults on Solana.** Group governance, AI-powered trading agents, creator monetization, and Tamagotchi mascots that evolve with your vault.
+**Group Treasury. AI execution. Money tree that grows.**
 
-Built for [Solana Frontier 2026](https://colosseum.com/frontier) · [@CryptoYDao](https://twitter.com/CryptoYDao) · Y-DAO Amsterdam
+**POT** = on-chain group treasury · **BOT** = AI execution through MCP · **🪴** = your wealth expanding.
+
+PotBot is a Solana protocol for groups who prefer on-chain votes over chat-based arguments. It combines group governance, AI automation, creator monetization, and DeFi yield into a single primitive — the *pot*.
+
+Built for [Solana Frontier 2026](https://colosseum.com/frontier) · [@PotBot_sol](https://twitter.com/PotBot_sol) · [@CryptoYDao](https://twitter.com/CryptoYDao) · Y-DAO Amsterdam
 
 [![Build](https://img.shields.io/badge/build-passing-00ff88?style=flat-square)](https://github.com/YD811/potbot-v2)
 [![Solana](https://img.shields.io/badge/Solana-devnet-9945FF?style=flat-square)](https://solana.com)
@@ -16,12 +20,10 @@ Built for [Solana Frontier 2026](https://colosseum.com/frontier) · [@CryptoYDao
 
 | | |
 |---|---|
-| 🏠 Landing | [potbot.fun](https://potbot.fun) |
-| 📱 DApp | [app.potbot.fun](https://app.potbot.fun) |
-| ⚡ Vaults | [app.potbot.fun/vaults](https://app.potbot.fun/vaults) |
-| 🤖 Telegram Bot | [t.me/PotBot](https://t.me/PotBot) |
-| 🔌 MCP Server | [app.potbot.fun/for-agents](https://app.potbot.fun/for-agents) |
-| 🌐 SNS | potbot.sol |
+| 🏠 Landing & DApp | [potbot.fun](https://potbot.fun) |
+| 🌐 SNS | `potbot.sol` |
+| 🔌 MCP Server | [`apps/potbot-mcp`](apps/potbot-mcp) |
+| 🤖 Telegram Bot (v1, legacy) | separate product — [see v1 vs v2](docs/OVERVIEW.md#potbot-v1-vs-v2) |
 
 ---
 
@@ -44,15 +46,17 @@ For full setup including Anchor, devnet deploy and API server: see [docs/DEVELOP
 
 ## What is PotBot?
 
-PotBot is a **DeFi strategy marketplace** — think on-chain copy-trading meets tokenized ETF meets Tamagotchi.
+PotBot is **infrastructure for group capital management on Solana** — one primitive that works the same for a 3-friend investment club and a $100M family office. Governance, AI execution, best-of-breed DEX routing and DeFi yield, all inside a single programmable vault.
 
-### For different users:
+Think on-chain copy-trading meets tokenized ETF meets Money Tree — configurable from autocratic solo vault up to timelocked institutional-grade treasury.
+
+### For different users
 
 | User | What PotBot does for them |
 |------|---------------------------|
-| 👨‍💻 **Trader** | Create a Strategy Vault, monetize knowledge via entry/performance fees, no custody needed |
 | 👥 **Group of friends** | Trade together with shared governance — no one person holds the keys |
-| 📣 **Influencer** | Open a public Vault, subscribers invest in your strategy, earn performance fees |
+| 👨‍💻 **Trader** | Create a Strategy Vault, monetize knowledge via entry/performance fees, no custody needed |
+| 📣 **Influencer** | Open a public vault, subscribers invest in your strategy, earn performance fees |
 | 🤖 **AI Agent developer** | Build autonomous trading agents via MCP server — 60+ on-chain actions |
 | 🏦 **Investor** | Browse Strategy Vaults, filter by PnL/APY/risk, join with one click |
 
@@ -60,14 +64,16 @@ PotBot is a **DeFi strategy marketplace** — think on-chain copy-trading meets 
 
 ## What is a POT?
 
-A **POT** is a shared on-chain vault governed by its members:
+A **POT** is a shared on-chain vault on Solana, governed by its members. Every SOL and SPL token lives in a program-owned **PDA from day one** — no custodian, no bot-held keys, no multisig operator. Only the PotBot program can move the funds, and only after a successful on-chain vote.
 
-- **Collective ownership** — deposit SOL/USDC, receive proportional shares (NAV-based, like an ETF)
+- **Collective ownership** — deposit SOL/USDC, receive proportional shares (NAV-based, like an ETF). The **vault is always on-chain**; share *accounting* starts off-chain at Seedling and graduates to an SPL mint at Sprout+ ([why](docs/OVERVIEW.md#off-chain--on-chain-shares-strategy))
 - **On-chain governance** — every trade, withdrawal or strategy change requires a vote (L0–L4 configurable)
-- **AI Agent** — set rules like *"if SOL < $120, propose buying 10% more"* — agent creates proposals, humans vote
-- **DeFi yield** — idle capital deployed via Kamino / Drift / MarginFi strategies
-- **Tamagotchi mascot** — evolves 🥚→🐣→🐥→🦅→🐉→⚡ based on AUM, members and trading volume
-- **SNS subdomain** — each POT gets `<name>.potbot.site`
+- **Personal AI Voters** — each member can delegate voting to their own AI agent, revocable and auditable on-chain ([details](docs/OVERVIEW.md#personal-ai-voting-agents))
+- **AI Agent (BOT)** — set rules like *"if SOL < $120, propose buying 10% more"* — agent creates proposals, humans (or their personal voters) vote
+- **DeFi yield** — idle capital deployed via Kamino / Drift / MarginFi / JLP strategies
+- **Money Tree mascot** — evolves 🌱→🌿→🌳→🌺→🌸→🌴 through 6 plant-themed stages based on AUM, members and trading volume. Has a Health stat; at 0 balance the tree dies and NFT shares burn ([mechanics](docs/OVERVIEW.md#money-tree--levels-rules-health))
+- **SNS subdomain** — each POT gets `<name>.potbot.sol` with reverse lookup
+- **Optional privacy (STAMPPOT)** — ZK proofs via PrivacyCash keep wallet-to-share linkage private while governance stays public
 
 ---
 
@@ -80,17 +86,17 @@ Creator launches vault → sets entry/performance/management fees
 Investors buy in → receive Strategy Shares (SPL tokens, NAV-priced)
 AI Agent runs the strategy → proposes swaps based on rules
 Group votes → executes only if quorum reached
-Tamagotchi evolves → unlock perks (lower fees, Jupiter Limit Orders, NFT shares)
+Money Tree evolves → unlock perks (lower fees, Jupiter Limit Orders, NFT shares)
 ```
 
-### Fee model
+### Fee model — honest unit economics, no token speculation
 
 | Fee | Who gets it | Range |
 |-----|-------------|-------|
 | Entry fee | 70% creator · 20% PotBot · 10% referrer | 0 – any |
-| Performance fee | Creator (on profit at exit) | 0–20% |
+| Performance fee | Creator + PotBot (only on profit at exit) | 0–20% |
 | Management fee | Creator (annual on AUM) | 0–2% |
-| Swap fee | PotBot protocol | 0.1–0.5% (Tamagotchi-discounted) |
+| Protocol swap fee | PotBot | 0.30% (Money Tree-discounted) |
 
 ### Referral system (on-chain, automatic)
 - Level 1 referrer: 20% of entry fee at transaction time
@@ -146,11 +152,11 @@ Integrates **x402 micropayments** — agents pay per API call (0.001 USDC/reques
 
 | Protocol | What we use it for |
 |----------|--------------------||
-| **Jupiter v6** | All swaps (best route, min slippage), Limit Orders (Eagle+), DCA (Dragon+) |
+| **Jupiter v6** | All swaps (best route, min slippage), Limit Orders (Bud+), DCA (Bloom+) |
 | **Kamino** | Yield strategies (lending APY up to 15%), RWA-backed vaults |
 | **Drift** | Perps exposure + lending rates |
 | **MarginFi** | Lending/borrowing yield |
-| **Metaplex Core** | NFT Strategy Shares for Titan-level vaults |
+| **Metaplex Core** | NFT Strategy Shares for Full Bloom+ vaults |
 | **MagicBlock** | Private USDC referral payouts (confidential transfers via MCP) |
 | **Privy** | Embedded wallet — join vaults by email, no Phantom needed |
 | **MoonPay** | Fiat on-ramp on vault join page |
@@ -168,7 +174,7 @@ PnL Engine     → entry_price × current_price × shares → unrealized/realize
 APY Engine     → annualized from 30d performance: (1 + pnl_30d)^(365/30) - 1
 Yield Aggreg.  → Kamino + Drift + JLP APY pulled every 15 minutes
 Agent Cron     → evaluates all AI rules every 60s, creates on-chain proposals
-Crank Service  → management fees, AUM snapshots, Tamagotchi evolution
+Crank Service  → management fees, AUM snapshots, Money Tree evolution, NFT burns on death
 ```
 
 **Per-vault metrics exposed via API:**
@@ -207,7 +213,7 @@ potbot-v2/
 │   ├── program/          # Anchor programs (Rust)
 │   │   └── programs/
 │   │       ├── pot_vault/     # Core: vault, governance, strategy, referral
-│   │       └── pot_duel/      # 1v1 duel vaults (Dragon+ unlock)
+│   │       └── pot_duel/      # 1v1 duel vaults (Bloom+ unlock)
 │   ├── sdk/              # TypeScript SDK
 │   └── ui/               # Shared React components
 └── docs/
@@ -232,7 +238,7 @@ potbot-v2/
 | `vote` | Vote yes/no weighted by shares |
 | `execute_proposal` | Execute passed proposal |
 | `execute_swap` | Execute Jupiter swap from vault |
-| `update_tamagotchi` | Permissionless crank to evolve mascot |
+| `update_tamagotchi` | Permissionless crank to evolve Money Tree (stage + health) |
 | `init_token_mint` | Initialize SPL mint for strategy shares |
 
 ### Strategy Vault
@@ -296,14 +302,20 @@ potbot-v2/
 
 ## Documentation
 
+> **📖 [Read the full project documentation → docs/OVERVIEW.md](docs/OVERVIEW.md)**
+> The single-page overview of everything PotBot: features, money tree stages, governance levels, STAMPPOT privacy, MCP server, fees, roadmap, and links.
+
 | Doc | Description |
 |-----|-------------|
+| [**OVERVIEW.md**](docs/OVERVIEW.md) | **Full project documentation — start here** |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data flow, key decisions |
 | [DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local setup, commands, troubleshooting |
 | [PROGRAM.md](docs/PROGRAM.md) | Solana program: accounts, instructions, PDAs |
 | [GOVERNANCE.md](docs/GOVERNANCE.md) | Governance levels, voting mechanics |
 | [MOCK_MODE.md](docs/MOCK_MODE.md) | Demo mode architecture |
-| [MCP.md](docs/MCP.md) | MCP server guide for AI agent developers |
+| [DEPLOY.md](docs/DEPLOY.md) | Devnet → mainnet deployment procedure |
+| [MAINNET_CUTOVER.md](docs/MAINNET_CUTOVER.md) | Mainnet migration checklist |
+| [SPONSORS.md](docs/SPONSORS.md) | Solana Frontier sponsor bounty plan |
 
 ---
 
@@ -322,3 +334,9 @@ potbot-v2/
 ## License
 
 MIT © 2026 Y-DAO Amsterdam — Built with ❤️ for Solana Frontier
+
+---
+
+### 📖 Full Documentation
+
+For the complete, single-page deep dive on PotBot — architecture, governance, money tree stages, STAMPPOT privacy, MCP server, fee model, and roadmap — see **[docs/OVERVIEW.md](docs/OVERVIEW.md)**.
