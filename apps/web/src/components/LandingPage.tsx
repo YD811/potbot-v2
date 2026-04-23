@@ -1,15 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
 import { useState } from 'react'
 import { usePots } from '@/hooks/usePots'
 import { useSolPrice } from '@/lib/prices'
-
-const WalletMultiButton = dynamic(
-  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  { ssr: false }
-)
 
 const FEATURES = [
   {
@@ -74,6 +68,357 @@ const FOR_BUILDERS = [
   { icon: '⚡', title: 'REST API', desc: 'Price oracle, PnL engine, leaderboard — all available as public API endpoints.', href: '/api/leaderboard' },
 ]
 
+/* ------------------------------------------------------------------ */
+/*  Product mockup with 3-D tilt + gentle auto-rotation                */
+/* ------------------------------------------------------------------ */
+function LiveVaultMockup() {
+  return (
+    <section className="max-w-6xl mx-auto px-4 py-16">
+      <div className="text-center mb-10">
+        <h2 className="text-3xl font-black text-white mb-3">
+          See your vault <span className="text-pot-green">at a glance</span>
+        </h2>
+        <p className="text-pot-muted max-w-xl mx-auto">
+          Every pot is a Solana program account. TVL, quorum, active proposals —
+          all live on-chain, all visible to every member.
+        </p>
+      </div>
+
+      <div className="potbot-mock-wrap">
+        {/* glow */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse at center, rgba(20,241,149,0.18) 0%, transparent 60%)',
+            filter: 'blur(60px)',
+          }}
+        />
+        <div className="potbot-mock">
+          <div className="potbot-mock-chrome">
+            <span className="dot r" />
+            <span className="dot y" />
+            <span className="dot g" />
+            <div className="url">potbot.fun/pot/AmsterdamDAO</div>
+          </div>
+          <div className="potbot-mock-body">
+            <div className="potbot-mock-vault">
+              <div className="vault-head">
+                <div className="vault-name">
+                  <div className="plant">🌿</div>
+                  <div>
+                    <div className="title">Amsterdam DAO Pot</div>
+                    <div className="sub">Sprout · 7 members</div>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div className="tvl">48.3 SOL</div>
+                  <div className="sub">~ $6,920</div>
+                </div>
+              </div>
+
+              <div className="stats">
+                <div className="stat">
+                  <div className="lbl">NAV</div>
+                  <div className="val">1.072</div>
+                </div>
+                <div className="stat">
+                  <div className="lbl">Quorum</div>
+                  <div className="val">5/7</div>
+                </div>
+                <div className="stat">
+                  <div className="lbl">30d</div>
+                  <div className="val up">+7.2%</div>
+                </div>
+              </div>
+
+              <div className="proposal">
+                <div className="proposal-head">
+                  <div className="proposal-title">Swap 5 SOL → JUP (agent)</div>
+                  <span className="badge">Voting · 4h left</span>
+                </div>
+                <div className="bar"><div className="fill" /></div>
+                <div className="vote-row">
+                  <span>Yes 5 · No 1</span>
+                  <span>72% · pass at 70%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        .potbot-mock-wrap {
+          position: relative;
+          max-width: 720px;
+          margin: 0 auto;
+          perspective: 1400px;
+        }
+        .potbot-mock {
+          position: relative;
+          z-index: 1;
+          border-radius: 20px;
+          overflow: hidden;
+          background: #10151C;
+          border: 1px solid rgba(255,255,255,0.14);
+          box-shadow:
+            0 40px 80px rgba(0,0,0,0.45),
+            0 0 0 1px rgba(20,241,149,0.08) inset;
+          transform-style: preserve-3d;
+          transform-origin: 50% 50%;
+          animation: potbot-tilt 9s ease-in-out infinite;
+          transition: transform 0.6s cubic-bezier(0.2,0.8,0.2,1);
+        }
+        .potbot-mock:hover {
+          animation-play-state: paused;
+          transform: perspective(1400px) rotateX(0deg) rotateY(0deg) scale(1.015);
+        }
+        @keyframes potbot-tilt {
+          0%   { transform: perspective(1400px) rotateX(4deg)  rotateY(-10deg); }
+          50%  { transform: perspective(1400px) rotateX(-3deg) rotateY(8deg); }
+          100% { transform: perspective(1400px) rotateX(4deg)  rotateY(-10deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .potbot-mock { animation: none; transform: none; }
+        }
+
+        .potbot-mock-chrome {
+          display: flex; align-items: center; gap: 8px;
+          padding: 12px 16px;
+          background: #1A2028;
+          border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot.r { background: #FF5F56; }
+        .dot.y { background: #FFBD2E; }
+        .dot.g { background: #27C93F; }
+        .url {
+          flex: 1; text-align: center;
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+          font-size: 11px;
+          color: rgba(255,255,255,0.45);
+        }
+
+        .potbot-mock-body { padding: 24px; }
+
+        .potbot-mock-vault {
+          background: #0D1117;
+          border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 14px;
+          padding: 22px;
+        }
+        .vault-head {
+          display: flex; align-items: center; justify-content: space-between;
+          margin-bottom: 18px;
+        }
+        .vault-name { display: flex; align-items: center; gap: 10px; }
+        .plant {
+          width: 40px; height: 40px; border-radius: 10px;
+          background: rgba(20,241,149,0.1);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 22px;
+        }
+        .title { font-weight: 700; font-size: 15px; color: #fff; text-align: left; }
+        .sub { font-size: 11px; color: rgba(255,255,255,0.5); text-align: left; }
+        .tvl {
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+          font-weight: 700; font-size: 18px;
+          color: #14F195;
+        }
+
+        .stats {
+          display: grid; grid-template-columns: repeat(3, 1fr);
+          gap: 10px; margin-bottom: 18px;
+        }
+        .stat {
+          background: #1A2028;
+          border-radius: 10px;
+          padding: 10px 12px;
+          text-align: left;
+        }
+        .lbl {
+          font-size: 10px; color: rgba(255,255,255,0.4);
+          text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .val {
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+          font-weight: 700; font-size: 14px; color: #fff;
+          margin-top: 2px;
+        }
+        .val.up { color: #14F195; }
+
+        .proposal {
+          background: #1A2028;
+          border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 12px;
+          padding: 14px;
+        }
+        .proposal-head {
+          display: flex; align-items: center; justify-content: space-between;
+          margin-bottom: 10px;
+        }
+        .proposal-title { font-size: 13px; font-weight: 600; color: #fff; text-align: left; }
+        .badge {
+          font-size: 10px; padding: 3px 8px; border-radius: 6px;
+          background: rgba(20,241,149,0.1); color: #14F195;
+          font-weight: 700;
+        }
+        .bar {
+          height: 8px; background: #0D1117;
+          border-radius: 999px; overflow: hidden;
+          margin-bottom: 8px;
+        }
+        .fill {
+          height: 100%; width: 0;
+          background: linear-gradient(135deg, #14F195 0%, #9945FF 100%);
+          border-radius: 999px;
+          animation: fill 2.2s cubic-bezier(0.2,0.8,0.2,1) forwards;
+        }
+        @keyframes fill { to { width: 72%; } }
+        .vote-row {
+          display: flex; justify-content: space-between;
+          font-size: 11px; color: rgba(255,255,255,0.5);
+        }
+      `}</style>
+    </section>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Claude chat mockup — "Ask Claude to manage your vault"             */
+/* ------------------------------------------------------------------ */
+function AskClaudeChat() {
+  return (
+    <div className="claude-chat">
+      <div className="claude-head">
+        <div className="claude-brand">
+          <div className="claude-logo">✻</div>
+          <div>
+            <div className="claude-name">Claude</div>
+            <div className="claude-sub">connected to potbot-mcp · devnet</div>
+          </div>
+        </div>
+        <span className="claude-pill">Live</span>
+      </div>
+
+      <div className="claude-body">
+        <div className="bubble bubble-user">
+          Hey Claude, if SOL drops below <strong>$130</strong>, propose buying 10% more
+          using the Amsterdam DAO vault balance.
+        </div>
+
+        <div className="bubble bubble-claude">
+          <div className="claude-think">Checking SOL price via Pyth…</div>
+          <div className="claude-tool">
+            <span className="tool-label">Tool call</span>
+            <code>
+              create_swap_proposal({'{'}<br />
+              &nbsp;&nbsp;pot: <span className="s">"AmsterdamDAO"</span>,<br />
+              &nbsp;&nbsp;trigger: <span className="s">"SOL &lt; 130 USD"</span>,<br />
+              &nbsp;&nbsp;inputMint: USDC, outputMint: SOL,<br />
+              &nbsp;&nbsp;amount: vault.<span className="fn">pct</span>(<span className="s">"10%"</span>),<br />
+              {'}'})
+            </code>
+          </div>
+          <div className="claude-result">
+            ✓ Proposal <strong>#42</strong> drafted. Members notified.
+            Voting closes in 4h.
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        .claude-chat {
+          max-width: 640px;
+          margin: 0 auto;
+          background: #10151C;
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 30px 60px rgba(0,0,0,0.35);
+        }
+        .claude-head {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 14px 18px;
+          background: linear-gradient(180deg, #1A2028 0%, #10151C 100%);
+          border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .claude-brand { display: flex; align-items: center; gap: 12px; }
+        .claude-logo {
+          width: 32px; height: 32px; border-radius: 8px;
+          background: #D97757; color: #fff;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 18px; font-weight: 700;
+        }
+        .claude-name { font-weight: 700; color: #fff; font-size: 14px; }
+        .claude-sub {
+          font-size: 11px; color: rgba(255,255,255,0.5);
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+        }
+        .claude-pill {
+          font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+          padding: 3px 10px; border-radius: 999px;
+          background: rgba(20,241,149,0.12); color: #14F195;
+          text-transform: uppercase;
+        }
+        .claude-body {
+          padding: 20px;
+          display: flex; flex-direction: column; gap: 14px;
+        }
+        .bubble {
+          padding: 14px 16px;
+          border-radius: 14px;
+          font-size: 14px;
+          line-height: 1.5;
+          max-width: 92%;
+        }
+        .bubble-user {
+          align-self: flex-end;
+          background: rgba(153,69,255,0.12);
+          border: 1px solid rgba(153,69,255,0.25);
+          color: #fff;
+        }
+        .bubble-claude {
+          align-self: flex-start;
+          background: #1A2028;
+          border: 1px solid rgba(255,255,255,0.07);
+          color: #E8EDF2;
+        }
+        .claude-think {
+          font-size: 12px; color: rgba(255,255,255,0.55);
+          font-style: italic; margin-bottom: 10px;
+        }
+        .claude-tool {
+          background: #0D1117;
+          border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 10px;
+          padding: 10px 12px;
+          margin-bottom: 10px;
+        }
+        .tool-label {
+          display: inline-block; font-size: 10px; font-weight: 700;
+          letter-spacing: 0.1em; text-transform: uppercase;
+          color: #9945FF; margin-bottom: 6px;
+        }
+        .claude-tool code {
+          display: block;
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+          font-size: 11.5px; line-height: 1.6;
+          color: #E8EDF2;
+          white-space: pre-wrap;
+        }
+        .claude-tool .s { color: #14F195; }
+        .claude-tool .fn { color: #58A6FF; }
+        .claude-result {
+          font-size: 13px; color: #14F195;
+          padding-top: 4px;
+        }
+      `}</style>
+    </div>
+  )
+}
+
 function CountUp({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
   if (value === 0) return <span className="text-pot-muted">—</span>
   return <>{prefix}{value >= 1000 ? (value / 1000).toFixed(1) + 'K' : value.toLocaleString()}{suffix}</>
@@ -118,62 +463,33 @@ function WaitlistSection() {
         {status === 'success' ? (
           <div className="flex flex-col items-center gap-3">
             <div className="text-4xl">🎉</div>
-            <p className="text-pot-green font-bold text-lg">You're on the list!</p>
-            <p className="text-pot-muted text-sm">We'll email you when mainnet goes live.</p>
-            <Link
-              href="/signup"
-              className="text-xs text-pot-accent hover:underline mt-2"
-            >
-              Want the founding-member NFT? Add your wallet →
-            </Link>
+            <p className="text-pot-green font-semibold">You're on the list!</p>
+            <p className="text-pot-muted text-sm">Check your inbox for a confirmation.</p>
           </div>
         ) : status === 'duplicate' ? (
-          <div className="flex flex-col items-center gap-3">
-            <div className="text-4xl">✅</div>
-            <p className="text-white font-bold text-lg">Already registered!</p>
-            <p className="text-pot-muted text-sm">You're already on the waitlist. We'll reach out soon.</p>
-            <Link
-              href="/signup"
-              className="text-xs text-pot-accent hover:underline mt-2"
-            >
-              Update your profile (twitter / wallet) →
-            </Link>
-          </div>
+          <p className="text-pot-muted text-sm">Looks like you're already on the waitlist — we'll be in touch.</p>
         ) : (
           <>
             <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="input flex-1 py-3 px-4 text-base"
-                disabled={status === 'loading'}
               />
               <button
                 type="submit"
-                disabled={status === 'loading' || !email.trim()}
+                disabled={status === 'loading'}
                 className="btn-primary px-6 py-3 text-base whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {status === 'loading' ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Joining...
-                  </span>
-                ) : (
-                  '🚀 Join Waitlist'
-                )}
+                {status === 'loading' ? 'Sending…' : '🚀 Join Waitlist'}
               </button>
             </form>
-
-            {/* Fuller signup CTA */}
             <div className="mt-6 text-sm text-pot-muted">
               Want founding-member perks (NFT badge, lower fees)?{' '}
-              <Link
-                href="/signup"
-                className="text-pot-green font-semibold hover:underline inline-flex items-center gap-1"
-              >
+              <Link href="/signup" className="text-pot-green font-semibold hover:underline inline-flex items-center gap-1">
                 Full sign-up →
               </Link>
             </div>
@@ -235,21 +551,13 @@ export default function LandingPage() {
             For groups who'd rather decide together than argue in group chats.
           </p>
 
-          {/* CTA buttons */}
+          {/* CTA buttons — only 2: primary + Follow X. Browse / Leaderboard / Connect live further down the page where they belong. */}
           <div className="flex flex-wrap gap-4 justify-center mb-12">
-            {/* Primary CTA — the new signup page */}
             <Link
               href="/signup"
               className="btn-primary text-base px-6 py-3 glow-green flex items-center gap-2"
             >
               🚀 Get Early Access
-            </Link>
-            <WalletMultiButton />
-            <Link href="/vaults" className="btn-secondary text-base px-6 py-3">
-              ⚡ Browse Strategy Vaults
-            </Link>
-            <Link href="/leaderboard" className="btn-secondary text-base px-6 py-3">
-              🏆 Leaderboard
             </Link>
             <a
               href="https://x.com/PotBot_sol"
@@ -257,12 +565,14 @@ export default function LandingPage() {
               rel="noreferrer"
               className="btn-secondary text-base px-6 py-3 flex items-center gap-2"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              Follow
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              Follow on X
             </a>
           </div>
 
-          {/* Live protocol stats */}
+          {/* Live protocol stats — only shown when data is real */}
           {totalTvlSol > 0 && (
             <div className="inline-flex flex-wrap items-center gap-0 bg-pot-card border border-pot-border rounded-2xl overflow-hidden shadow-xl">
               {[
@@ -276,13 +586,6 @@ export default function LandingPage() {
                 { label: 'Active Vaults', value: String(pots?.length ?? 0), color: 'text-white' },
                 { label: 'Members', value: String(totalMembers), color: 'text-white' },
                 { label: 'Total Trades', value: String(totalTrades), color: 'text-pot-accent' },
-                {
-                  label: 'TVL POTs',
-                  value: totalTvlUsd > 0
-                    ? `$${totalTvlUsd >= 1000 ? (totalTvlUsd / 1000).toFixed(1) + 'K' : totalTvlUsd.toFixed(0)}`
-                    : '—',
-                  color: 'text-pot-green',
-                },
               ].map((s, i, arr) => (
                 <div key={s.label} className={`px-6 py-4 text-center ${i < arr.length - 1 ? 'border-r border-pot-border' : ''}`}>
                   <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
@@ -309,6 +612,16 @@ export default function LandingPage() {
               <p className="text-pot-muted text-sm leading-relaxed">{f.desc}</p>
             </div>
           ))}
+        </div>
+
+        {/* Secondary CTAs — the ones we removed from the hero live here, in context */}
+        <div className="flex flex-wrap gap-3 justify-center mt-10">
+          <Link href="/vaults" className="btn-secondary text-sm px-5 py-2.5">
+            ⚡ Browse Strategy Vaults
+          </Link>
+          <Link href="/leaderboard" className="btn-secondary text-sm px-5 py-2.5">
+            🏆 Leaderboard
+          </Link>
         </div>
       </section>
 
@@ -337,6 +650,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── NEW: Rotating product mockup ── */}
+      <LiveVaultMockup />
 
       {/* ── How it works ── */}
       <section className="bg-pot-card border-y border-pot-border py-16 px-4">
@@ -494,7 +810,7 @@ export default function LandingPage() {
             <p className="text-pot-muted max-w-lg mx-auto">Any LLM can control PotBot vaults via the MCP server. Claude, GPT, or your own agent — 60+ on-chain actions available.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
             {FOR_BUILDERS.map((item) => (
               <a
                 key={item.title}
@@ -510,13 +826,8 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* Code snippet teaser */}
-          <div className="bg-pot-dark border border-pot-border rounded-2xl p-5 font-mono text-sm max-w-2xl mx-auto">
-            <div className="text-pot-muted text-xs mb-3">// Ask Claude to manage your vault</div>
-            <div className="text-pot-green">{"\"Hey Claude, if SOL drops below $130,"}</div>
-            <div className="text-pot-green pl-4">{"propose buying 10% more using the vault balance\""}</div>
-            <div className="text-pot-muted mt-2 text-xs">→ Claude calls <span className="text-pot-accent">create_swap_proposal</span> via MCP → members vote → executed on-chain</div>
-          </div>
+          {/* Ask Claude — expanded into a real chat UI */}
+          <AskClaudeChat />
         </div>
       </section>
 
