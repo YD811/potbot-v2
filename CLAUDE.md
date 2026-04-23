@@ -39,6 +39,33 @@ solana airdrop 2 --url devnet             # SOL на девнет
 - owner: "YD811", repo: "potbot-v2", branch: "main"
 - Через `mcp__github__push_files` или `git push origin main`
 
+## Protocol-integration skills (Sendai)
+**Marketplace**: `sendaifun/skills` — AI-native best-practices для 45+ Solana-протоколов.
+Install via Claude Code: `/plugin marketplace add sendaifun/skills` then
+`/plugin install <name>` per protocol.
+
+Claude must consult these skills when touching the relevant code paths — they
+capture SDK/endpoint best practices that drift out of date in tutorials.
+
+| Skill | Plug in when editing |
+|------|---------------------|
+| `jupiter` | `apps/web/src/lib/jupiter-*.ts`, `apps/web/src/components/JupiterSwapPanel.tsx`, `packages/program/programs/pot_vault/src/instructions/execute_swap.rs` |
+| `pyth`    | `apps/web/src/lib/pyth.ts`, keeper oracle path, proposal_swap price-feed guard |
+| `meteora` | DLMM/DAMM yield strategies (`yield_strategy`, unwind path) |
+| `kamino`  | Lending-based yield strategies, CPI into Kamino reserves |
+| `helius`  | RPC config, webhook pipelines, priority fees |
+| `squads`  | Pot authority multisig (task #15, mainnet prereq) |
+| `phantom-connect` | Wallet connection flow in `apps/web` |
+| `metaplex` | Tamagotchi NFT mint + metadata (`mint_tamagotchi_nft`) |
+| `raydium` | If we add Raydium routing fallback alongside Jupiter |
+| `solana-kit` + `solana-kit-migration` | Reference for eventual web3.js v1 → @solana/kit migration |
+| `coingecko` | Price data fallbacks outside Jupiter Price API |
+| `orca` | Whirlpools concentrated-liquidity if we add it |
+| `pumpfun` | Only if we integrate pump.fun launches (not current scope) |
+
+Local copies live in `POTBOT_OPUS/.claude/skills/sendai/` so Claude can read the
+SKILL.md files directly even without the marketplace installed.
+
 ## Статус
 - Mock режим: ✅ полностью работает (6 seed-потов)
 - Leaderboard: ✅ /leaderboard
