@@ -364,21 +364,24 @@ Integrates x402 so agents can pay per API call (0.001 USDC / request). This enab
 
 ## Governance Levels
 
-Every pot picks a level at creation (and can upgrade by proposal).
+Every pot picks two levels at creation — one for trades, one for withdrawals — and can upgrade them later by governance proposal.
 
-| Level | Quorum | Approval | Window | Timelock | Ideal for |
-|---|---|---|---|---|---|
-| L0 — Autocracy | — | admin | — | — | solo traders |
-| L1 — Fast Council | 25% | 51% | 4h | — | small trusted groups |
-| L2 — Standard | 50% | 51% | 24h | — | public pots (default) |
-| L3 — Consensus | 75% | 66% | 48h | — | high-value pots |
-| L4 — Timelock | 75% | 66% | 48h | 24h | institutional vaults |
+| Level | Name | Rule | Ideal for |
+|---|---|---|---|
+| L0 | Autocracy | Authority decides directly, no vote | solo traders |
+| L1 | Advisory | Owner proposes; members can veto with > 25% no-votes | small trusted groups |
+| L2 | Majority | > 50% yes-votes by share weight | public pots (default) |
+| L3 | Supermajority | > 66% yes-votes by share weight | high-value pots |
+| L4 | Consensus | 100% yes-votes | institutional vaults |
 
-Optional risk caps stacked on any level:
+Optional risk caps and timing controls stack on top of the level (`GovernanceConfig`):
 
-- `maxSwapPct` — no single swap may exceed X% of vault balance
-- `maxBudgetGrantPct` — no budget grant may exceed X% of vault balance
-- `requireAdminCoSign` — proposals above a threshold need admin co-sign
+- `max_swap_pct` — no single swap may exceed X% of vault balance
+- `max_budget_grant_pct` — no budget grant may exceed X% of vault balance
+- `require_admin_cosign` — proposals above a threshold need authority co-sign
+- `timelock_seconds` — cooling-off window between proposal pass and execution (institutional tier often uses 24h)
+
+Money Tree Health also interacts with governance: at low HP the program automatically restricts proposals to defensive actions only. See [GOVERNANCE.md](GOVERNANCE.md) for the full matrix, voting mechanics, and Personal AI Voter details.
 
 ---
 
