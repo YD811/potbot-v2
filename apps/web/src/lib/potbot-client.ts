@@ -4,6 +4,7 @@ import { PublicKey, SystemProgram, type Connection } from '@solana/web3.js'
 import { IDL, getMemberAddress, getProposalAddress, getVaultAddress, getVoterRecordAddress } from '@potbot/sdk'
 
 export const POTBOT_PROGRAM_ID = new PublicKey('GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK')
+export const POTBOT_PROGRAM_ID = new PublicKey('2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL')
 
 type RpcFn = { accounts: (a: Record<string, PublicKey>) => { rpc: () => Promise<string> } }
 
@@ -112,6 +113,11 @@ export class PotbotClient {
 
   async closeStrategy(accounts: Record<string, PublicKey>) {
     return this.callAny(['closeStrategy', 'closeStrategyVault'], [], accounts)
+    return this.call('createStrategy', [args], accounts)
+  }
+
+  async closeStrategy(accounts: Record<string, PublicKey>) {
+    return this.call('closeStrategy', [], accounts)
   }
 
   async markProposalPassed(accounts: Record<string, PublicKey>) {
