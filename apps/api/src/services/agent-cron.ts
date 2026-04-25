@@ -3,8 +3,18 @@
  * Detects trigger conditions and prepares on-chain proposals
  */
 import cron from 'node-cron'
+import { PublicKey } from '@solana/web3.js'
 import { getPrices } from './price-oracle.js'
+import {
+  buildCreateSwapProposalIx,
+  loadAgentKeypair,
+  proposalPda,
+  readPotHeader,
+  sendSignedIx,
+} from './anchor-ix.js'
 import type { AgentRule, AgentEvalContext } from '../types.js'
+
+const NETWORK = process.env.SOLANA_NETWORK ?? 'devnet'
 
 export interface AgentLog {
   id: string
@@ -139,21 +149,71 @@ async function executeRuleAction(
   rule: AgentRule,
   _ctx: AgentEvalContext
 ): Promise<AgentLog> {
-  // TODO: When program is deployed on devnet/mainnet:
-  // 1. Build proposal instruction via @potbot/sdk
-  // 2. Sign with agent keypair (from env)
-  // 3. Submit on-chain → creates Passed proposal (if solo authority)
-  // 4. Set proposalCreated = true, proposalId = tx signature
-
-  return {
+  const baseLog: AgentLog = {
     id: crypto.randomUUID(),
     potPubkey,
     ruleId: rule.id,
     ruleName: rule.name,
     triggerDesc: describeTrigger(rule),
     actionDesc: describeAction(rule),
-    proposalCreated: false,  // becomes true after on-chain deploy
+    proposalCreated: false,
     ts: Date.now(),
+  }
+
+  // Only propose_swap is wired to chain right now. Other action types remain
+  // log-only until their builders are added.
+  if (rule.action.type !== 'propose_swap') return baseLog
+
+  const agent = loadAgentKeypair()
+  if (!agent) {
+    return { ...baseLog, error: 'AGENT_KEYPAIR not set — running in dry-run mode' }
+  }
+
+  const { token: fromMint, toToken: toMint, amount } = rule.action
+  if (!fromMint || !toMint || !amount) {
+    return { ...baseLog, error: 'propose_swap rule missing token / toToken / amount' }
+  }
+
+  let pot: PublicKey
+  let from: PublicKey
+  let to: PublicKey
+  try {
+    pot = new PublicKey(potPubkey)
+    from = new PublicKey(fromMint)
+    to = new PublicKey(toMint)
+  } catch (err: any) {
+    return { ...baseLog, error: `Invalid pubkey in rule: ${err.message ?? String(err)}` }
+  }
+
+  const header = await readPotHeader(pot)
+  if (!header) return { ...baseLog, error: `PotAccount not found at ${potPubkey}` }
+
+  const ix = buildCreateSwapProposalIx({
+    pot,
+    proposer: agent.publicKey,
+    proposalId: header.nextProposalId,
+    fromMint: from,
+    toMint: to,
+    amountInLamports: BigInt(Math.round(amount)),
+    minAmountOutLamports: 0n,
+    description: `[agent] ${rule.name}`.slice(0, 200),
+  })
+
+  const proposalKey = proposalPda(pot, header.nextProposalId)
+
+  try {
+    const sig = await sendSignedIx(ix, agent)
+    return {
+      ...baseLog,
+      proposalCreated: true,
+      proposalId: sig,
+      actionDesc: `${baseLog.actionDesc} → proposal #${header.nextProposalId} (${proposalKey.toBase58().slice(0, 8)}…) tx ${sig.slice(0, 12)}…`,
+    }
+  } catch (err: any) {
+    return {
+      ...baseLog,
+      error: `On-chain create_proposal failed: ${err.message ?? String(err)}`,
+    }
   }
 }
 
