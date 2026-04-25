@@ -1,9 +1,9 @@
 import { AnchorProvider, BN, Program } from '@coral-xyz/anchor'
 import type { Idl, Wallet } from '@coral-xyz/anchor'
 import { PublicKey, SystemProgram, type Connection } from '@solana/web3.js'
-import { IDL, PROGRAM_ID as SDK_PROGRAM_ID, getMemberAddress, getProposalAddress, getVaultAddress, getVoterRecordAddress } from '@potbot/sdk'
+import { IDL, getMemberAddress, getProposalAddress, getVaultAddress, getVoterRecordAddress } from '@potbot/sdk'
 
-export const POTBOT_PROGRAM_ID = SDK_PROGRAM_ID
+export const POTBOT_PROGRAM_ID = new PublicKey('2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL')
 
 type RpcFn = { accounts: (a: Record<string, PublicKey>) => { rpc: () => Promise<string> } }
 
