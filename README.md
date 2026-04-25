@@ -48,7 +48,7 @@ cd apps/web && npx next dev
 ```
 
 **On-chain (devnet):**
-- Program ID: `2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL`
+- Program ID: `GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK`
 - - Connect Phantom → switch to devnet → interact live
  
   - **Test MCP with Claude:**
