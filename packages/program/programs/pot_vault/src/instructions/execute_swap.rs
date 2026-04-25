@@ -110,7 +110,7 @@ pub struct ExecuteSwap<'info> {
         mut,
         constraint = source_ata.owner == vault.key()
             @ crate::errors::PotError::VaultOwnerMismatch,
-        constraint = source_ata.mint == strategy.input_mint
+        constraint = (args.is_entry && source_ata.mint == strategy.input_mint) || (!args.is_entry && source_ata.mint == strategy.output_mint)
             @ crate::errors::PotError::MintNotAllowlisted,
     )]
     pub source_ata: Account<'info, TokenAccount>,
@@ -119,7 +119,7 @@ pub struct ExecuteSwap<'info> {
         mut,
         constraint = destination_ata.owner == vault.key()
             @ crate::errors::PotError::VaultOwnerMismatch,
-        constraint = destination_ata.mint == strategy.output_mint
+        constraint = (args.is_entry && destination_ata.mint == strategy.output_mint) || (!args.is_entry && destination_ata.mint == strategy.input_mint)
             @ crate::errors::PotError::MintNotAllowlisted,
     )]
     pub destination_ata: Account<'info, TokenAccount>,
