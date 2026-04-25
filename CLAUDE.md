@@ -186,3 +186,34 @@ Ecosystem data в `~/.claude/skills/data/` (colosseum, defi, ideas, solana-knowl
                                5. 5. **Demo video** — May 6–8, сценарий: create_pot → AI proposal → vote → real swap
 - 🟢 Demo video — May 6–8
 - 📅 Hackathon submission — 2026-05-11
+
+
+## Изменения сессии 2 (апрель 25, 2026)
+
+### CI/CD
+✅ Исправлен синтаксис YAML в ci.yml (ошибка была на строке 4 — неверный отступ)
+✅ Добавлен .github/workflows/publish.yml — автопубликация @potbot/mcp на npm по тегу mcp-v*
+
+### MCP Server
+✅ Создан apps/potbot-mcp/src/http.ts — HTTP+SSE транспорт (MCP 2025-11-05 spec)
+✅ Реализован x402 micropayment gate (0.001 USDC за аналитический вызов)
+✅ Платные инструменты: get_vault_analytics, get_yield_rates, get_leaderboard
+✅ Бесплатные инструменты: list_vaults, get_token_prices, create_swap_proposal, vote_on_proposal, join_strategy_vault
+✅ Обновлён package.json → v0.2.0 + binaries potbot-mcp-http, npm publish scripts
+✅ Добавлен Issue #15 progress comment с инструкцией как включить x402
+
+### Ключевые файлы (обновлено апрель 25, 2026)
+- .github/workflows/ci.yml — исправлен YAML (был невалиден с сессии 1)
+- .github/workflows/publish.yml — НОВЫЙ: автопубликация @potbot/mcp
+- apps/potbot-mcp/src/http.ts — НОВЫЙ: HTTP+SSE transport + x402
+- apps/potbot-mcp/package.json — v0.2.0, HTTP bin, publish scripts
+
+## Следующий приоритет (для Claude в следующей сессии)
+
+1. **Executor wallet** — задеплоить apps/api на Fly.io, EXECUTOR_KEYPAIR в env
+2. **npm publish** — `cd apps/potbot-mcp && npm login && npm run build && npm publish`
+3. **x402 deploy** — `X402_ENABLED=true X402_RECEIVER_WALLET=<wallet> fly deploy --app potbot-mcp-http`
+4. **E2E devnet тест** — прогнать scripts/e2e-devnet.ts после executor deploy
+5. **Branch protection** — Settings → Branches → sudo confirm
+6. **Demo video** — May 6–8, сценарий: create_pot → AI proposal → vote → real swap
+7. **Hackathon submission** — colosseum.com/frontier до May 11, 2026
