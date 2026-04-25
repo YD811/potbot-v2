@@ -64,6 +64,15 @@ export class PotbotClient {
     return this.method(name, args).accounts(accounts).rpc()
   }
 
+  private async callAny(names: string[], args: unknown[], accounts: Record<string, PublicKey>): Promise<string> {
+    const methods = this.program.methods as Record<string, (...methodArgs: unknown[]) => RpcFn>
+    for (const name of names) {
+      const fn = methods[name]
+      if (fn) return fn(...args).accounts(accounts).rpc()
+    }
+    throw new Error(`None of the instructions are present in current IDL: ${names.join(', ')}`)
+  }
+
   async createPot(args: Record<string, unknown>, accounts: { pot: PublicKey; vault: PublicKey; authority: PublicKey }) {
     return this.call('createPot', [args], { ...accounts, systemProgram: SystemProgram.programId })
   }
@@ -98,11 +107,11 @@ export class PotbotClient {
   }
 
   async createStrategy(args: CreateStrategyArgs, accounts: Record<string, PublicKey>) {
-    return this.call('createStrategy', [args], accounts)
+    return this.callAny(['createStrategy', 'createStrategyVault'], [args], accounts)
   }
 
   async closeStrategy(accounts: Record<string, PublicKey>) {
-    return this.call('closeStrategy', [], accounts)
+    return this.callAny(['closeStrategy', 'closeStrategyVault'], [], accounts)
   }
 
   async markProposalPassed(accounts: Record<string, PublicKey>) {
