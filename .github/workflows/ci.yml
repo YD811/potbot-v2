@@ -36,7 +36,9 @@ jobs:
           cache: 'npm'
       - run: npm install --no-audit --no-fund
       - name: tsc --noEmit (SDK)
-        run: cd packages/sdk && npx tsc -p tsconfig.json --noEmit || echo "::warning::SDK type-check has known errors — see issue #XXX"
+        run: |
+          cd packages/sdk
+          npx tsc -p tsconfig.json --noEmit || echo "::warning::SDK type-check has known errors - see issue #XXX"
 
   anchor-build:
     name: anchor — build
