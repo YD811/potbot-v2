@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-/// PotBot v2 treasury address (YD's PotBot v2 wallet for fee collection)
+/// PotBot v2 treasury address (fee collection)
 pub const TREASURY_ADDRESS: Pubkey = pubkey!("2LeG86xuss12WrYsamTGk4zLfBbXJpWZpr1yFrUqN98o");
 
 /// Fee constants (in lamports)
@@ -8,19 +8,39 @@ pub const TOKENIZATION_FEE: u64 = 100_000_000;  // 0.1 SOL
 pub const SNS_DOMAIN_FEE: u64 = 250_000_000;     // 0.25 SOL
 pub const TAMAGOTCHI_NFT_FEE: u64 = 50_000_000;  // 0.05 SOL
 
-/// Tamagotchi level thresholds
-pub const TAMAGOTCHI_THRESHOLDS: &[u64] = &[
-    0,      // Level 0
-    100,    // Level 1
-    500,    // Level 2  
-    2000,   // Level 3
-    8000,   // Level 4
-    25000,  // Level 5
-];
+/// Tamagotchi level thresholds (XP)
+pub const TAMAGOTCHI_THRESHOLDS: &[u64] = &[0, 100, 500, 2000, 8000, 25000];
 
-/// Maximum values
+/// Length limits
 pub const MAX_POT_NAME_LEN: usize = 32;
 pub const MAX_EMOJI_LEN: usize = 8;
 pub const MAX_INVITE_CODE_LEN: usize = 6;
 pub const MAX_DOMAIN_NAME_LEN: usize = 32;
 pub const MAX_INVITED_MEMBERS: usize = 100;
+
+// ─── Strategy vault constants ──────────────────────────────────────────────
+
+/// Jupiter v6 aggregator program ID (stable across clusters)
+pub const JUPITER_V6_PROGRAM_ID: Pubkey =
+    pubkey!("JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4");
+
+/// Hard program-wide slippage ceiling for all swaps (5%).
+/// Prevents any single swap — regardless of mode — from losing more than
+/// MAX_SLIPPAGE_BPS of value relative to the on-chain entry price.
+pub const MAX_SLIPPAGE_BPS: u16 = 500;
+
+/// PDA seed for StrategyAccount: ["strategy", pot_pubkey, slot_id_le_bytes]
+pub const STRATEGY_SEED: &[u8] = b"strategy";
+
+/// PDA seed for vault SOL/token escrow: ["vault", pot_pubkey]
+pub const VAULT_SEED: &[u8] = b"vault";
+
+/// Minimum fee reserve (lamports) before a triggered strategy can be created.
+/// Ensures the keeper has gas budget to fire the trigger.
+pub const MIN_FEE_RESERVE_LAMPORTS: u64 = 50_000_000; // 0.05 SOL
+
+/// Pyth push oracle program IDs (for ownership verification)
+pub const PYTH_PROGRAM_MAINNET: Pubkey =
+    pubkey!("FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH");
+pub const PYTH_PROGRAM_DEVNET: Pubkey =
+    pubkey!("gSbePebfvPy7tRqimPoVecS2UsBvYv46ynrzWocc92s");

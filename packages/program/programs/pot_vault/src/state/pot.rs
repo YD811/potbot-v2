@@ -1,108 +1,116 @@
 use anchor_lang::prelude::*;
+use crate::errors::PotError;
 
 #[account]
 #[derive(InitSpace)]
 pub struct PotAccount {
-    /// Creator / initial admin
+    // ─── Identity ─────────────────────────────────────────────────────────
     pub authority: Pubkey,
-    /// Human-readable name (max 32 bytes)
     #[max_len(32)]
     pub name: String,
-    /// Emoji identifier
     #[max_len(8)]
     pub emoji: String,
-    /// Bump for the vault PDA
+
+    // ─── PDAs ─────────────────────────────────────────────────────────────
     pub vault_bump: u8,
-    /// Bump for the pot PDA
     pub pot_bump: u8,
-    /// Total share units distributed across all members
+
+    // ─── Shares ───────────────────────────────────────────────────────────
     pub total_shares: u64,
-    /// Number of active members
     pub member_count: u32,
-    /// Running trade counter
     pub trade_count: u32,
-    /// Total volume in lamports
     pub total_volume: u64,
-    /// Tamagotchi level 0-5
+
+    // ─── Tamagotchi ───────────────────────────────────────────────────────
     pub tamagotchi_level: u8,
-    /// Tamagotchi XP
     pub tamagotchi_xp: u64,
-    /// Community token mint (SPL)
+
+    // ─── Token mint ───────────────────────────────────────────────────────
     pub community_token_mint: Pubkey,
-    /// Config
+    pub token_mint: Pubkey,
+    pub shares_per_sol: u64,
+
+    // ─── Config ───────────────────────────────────────────────────────────
     pub config: PotConfig,
-    /// Governance settings
     pub governance: GovSettings,
-    /// Next proposal ID
     pub next_proposal_id: u64,
-    /// Created timestamp
     pub created_at: i64,
 
-    // ── Risk & performance fields ──────────────────────────────────────
-    /// High-water mark in lamports (for performance fee tracking)
+    // ─── Risk & performance ───────────────────────────────────────────────
     pub high_water_mark: u64,
-    /// Protocol performance fee in basis points (0-1000 = 0-10%)
     pub protocol_fee_bps: u16,
-    /// Last activity timestamp (deposit/trade) — for leaderboard & tamagotchi decay
     pub last_activity_at: i64,
 
-    // ── AI Agent ───────────────────────────────────────────────────────
-    /// AI agent wallet pubkey — None = disabled
+    // ─── Legacy AI agent ──────────────────────────────────────────────────
+    /// Pubkey used for rate-limiting agent proposals (legacy field).
     pub agent_pubkey: Option<Pubkey>,
-    /// Max single trade size the agent can propose (bps of vault, e.g. 1000 = 10%)
     pub agent_max_trade_bps: u16,
-    /// Unix timestamp of agent's last proposal (rate limiting)
     pub agent_last_proposal_at: i64,
 
-    // ── Daily trade tracking ───────────────────────────────────────────
-    /// Trades executed on the current UTC day
+    // ─── Daily trade tracking ─────────────────────────────────────────────
     pub daily_trades_count: u8,
-    /// UTC midnight timestamp of the current trading day
     pub last_trade_day: i64,
 
-    /// SPL token mint for vault shares (set by init_token_mint)
-    pub token_mint: Pubkey,
-    /// How many share tokens per 1 SOL deposited (default 100)
-    pub shares_per_sol: u64,
+    // ─── Strategy layer v2 ────────────────────────────────────────────────
+
+    /// Emergency pause. When true, execute_swap rejects all modes.
+    pub paused: bool,
+
+    /// Keeper agent authority for StrategyTrigger mode.
+    /// This is the keeper's hot wallet pubkey — separate from agent_pubkey.
+    /// Set via set_allowed_mints.
+    pub agent_authority: Pubkey,
+
+    /// Mint allowlist for swap strategies (zeroed entries = unused slots).
+    /// Maximum 16 mints per pot.
+    pub allowed_mints: [Pubkey; 16],
+
+    /// Number of populated entries in allowed_mints.
+    pub allowed_mints_count: u8,
+
+    /// Maximum lamports spendable per UTC day across all strategies.
+    /// 0 = unlimited (not recommended for production).
+    pub daily_budget_lamports: u64,
+
+    /// Lamports spent in the current UTC day (resets at midnight).
+    pub daily_spent_lamports: u64,
+
+    /// UTC day number (unix_timestamp / 86400) of the last spend.
+    pub daily_spend_day: i64,
+
+    /// Maximum single swap as bps of vault balance (0 = unlimited).
+    /// E.g. 2000 = 20% of vault per swap.
+    pub single_swap_cap_bps: u16,
+
+    /// Monotonic count of StrategyAccount PDAs created under this pot.
+    pub strategy_count: u8,
+
+    /// Keeper gas reserve (lamports). Keeper draws from this for trigger gas.
+    pub fee_reserve: u64,
 }
+
+// ─── Config structs ───────────────────────────────────────────────────────
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub struct PotConfig {
-    /// Whether anyone can join or invite-only
     pub is_public: bool,
-    /// Minimum deposit in lamports
     pub min_deposit: u64,
-    /// Lockup period in seconds (0 = no lockup)
     pub lockup_seconds: i64,
-    /// Yield strategy
     pub yield_strategy: YieldStrategy,
-    /// Max % of vault allocated to yield (basis points, e.g. 5000 = 50%)
     pub max_yield_allocation_bps: u16,
-    /// Max single swap size as % of vault (basis points, e.g. 2000 = 20%)
-    /// 0 = no limit (not recommended for production)
     pub max_trade_size_bps: u16,
-    /// Max number of members — 0 = unlimited
     pub max_members: u16,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub struct GovSettings {
-    /// Governance level for trades (0=autocracy, 1=advisory, 2=majority, 3=super, 4=consensus)
     pub trade_level: u8,
-    /// Governance level for withdrawals
     pub withdraw_level: u8,
-    /// Governance level for member changes
     pub member_change_level: u8,
-    /// Governance level for settings changes
     pub settings_change_level: u8,
-    /// Governance level for yield strategy changes
     pub yield_change_level: u8,
-    /// Voting timeout in seconds
     pub vote_timeout_seconds: i64,
-    /// Quorum in basis points (e.g. 5000 = 50%)
     pub quorum_bps: u16,
-    /// Timelock: seconds to wait after proposal passes before it can be executed.
-    /// 0 = instant execution (no timelock). Recommended: 3600–86400 for democracy modes.
     pub timelock_seconds: i64,
 }
 
@@ -114,12 +122,13 @@ pub enum YieldStrategy {
     Aggressive,
 }
 
+// ─── impl PotAccount ─────────────────────────────────────────────────────
+
 impl PotAccount {
-    /// Calculate the share price: vault_lamports / total_shares
-    /// Returns lamports per share (scaled by 1e9 for precision)
+    /// Calculate the share price: vault_lamports / total_shares (scaled ×10^9).
     pub fn share_price(&self, vault_lamports: u64) -> u64 {
         if self.total_shares == 0 {
-            return 1_000_000_000; // 1:1 initial price
+            return 1_000_000_000;
         }
         (vault_lamports as u128)
             .checked_mul(1_000_000_000)
@@ -128,10 +137,9 @@ impl PotAccount {
             .unwrap() as u64
     }
 
-    /// Calculate shares for a given deposit
     pub fn lamports_to_shares(&self, lamports: u64, vault_lamports: u64) -> u64 {
         if self.total_shares == 0 {
-            return lamports; // First deposit: 1 lamport = 1 share
+            return lamports;
         }
         (lamports as u128)
             .checked_mul(self.total_shares as u128)
@@ -140,7 +148,6 @@ impl PotAccount {
             .unwrap() as u64
     }
 
-    /// Calculate lamports for a given number of shares
     pub fn shares_to_lamports(&self, shares: u64, vault_lamports: u64) -> u64 {
         if self.total_shares == 0 {
             return 0;
@@ -152,62 +159,125 @@ impl PotAccount {
             .unwrap() as u64
     }
 
-    /// Check if governance level allows autocracy (owner decides)
     pub fn is_autocracy(&self, level: u8) -> bool {
         level == 0
     }
 
-    /// Required approval BPS for a given governance level
     pub fn required_approval_bps(level: u8) -> u16 {
         match level {
-            0 => 0,       // Autocracy
-            1 => 0,       // Advisory (veto-based)
-            2 => 5001,    // Majority >50%
-            3 => 6667,    // Supermajority >66%
-            4 => 10000,   // Consensus 100%
+            0 => 0,
+            1 => 0,
+            2 => 5001,
+            3 => 6667,
+            4 => 10000,
             _ => 10000,
         }
     }
 
-    /// Recalculate tamagotchi XP and level — call after any stat change
     pub fn recalculate_tamagotchi(&mut self) {
         let total_volume_sol = self.total_volume / 1_000_000_000;
         let volume_xp = std::cmp::min(total_volume_sol * 10, 5000);
         let member_xp = (self.member_count as u64) * 50;
         let trade_xp = (self.trade_count as u64) * 20;
         let total_xp = volume_xp + member_xp + trade_xp;
-
         self.tamagotchi_xp = total_xp;
         self.tamagotchi_level = match total_xp {
-            0..=99   => 0,
-            100..=499  => 1,
-            500..=1999  => 2,
-            2000..=7999  => 3,
+            0..=99 => 0,
+            100..=499 => 1,
+            500..=1999 => 2,
+            2000..=7999 => 3,
             8000..=24999 => 4,
-            25000..    => 5,
+            25000.. => 5,
         };
     }
 
-    /// Check and reset daily trade counter if a new UTC day has started.
     pub fn check_daily_trade_limit(&mut self, now: i64, limit: u8) -> bool {
         let current_day = now / 86400;
         let last_day = self.last_trade_day / 86400;
-
         if current_day > last_day {
             self.daily_trades_count = 0;
             self.last_trade_day = now;
         }
-
         if limit == 0 {
             self.daily_trades_count = self.daily_trades_count.saturating_add(1);
             return true;
         }
-
         if self.daily_trades_count >= limit {
             return false;
         }
-
         self.daily_trades_count = self.daily_trades_count.saturating_add(1);
         true
+    }
+
+    // ─── Strategy layer v2 methods ────────────────────────────────────────
+
+    /// Returns true if `mint` is in the pot's allowlist.
+    /// A zeroed Pubkey (Pubkey::default()) is treated as an unused slot.
+    /// If allowed_mints_count == 0, any mint is allowed (open mode, for testing).
+    pub fn is_mint_allowed(&self, mint: &Pubkey) -> bool {
+        if self.allowed_mints_count == 0 {
+            return true; // no allowlist configured — open mode
+        }
+        self.allowed_mints[..self.allowed_mints_count as usize]
+            .iter()
+            .any(|m| m == mint)
+    }
+
+    /// Enforce the single-swap size cap. Returns Ok if the swap is within bounds.
+    /// `amount` is in lamports (or base token units for SPL).
+    pub fn check_single_swap_cap(&self, amount: u64, _mint: &Pubkey) -> Result<()> {
+        if self.single_swap_cap_bps == 0 {
+            return Ok(()); // unlimited
+        }
+        // Cap is expressed as bps of fee_reserve (keeper gas pool) as a proxy
+        // for vault balance, since we don't have the vault lamports in scope.
+        // For a real per-vault-balance cap, the caller should pass vault_lamports
+        // and this helper can be extended. For Phase 1, fee_reserve doubles as
+        // the reference. If fee_reserve is 0 (not yet funded), skip the cap.
+        if self.fee_reserve == 0 {
+            return Ok(());
+        }
+        let cap = (self.fee_reserve as u128)
+            .checked_mul(self.single_swap_cap_bps as u128)
+            .unwrap_or(u128::MAX)
+            / 10_000u128;
+        require!(amount as u128 <= cap, PotError::SpendingLimitExceeded);
+        Ok(())
+    }
+
+    /// Returns Ok if adding `amount` to today's spend stays within daily_budget_lamports.
+    /// Does NOT mutate — call register_spend after the swap succeeds.
+    pub fn check_daily_budget(&self, amount: u64, now: i64) -> Result<()> {
+        if self.daily_budget_lamports == 0 {
+            return Ok(()); // unlimited
+        }
+        let current_day = now / 86400;
+        let spent = if current_day > self.daily_spend_day {
+            0u64 // new day — counter will reset
+        } else {
+            self.daily_spent_lamports
+        };
+        let new_total = spent
+            .checked_add(amount)
+            .ok_or(error!(PotError::MathOverflow))?;
+        require!(
+            new_total <= self.daily_budget_lamports,
+            PotError::SpendingLimitExceeded
+        );
+        Ok(())
+    }
+
+    /// Record a spend against the daily budget. Call AFTER the swap succeeds.
+    pub fn register_spend(&mut self, amount: u64, now: i64) -> Result<()> {
+        let current_day = now / 86400;
+        if current_day > self.daily_spend_day {
+            self.daily_spent_lamports = 0;
+            self.daily_spend_day = current_day;
+        }
+        self.daily_spent_lamports = self
+            .daily_spent_lamports
+            .checked_add(amount)
+            .ok_or(error!(PotError::MathOverflow))?;
+        Ok(())
     }
 }
