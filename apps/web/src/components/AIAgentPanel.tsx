@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { PublicKey, Transaction } from '@solana/web3.js'
+import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import {
   STRATEGY_DESCRIPTIONS,
   type StrategyPreset,
@@ -9,6 +11,13 @@ import {
   type AgentLogEntry,
 } from '@/lib/ai-agent'
 import { useAIAgent } from '@/hooks/useAIAgent'
+import {
+  buildRegisterDelegateIx,
+  buildRevokeDelegateIx,
+  readMemberDelegate,
+  delegatePda,
+  type MemberDelegateState,
+} from '@/lib/delegate-ix'
 
 /* ── Log level styles ── */
 const LOG_STYLES: Record<AgentLogEntry['level'], { bg: string; text: string; icon: string }> = {
@@ -49,7 +58,7 @@ export function AIAgentPanel({ potPubkey, pot }: Props) {
   const { config, log, isRunning, lastCheck, setConfig, toggleEnabled, clearLog, triggerManualCheck } =
     useAIAgent(potPubkey, pot)
 
-  const [tab, setTab] = useState<'overview' | 'rules' | 'log'>('overview')
+  const [tab, setTab] = useState<'overview' | 'rules' | 'delegate' | 'log'>('overview')
   const [editingRule, setEditingRule] = useState<string | null>(null)
 
   return (
@@ -118,7 +127,7 @@ export function AIAgentPanel({ potPubkey, pot }: Props) {
 
       {/* Sub-tabs */}
       <div className="flex gap-1 bg-pot-dark rounded-xl p-1 border border-pot-border">
-        {(['overview', 'rules', 'log'] as const).map((t) => (
+        {(['overview', 'rules', 'delegate', 'log'] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -128,7 +137,10 @@ export function AIAgentPanel({ potPubkey, pot }: Props) {
                 : 'text-pot-muted hover:text-white'
             }`}
           >
-            {t === 'overview' ? '🎛 Strategy' : t === 'rules' ? '📋 Rules' : `📜 Log ${log.length > 0 ? `(${log.length})` : ''}`}
+            {t === 'overview' ? '🎛 Strategy'
+              : t === 'rules' ? '📋 Rules'
+              : t === 'delegate' ? '🪪 Delegate'
+              : `📜 Log ${log.length > 0 ? `(${log.length})` : ''}`}
           </button>
         ))}
       </div>
@@ -146,6 +158,11 @@ export function AIAgentPanel({ potPubkey, pot }: Props) {
           editingRule={editingRule}
           setEditingRule={setEditingRule}
         />
+      )}
+
+      {/* Delegate tab */}
+      {tab === 'delegate' && (
+        <DelegateTab potPubkey={potPubkey} />
       )}
 
       {/* Log tab */}
@@ -574,6 +591,255 @@ function LogTab({ log, clearLog }: { log: AgentLogEntry[]; clearLog: () => void 
             })}
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+/* ── Delegate tab ──
+   Lets a member register an AI-agent wallet as a voting delegate for this pot
+   (calls register_delegate on-chain). The user signs with wallet-adapter; the
+   delegate's secret key never leaves their machine. PotBot's MCP server can
+   then sign votes via vote_as_delegate using the agent's keypair.
+*/
+function DelegateTab({ potPubkey }: { potPubkey: string }) {
+  const { connection } = useConnection()
+  const { publicKey, sendTransaction, connected } = useWallet()
+
+  const [state, setState] = useState<MemberDelegateState | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [lastSig, setLastSig] = useState<string | null>(null)
+
+  const [delegateInput, setDelegateInput] = useState('')
+  const [rulesUriInput, setRulesUriInput] = useState('')
+
+  const potKey = (() => { try { return new PublicKey(potPubkey) } catch { return null } })()
+
+  async function refresh() {
+    if (!potKey || !publicKey) return
+    setLoading(true)
+    setError(null)
+    try {
+      const s = await readMemberDelegate(connection, potKey, publicKey)
+      setState(s)
+    } catch (err: any) {
+      setError(err.message ?? String(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (potKey && publicKey) refresh()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [potPubkey, publicKey?.toBase58()])
+
+  async function handleRegister() {
+    if (!potKey || !publicKey) return
+    let delegateKey: PublicKey
+    try { delegateKey = new PublicKey(delegateInput.trim()) }
+    catch { setError('Invalid delegate pubkey'); return }
+    if (rulesUriInput.length > 200) { setError('Rules URI must be ≤ 200 chars'); return }
+
+    setSubmitting(true)
+    setError(null)
+    try {
+      const ix = buildRegisterDelegateIx({
+        pot: potKey,
+        memberWallet: publicKey,
+        delegate: delegateKey,
+        rulesUri: rulesUriInput,
+      })
+      const tx = new Transaction().add(ix)
+      const sig = await sendTransaction(tx, connection)
+      await connection.confirmTransaction(sig, 'confirmed')
+      setLastSig(sig)
+      await refresh()
+    } catch (err: any) {
+      setError(err.message ?? String(err))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleRevoke() {
+    if (!potKey || !publicKey) return
+    if (!confirm('Revoke this delegation? The agent will no longer be able to vote on your behalf.')) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      const ix = buildRevokeDelegateIx({ pot: potKey, memberWallet: publicKey })
+      const tx = new Transaction().add(ix)
+      const sig = await sendTransaction(tx, connection)
+      await connection.confirmTransaction(sig, 'confirmed')
+      setLastSig(sig)
+      await refresh()
+    } catch (err: any) {
+      setError(err.message ?? String(err))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (!connected) {
+    return (
+      <div className="bg-pot-card border border-pot-border rounded-2xl p-8 flex flex-col items-center text-center gap-3">
+        <div className="text-4xl">🪪</div>
+        <p className="text-white font-semibold">Connect your wallet to manage delegation</p>
+        <p className="text-pot-muted text-sm max-w-md">
+          Delegation is signed by the member wallet. The AI agent never holds your main key.
+        </p>
+      </div>
+    )
+  }
+
+  if (!potKey) {
+    return <div className="bg-pot-card border border-pot-border rounded-2xl p-6 text-pot-muted text-sm">Invalid pot pubkey.</div>
+  }
+
+  const explorerCluster = process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? 'devnet'
+  const [pdaKey] = delegatePda(potKey, publicKey!)
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-pot-card border border-pot-border rounded-2xl p-5">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div>
+            <h3 className="text-white font-semibold">Personal AI Voter</h3>
+            <p className="text-xs text-pot-muted mt-1 max-w-xl">
+              Register an AI-agent wallet to vote on your behalf in this pot. The delegate signs with
+              its own keypair via the MCP server (<code className="text-pot-accent">vote_as_delegate</code>).
+              Your member key never leaves your wallet. Revocable on-chain at any time.
+            </p>
+          </div>
+          <button
+            onClick={refresh}
+            disabled={loading}
+            className="text-xs px-2 py-1 rounded border border-pot-border text-pot-muted hover:text-white"
+          >
+            {loading ? '⏳' : '↻ Refresh'}
+          </button>
+        </div>
+
+        {/* Current delegation state */}
+        {loading && !state ? (
+          <div className="text-sm text-pot-muted">Reading on-chain delegation…</div>
+        ) : state?.exists && state.active ? (
+          <div className="bg-pot-dark border border-pot-green/30 rounded-xl p-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-pot-green text-sm font-semibold">✅ Active delegation</span>
+            </div>
+            <div className="text-xs text-pot-muted space-y-1">
+              <div>Delegate: <code className="text-white break-all">{state.delegate?.toBase58()}</code></div>
+              {state.rulesUri && (
+                <div>Rules URI: {/^https?:\/\//.test(state.rulesUri) || state.rulesUri.startsWith('ipfs://') || state.rulesUri.startsWith('ar://')
+                  ? <a href={state.rulesUri} target="_blank" rel="noopener noreferrer" className="text-pot-accent break-all">{state.rulesUri}</a>
+                  : <code className="text-white break-all">{state.rulesUri || '(none)'}</code>
+                }</div>
+              )}
+              <div>Registered: {state.registeredAt ? new Date(state.registeredAt * 1000).toLocaleString() : '—'}</div>
+              <div>PDA: <code className="text-pot-muted break-all">{state.pda.toBase58()}</code></div>
+            </div>
+            <div className="pt-2">
+              <button
+                onClick={handleRevoke}
+                disabled={submitting}
+                className="text-xs px-3 py-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 disabled:opacity-40"
+              >
+                {submitting ? 'Revoking…' : '🛑 Revoke Delegation'}
+              </button>
+            </div>
+          </div>
+        ) : state?.exists && !state.active ? (
+          <div className="bg-pot-dark border border-yellow-500/30 rounded-xl p-4 space-y-2">
+            <div className="text-yellow-300 text-sm font-semibold">⚪ Previously delegated, now revoked</div>
+            <div className="text-xs text-pot-muted">
+              Last delegate: <code className="text-white break-all">{state.delegate?.toBase58()}</code><br/>
+              Revoked: {state.revokedAt ? new Date(state.revokedAt * 1000).toLocaleString() : '—'}
+            </div>
+            <p className="text-xs text-pot-muted pt-2">
+              Register a new delegate below to re-enable AI voting. The PDA is reused; this overwrites the previous record.
+            </p>
+          </div>
+        ) : (
+          <div className="bg-pot-dark border border-pot-border rounded-xl p-4 text-sm text-pot-muted">
+            No delegation registered yet for this wallet on this pot.
+          </div>
+        )}
+      </div>
+
+      {/* Register form */}
+      {(!state?.exists || !state?.active) && (
+        <div className="bg-pot-card border border-pot-border rounded-2xl p-5 space-y-4">
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-1">Register a delegate</h4>
+            <p className="text-xs text-pot-muted">
+              The delegate pubkey is whichever wallet your AI agent uses (e.g. the keypair loaded into the
+              MCP server&apos;s <code className="text-pot-accent">AGENT_KEYPAIR</code> env).
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs text-pot-muted">Delegate pubkey</label>
+            <input
+              type="text"
+              value={delegateInput}
+              onChange={(e) => setDelegateInput(e.target.value)}
+              placeholder="e.g. 9HCK3gppiZCJcJJ17Db1LUugeiyEemvgSRfC2oYRDNws"
+              className="w-full bg-pot-dark border border-pot-border rounded-lg px-3 py-2 text-sm text-white placeholder-pot-muted/50 font-mono"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs text-pot-muted">Rules URI (optional, ≤ 200 chars) — IPFS, Arweave, or https describing the agent&apos;s voting policy</label>
+            <input
+              type="text"
+              value={rulesUriInput}
+              onChange={(e) => setRulesUriInput(e.target.value)}
+              placeholder="https://… or ipfs://…"
+              className="w-full bg-pot-dark border border-pot-border rounded-lg px-3 py-2 text-sm text-white placeholder-pot-muted/50 font-mono"
+            />
+          </div>
+
+          <button
+            onClick={handleRegister}
+            disabled={submitting || !delegateInput.trim()}
+            className="w-full px-4 py-2.5 rounded-lg bg-pot-accent text-black font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
+          >
+            {submitting ? '⏳ Submitting…' : '🪪 Register Delegate'}
+          </button>
+        </div>
+      )}
+
+      {/* Result / error */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-300 text-xs px-4 py-3 rounded-xl">
+          ❌ {error}
+        </div>
+      )}
+      {lastSig && (
+        <div className="bg-pot-green/10 border border-pot-green/30 text-pot-green text-xs px-4 py-3 rounded-xl">
+          ✅ Tx confirmed: <a
+            href={`https://explorer.solana.com/tx/${lastSig}?cluster=${explorerCluster}`}
+            target="_blank" rel="noopener noreferrer" className="underline break-all"
+          >{lastSig.slice(0, 32)}…</a>
+        </div>
+      )}
+
+      {/* MCP usage hint */}
+      <div className="bg-pot-dark border border-pot-border/50 rounded-xl p-4 space-y-1">
+        <p className="text-xs font-semibold text-white">Use with Claude / any MCP client</p>
+        <p className="text-[11px] text-pot-muted">
+          Run <code className="text-pot-accent">npx @potbot/mcp</code> with <code className="text-pot-accent">AGENT_KEYPAIR</code> set to the delegate&apos;s
+          base58 secret key, then your AI can call <code className="text-pot-accent">vote_on_proposal</code> with this pot and your member wallet —
+          it will sign + submit a real <code className="text-pot-accent">vote_as_delegate</code> tx on chain.
+        </p>
+      </div>
+
+      <div className="text-[10px] text-pot-muted/70 text-center">
+        Delegation PDA: <code>{pdaKey.toBase58()}</code>
       </div>
     </div>
   )
