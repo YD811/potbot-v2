@@ -1,125 +1,107 @@
-# PotBot v2 — Solana Frontier 2026 submission
+# PotBot v2 — Solana Frontier 2026 Submission
 
-**Status:** draft. Refine with Claude Code `/submit-to-hackathon` and
-`/create-pitch-deck` before submitting.
+**Project:** PotBot v2  
+**Category:** DeFi / Group Coordination  
+**Team:** Yehor Dolinskiy (YD) — BD @ Binance ecosystem & Trust Wallet, co-founder Y-DAO Amsterdam, Superteam Netherlands  
+**Repo:** https://github.com/YD811/potbot-v2  
+**Live:** https://potbot.fun  
 
 ---
 
-## Tagline
+## Problem
 
-Group trading vaults on Solana. Pool, govern, and trade together — with an
-AI agent watching the market 24/7.
+On-chain trading is built for individuals. When a group of friends, a DAO, or an investment club wants to trade together, they hit an immediate wall: whose wallet holds the funds? Who can execute? How do you prevent one person from draining the pot?
 
-## One-line elevator
+Current workarounds — shared seed phrases, multisig treasuries, off-chain spreadsheets — are either insecure, slow, or opaque. There is no native primitive for "trade together, govern together."
 
-PotBot turns crypto group chats into on-chain trading vaults: pool SOL with
-friends, vote on every swap, and let an MCP-native AI agent propose trades
-24/7. SPL-tokenized shares, Jupiter routing, Pyth-guarded execution.
+---
 
-## What PotBot does (scannable)
+## Solution
 
-- **Group vaults** — any number of members pool SOL into a shared on-chain vault; each member holds SPL-tokenized shares reflecting their proportion of the NAV.
-- **On-chain governance** — every swap, withdrawal, or config change requires a vote. Five governance levels from autocracy to full consensus. Quorum, timelock, and approval-% are configurable per vault.
-- **AI trading agent (MCP-native)** — members write IF/THEN rules ("if SOL drops 5%, buy 10%"); the agent creates proposals automatically. Any LLM with MCP access can drive it — Claude, GPT, Codex, or a custom agent.
-- **Jupiter routing** — swaps route through Jupiter Ultra API for best execution with slippage guards.
-- **Pyth price validation** — swaps with attached oracle feeds verify fill price vs. Pyth before settlement, defeating Jupiter-sandwich attacks.
-- **Tamagotchi evolution** — each vault is a plant that grows from 🌱 to 🌳 based on volume, members, and trades. Higher levels unlock lower fees.
-- **Referral + creator economy** — creators can launch Strategy Vaults, set entry/performance fees, and earn from investors following their strategy.
-- **Private pots** — invite-code-gated vaults with SNS subdomain support.
+PotBot v2 is a group trading vault on Solana. Any group can:
 
-## Track
+1. **Create a pot** — a shared on-chain vault with governance rules baked in.
+2. **Set strategy** — define which tokens can be traded, spending limits, and who can authorize swaps (admin, proposal, or keeper agent).
+3. **Execute swaps** — one-click Jupiter v6 swaps signed by the vault PDA, with slippage enforced on-chain.
+4. **Govern together** — proposal + vote → auto-execute once quorum passes.
+5. **Automate** — keeper cranks fire stop-loss / take-profit / trailing-stop exits using on-chain Pyth prices without requiring any member to be online.
 
-**DeFi / Consumer** — group coordination primitive for retail DeFi users.
+---
 
-## Live links
+## What's Live on Devnet
 
-| Resource | URL |
+**Program ID:** `GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK`  
+**Explorer:** https://explorer.solana.com/address/GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK?cluster=devnet
+
+Working on devnet as of submission:
+- `create_pot` — vault PDA initialization, fee config
+- `set_allowed_mints` — per-pot token allowlist
+- `create_strategy` — slot-based strategy accounts (AdminDirect / Proposal / Agent sources)
+- `execute_swap` — Jupiter v6 CPI signed by vault PDA; slippage floor enforced on-chain
+- `close_strategy` — PnL realized, strategy marked Closed
+- `mark_proposal_passed` — governance trigger for Proposal-mode swaps
+- `pot_admin` — pause / unpause / set spending policy
+
+DApp frontend (Next.js 14) at https://potbot.fun runs in mock mode by default, auto-switches to on-chain when the program is live.
+
+---
+
+## Tech Stack
+
+| Layer | Tech |
 |---|---|
-| Product | https://potbot.fun |
-| App (same host, auto-detects on-chain mode) | https://potbot.fun |
-| GitHub | https://github.com/YD811/potbot-v2 |
-| Program (Solscan devnet) | https://solscan.io/account/2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL?cluster=devnet |
-| SDK (npm/TS) | `packages/sdk/` in the repo |
-| MCP server | `apps/potbot-mcp/` in the repo |
-| Twitter | https://x.com/PotBot_sol |
-| Telegram v1 bot | https://t.me/Trade_pot_bot |
+| Smart contracts | Anchor 0.30 (Rust) |
+| Swaps | Jupiter Aggregator v6 |
+| Frontend | Next.js 14, TanStack Query, Zustand |
+| Wallet | @solana/wallet-adapter |
+| Price feeds | Pyth Network |
+| Keeper / automation | Node.js worker (devnet), Cloudflare Workers (prod) |
+| Hosting | Cloudflare Pages + KV |
 
-## Tech stack
+---
 
-- **Solana + Anchor 0.30** — `pot_vault` program, program ID `2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL`
-- **Jupiter v6 / Ultra API** — swap execution
-- **Pyth** — oracle price guard on every swap
-- **Meteora DLMM, Kamino** — yield strategies for idle capital
-- **Helius** — RPC + priority fees
-- **Metaplex Core** — Tamagotchi NFT metadata
-- **Squads v4** — mainnet multisig authority (phase-5)
-- **Next.js 14 + TanStack Query** — dApp
-- **Supabase** — off-chain NAV snapshots, swap metadata, AI agent rules
-- **@potbot/sdk** — TypeScript SDK, 60+ on-chain actions
-- **@potbot/mcp** — MCP server so any LLM can drive the vault
+## Key Differentiators
 
-## Why this wins
+**1. Strategy layer with on-chain trigger verification**  
+Stop-loss, take-profit, and trailing-stop are not just UI labels — the program re-reads the Pyth price feed inside the instruction and rejects any keeper that fires the wrong reason. Keepers cannot fake a trigger.
 
-1. **Novel primitive** — group-vault governance with AI-driven proposals isn't solved on any L1. This is the first end-to-end implementation.
-2. **MCP-native from day one** — directly exposed as tools any AI agent can call. Matches the direction the ecosystem is heading.
-3. **Real product, not a hackathon demo** — deployed program, live dApp, waitlist, functioning Supabase, working Telegram v1 bot with paying users (PotBot v1 predecessor).
-4. **Full stack** — program + SDK + web + MCP + bot. No hand-waving about "could integrate X" — every protocol (Jupiter, Pyth, Meteora, Kamino, Helius, Squads, Metaplex, SNS) is wired.
-5. **Open source under Apache-2.0**, clean monorepo, comprehensive docs.
+**2. Three-mode authorization in one instruction**  
+`execute_swap` supports AdminDirect (instant), Proposal (governance), and StrategyTrigger (keeper) in a single instruction with strict mode-source matching. No separate contracts needed.
 
-## Demo video — 3 min script
+**3. STAMPPOT — ZK privacy layer**  
+Optional PrivacyCash ZK proof integration for private deposit/withdraw. Public pot mechanics are unchanged; privacy is composable and opt-in.
 
-**0:00–0:15** — cold open: group chat with three friends arguing about whether to buy SOL. Cut to the PotBot dApp. Tagline on screen.
+**4. Keeper economics**  
+Pots fund a `fee_reserve` to pay keeper gas. Strategy creation with price triggers requires minimum reserve. Keepers have a sustainable on-chain revenue path.
 
-**0:15–0:45** — "Create a pot" flow. Name, emoji, governance level slider (autocracy → consensus), yield strategy. 30 seconds of real screen.
+---
 
-**0:45–1:15** — Three members deposit SOL from separate wallets. Shares tokens mint to each. Show the NAV live.
+## Roadmap
 
-**1:15–2:00** — A member proposes a swap (SOL → JUP). Governance card shows current vote tally; two members vote yes. Timelock countdown. Once passed, any member clicks Execute → Phantom → Jupiter swap → Pyth price check → settled on-chain. Show the tx on Solscan.
+Yield parking (Kamino/Meteora), share tokenization, tamagotchi NFTs. Mainnet cut targeting May 8–11.
 
-**2:00–2:30** — Set an AI agent rule: "if SOL drops below $130, propose buying 5% more." Fake a price drop (devnet). Agent creates a proposal. Members vote via the bot notification.
+---
 
-**2:30–3:00** — Tamagotchi evolution. Plant grows to level 3. "Watch your vault grow. Built for Solana Frontier 2026. potbot.fun."
+*Solana Frontier 2026 — solo founder, 5 weeks, production-grade architecture.*
 
-Close on: logo, GitHub link, Twitter.
+---
 
-## Judging criteria mapping
+## Dune SIM Integration
 
-| Criterion | How PotBot earns it |
-|---|---|
-| **Novelty / creativity** | Group-vault governance with AI proposals is new. Tamagotchi gamification of vault growth adds stickiness. |
-| **Technical execution** | Full Anchor program + TS SDK + MCP + web + bot. Every protocol (Jupiter / Pyth / Meteora / Kamino / Helius / Squads / Metaplex / SNS) integrated, not mocked. |
-| **Product polish** | Live dApp on potbot.fun, light/dark theme, three wallet adapters, keeper uptime, Supabase backed. |
-| **Composability** | MCP-native → any AI agent can drive. SDK published. Program open. |
-| **Growth potential** | Already has v1 Telegram product with active users. Discord/Twitter presence. Superteam NL grant pipeline. |
-| **Open source** | Apache-2.0, monorepo, comprehensive docs (CLAUDE.md, ARCHITECTURE_V2.md, Anchor program ADRs). |
+**Track:** Dune SIM (SVM endpoints)
 
-## What's still pending (be honest with judges)
+PotBot v2 uses Dune SIM across three layers:
 
-- Mainnet deploy is gated on: external audit pass, Squads multisig handoff, MiCAR disclosure (YD is Amsterdam-based, EU jurisdiction). Target: week of 2026-05-07.
-- Keeper 48h devnet uptime test (task #14) — runs before judging window.
-- Some premium features (SNS, tokenized shares) are complete on-chain but
-  still behind a "beta" toggle in UI.
+**1. Vault portfolio display (`/beta/svm/balances/{vaultPda}`)**  
+Every pot shows real-time token holdings of its vault PDA — symbol, balance, USD value, % of total. Single API call replaces N manual RPC `getTokenAccountsByOwner` calls. Data refreshes every 30 seconds.
 
-Being upfront about pending work beats pretending everything is done — judges
-spot padding instantly.
+**2. On-chain activity feed (`/beta/svm/transactions/{vaultPda}`)**  
+The pot detail page shows a timestamped history of all vault transactions — swaps, deposits, withdrawals — decoded from raw Solana tx data. Swap events are identified by Jupiter v6 program presence in account keys.
 
-## Prior context
+**3. Keeper pre-flight check (server-side)**  
+Before submitting `execute_swap`, the keeper calls `/svm/balances` to confirm the vault actually holds the required input token. Post-execution, it calls again to verify balance moved correctly. This prevents wasted gas on mis-fired trigger transactions.
 
-PotBot v1 lives as a Telegram-native group wallet (`@Trade_pot_bot`) with
-paying users. v2 is the on-chain, governance-first reimagining — same team
-(YD + Y-DAO Amsterdam contributors), same product north star, full rewrite.
+**4. Leaderboard TVL (`/svm/balances` parallel fetch)**  
+The public pot leaderboard aggregates real USD TVL across all active vaults using batched Dune SIM calls — no custom indexer required.
 
-## Next steps
-
-Run these in order to finalize:
-
-```
-claude "/submit-to-hackathon  Refine this draft against Solana Frontier judging criteria"
-claude "/create-pitch-deck    Build the deck from this submission and Y-DAO brand"
-claude "/marketing-video      Storyboard + shot list from the 3-min script above"
-claude "/video-craft          Produce the demo video"
-claude "/roast-my-product     Stress-test the dApp before judges do"
-claude "/cso                  Security review pass on the program"
-claude "/deploy-to-mainnet    Execute the mainnet checklist"
-claude "/apply-grant          Superteam NL — reuse this submission as base"
-```
+Files added: `apps/web/src/lib/dune.ts`, `apps/web/src/hooks/useDunePortfolio.ts`, `apps/web/src/hooks/useDuneTrades.ts`, `apps/web/src/components/VaultPortfolio.tsx`, `apps/keeper/src/dune.ts`
