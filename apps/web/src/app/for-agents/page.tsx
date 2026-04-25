@@ -4,58 +4,58 @@ import Link from 'next/link'
 
 const TOOLS = [
   {
-    name: 'list_pots',
-    desc: 'List all strategy vaults on Solana',
-    example: '{}',
-    returns: 'name, balance, members, tamagotchi level, 30d PnL',
+    name: 'list_vaults',
+    desc: 'List all PotBot Strategy Vaults with performance metrics',
+    example: '{ "sort": "pnl", "limit": 10, "strategy": "Trend" }',
+    returns: 'vaults[] with TVL, PnL, APY, members, win rate',
   },
   {
-    name: 'get_pot_analytics',
+    name: 'get_vault_analytics',
     desc: 'Get NAV, PnL, APY, and positions for a vault',
-    example: '{ "pot_pubkey": "ABC..." }',
-    returns: 'navUsd, pnlPct, apy30d, apy7d, positions[]',
+    example: '{ "vault_pubkey": "PotXALPHA..." }',
+    returns: 'nav_usd, nav_sol, pnl_pct, apy_pct, win_rate, sharpe, members, trades',
   },
   {
-    name: 'get_prices',
+    name: 'get_token_prices',
     desc: 'Current prices via Jupiter Price API v2',
-    example: '{ "mints": ["SOL", "USDC", "BONK"] }',
-    returns: 'price in USD for each token',
+    example: '{ "tokens": ["SOL", "USDC", "BONK"] }',
+    returns: 'price_usd per token (with mint + source)',
   },
   {
-    name: 'create_proposal',
-    desc: 'Create a swap or governance proposal',
-    example: '{ "pot_pubkey": "ABC...", "proposal_type": "swap", "description": "Buy SOL dip", "params": {...} }',
-    returns: 'prepared instruction + SDK code example',
+    name: 'create_swap_proposal',
+    desc: 'Draft a token-swap governance proposal in a vault',
+    example: '{ "vault_pubkey": "PotXALPHA...", "from_token": "SOL", "to_token": "USDC", "amount_pct": 30, "reason": "Take profit" }',
+    returns: 'draft proposal + dApp signing link',
   },
   {
     name: 'vote_on_proposal',
     desc: 'Vote YES or NO on a governance proposal',
-    example: '{ "pot_pubkey": "ABC...", "proposal_id": 3, "vote": "yes" }',
-    returns: 'prepared vote instruction',
+    example: '{ "vault_pubkey": "PotXALPHA...", "proposal_id": 3, "approve": true }',
+    returns: 'vote payload + dApp signing link',
   },
   {
-    name: 'join_vault',
-    desc: 'Join a strategy vault with SOL deposit',
-    example: '{ "pot_pubkey": "ABC...", "amount_sol": 1.0, "referrer": "XYZ..." }',
-    returns: 'prepared deposit instruction with referral payout info',
+    name: 'join_strategy_vault',
+    desc: 'Join a strategy vault (returns entry-fee details and dApp link)',
+    example: '{ "vault_pubkey": "PotXALPHA...", "user_wallet": "XYZ...", "referrer_wallet": "ABC..." }',
+    returns: 'entry fee, strategy, current members, vault URL',
   },
   {
     name: 'get_yield_rates',
-    desc: 'Best DeFi yield from Kamino, Drift, Jito, Marinade',
-    example: '{ "token": "SOL", "risk": "low" }',
-    returns: 'protocol, APY, TVL, risk level for each opportunity',
+    desc: 'Current DeFi yield rates: Kamino, Marginfi, Drift, Jito',
+    example: '{ "risk_level": "low" }',
+    returns: 'protocol, APY range, TVL, asset, risk for each opportunity',
+  },
+  {
+    name: 'get_leaderboard',
+    desc: 'Top performing vaults ranked by a chosen metric',
+    example: '{ "metric": "apy", "limit": 5 }',
+    returns: 'ranked vaults[] with rank + all performance fields',
   },
   {
     name: 'get_agent_rules',
     desc: 'Inspect AI automation rules for a vault',
-    example: '{ "pot_pubkey": "ABC..." }',
-    returns: 'rules array with triggers and actions',
-  },
-  {
-    name: 'update_agent_rules',
-    desc: 'Update AI automation rules (price triggers, DCA, yield rebalancing)',
-    example: '{ "pot_pubkey": "ABC...", "rules": [{...}] }',
-    returns: 'confirmation with rule count',
+    example: '{ "vault_pubkey": "PotXALPHA..." }',
+    returns: 'rules array with triggers, actions, cooldowns',
   },
 ]
 
@@ -83,8 +83,9 @@ const CLAUDE_CONFIG = `{
       "command": "npx",
       "args": ["-y", "@potbot/mcp"],
       "env": {
-        "RPC_URL": "https://api.devnet.solana.com",
-        "API_URL": "http://localhost:3001"
+        "POTBOT_API_URL": "https://app.potbot.fun",
+        "SOLANA_RPC_URL": "https://api.devnet.solana.com",
+        "SOLANA_NETWORK": "devnet"
       }
     }
   }
