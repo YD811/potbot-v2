@@ -14,6 +14,25 @@ export interface ExecuteSwapArgs {
   minAmountOut: BN
 }
 
+export interface CreateStrategyArgs {
+  name: string
+  description: string
+  entryFeeLamports: BN
+  performanceFeeBps: number
+  managementFeeBps: number
+  referralBps: number
+  strategyConfig: Record<string, unknown>
+}
+
+export interface SetAllowedMintsArgs {
+  mints: PublicKey[]
+}
+
+export interface SetSpendingPolicyArgs {
+  dailySpendingLamports: BN
+  maxSwapBps: number
+}
+
 export interface ProposalSwapSpec {
   fromMint: PublicKey
   toMint: PublicKey
@@ -43,6 +62,15 @@ export class PotbotClient {
 
   private async call(name: string, args: unknown[], accounts: Record<string, PublicKey>): Promise<string> {
     return this.method(name, args).accounts(accounts).rpc()
+  }
+
+  private async callAny(names: string[], args: unknown[], accounts: Record<string, PublicKey>): Promise<string> {
+    const methods = this.program.methods as Record<string, (...methodArgs: unknown[]) => RpcFn>
+    for (const name of names) {
+      const fn = methods[name]
+      if (fn) return fn(...args).accounts(accounts).rpc()
+    }
+    throw new Error(`None of the instructions are present in current IDL: ${names.join(', ')}`)
   }
 
   async createPot(args: Record<string, unknown>, accounts: { pot: PublicKey; vault: PublicKey; authority: PublicKey }) {
@@ -76,6 +104,34 @@ export class PotbotClient {
       amountIn: args.amountIn,
       minAmountOut: args.minAmountOut,
     }], { ...accounts, systemProgram: SystemProgram.programId })
+  }
+
+  async createStrategy(args: CreateStrategyArgs, accounts: Record<string, PublicKey>) {
+    return this.callAny(['createStrategy', 'createStrategyVault'], [args], accounts)
+  }
+
+  async closeStrategy(accounts: Record<string, PublicKey>) {
+    return this.callAny(['closeStrategy', 'closeStrategyVault'], [], accounts)
+  }
+
+  async markProposalPassed(accounts: Record<string, PublicKey>) {
+    return this.call('markProposalPassed', [], accounts)
+  }
+
+  async pausePot(accounts: Record<string, PublicKey>) {
+    return this.call('pausePot', [], accounts)
+  }
+
+  async unpausePot(accounts: Record<string, PublicKey>) {
+    return this.call('unpausePot', [], accounts)
+  }
+
+  async setAllowedMints(args: SetAllowedMintsArgs, accounts: Record<string, PublicKey>) {
+    return this.call('setAllowedMints', [args], accounts)
+  }
+
+  async setSpendingPolicy(args: SetSpendingPolicyArgs, accounts: Record<string, PublicKey>) {
+    return this.call('setSpendingPolicy', [args], accounts)
   }
 
   async fetchPotAccount(pot: PublicKey): Promise<PotAccount | null> {
