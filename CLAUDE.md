@@ -217,3 +217,13 @@ Ecosystem data в `~/.claude/skills/data/` (colosseum, defi, ideas, solana-knowl
 5. **Branch protection** — Settings → Branches → sudo confirm
 6. **Demo video** — May 6–8, сценарий: create_pot → AI proposal → vote → real swap
 7. **Hackathon submission** — colosseum.com/frontier до May 11, 2026
+
+## Архитектурный roadmap (апрель 25, 2026)
+
+- **`docs/ARCHITECTURE_ONCHAIN.md`** — каноническая reference: Tier 0/1/2/3 модель, три privacy-режима (Public / Auditable-Private / Sealed-Private), threat model, perf plan на Light Protocol ZK Compression, phasing до 2027.
+- **`docs/PROGRAM_PHASE1.md`** — PR-ready spec для post-hackathon работы: kill-switch, auto-pause по drawdown, hash commitments (rules_uri / description / strategy params), `update_health` crank, treasury split. Все additive к текущим accounts (back-compat сохранён).
+- **`docs/RENDER_DEPLOY.md`** — пошаговая инструкция деплоя hosted MCP (Blueprint уже в репо, остался один клик в dashboard).
+- **`HACKATHON_SUBMISSION.md` (root)** — обновлён, real devnet tx hashes (Explorer-verifiable), 18-tool MCP table, Personal AI Voters top-line, 90-сек video shot list.
+
+## Phase 1 (post-hackathon) execution order
+PR-A program changes → PR-B devnet upgrade → PR-C SDK + MCP `@potbot/mcp@0.7.0` → PR-D DApp UI → PR-E Light Protocol compressed events. Каждый PR независим. См. `docs/PROGRAM_PHASE1.md` §8.

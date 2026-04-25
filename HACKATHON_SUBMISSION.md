@@ -156,7 +156,9 @@ Recording window 2026-05-06 → 2026-05-08. Cuts under 5s each.
 | 🤖 AI Agent rules + Delegate | Open any pot → AI Agent tab → Rules / Delegate sub-tabs |
 | 📊 Analytics API | `curl https://api.potbot.fun/health` |
 | 🏆 Leaderboard | https://potbot.fun/leaderboard |
-| 📖 Architecture | [docs/OVERVIEW.md](docs/OVERVIEW.md), [docs/PROGRAM.md](docs/PROGRAM.md), [docs/MCP.md](docs/MCP.md) |
+| 📖 Architecture | [docs/OVERVIEW.md](docs/OVERVIEW.md), [docs/PROGRAM.md](docs/PROGRAM.md), [docs/MCP.md](docs/MCP.md), [docs/ARCHITECTURE_ONCHAIN.md](docs/ARCHITECTURE_ONCHAIN.md) |
+| 🛣️ Phase 1 spec (post-hackathon) | [docs/PROGRAM_PHASE1.md](docs/PROGRAM_PHASE1.md) — kill-switch, auto-pause, hash commitments, Light Protocol events |
+| ☁️ Hosted MCP deploy | [docs/RENDER_DEPLOY.md](docs/RENDER_DEPLOY.md) — Render Blueprint, 3-click setup |
 
 ---
 
