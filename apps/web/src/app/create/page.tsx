@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useCreatePot } from '@/hooks/usePots'
+import { PotTypeSelector, PotType } from '@/components/PotTypeSelector';
 
 // SSR-safe — keeps the wallet-adapter-react-ui bundle out of the initial
 // render so non-connected users can see the wizard immediately.
@@ -41,7 +42,8 @@ export default function CreatePotPage() {
   const createPot = useCreatePot()
 
   const [form, setForm] = useState({
-    name: '',
+
+  const [potType, setPotType] = useState<PotType>('public');    name: '',
     emoji: '🪴',
     isPublic: true,
     minDeposit: 0.01,
@@ -90,6 +92,11 @@ export default function CreatePotPage() {
   // wizard stays usable without a wallet so visitors can see what they're
   // about to create. Connect is only required on final Submit (see below).
 
+  // Sync potType selector with isPublic form field
+  useEffect(() => {
+    setValue('isPublic', potType === 'public');
+  }, [potType, setValue]);
+
   return (
     <div className="max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold text-white mb-2">Create a New POT</h1>
@@ -118,6 +125,8 @@ export default function CreatePotPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        <PotTypeSelector value={potType} onChange={setPotType} />
+
         {/* Name + Emoji */}
         <div className="rounded-2xl border border-pot-border bg-pot-card p-6 space-y-4">
           <h2 className="text-lg font-semibold text-white">Identity</h2>
