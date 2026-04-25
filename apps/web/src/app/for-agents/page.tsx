@@ -112,7 +112,7 @@ export default function ForAgentsPage() {
           <p className="text-xl mb-8" style={{ color: '#9CA3AF' }}>
             PotBot exposes its entire vault infrastructure as an MCP server.
             Any AI agent — Claude, GPT, custom — can list vaults, analyze performance,
-            create governance proposals, and configure automation rules.
+            create governance proposals, and configure automation + delegated voting rules.
           </p>
           <div className="flex flex-wrap gap-4">
             <a
@@ -126,6 +126,27 @@ export default function ForAgentsPage() {
             <Link href="/vaults" className="btn-secondary">
               Explore Vaults
             </Link>
+          </div>
+        </div>
+      </div>
+
+
+      <div className="max-w-5xl mx-auto px-6 pt-8">
+        <div className="card" style={{ borderColor: '#14F19544' }}>
+          <p className="text-sm font-mono mb-2" style={{ color: '#14F195' }}>Release Update</p>
+          <p className="text-sm mb-3" style={{ color: '#E5E7EB' }}>
+            @potbot/mcp@0.2.0 is now live on npm with HTTP+SSE+x402 transport support, including
+            two binaries: <code>potbot-mcp</code> (stdio) and <code>potbot-mcp-http</code> (HTTP).
+          </p>
+          <ul className="text-xs space-y-1" style={{ color: '#9CA3AF' }}>
+            <li>• Tag <code>mcp-v0.2.0</code> published successfully via CI.</li>
+            <li>• npm latest now points to <code>0.2.0</code> (versions: 0.1.0, 0.2.0).</li>
+            <li>• Package size increased from 11.5 kB to 81.2 kB due to the new <code>http.ts</code> module.</li>
+          </ul>
+          <div className="mt-4 flex flex-wrap gap-3 text-xs">
+            <a href="https://www.npmjs.com/package/@potbot/mcp" target="_blank" rel="noopener noreferrer" style={{ color: '#14F195' }}>npm package ↗</a>
+            <a href="https://github.com/YD811/potbot-v2/releases/tag/mcp-v0.2.0" target="_blank" rel="noopener noreferrer" style={{ color: '#14F195' }}>release tag ↗</a>
+            <a href="https://github.com/YD811/potbot-v2/actions/runs/24932500756" target="_blank" rel="noopener noreferrer" style={{ color: '#14F195' }}>CI run ↗</a>
           </div>
         </div>
       </div>
@@ -201,7 +222,8 @@ export default function ForAgentsPage() {
           <h2 className="text-2xl font-bold text-white mb-2">AI Agent Automation</h2>
           <p className="mb-6" style={{ color: '#6B7280' }}>
             Configure rules that run every 60 seconds. When a trigger fires, the agent
-            automatically creates an on-chain governance proposal — humans still vote before execution.
+            creates and can vote on governance actions based on user preferences. By default, members vote manually,
+            but users can enable delegated AI voting in bot settings for predefined decision policies.
           </p>
           <div className="card">
             <p className="text-sm font-mono mb-3" style={{ color: '#14F195' }}>Example: Buy SOL when price drops</p>
@@ -226,13 +248,13 @@ export default function ForAgentsPage() {
         <section>
           <h2 className="text-2xl font-bold text-white mb-2">Governance Safety</h2>
           <p className="mb-6" style={{ color: '#6B7280' }}>
-            AI agents propose — humans decide. Every agent action creates an on-chain governance
-            proposal that requires quorum + majority vote before any funds move.
+            AI agents can act as delegates for governance voting when the user opts in.
+            Users choose manual or delegated mode in bot settings, and all decisions remain transparent on-chain.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
               { icon: '🤖', title: 'Agent proposes', desc: 'AI detects opportunity and creates on-chain proposal' },
-              { icon: '🗳️', title: 'Members vote', desc: 'Vault members vote YES/NO within the governance window' },
+              { icon: '🗳️', title: 'Vote mode', desc: 'Manual member voting or delegated AI voting based on user preference' },
               { icon: '⚡', title: 'Jupiter executes', desc: 'Passed proposals execute via Jupiter swap CPI' },
             ].map(step => (
               <div key={step.title} className="card text-center">
