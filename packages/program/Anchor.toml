@@ -16,7 +16,7 @@ pot_vault = "GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK"
 # `deploy-mainnet.sh` will auto-sync this value with declare_id! in lib.rs.
 # ──────────────────────────────────────────────────────────────────────────
 [programs.mainnet]
-pot_vault = "REPLACE_WITH_MAINNET_PROGRAM_ID_AFTER_KEYGEN"
+pot_vault = "GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK"
 
 [registry]
 url = "https://api.apr.dev"

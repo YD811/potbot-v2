@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, type ReactNode } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import dynamic from 'next/dynamic'
@@ -26,6 +26,9 @@ import { reverseSNS } from '@/lib/sns'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import SwapExecuteButton from '@/components/SwapExecuteButton'
 import CreateProposalModal from '@/components/pot/CreateProposalModal'
+import { PublicKey } from '@solana/web3.js'
+import VaultPortfolio from '@/components/VaultPortfolio'
+
 
 // SSR-safe wallet button (same pattern as Navbar)
 const WalletMultiButtonDynamic = dynamic(
@@ -282,6 +285,22 @@ export default function PotPage() {
   const { publicKey: userPubkey } = useWallet()
 
   const pubkey = params.pubkey as string
+
+  // Vault PDA — feeds VaultPortfolio (Dune SIM real-time data)
+  const vaultPda = useMemo(() => {
+    try {
+      const programId = new PublicKey(
+        process.env.NEXT_PUBLIC_PROGRAM_ID ?? 'GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK'
+      )
+      const [pda] = PublicKey.findProgramAddressSync(
+        [Buffer.from('vault'), new PublicKey(pubkey).toBuffer()],
+        programId
+      )
+      return pda.toBase58()
+    } catch {
+      return ''
+    }
+  }, [pubkey])
 
   // Track referral in Supabase (replaces localStorage)
   useEffect(() => {
@@ -627,8 +646,17 @@ export default function PotPage() {
         {/* ── Shares ── */}
         {activeTab === 'shares' && <SharesTab potPubkey={pubkey} />}
 
-        {/* ── Positions / P&L ── */}
-        {activeTab === 'positions' && <PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} />}
+        {/* ── Positions / P&L — powered by Dune SIM ── */}
+        {activeTab === 'positions' && (
+          <div className="space-y-6 w-full">
+            {/* Real-time vault portfolio: token balances + USD values + activity feed */}
+            {vaultPda && (
+              <VaultPortfolio vaultPda={vaultPda} potName={pot.name} />
+            )}
+            {/* PnL dashboard (mock-mode / on-chain) */}
+            <PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} />
+          </div>
+        )}
 
         {/* ── Strategy ── */}
         {activeTab === 'strategy' && <StrategyPanel potPubkey={pubkey} />}

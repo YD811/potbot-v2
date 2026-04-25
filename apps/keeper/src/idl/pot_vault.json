@@ -1,0 +1,1348 @@
+{
+  "version": "0.1.0",
+  "name": "pot_vault",
+  "address": "GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK",
+  "metadata": {
+    "name": "pot_vault",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "PotBot v2 \u2014 Group trading vaults on Solana"
+  },
+  "instructions": [
+    {
+      "name": "createPot",
+      "discriminator": [
+        132,
+        152,
+        9,
+        27,
+        112,
+        19,
+        95,
+        83
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "args.name"
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pot"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "CreatePotArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "setAllowedMints",
+      "discriminator": [
+        201,
+        88,
+        43,
+        12,
+        245,
+        7,
+        64,
+        199
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "SetAllowedMintsArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "createStrategy",
+      "discriminator": [
+        172,
+        40,
+        252,
+        198,
+        153,
+        25,
+        135,
+        2
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "strategy",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pot"
+              },
+              {
+                "kind": "arg",
+                "path": "args.slotId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "CreateStrategyArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "closeStrategy",
+      "discriminator": [
+        233,
+        29,
+        11,
+        234,
+        98,
+        129,
+        196,
+        0
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "strategy",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pot"
+              },
+              {
+                "kind": "arg",
+                "path": "slotId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "slotId",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "markProposalPassed",
+      "discriminator": [
+        45,
+        94,
+        243,
+        24,
+        184,
+        59,
+        243,
+        250
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "proposal",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "proposalId",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "executeSwap",
+      "discriminator": [
+        55,
+        152,
+        95,
+        233,
+        102,
+        111,
+        21,
+        178
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "strategy",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pot"
+              },
+              {
+                "kind": "account",
+                "path": "strategy.slotId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pot"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sourceAta",
+          "writable": true
+        },
+        {
+          "name": "destinationAta",
+          "writable": true
+        },
+        {
+          "name": "jupiterProgram"
+        },
+        {
+          "name": "pythPriceUpdate"
+        },
+        {
+          "name": "proposalSwapSpec",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "ExecuteSwapArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "potAdmin",
+      "discriminator": [
+        12,
+        252,
+        96,
+        204,
+        141,
+        175,
+        100,
+        98
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "action",
+          "type": {
+            "defined": {
+              "name": "PotAdminAction"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "PotAccount",
+      "discriminator": [
+        99,
+        152,
+        241,
+        244,
+        52,
+        100,
+        153,
+        189
+      ]
+    },
+    {
+      "name": "StrategyAccount",
+      "discriminator": [
+        27,
+        75,
+        18,
+        68,
+        100,
+        120,
+        211,
+        48
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "PotAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "feeBps",
+            "type": "u16"
+          },
+          {
+            "name": "isPublic",
+            "type": "bool"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "totalDeposits",
+            "type": "u64"
+          },
+          {
+            "name": "totalShares",
+            "type": "u64"
+          },
+          {
+            "name": "memberCount",
+            "type": "u32"
+          },
+          {
+            "name": "tradeCount",
+            "type": "u32"
+          },
+          {
+            "name": "totalVolume",
+            "type": "u64"
+          },
+          {
+            "name": "nextProposalId",
+            "type": "u64"
+          },
+          {
+            "name": "allowedMints",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "feeReserve",
+            "type": "u64"
+          },
+          {
+            "name": "agentAuthority",
+            "type": "pubkey"
+          },
+          {
+            "name": "tamagotchiLevel",
+            "type": "u8"
+          },
+          {
+            "name": "tamagotchiXp",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "vaultBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategyAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "slotId",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "source",
+            "type": {
+              "defined": {
+                "name": "StrategySource"
+              }
+            }
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "StrategyStatus"
+              }
+            }
+          },
+          {
+            "name": "inputMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "outputMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "sizeIn",
+            "type": "u64"
+          },
+          {
+            "name": "sizeOut",
+            "type": "u64"
+          },
+          {
+            "name": "entryPriceX64",
+            "type": "u128"
+          },
+          {
+            "name": "trailingHighPriceX64",
+            "type": "u128"
+          },
+          {
+            "name": "pythPriceFeed",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "stopLossBps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "takeProfitBps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "trailingStopBps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "yieldTarget",
+            "type": {
+              "defined": {
+                "name": "YieldTarget"
+              }
+            }
+          },
+          {
+            "name": "yieldPosition",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "YieldPosition"
+                }
+              }
+            }
+          },
+          {
+            "name": "executorNonce",
+            "type": "u32"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "executedAt",
+            "type": "i64"
+          },
+          {
+            "name": "closedAt",
+            "type": "i64"
+          },
+          {
+            "name": "lastTriggerReason",
+            "type": {
+              "defined": {
+                "name": "TriggerReason"
+              }
+            }
+          },
+          {
+            "name": "lastPriceUpdateTs",
+            "type": "i64"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreatePotArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "feeBps",
+            "type": "u16"
+          },
+          {
+            "name": "isPublic",
+            "type": "bool"
+          },
+          {
+            "name": "maxMembers",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SetAllowedMintsArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mints",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateStrategyArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "slotId",
+            "type": "u16"
+          },
+          {
+            "name": "source",
+            "type": {
+              "defined": {
+                "name": "StrategySource"
+              }
+            }
+          },
+          {
+            "name": "inputMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "outputMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "pythPriceFeed",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "stopLossBps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "takeProfitBps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "trailingStopBps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "yieldTarget",
+            "type": {
+              "defined": {
+                "name": "YieldTarget"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExecuteSwapArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mode",
+            "type": {
+              "defined": {
+                "name": "SwapMode"
+              }
+            }
+          },
+          {
+            "name": "amountIn",
+            "type": "u64"
+          },
+          {
+            "name": "minOut",
+            "type": "u64"
+          },
+          {
+            "name": "maxIn",
+            "type": "u64"
+          },
+          {
+            "name": "isEntry",
+            "type": "bool"
+          },
+          {
+            "name": "jupiterIxData",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SwapMode",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "AdminDirect"
+          },
+          {
+            "name": "Proposal",
+            "fields": [
+              {
+                "name": "proposalId",
+                "type": "u64"
+              }
+            ]
+          },
+          {
+            "name": "StrategyTrigger",
+            "fields": [
+              {
+                "name": "reason",
+                "type": {
+                  "defined": {
+                    "name": "TriggerReason"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategySource",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "AdminDirect",
+            "fields": [
+              {
+                "name": "admin",
+                "type": "pubkey"
+              }
+            ]
+          },
+          {
+            "name": "Proposal",
+            "fields": [
+              {
+                "name": "proposalId",
+                "type": "u64"
+              }
+            ]
+          },
+          {
+            "name": "Agent",
+            "fields": [
+              {
+                "name": "ruleId",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategyStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pending"
+          },
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Parked"
+          },
+          {
+            "name": "Closed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "YieldTarget",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "None"
+          },
+          {
+            "name": "KaminoLend",
+            "fields": [
+              {
+                "name": "reserve",
+                "type": "pubkey"
+              }
+            ]
+          },
+          {
+            "name": "KaminoVault",
+            "fields": [
+              {
+                "name": "strategy",
+                "type": "pubkey"
+              }
+            ]
+          },
+          {
+            "name": "MeteoraDlmm",
+            "fields": [
+              {
+                "name": "pool",
+                "type": "pubkey"
+              },
+              {
+                "name": "lowerBin",
+                "type": "i32"
+              },
+              {
+                "name": "upperBin",
+                "type": "i32"
+              }
+            ]
+          },
+          {
+            "name": "MeteoraDynamic",
+            "fields": [
+              {
+                "name": "vault",
+                "type": "pubkey"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "YieldPosition",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "KaminoLend",
+            "fields": [
+              {
+                "name": "reserve",
+                "type": "pubkey"
+              },
+              {
+                "name": "collateralAta",
+                "type": "pubkey"
+              },
+              {
+                "name": "liquidityDeposited",
+                "type": "u64"
+              },
+              {
+                "name": "enteredAt",
+                "type": "i64"
+              }
+            ]
+          },
+          {
+            "name": "MeteoraDlmm",
+            "fields": [
+              {
+                "name": "position",
+                "type": "pubkey"
+              },
+              {
+                "name": "pool",
+                "type": "pubkey"
+              },
+              {
+                "name": "lowerBinId",
+                "type": "i32"
+              },
+              {
+                "name": "upperBinId",
+                "type": "i32"
+              },
+              {
+                "name": "enteredAt",
+                "type": "i64"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "TriggerReason",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Manual"
+          },
+          {
+            "name": "StopLoss"
+          },
+          {
+            "name": "TakeProfit"
+          },
+          {
+            "name": "TrailingStop"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PotAdminAction",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pause"
+          },
+          {
+            "name": "Unpause"
+          },
+          {
+            "name": "SetMints",
+            "fields": [
+              {
+                "name": "mints",
+                "type": {
+                  "vec": "pubkey"
+                }
+              }
+            ]
+          },
+          {
+            "name": "SetSpendingPolicy",
+            "fields": [
+              {
+                "name": "maxSwapBps",
+                "type": "u16"
+              },
+              {
+                "name": "dailyBudgetSol",
+                "type": "u64"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "StrategyCreated",
+      "discriminator": [
+        24,
+        91,
+        78,
+        221,
+        111,
+        148,
+        232,
+        101
+      ],
+      "fields": [
+        {
+          "name": "pot",
+          "type": "pubkey"
+        },
+        {
+          "name": "strategy",
+          "type": "pubkey"
+        },
+        {
+          "name": "slotId",
+          "type": "u16"
+        },
+        {
+          "name": "inputMint",
+          "type": "pubkey"
+        },
+        {
+          "name": "outputMint",
+          "type": "pubkey"
+        },
+        {
+          "name": "hasYield",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "SwapExecuted",
+      "discriminator": [
+        151,
+        22,
+        79,
+        34,
+        77,
+        105,
+        250,
+        130
+      ],
+      "fields": [
+        {
+          "name": "pot",
+          "type": "pubkey"
+        },
+        {
+          "name": "strategy",
+          "type": "pubkey"
+        },
+        {
+          "name": "slotId",
+          "type": "u64"
+        },
+        {
+          "name": "modeTag",
+          "type": "u8"
+        },
+        {
+          "name": "isEntry",
+          "type": "bool"
+        },
+        {
+          "name": "inputMint",
+          "type": "pubkey"
+        },
+        {
+          "name": "outputMint",
+          "type": "pubkey"
+        },
+        {
+          "name": "spent",
+          "type": "u64"
+        },
+        {
+          "name": "received",
+          "type": "u64"
+        },
+        {
+          "name": "trigger",
+          "type": {
+            "defined": {
+              "name": "TriggerReason"
+            }
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u32"
+        },
+        {
+          "name": "statusAfter",
+          "type": {
+            "defined": {
+              "name": "StrategyStatus"
+            }
+          }
+        },
+        {
+          "name": "signer",
+          "type": "pubkey"
+        },
+        {
+          "name": "timestamp",
+          "type": "i64"
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "StrategyNotAdmin",
+      "msg": "Caller is not authorized as admin for this strategy"
+    },
+    {
+      "code": 6001,
+      "name": "SwapSpecMismatch",
+      "msg": "SwapSpec in instruction data does not match proposal intent"
+    },
+    {
+      "code": 6002,
+      "name": "ProposalMismatch",
+      "msg": "Proposal mismatch \u2014 proposal_id or pot does not match attached spec"
+    },
+    {
+      "code": 6003,
+      "name": "StrategyPotMismatch",
+      "msg": "Strategy.pot does not match the pot supplied in this ix"
+    },
+    {
+      "code": 6004,
+      "name": "ProposalExecutorForbidden",
+      "msg": "Caller is not allowed to execute this proposal"
+    },
+    {
+      "code": 6005,
+      "name": "SwapModeMismatch",
+      "msg": "SwapMode in args does not match strategy.source"
+    },
+    {
+      "code": 6006,
+      "name": "TriggerReasonMismatch",
+      "msg": "Trigger reason in args does not match the on-chain oracle reading"
+    },
+    {
+      "code": 6007,
+      "name": "MemberPermissionInvalid",
+      "msg": "MemberPermissions account is invalid"
+    },
+    {
+      "code": 6008,
+      "name": "SlippageExceeded",
+      "msg": "Swap output below min_out (slippage exceeded)"
+    },
+    {
+      "code": 6009,
+      "name": "OverspentInput",
+      "msg": "Swap consumed more than max_in"
+    },
+    {
+      "code": 6010,
+      "name": "StrategyInactive",
+      "msg": "Strategy is not in an executable state"
+    },
+    {
+      "code": 6011,
+      "name": "StrategyNonceMismatch",
+      "msg": "Strategy executor_nonce mismatch; possible replay"
+    },
+    {
+      "code": 6012,
+      "name": "MintNotAllowlisted",
+      "msg": "Input or output mint is not in pot allowlist"
+    },
+    {
+      "code": 6013,
+      "name": "SpendingLimitExceeded",
+      "msg": "Swap size exceeds SpendingLimit for this period"
+    },
+    {
+      "code": 6014,
+      "name": "SpendingLimitInactive",
+      "msg": "SpendingLimit is paused or expired"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidSwapAmount",
+      "msg": "amount_in is zero or otherwise invalid for this swap mode"
+    },
+    {
+      "code": 6016,
+      "name": "VaultOwnerMismatch",
+      "msg": "Vault token account ownership does not match the vault PDA"
+    },
+    {
+      "code": 6017,
+      "name": "TriggerNotMet",
+      "msg": "Trigger condition not satisfied by current oracle price"
+    },
+    {
+      "code": 6018,
+      "name": "PriceStale",
+      "msg": "Pyth price feed is stale"
+    },
+    {
+      "code": 6019,
+      "name": "PriceFeedMismatch",
+      "msg": "Pyth price feed account does not match strategy.pyth_price_feed"
+    },
+    {
+      "code": 6020,
+      "name": "NoPriceFeed",
+      "msg": "Strategy has no pyth feed configured; trusted keeper required"
+    },
+    {
+      "code": 6021,
+      "name": "YieldTargetInvalid",
+      "msg": "YieldTarget program does not match expected Kamino/Meteora id"
+    },
+    {
+      "code": 6022,
+      "name": "YieldPositionMismatch",
+      "msg": "Yield position mismatch; expected previously-stored account"
+    },
+    {
+      "code": 6023,
+      "name": "YieldNotConfigured",
+      "msg": "Strategy has no yield leg but yield ix was supplied"
+    },
+    {
+      "code": 6024,
+      "name": "FeeReserveTooLow",
+      "msg": "Fee reserve below threshold required to activate strategy"
+    },
+    {
+      "code": 6025,
+      "name": "MathOverflow",
+      "msg": "Arithmetic overflow during fixed-point math"
+    },
+    {
+      "code": 6026,
+      "name": "ProposalNotPassed",
+      "msg": "Proposal has not passed governance vote"
+    },
+    {
+      "code": 6027,
+      "name": "ProposalAlreadyExecuted",
+      "msg": "Proposal has already been executed"
+    },
+    {
+      "code": 6028,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow"
+    }
+  ]
+}
