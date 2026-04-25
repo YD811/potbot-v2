@@ -1,11 +1,11 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useCreatePot } from '@/hooks/usePots'
-import { PotTypeSelector, PotType } from '@/components/PotTypeSelector';
+import { PotTypeSelector, PotType } from '@/components/PotTypeSelector'
 
 // SSR-safe — keeps the wallet-adapter-react-ui bundle out of the initial
 // render so non-connected users can see the wizard immediately.
@@ -41,9 +41,10 @@ export default function CreatePotPage() {
   const { publicKey } = useWallet()
   const createPot = useCreatePot()
 
-  const [form, setForm] = useState({
+  const [potType, setPotType] = useState<PotType>('public')
 
-  const [potType, setPotType] = useState<PotType>('public');    name: '',
+  const [form, setForm] = useState({
+    name: '',
     emoji: '🪴',
     isPublic: true,
     minDeposit: 0.01,
@@ -52,6 +53,11 @@ export default function CreatePotPage() {
     tradeLevel: 0,
     withdrawLevel: 0,
   })
+
+  // Keep form.isPublic in sync with the PotTypeSelector
+  useEffect(() => {
+    update('isPublic', potType === 'public')
+  }, [potType])
 
   const update = (key: string, value: any) =>
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -92,11 +98,6 @@ export default function CreatePotPage() {
   // wizard stays usable without a wallet so visitors can see what they're
   // about to create. Connect is only required on final Submit (see below).
 
-  // Sync potType selector with isPublic form field
-  useEffect(() => {
-    setValue('isPublic', potType === 'public');
-  }, [potType, setValue]);
-
   return (
     <div className="max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold text-white mb-2">Create a New POT</h1>
@@ -125,6 +126,7 @@ export default function CreatePotPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* POT Type Selector — Public vs Private */}
         <PotTypeSelector value={potType} onChange={setPotType} />
 
         {/* Name + Emoji */}
@@ -174,7 +176,7 @@ export default function CreatePotPage() {
         <div className="rounded-2xl border border-pot-border bg-pot-card p-6 space-y-5">
           <h2 className="text-lg font-semibold text-white">Configuration</h2>
 
-          {/* Public toggle */}
+          {/* Public toggle — kept in sync with PotTypeSelector above */}
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-white">Public POT</p>
@@ -184,7 +186,11 @@ export default function CreatePotPage() {
             </div>
             <button
               type="button"
-              onClick={() => update('isPublic', !form.isPublic)}
+              onClick={() => {
+                const next = !form.isPublic
+                update('isPublic', next)
+                setPotType(next ? 'public' : 'private')
+              }}
               className={`relative h-6 w-11 rounded-full transition ${
                 form.isPublic ? 'bg-pot-green' : 'bg-pot-border'
               }`}
