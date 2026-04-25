@@ -1,0 +1,43 @@
+name: Publish @potbot/mcp to npm
+
+on:
+  push:
+    tags:
+      - 'mcp-v*'  # trigger on tags like mcp-v0.2.0
+
+jobs:
+  publish:
+    name: npm publish @potbot/mcp
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # for npm provenance
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      - name: Install root deps
+        run: npm install --no-audit --no-fund
+
+      - name: Build @potbot/mcp
+        run: |
+          cd apps/potbot-mcp
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Verify build output
+        run: |
+          ls -la apps/potbot-mcp/dist/
+          node apps/potbot-mcp/dist/index.js --version || true
+
+      - name: Publish to npm
+        run: |
+          cd apps/potbot-mcp
+          npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
