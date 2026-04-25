@@ -1,5 +1,74 @@
 # @potbot/mcp Changelog
 
+## 0.6.0 — 2026-04-25
+
+### Real market & social signals so the AI doesn't bluff
+
+Adds 4 new tools that pull live fundamentals and crowd sentiment so an
+AI strategist can ground proposals in observable data instead of vibes.
+
+#### `get_market_analytics(token)` — fundamentals
+Pulls the asset record from **CoinGecko** (free, key-less) plus 30d
+daily price chart. Returns: USD price, market cap & rank, 24h volume,
+%-changes (24h / 7d / 30d), ATH price + distance from ATH, FDV,
+circulating + total supply. Computed signals:
+
+- **30d realized volatility** — annualized stdev of daily log-returns, %.
+- **14d RSI** — classic Wilder's RSI on the daily series.
+- **30d trend label** — strong_up / up / sideways / down / strong_down.
+
+Symbol resolver knows SOL, USDC, USDT, JUP, WIF, BONK, JITOSOL, MSOL,
+BTC, ETH and a handful of Solana mint addresses. Extend `COINGECKO_IDS`
+in src/data/market.ts for more.
+
+#### `get_top_solana_protocols(limit)` and `get_protocol_stats(slug)`
+Top Solana DeFi by **DefiLlama**. Filters out CEX / Bridge / RWA so
+the list is actually Solana-native. Each protocol carries Solana-only
+TVL, 1d / 7d % TVL change, category, and slug. The slug variant pulls
+the full per-chain breakdown for one protocol.
+
+#### `get_social_sentiment(token)` — crowd sentiment
+Aggregates and labels the crowd:
+
+- **Twitter via LunarCrush** (`LUNARCRUSH_API_KEY`) — top ~20 posts per
+  topic with pre-computed influencer sentiment (1-5 scale → label).
+- **Reddit via public JSON** (no key needed) — top weekly posts on
+  r/solana, r/CryptoCurrency, etc. matching the symbol.
+- **News via CryptoPanic** (`CRYPTOPANIC_API_KEY`) — recent headlines
+  per coin with vote-derived sentiment.
+- Every text item is also scored locally with **VADER**
+  (vader-sentiment npm). External labels override VADER when present.
+
+Output: a single `overall` (bullish / bearish / neutral) + numeric
+score in [-1, 1] + confidence (low / medium / high based on sample
+size). Per-source breakdowns, top posts/headlines with their
+individual VADER compounds, and explicit warnings for missing keys.
+
+Source weighting in the aggregate score: Twitter 50% · Reddit 30% ·
+News 20%, renormalised over the sources that actually returned data.
+So even with no LunarCrush key the tool works (Reddit-only, lower
+confidence).
+
+#### Prompt: `vault_strategist` upgraded
+Now refuses to make recommendations without first calling
+`get_market_analytics` and `get_social_sentiment`, and forces the AI
+to cite specific numbers per signal in its rationale. Goal: stop AI
+making up data when real data is one tool call away.
+
+### Misc
+- `vader-sentiment` added as a runtime dep (~50 KB, Apache-2.0, zero
+  transitive deps).
+- `.env.example` documents `LUNARCRUSH_API_KEY` and
+  `CRYPTOPANIC_API_KEY` as optional but recommended.
+
+### E2E verified on devnet (sample run)
+- get_market_analytics(SOL) → price=$85.77 mcap_rank=7 30d_vol=52.82%
+  RSI_14d=49.6 trend=sideways ATH=$293 -70.76% from ATH.
+- get_top_solana_protocols(5) → Kamino Lend $1.5B / Sanctum $1.1B /
+  Raydium $1.0B / BNSOL / Jito (CEX category filtered out).
+- get_social_sentiment(SOL) without LunarCrush → bullish 0.323,
+  Reddit 4↑/1↓/0→ of 5 r/CryptoCurrency posts.
+
 ## 0.5.0 — 2026-04-25
 
 ### Real on-chain reads (no more mock vaults)

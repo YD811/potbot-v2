@@ -53,6 +53,8 @@ import {
   proposalPda,
   rpcUrl,
 } from './anchor.js'
+import { getMarketAnalytics, getTopSolanaProtocols, getProtocolStats } from './data/market.js'
+import { getSocialSentiment } from './data/social.js'
 
 // ── Config ─────────────────────────────────────────────────────────────────
 const POTBOT_API  = process.env.POTBOT_API_URL  ?? 'https://api.potbot.fun'
@@ -357,18 +359,24 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
           content: {
             type: 'text',
             text: `You are a senior crypto vault strategist auditing a PotBot vault.
+You make decisions based on real data, not vibes. Always cite the source tool you used.
 
 Vault: ${args.vault_pubkey ?? '<vault_pubkey>'}
 Goal: ${args.goal ?? 'maximize risk-adjusted returns'}
 
 Steps:
-1. Call get_vault_analytics for this vault to inspect NAV and SPL holdings.
-2. Call get_token_prices for each non-stable holding to value the book.
-3. Call get_yield_rates with risk_level matching the goal — pick top 3 pools by TVL.
-4. Call get_leaderboard to compare against peer vaults.
-5. Recommend up to 3 specific actions, each as a draft create_swap_proposal call (do not execute — produce arguments only).
+1. Call get_vault_analytics — inspect NAV, member_count, governance, on-chain SPL holdings.
+2. For each non-stable holding AND for SOL, call get_market_analytics — record price, 24h/7d/30d % changes, 30d realized volatility, RSI, trend label, market cap rank.
+3. Call get_social_sentiment for the same tokens — record overall verdict (bullish/bearish/neutral), score, confidence, top tweet samples.
+4. Call get_yield_rates with risk_level matching the goal — pick top 3 pools by TVL.
+5. Call get_top_solana_protocols if you'd consider migrating yield to a different protocol.
+6. Cross-check by calling get_leaderboard to compare against peer vaults.
+7. Recommend up to 3 specific actions, each as a draft create_swap_proposal call (do not execute — produce arguments only).
 
-Output a concise rationale with explicit numbers, not generalities.`,
+Each recommendation must cite specific numbers AND specific signals: e.g.
+"Swap 30% USDC → SOL: SOL 30d trend = down (-22%), RSI 28 (oversold), social sentiment turning bullish (score +0.31, 14/20 top tweets bullish), TVL stable. Rationale: dollar-cost into oversold RSI with positive social inflection."
+
+Refuse to recommend without first calling get_market_analytics + get_social_sentiment.`,
           },
         }],
       }
@@ -593,6 +601,49 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           member_wallet: { type: 'string', description: 'Member wallet whose delegation we are inspecting' },
         },
         required: ['vault_pubkey', 'member_wallet'],
+      },
+    },
+    {
+      name: 'get_market_analytics',
+      description: 'Real market fundamentals for a token from CoinGecko + DefiLlama. Returns price, market cap, volume, %-changes (24h/7d/30d), ATH distance, FDV, plus derived signals: 30d realized volatility (annualized %), 14d RSI, and a trend label. Use this BEFORE proposing a swap so the rationale is grounded in real data.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          token: { type: 'string', description: 'Symbol (SOL, USDC, JUP, BONK, WIF, JITOSOL, MSOL, BTC, ETH) or known mint address' },
+        },
+        required: ['token'],
+      },
+    },
+    {
+      name: 'get_top_solana_protocols',
+      description: 'Top Solana DeFi protocols by TVL from DefiLlama (Kamino, Marinade, Jito, Raydium, etc.) with 24h / 7d % TVL changes. Useful when picking a yield destination.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          limit: { type: 'number', description: 'Max protocols (default 20)' },
+        },
+      },
+    },
+    {
+      name: 'get_protocol_stats',
+      description: 'Detailed TVL stats for one DefiLlama protocol slug (e.g. "kamino", "marinade-finance", "jupiter").',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          slug: { type: 'string', description: 'DefiLlama protocol slug — see get_top_solana_protocols.' },
+        },
+        required: ['slug'],
+      },
+    },
+    {
+      name: 'get_social_sentiment',
+      description: 'Aggregated Twitter + news sentiment for a token. Pulls top ~20 Twitter posts (LunarCrush, key-gated) and ~20 news headlines (CryptoPanic), scores each via VADER, and returns a bullish/bearish/neutral verdict with confidence + per-source breakdown. Use BEFORE creating a proposal to know which direction crypto-twitter is leaning.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          token: { type: 'string', description: 'Symbol or known mint. Same resolver as get_market_analytics.' },
+        },
+        required: ['token'],
       },
     },
   ],
@@ -1074,6 +1125,51 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           ...info,
           delegate: info.delegate?.toBase58() ?? null,
           explorer_url: `https://explorer.solana.com/address/${pda.toBase58()}?cluster=${NETWORK}`,
+        })
+      }
+
+      // ── get_market_analytics ─────────────────────────────────────────────
+      case 'get_market_analytics': {
+        const token = args?.token as string
+        if (!token) throw new Error('token required')
+        const { data, warning } = await getMarketAnalytics(token)
+        return text({
+          token: token.toUpperCase(),
+          analytics: data,
+          source: 'CoinGecko + derived signals',
+          ...(warning ? { warnings: [warning] } : {}),
+        })
+      }
+
+      // ── get_top_solana_protocols ─────────────────────────────────────────
+      case 'get_top_solana_protocols': {
+        const limit = (args?.limit as number) ?? 20
+        const protocols = await getTopSolanaProtocols(limit)
+        return text({
+          protocols,
+          total: protocols.length,
+          source: 'DefiLlama /protocols (Solana chain filter)',
+          updated_at: new Date().toISOString(),
+        })
+      }
+
+      // ── get_protocol_stats ───────────────────────────────────────────────
+      case 'get_protocol_stats': {
+        const slug = args?.slug as string
+        if (!slug) throw new Error('slug required')
+        const stats = await getProtocolStats(slug)
+        if (!stats) throw new Error(`No DefiLlama protocol with slug "${slug}"`)
+        return text({ ...stats, source: 'DefiLlama /protocol/{slug}', updated_at: new Date().toISOString() })
+      }
+
+      // ── get_social_sentiment ─────────────────────────────────────────────
+      case 'get_social_sentiment': {
+        const token = args?.token as string
+        if (!token) throw new Error('token required')
+        const result = await getSocialSentiment(token)
+        return text({
+          ...result,
+          method: 'VADER local + LunarCrush (if LUNARCRUSH_API_KEY set) + CryptoPanic (CRYPTOPANIC_API_KEY for higher rate limits). Top tweets weighted 60%, news 40%.',
         })
       }
 
