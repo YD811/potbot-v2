@@ -4,7 +4,7 @@
 **Team**: Y-DAO Amsterdam — Yehor Dolinskiy (solo, [@CryptoYDao](https://x.com/CryptoYDao))
 **Deadline**: 2026-05-11 · **Submission portal**: [colosseum.com/frontier](https://colosseum.com/frontier)
 
-> **One-liner.** Group-trading vaults on Solana with on-chain governance and **Personal AI Voters** — every member can delegate their vote to an AI agent that signs on-chain with a public, revocable rules URI.
+> **One-liner.** PotBot ships **two pieces of infrastructure**: (1) `MemberDelegate` — a new on-chain primitive enabling per-seat AI delegation in shared trading vaults, and (2) `@potbot/mcp` — the first MCP server in the Solana ecosystem with **real on-chain write effects** (`vote_as_delegate`, `register_delegate`, `create_proposal`). The dApp at potbot.fun is the reference client.
 
 ---
 
@@ -97,6 +97,21 @@ npm install -g @potbot/mcp
 
 ---
 
+## Competitive Landscape
+
+| Product | What it does | Overlap with PotBot | What PotBot adds |
+|---|---|---|---|
+| **Squads v4** ($10B+ secured, used by Pyth/Drift/Orca/Mango) | Multisig + smart accounts | Custody + threshold approval | Share-weighted governance, active trading layer, per-seat AI delegates, Money Tree retention |
+| **Realms (+ Realms MCP, Q1 2026)** | Generic DAO governance, AI-managed via MCP | AI-managed governance — **closest competitor** | Vault-native (not generic DAO), integrated Jupiter swap CPI, on-chain risk caps, retail UX |
+| **Drift Vaults** (with AI delegation via solana-agent-kit) | Single-manager vault, depositor → manager | Vault + AI delegate | **Multi-member, multi-AI co-governance** — not depositor → single manager |
+| **Symmetry / Sanctum baskets** | Index funds, passive baskets | Pool of capital | Active strategy execution + governance, not pre-defined basket |
+| **Hive / Cleopetra / Plutus** (AI hackathon Jan 2025) | Single AI DeFi strategist | AI agent picks strategy | Multi-human + multi-AI co-governance — AI is delegated participant, not sole brain |
+| **R3 Corda / State Street SWEEP** (institutional, 2026) | Tokenized RWA vaults | Onchain pooled capital | Retail/club focus, programmable governance for groups of any size |
+
+**The wedge:** as of 2026-04, no shipped product combines (1) shared trading vault, (2) share-weighted governance, and (3) per-member AI delegation with public rules. Personal AI Voters is the primitive that closes that gap.
+
+---
+
 ## Why This Wins
 
 1. **Real on-chain effects from an AI client.** Three of the MCP tools (`vote_as_delegate`, `register_delegate`, `revoke_delegate`) **produce signed transactions** — not advice, not "click this dApp link." Other AI-meets-DeFi submissions stop at instructions; this one transacts.
@@ -159,6 +174,9 @@ Recording window 2026-05-06 → 2026-05-08. Cuts under 5s each.
 | 📖 Architecture | [docs/OVERVIEW.md](docs/OVERVIEW.md), [docs/PROGRAM.md](docs/PROGRAM.md), [docs/MCP.md](docs/MCP.md), [docs/ARCHITECTURE_ONCHAIN.md](docs/ARCHITECTURE_ONCHAIN.md) |
 | 🛣️ Phase 1 spec (post-hackathon) | [docs/PROGRAM_PHASE1.md](docs/PROGRAM_PHASE1.md) — kill-switch, auto-pause, hash commitments, Light Protocol events |
 | ☁️ Hosted MCP deploy | [docs/RENDER_DEPLOY.md](docs/RENDER_DEPLOY.md) — Render Blueprint, 3-click setup |
+| 🥊 Competitive landscape | [docs/COMPETITIVE_LANDSCAPE.md](docs/COMPETITIVE_LANDSCAPE.md) — Squads / Realms / Drift / AI hackathon winners + winning-pattern match |
+| 📈 Platform improvement plan | [docs/PLATFORM_IMPROVEMENTS.md](docs/PLATFORM_IMPROVEMENTS.md) — High-leverage UX moves before submission + post-hackathon roadmap |
+| 🤝 Sendai skill (PR-ready) | [skills/sendai-potbot/skill.md](skills/sendai-potbot/skill.md) — PotBot integration guide for any AI agent |
 
 ---
 
