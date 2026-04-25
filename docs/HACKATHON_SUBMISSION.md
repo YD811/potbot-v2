@@ -57,10 +57,29 @@ DApp frontend (Next.js 14) at https://potbot.fun runs in mock mode by default, a
 | Price feeds | Pyth Network |
 | Keeper / automation | Node.js worker (devnet), Cloudflare Workers (prod) |
 | Hosting | Cloudflare Pages + KV |
+| Product | https://potbot.fun |
+| App (same host, auto-detects on-chain mode) | https://potbot.fun |
+| GitHub | https://github.com/YD811/potbot-v2 |
+| Program (Solscan devnet) | https://solscan.io/account/GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK?cluster=devnet |
+| SDK (npm/TS) | `packages/sdk/` in the repo |
+| MCP server | `apps/potbot-mcp/` in the repo |
+| Twitter | https://x.com/PotBot_sol |
+| Telegram v1 bot | https://t.me/Trade_pot_bot |
 
 ---
 
 ## Key Differentiators
+- **Solana + Anchor 0.30** — `pot_vault` program, program ID `GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK`
+- **Jupiter v6 / Ultra API** — swap execution
+- **Pyth** — oracle price guard on every swap
+- **Meteora DLMM, Kamino** — yield strategies for idle capital
+- **Helius** — RPC + priority fees
+- **Metaplex Core** — Tamagotchi NFT metadata
+- **Squads v4** — mainnet multisig authority (phase-5)
+- **Next.js 14 + TanStack Query** — dApp
+- **Supabase** — off-chain NAV snapshots, swap metadata, AI agent rules
+- **@potbot/sdk** — TypeScript SDK, 60+ on-chain actions
+- **@potbot/mcp** — MCP server so any LLM can drive the vault
 
 **1. Strategy layer with on-chain trigger verification**  
 Stop-loss, take-profit, and trailing-stop are not just UI labels — the program re-reads the Pyth price feed inside the instruction and rejects any keeper that fires the wrong reason. Keepers cannot fake a trigger.

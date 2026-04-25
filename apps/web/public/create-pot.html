@@ -1,0 +1,1207 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Create POT — PotBot v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:#14F195; --green-600:#0BCF7D;
+  --purple:#9945FF; --purple-600:#7B2ED3;
+  --blue:#3B82F6;
+  --danger:#FF5E7E;
+  --radius:14px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --h-sm:32px; --px-sm:12px; --fs-sm:13px;
+  --h-md:40px; --px-md:16px; --fs-md:14px;
+  --h-lg:48px; --px-lg:22px; --fs-lg:15px;
+}
+html[data-theme="dark"]{
+  --bg:#07090F; --bg-elev:#0D1117; --card:#111827; --card-2:#141B2B;
+  --border:#1A2332; --border-strong:#243049;
+  --text:#E6EAF2; --text-muted:#8892A8; --text-dim:#5A6379;
+  --overlay:rgba(255,255,255,.04);
+  --pill-bg:rgba(20,241,149,.1); --pill-border:rgba(20,241,149,.25);
+  --glow-green:0 0 40px rgba(20,241,149,.25);
+  --glow-purple:0 0 40px rgba(153,69,255,.3);
+  --danger-bg:rgba(255,94,126,.10); --danger-border:rgba(255,94,126,.35);
+}
+html[data-theme="light"]{
+  --bg:#F6F7FB; --bg-elev:#FFFFFF; --card:#FFFFFF; --card-2:#F3F5FA;
+  --border:#E4E8F1; --border-strong:#C9D1E2;
+  --text:#0B1020; --text-muted:#4A5370; --text-dim:#8089A0;
+  --overlay:rgba(11,16,32,.03);
+  --pill-bg:rgba(11,207,125,.10); --pill-border:rgba(11,207,125,.30);
+  --glow-green:0 0 32px rgba(11,207,125,.18);
+  --glow-purple:0 0 32px rgba(153,69,255,.2);
+  --danger-bg:rgba(255,94,126,.06); --danger-border:rgba(255,94,126,.30);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg); color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  transition:background .35s var(--ease),color .35s var(--ease);
+}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* NAV */
+.top-nav{
+  position:sticky;top:0;z-index:80;
+  backdrop-filter:saturate(180%) blur(14px);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);
+  background:color-mix(in srgb, var(--bg) 78%, transparent);
+  border-bottom:1px solid var(--border);
+}
+.top-nav-inner{max-width:900px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:16px;letter-spacing:-.02em;color:var(--text);text-decoration:none}
+.brand-dot{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--green),var(--purple));box-shadow:var(--glow-green)}
+.theme-toggle{position:relative;width:60px;height:32px;border-radius:999px;background:var(--card-2);border:1px solid var(--border);cursor:pointer;padding:0;display:inline-flex;align-items:center}
+.theme-toggle .knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--purple));transition:transform .3s var(--ease);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+html[data-theme="light"] .theme-toggle .knob{transform:translateX(28px)}
+.theme-toggle .icon-sun,.theme-toggle .icon-moon{position:absolute;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted)}
+.theme-toggle .icon-moon{left:9px}
+.theme-toggle .icon-sun{right:9px}
+html[data-theme="dark"] .theme-toggle .icon-moon{opacity:0}
+html[data-theme="light"] .theme-toggle .icon-sun{opacity:0}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;font-weight:600;text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform .15s,background .2s,border-color .2s,box-shadow .25s;white-space:nowrap;background:transparent;color:var(--text);font-family:inherit}
+.btn:active{transform:translateY(1px)}
+.btn-sm{height:var(--h-sm);padding:0 var(--px-sm);font-size:var(--fs-sm)}
+.btn-md{height:var(--h-md);padding:0 var(--px-md);font-size:var(--fs-md)}
+.btn-lg{height:var(--h-lg);padding:0 var(--px-lg);font-size:var(--fs-lg)}
+.btn-primary{background:linear-gradient(135deg,var(--green),var(--green-600));color:#042015;box-shadow:var(--glow-green)}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-secondary{background:var(--card);color:var(--text);border-color:var(--border)}
+.btn-secondary:hover{background:var(--card-2);border-color:var(--border-strong)}
+.btn-ghost{background:transparent;color:var(--text-muted);border-color:transparent}
+.btn-ghost:hover{background:var(--overlay);color:var(--text)}
+.btn-purple{background:linear-gradient(135deg,var(--purple),var(--purple-600));color:#fff;box-shadow:var(--glow-purple)}
+.btn-purple:hover{filter:brightness(1.08)}
+
+/* LAYOUT */
+.page{max-width:900px;margin:0 auto;padding:36px 24px 80px}
+.stack>*+*{margin-top:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.row-sb{display:flex;align-items:center;justify-content:space-between;gap:10px}
+
+/* STEP INDICATOR */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:32px}
+.step-item{display:flex;align-items:center;gap:10px;flex:1}
+.step-item:last-child{flex:0}
+.step-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:2px solid var(--border);color:var(--text-dim);background:var(--card);transition:all .3s var(--ease);flex-shrink:0}
+.step-item.active .step-num{border-color:var(--green);color:var(--green);background:rgba(20,241,149,.1);box-shadow:0 0 16px rgba(20,241,149,.2)}
+.step-item.done .step-num{border-color:var(--green);background:var(--green);color:#042015}
+.step-label{font-size:13px;font-weight:600;color:var(--text-dim);transition:color .3s}
+.step-item.active .step-label{color:var(--text)}
+.step-item.done .step-label{color:var(--text-muted)}
+.step-line{flex:1;height:2px;background:var(--border);margin:0 12px;border-radius:1px;transition:background .3s}
+.step-item.done+.step-line{background:var(--green)}
+
+/* =========================================================
+   TYPE SELECTOR (Public / Private) — the hero component
+   ========================================================= */
+.type-selector-wrap{
+  position:relative;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:6px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  /* animated gradient border on hover */
+  transition:border-color .3s;
+}
+
+/* sliding background pill */
+.type-selector-wrap::before{
+  content:'';
+  position:absolute;
+  top:6px; bottom:6px;
+  width:calc(50% - 9px);
+  border-radius:14px;
+  transition:transform .4s var(--ease), background .4s var(--ease), box-shadow .4s var(--ease);
+  pointer-events:none;
+  z-index:0;
+}
+.type-selector-wrap[data-selected="public"]::before{
+  left:6px;
+  background:linear-gradient(135deg,rgba(20,241,149,.18),rgba(20,241,149,.08));
+  border:1px solid rgba(20,241,149,.35);
+  box-shadow:0 0 32px rgba(20,241,149,.12);
+  transform:translateX(0);
+}
+.type-selector-wrap[data-selected="private"]::before{
+  left:6px;
+  background:linear-gradient(135deg,rgba(153,69,255,.18),rgba(153,69,255,.08));
+  border:1px solid rgba(153,69,255,.35);
+  box-shadow:0 0 32px rgba(153,69,255,.15);
+  transform:translateX(calc(100% + 6px));
+}
+
+.type-card{
+  position:relative;z-index:1;
+  border-radius:14px;
+  padding:24px 20px;
+  cursor:pointer;
+  transition:transform .2s var(--ease);
+  user-select:none;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.type-card:hover{transform:translateY(-1px)}
+
+.type-icon{
+  width:52px;height:52px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;
+  transition:box-shadow .3s;
+}
+.type-card.public .type-icon{background:rgba(20,241,149,.12);box-shadow:0 0 20px rgba(20,241,149,.15)}
+.type-card.private .type-icon{background:rgba(153,69,255,.12);box-shadow:0 0 20px rgba(153,69,255,.15)}
+
+[data-selected="public"] .type-card.public .type-icon{box-shadow:0 0 28px rgba(20,241,149,.35)}
+[data-selected="private"] .type-card.private .type-icon{box-shadow:0 0 28px rgba(153,69,255,.35)}
+
+.type-title{font-size:20px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.type-card.public .type-title{color:var(--green)}
+html[data-theme="light"] .type-card.public .type-title{color:var(--green-600)}
+.type-card.private .type-title{color:var(--purple)}
+
+.type-badge{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:999px}
+.type-card.public .type-badge{background:rgba(20,241,149,.15);border:1px solid rgba(20,241,149,.3);color:var(--green)}
+html[data-theme="light"] .type-card.public .type-badge{color:var(--green-600)}
+.type-card.private .type-badge{background:rgba(153,69,255,.15);border:1px solid rgba(153,69,255,.3);color:var(--purple)}
+
+.type-tagline{font-size:14px;color:var(--text-muted);line-height:1.55;font-weight:500}
+
+/* feature pills */
+.feature-pills{display:flex;flex-wrap:wrap;gap:6px}
+.fpill{
+  font-size:11.5px;font-weight:600;
+  padding:5px 10px;border-radius:999px;
+  background:var(--card-2);border:1px solid var(--border);
+  color:var(--text-muted);
+  transition:all .2s;
+  display:flex;align-items:center;gap:5px;
+}
+[data-selected="public"] .type-card.public .fpill{
+  background:rgba(20,241,149,.08);
+  border-color:rgba(20,241,149,.2);
+  color:var(--green);
+}
+html[data-theme="light"] [data-selected="public"] .type-card.public .fpill{color:var(--green-600)}
+[data-selected="private"] .type-card.private .fpill{
+  background:rgba(153,69,255,.08);
+  border-color:rgba(153,69,255,.2);
+  color:var(--purple);
+}
+
+/* EXPAND / COLLAPSE DETAILS */
+.type-details-toggle{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;color:var(--text-dim);
+  cursor:pointer;background:none;border:none;padding:0;font-family:inherit;
+  transition:color .2s;margin-top:4px;
+}
+.type-card.public .type-details-toggle:hover{color:var(--green)}
+html[data-theme="light"] .type-card.public .type-details-toggle:hover{color:var(--green-600)}
+.type-card.private .type-details-toggle:hover{color:var(--purple)}
+.type-details-toggle .arrow{transition:transform .3s var(--ease)}
+.type-details-toggle.open .arrow{transform:rotate(180deg)}
+
+.type-details{
+  overflow:hidden;
+  max-height:0;
+  transition:max-height .45s var(--ease), opacity .3s;
+  opacity:0;
+}
+.type-details.open{max-height:800px;opacity:1}
+
+.detail-section{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.detail-section-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px}
+.detail-row{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 12px;border-radius:10px;
+  background:var(--card-2);border:1px solid var(--border);
+}
+.detail-row .d-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.detail-row .d-text{}
+.detail-row .d-title{font-size:13px;font-weight:700}
+.detail-row .d-desc{font-size:12px;color:var(--text-muted);margin-top:2px;line-height:1.5}
+
+/* privacy partners strip */
+.privacy-partners{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.ppartner{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 10px;border-radius:8px;
+  background:rgba(153,69,255,.08);border:1px solid rgba(153,69,255,.2);
+  font-size:11px;font-weight:700;color:var(--purple);
+}
+
+/* =========================================================
+   FORM SECTION
+   ========================================================= */
+.form-section{display:none}
+.form-section.active{display:block}
+
+.field{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.field label{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em}
+.input{
+  background:var(--card-2);border:1px solid var(--border);
+  border-radius:10px;padding:11px 14px;
+  color:var(--text);font-size:14px;font-family:inherit;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+  width:100%;
+}
+.input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(20,241,149,.1)}
+.input-group{display:flex;gap:10px}
+.input-group .input{flex:1}
+
+select.input{cursor:pointer}
+select.input option{background:var(--card-2);color:var(--text)}
+
+/* Emoji picker */
+.emoji-strip{display:flex;gap:8px;flex-wrap:wrap}
+.emoji-opt{
+  width:42px;height:42px;border-radius:10px;
+  background:var(--card-2);border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;cursor:pointer;
+  transition:border-color .15s,transform .15s,background .15s;
+}
+.emoji-opt:hover,.emoji-opt.active{border-color:var(--green);background:rgba(20,241,149,.1);transform:scale(1.08)}
+.emoji-opt.private-active{border-color:var(--purple);background:rgba(153,69,255,.1)}
+
+/* Range / slider */
+.range-wrap{display:flex;align-items:center;gap:12px}
+.range-wrap input[type=range]{flex:1;accent-color:var(--green)}
+.range-val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;min-width:40px;text-align:right}
+
+/* Advanced toggle */
+.advanced-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-radius:12px;
+  background:var(--card-2);border:1px dashed var(--border);
+  cursor:pointer;font-size:13px;font-weight:600;color:var(--text-muted);
+  transition:color .2s,border-color .2s,background .2s;
+  user-select:none;
+}
+.advanced-toggle:hover{color:var(--text);border-color:var(--border-strong);background:var(--card)}
+.advanced-toggle .adv-arrow{transition:transform .3s var(--ease)}
+.advanced-toggle.open .adv-arrow{transform:rotate(180deg)}
+
+.advanced-body{
+  overflow:hidden;max-height:0;
+  transition:max-height .5s var(--ease),opacity .3s;
+  opacity:0;
+}
+.advanced-body.open{max-height:1200px;opacity:1}
+.advanced-inner{padding-top:16px;display:flex;flex-direction:column;gap:16px}
+
+/* Privacy provider selector */
+.provider-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.provider-card{
+  padding:14px;border-radius:12px;
+  background:var(--card-2);border:2px solid var(--border);
+  cursor:pointer;transition:all .2s var(--ease);text-align:center;
+}
+.provider-card:hover{border-color:var(--border-strong)}
+.provider-card.active{border-color:var(--purple);background:rgba(153,69,255,.08)}
+.provider-card .p-icon{font-size:22px;margin-bottom:6px}
+.provider-card .p-name{font-size:12px;font-weight:700;color:var(--text)}
+.provider-card .p-desc{font-size:11px;color:var(--text-muted);margin-top:3px;line-height:1.4}
+
+/* Gov settings row */
+.gov-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.gov-grid{grid-template-columns:1fr}}
+
+/* Referral / share toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--card-2);border:1px solid var(--border);border-radius:10px}
+.toggle-label{font-size:13px;font-weight:600}
+.toggle-sub{font-size:11.5px;color:var(--text-muted);margin-top:2px}
+.toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--card);border:1px solid var(--border-strong);border-radius:12px;transition:.3s}
+.toggle-slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:var(--text-muted);border-radius:50%;transition:.3s}
+input:checked+.toggle-slider{background:rgba(20,241,149,.2);border-color:var(--green)}
+input:checked+.toggle-slider:before{transform:translateX(20px);background:var(--green)}
+
+/* SUMMARY CARD */
+.summary-card{
+  background:linear-gradient(135deg,rgba(20,241,149,.06),rgba(153,69,255,.06));
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius);
+  padding:20px;
+}
+.summary-card.private-mode{
+  background:linear-gradient(135deg,rgba(153,69,255,.08),rgba(153,69,255,.03));
+}
+.summary-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;font-size:13px}
+.summary-row+.summary-row{border-top:1px solid var(--border)}
+.summary-row .s-label{color:var(--text-muted)}
+.summary-row .s-val{font-weight:700}
+
+/* ALERT */
+.alert{display:flex;gap:10px;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card-2);color:var(--text-muted);font-size:13px;line-height:1.55}
+.alert.info{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.25);color:#93C5FD}
+.alert.warn{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.25);color:#FCD34D}
+.alert.priv{background:rgba(153,69,255,.08);border-color:rgba(153,69,255,.25);color:#C4B5FD}
+
+/* CTA row */
+.cta-row{display:flex;gap:12px;align-items:center;margin-top:24px}
+
+/* SECTION TITLE */
+.section-title{font-size:12px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+
+/* Responsive */
+@media(max-width:700px){
+  .type-selector-wrap{grid-template-columns:1fr}
+  .type-selector-wrap::before{width:calc(100% - 12px)!important;transform:none!important;left:6px!important}
+  .type-selector-wrap[data-selected="private"]::before{top:calc(50% + 3px);bottom:6px;height:auto}
+}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:8px}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="potbot-dapp-unified.html" class="brand">
+      <span class="brand-dot"></span>
+      PotBot <span class="mono" style="color:var(--text-muted);font-weight:600;">v2</span>
+    </a>
+    <div style="font-size:13px;color:var(--text-dim)">
+      <a href="potbot-dapp-unified.html" style="color:var(--text-muted);text-decoration:none">Pots</a>
+      <span style="margin:0 6px">/</span>
+      <span style="color:var(--text);font-weight:600">Create POT</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">
+        <span class="icon-moon">☾</span>
+        <span class="icon-sun">☀</span>
+        <span class="knob"></span>
+      </button>
+      <button class="btn btn-md btn-secondary"><span class="mono">7f3A…Kk4n</span></button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- STEP INDICATOR -->
+  <div style="margin-bottom:36px">
+    <h1 style="font-size:28px;font-weight:800;letter-spacing:-.03em;margin:0 0 6px">Create a new POT 🫕</h1>
+    <p style="color:var(--text-muted);font-size:14px;margin:0">Deploy your group trading vault on Solana. Choose your mode, configure, launch.</p>
+  </div>
+
+  <div class="steps" id="stepIndicator">
+    <div class="step-item active" id="step1Indicator">
+      <div class="step-num" id="step1Num">1</div>
+      <div class="step-label">Choose type</div>
+    </div>
+    <div class="step-line" id="line1"></div>
+    <div class="step-item" id="step2Indicator">
+      <div class="step-num" id="step2Num">2</div>
+      <div class="step-label">Configure</div>
+    </div>
+    <div class="step-line" id="line2"></div>
+    <div class="step-item" id="step3Indicator">
+      <div class="step-num" id="step3Num">3</div>
+      <div class="step-label">Launch</div>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 1: TYPE SELECTOR ==================== -->
+  <div class="form-section active" id="step1">
+
+    <div class="section-title">Step 1 — Select POT visibility</div>
+
+    <!-- THE BIG SELECTOR -->
+    <div class="type-selector-wrap" id="typeSelector" data-selected="public">
+
+      <!-- PUBLIC CARD -->
+      <div class="type-card public" id="publicCard" onclick="selectType('public')">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div class="type-icon">🌐</div>
+          <span class="type-badge">Social-Fi</span>
+        </div>
+        <div>
+          <div class="type-title">
+            Public POT
+          </div>
+          <div class="type-tagline" style="margin-top:6px">
+            Open vault with social mechanics. Share your strategy, build a community, earn from referrals. Listed in the public pool.
+          </div>
+        </div>
+
+        <div class="feature-pills">
+          <span class="fpill">🏆 Leaderboard</span>
+          <span class="fpill">⚔️ Public Duels</span>
+          <span class="fpill">🔗 Referrals</span>
+          <span class="fpill">👥 Community</span>
+          <span class="fpill">📊 Strategy Share</span>
+          <span class="fpill">🌱 Tamagotchi</span>
+        </div>
+
+        <button class="type-details-toggle" id="pubToggle" onclick="toggleDetails(event,'pubDetails','pubToggle')">
+          <span>See all features</span>
+          <span class="arrow">▾</span>
+        </button>
+
+        <div class="type-details" id="pubDetails">
+          <div class="detail-section">
+            <div class="detail-section-title">📣 Social-Fi Mechanics</div>
+
+            <div class="detail-row">
+              <div class="d-icon">🏆</div>
+              <div class="d-text">
+                <div class="d-title">Public Leaderboard</div>
+                <div class="d-desc">Your pot is discoverable in the global leaderboard, ranked by PnL, TVL, and activity. New capital finds you.</div>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="d-icon">📊</div>
+              <div class="d-text">
+                <div class="d-title">Strategy Sharing</div>
+                <div class="d-desc">You set the direction — DCA, trend, reversion. Community joins and votes to endorse your approach. Author earns a creator fee % of realized PnL.</div>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="d-icon">🔗</div>
+              <div class="d-text">
+                <div class="d-title">Referral Rewards</div>
+                <div class="d-desc">Get a unique referral link. Every new depositor who joins via your link earns you a % fee automatically, forever.</div>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="d-icon">⚔️</div>
+              <div class="d-text">
+                <div class="d-title">Public Duels</div>
+                <div class="d-desc">Challenge other public pots to 24h PnL races. Winner takes both escrows minus protocol fee. Drives engagement and community hype.</div>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="d-icon">💠</div>
+              <div class="d-text">
+                <div class="d-title">Liquid Share Tokens</div>
+                <div class="d-desc">Members receive tokenized shares tradeable on any DEX. Open pool = constant inflow of new capital from the discovery feed.</div>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="d-icon">🌱</div>
+              <div class="d-text">
+                <div class="d-title">Tamagotchi & Social XP</div>
+                <div class="d-desc">Public activity (trades, governance, wins) feeds your pot's creature. Higher levels unlock badges, loot drops, and exclusive duel access.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected indicator -->
+        <div id="pubSelected" style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--green);margin-top:4px">
+          ✓ Selected
+        </div>
+      </div>
+
+      <!-- PRIVATE CARD -->
+      <div class="type-card private" id="privateCard" onclick="selectType('private')">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div class="type-icon">🔒</div>
+          <span class="type-badge">Alpha Club</span>
+        </div>
+        <div>
+          <div class="type-title">
+            Private POT
+          </div>
+          <div class="type-tagline" style="margin-top:6px">
+            ZK-protected closed vault. Your alpha stays yours. Invite only. Shielded balances, private governance, no on-chain leaks.
+          </div>
+        </div>
+
+        <div class="feature-pills">
+          <span class="fpill">🔐 ZK Shielded</span>
+          <span class="fpill">🔑 Invite Link</span>
+          <span class="fpill">🕵️ Hidden PnL</span>
+          <span class="fpill">🛡️ Umbra SDK</span>
+          <span class="fpill">⚙️ PrivacyCash</span>
+          <span class="fpill">🧩 MagicBlock PER</span>
+        </div>
+
+        <button class="type-details-toggle" id="privToggle" onclick="toggleDetails(event,'privDetails','privToggle')">
+          <span>See all features</span>
+          <span class="arrow">▾</span>
+        </button>
+
+        <div class="type-details" id="privDetails">
+          <div class="detail-section">
+            <div class="detail-section-title">🛡️ Privacy Architecture</div>
+
+            <div class="detail-row">
+              <div class="d-icon">🔐</div>
+              <div class="d-text">
+                <div class="d-title">Shielded Balances (Umbra SDK)</div>
+                <div class="d-desc">Vault balance and member holdings are encrypted on-chain. Only members with viewing keys can see the financials.</div>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="d-icon">🕵️</div>
+              <div class="d-text">
+                <div class="d-title">Private Swaps (PrivacyCash ZK)</div>
+                <div class="d-desc">Trade via ZK-routed Jupiter swaps. On-chain observers see a proof but never the asset, amount, or counterparty.</div>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="d-icon">🧩</div>
+              <div class="d-text">
+                <div class="d-title">MagicBlock Private Ephemeral Rollup</div>
+                <div class="d-desc">Governance proposals and votes execute inside a Private Ephemeral Rollup. Strategies, positions, and votes stay off public state until settled.</div>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="d-icon">🔑</div>
+              <div class="d-text">
+                <div class="d-title">Invite-Only Access</div>
+                <div class="d-desc">New members join exclusively via your unique invite link. No public listing. Treat it as a closed alpha club for your trusted circle.</div>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="d-icon">📋</div>
+              <div class="d-text">
+                <div class="d-title">Viewing Keys for Compliance</div>
+                <div class="d-desc">Generate selective disclosure keys for accountants or regulators. Decrypt exactly what's needed — nothing more. Full audit trail on demand.</div>
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="d-icon">🏛️</div>
+              <div class="d-text">
+                <div class="d-title">Private Governance</div>
+                <div class="d-desc">Proposals and vote tallies are only visible to pot members. Outsiders see no signal about strategy direction or internal activity.</div>
+              </div>
+            </div>
+
+          </div>
+
+          <div style="margin-top:10px">
+            <div class="detail-section-title" style="margin-bottom:8px">⚙️ Privacy Providers</div>
+            <div class="privacy-partners">
+              <span class="ppartner">🛡️ Umbra SDK</span>
+              <span class="ppartner">⚙️ PrivacyCash</span>
+              <span class="ppartner">🧩 MagicBlock PER</span>
+              <span class="ppartner">🧱 Arcium</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected indicator (hidden by default) -->
+        <div id="privSelected" style="display:none;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--purple);margin-top:4px">
+          ✓ Selected
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert under selector -->
+    <div class="alert info" id="typeAlert" style="margin-top:12px">
+      <span>🌐</span>
+      <span><b>Public POT</b> — Your vault will appear in the discovery feed. Anyone can join and deposit. Great for building a following and earning referral fees.</span>
+    </div>
+
+    <div class="cta-row">
+      <button class="btn btn-lg btn-primary" id="step1Next" onclick="goToStep(2)" style="flex:1">
+        Continue with Public POT →
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 2: CONFIGURE ==================== -->
+  <div class="form-section" id="step2">
+
+    <div class="section-title">Step 2 — Configure your POT</div>
+
+    <!-- Basic Config -->
+    <div class="card">
+      <div style="font-size:15px;font-weight:700;margin-bottom:16px">Basic setup</div>
+
+      <div class="field">
+        <label>POT Name</label>
+        <input class="input" type="text" placeholder="e.g. Alpha Degens, Moon Collective…" maxlength="32" id="potName">
+      </div>
+
+      <div class="field">
+        <label>Emoji Icon</label>
+        <div class="emoji-strip" id="emojiStrip">
+          <div class="emoji-opt active" data-emoji="🫕" onclick="pickEmoji(this)">🫕</div>
+          <div class="emoji-opt" data-emoji="🌙" onclick="pickEmoji(this)">🌙</div>
+          <div class="emoji-opt" data-emoji="⚡" onclick="pickEmoji(this)">⚡</div>
+          <div class="emoji-opt" data-emoji="🔥" onclick="pickEmoji(this)">🔥</div>
+          <div class="emoji-opt" data-emoji="🦅" onclick="pickEmoji(this)">🦅</div>
+          <div class="emoji-opt" data-emoji="🐺" onclick="pickEmoji(this)">🐺</div>
+          <div class="emoji-opt" data-emoji="🌊" onclick="pickEmoji(this)">🌊</div>
+          <div class="emoji-opt" data-emoji="💎" onclick="pickEmoji(this)">💎</div>
+          <div class="emoji-opt" data-emoji="🧠" onclick="pickEmoji(this)">🧠</div>
+          <div class="emoji-opt" data-emoji="🚀" onclick="pickEmoji(this)">🚀</div>
+          <div class="emoji-opt" data-emoji="🐻‍❄️" onclick="pickEmoji(this)">🐻‍❄️</div>
+          <div class="emoji-opt" data-emoji="🎯" onclick="pickEmoji(this)">🎯</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Initial Deposit (SOL)</label>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input class="input" type="number" min="0.1" step="0.1" value="1.0" id="initDeposit" style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700">
+          <div style="background:var(--card-2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text-muted);white-space:nowrap">≈ $<span id="usdVal">142</span></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-sm btn-secondary" onclick="setDeposit(0.5)">0.5 SOL</button>
+          <button class="btn btn-sm btn-secondary" onclick="setDeposit(1)">1 SOL</button>
+          <button class="btn btn-sm btn-secondary" onclick="setDeposit(5)">5 SOL</button>
+          <button class="btn btn-sm btn-secondary" onclick="setDeposit(10)">10 SOL</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Starting Strategy</label>
+        <select class="input" id="stratSelect">
+          <option value="dca">📉 DCA — Dollar-Cost Averaging (recommended for beginners)</option>
+          <option value="trend">📈 Trend — Follow momentum signals</option>
+          <option value="reversion">🔁 Mean Reversion — Buy dips, sell peaks</option>
+          <option value="yield">🌾 Yield — Stake / LP for passive income</option>
+          <option value="custom">🧠 Custom — AI agent rules (manual setup)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Public-specific settings -->
+    <div id="publicSettings" class="card">
+      <div style="font-size:15px;font-weight:700;margin-bottom:4px">Social-Fi settings</div>
+      <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:16px">Configure how your community interacts with the pot</div>
+
+      <div class="toggle-row" style="margin-bottom:10px">
+        <div>
+          <div class="toggle-label">Referral System</div>
+          <div class="toggle-sub">Earn % when someone joins via your link</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" checked id="referralToggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row" style="margin-bottom:10px">
+        <div>
+          <div class="toggle-label">Show Strategy Publicly</div>
+          <div class="toggle-sub">Display your AI rules on leaderboard card</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row" style="margin-bottom:10px">
+        <div>
+          <div class="toggle-label">Allow Public Duels</div>
+          <div class="toggle-sub">Other pots can challenge you (requires L3)</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Tamagotchi Visible</div>
+          <div class="toggle-sub">Show your pot creature on the leaderboard</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Private-specific settings -->
+    <div id="privateSettings" class="card" style="display:none">
+      <div style="font-size:15px;font-weight:700;margin-bottom:4px">Privacy settings</div>
+      <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:16px">Choose your ZK privacy stack</div>
+
+      <div class="field">
+        <label>Privacy Provider</label>
+        <div class="provider-grid">
+          <div class="provider-card active" onclick="pickProvider(this,'umbra')">
+            <div class="p-icon">🛡️</div>
+            <div class="p-name">Umbra SDK</div>
+            <div class="p-desc">Confidential transfers + shielded balances on Solana</div>
+          </div>
+          <div class="provider-card" onclick="pickProvider(this,'privacycash')">
+            <div class="p-icon">⚙️</div>
+            <div class="p-name">PrivacyCash</div>
+            <div class="p-desc">ZK proofs for swap privacy + STAMPPOT layer</div>
+          </div>
+          <div class="provider-card" onclick="pickProvider(this,'magicblock')">
+            <div class="p-icon">🧩</div>
+            <div class="p-name">MagicBlock PER</div>
+            <div class="p-desc">Private Ephemeral Rollup for governance & state</div>
+          </div>
+          <div class="provider-card" onclick="pickProvider(this,'arcium')">
+            <div class="p-icon">🧱</div>
+            <div class="p-name">Arcium</div>
+            <div class="p-desc">MPC-based computation on encrypted state</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="toggle-row" style="margin-bottom:10px">
+        <div>
+          <div class="toggle-label">Shielded Balances</div>
+          <div class="toggle-sub">Encrypt vault balance from public view</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row" style="margin-bottom:10px">
+        <div>
+          <div class="toggle-label">Private Governance</div>
+          <div class="toggle-sub">Proposals visible only to members</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Generate Viewing Keys</div>
+          <div class="toggle-sub">For compliance audits (optional)</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- ADVANCED CONFIG ACCORDION -->
+    <div>
+      <div class="advanced-toggle" id="advToggle" onclick="toggleAdvanced()">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:16px">⚙️</span>
+          <div>
+            <div style="color:var(--text);font-size:13px;font-weight:700">Advanced configuration</div>
+            <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;font-weight:400">Governance rules, entry caps, fee structure, max members</div>
+          </div>
+        </div>
+        <span class="adv-arrow" style="font-size:16px">▾</span>
+      </div>
+      <div class="advanced-body" id="advBody">
+        <div class="advanced-inner">
+
+          <!-- Governance -->
+          <div>
+            <div class="section-title">Governance Rules</div>
+            <div class="gov-grid">
+              <div class="field" style="margin-bottom:0">
+                <label>Quorum %</label>
+                <div class="range-wrap">
+                  <input type="range" min="10" max="90" value="40" id="quorum" oninput="document.getElementById('quorumVal').textContent=this.value+'%'">
+                  <span class="range-val" id="quorumVal">40%</span>
+                </div>
+              </div>
+              <div class="field" style="margin-bottom:0">
+                <label>Approval %</label>
+                <div class="range-wrap">
+                  <input type="range" min="50" max="100" value="60" id="approval" oninput="document.getElementById('approvalVal').textContent=this.value+'%'">
+                  <span class="range-val" id="approvalVal">60%</span>
+                </div>
+              </div>
+              <div class="field" style="margin-bottom:0">
+                <label>Voting Window</label>
+                <select class="input">
+                  <option>12 hours</option>
+                  <option selected>24 hours</option>
+                  <option>48 hours</option>
+                  <option>72 hours</option>
+                </select>
+              </div>
+              <div class="field" style="margin-bottom:0">
+                <label>Max Swap % per proposal</label>
+                <div class="range-wrap">
+                  <input type="range" min="5" max="100" value="25" id="maxSwap" oninput="document.getElementById('maxSwapVal').textContent=this.value+'%'">
+                  <span class="range-val" id="maxSwapVal">25%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Entry & Access -->
+          <div>
+            <div class="section-title">Entry & Access</div>
+            <div class="gov-grid">
+              <div class="field" style="margin-bottom:0">
+                <label>Min Deposit (SOL)</label>
+                <input class="input" type="number" min="0" value="0.1" step="0.1" placeholder="0 = no minimum">
+              </div>
+              <div class="field" style="margin-bottom:0">
+                <label>Max Members</label>
+                <input class="input" type="number" min="2" value="50" placeholder="0 = unlimited">
+              </div>
+              <div class="field" style="margin-bottom:0">
+                <label>Max TVL Cap (SOL)</label>
+                <input class="input" type="number" min="0" value="" placeholder="0 = unlimited">
+              </div>
+              <div class="field" style="margin-bottom:0">
+                <label>Require Admin Co-Sign</label>
+                <select class="input">
+                  <option>No (fully decentralized)</option>
+                  <option>Yes (author approves all swaps)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fee structure -->
+          <div>
+            <div class="section-title">Fee Structure</div>
+            <div class="gov-grid">
+              <div class="field" style="margin-bottom:0">
+                <label>Creator PnL Fee %</label>
+                <div class="range-wrap">
+                  <input type="range" min="0" max="20" value="5" id="creatorFee" oninput="document.getElementById('creatorFeeVal').textContent=this.value+'%'">
+                  <span class="range-val" id="creatorFeeVal">5%</span>
+                </div>
+              </div>
+              <div class="field" style="margin-bottom:0">
+                <label>Referral Fee % of creator fee</label>
+                <div class="range-wrap">
+                  <input type="range" min="0" max="50" value="20" id="refFee" oninput="document.getElementById('refFeeVal').textContent=this.value+'%'">
+                  <span class="range-val" id="refFeeVal">20%</span>
+                </div>
+              </div>
+            </div>
+            <div class="alert" style="margin-top:10px;font-size:12px">
+              Creator receives <b id="feePreview">5%</b> of realized PnL. Of that, <b id="refPreview">20%</b> goes to referrers. Rest goes to pot treasury reserve.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-row">
+      <button class="btn btn-lg btn-secondary" onclick="goToStep(1)">← Back</button>
+      <button class="btn btn-lg btn-primary" id="step2Next" onclick="goToStep(3)" style="flex:1">Preview & Launch →</button>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 3: REVIEW & LAUNCH ==================== -->
+  <div class="form-section" id="step3">
+
+    <div class="section-title">Step 3 — Review & Launch</div>
+
+    <div class="summary-card" id="summaryCard">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+        <div style="width:52px;height:52px;border-radius:14px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:26px" id="summaryEmoji">🫕</div>
+        <div>
+          <div style="font-size:20px;font-weight:800;letter-spacing:-.02em" id="summaryName">My POT</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:3px" id="summaryTypeLine">🌐 Public · DCA Strategy</div>
+        </div>
+        <div id="summaryBadge" style="margin-left:auto;font-size:11px;font-weight:700;padding:5px 12px;border-radius:999px;background:rgba(20,241,149,.12);border:1px solid rgba(20,241,149,.3);color:var(--green)">PUBLIC</div>
+      </div>
+
+      <div class="summary-row">
+        <span class="s-label">Initial deposit</span>
+        <span class="s-val mono" id="summaryDeposit">1.0 SOL</span>
+      </div>
+      <div class="summary-row">
+        <span class="s-label">Strategy</span>
+        <span class="s-val" id="summaryStrategy">📉 DCA</span>
+      </div>
+      <div class="summary-row">
+        <span class="s-label">Governance</span>
+        <span class="s-val mono">40% quorum · 60% approval · 24h window</span>
+      </div>
+      <div class="summary-row">
+        <span class="s-label">Privacy</span>
+        <span class="s-val" id="summaryPrivacy">Public · On-chain transparent</span>
+      </div>
+      <div class="summary-row">
+        <span class="s-label">Program</span>
+        <span class="s-val mono" style="font-size:11px">GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK</span>
+      </div>
+      <div class="summary-row">
+        <span class="s-label">Network</span>
+        <span class="s-val" style="display:flex;align-items:center;gap:6px">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>
+          Solana Devnet
+        </span>
+      </div>
+    </div>
+
+    <div class="alert warn" style="margin-top:12px">
+      <span>⚠️</span>
+      <span>This will send a <b>create_pot</b> transaction to Solana devnet. Initial deposit of <b id="warnDeposit">1.0 SOL</b> will be locked into the vault PDA. Make sure your wallet is connected and funded.</span>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">Transaction breakdown</div>
+      <div class="summary-row" style="padding:8px 0">
+        <span class="s-label" style="color:var(--text-muted)">Initial deposit</span>
+        <span class="s-val mono" id="txDeposit">1.000000 SOL</span>
+      </div>
+      <div class="summary-row" style="padding:8px 0">
+        <span class="s-label" style="color:var(--text-muted)">Withdrawal reserve (10%)</span>
+        <span class="s-val mono">0.100000 SOL</span>
+      </div>
+      <div class="summary-row" style="padding:8px 0">
+        <span class="s-label" style="color:var(--text-muted)">Rent (account creation)</span>
+        <span class="s-val mono">≈ 0.002 SOL</span>
+      </div>
+      <div class="summary-row" style="padding:8px 0;border-top:2px solid var(--border-strong)">
+        <span style="font-weight:700">Total required</span>
+        <span class="mono" style="font-weight:700;color:var(--green)" id="txTotal">≈ 1.002 SOL</span>
+      </div>
+    </div>
+
+    <div class="cta-row">
+      <button class="btn btn-lg btn-secondary" onclick="goToStep(2)">← Back</button>
+      <button class="btn btn-lg btn-primary" id="launchBtn" onclick="launchPot()" style="flex:1;font-size:16px">
+        🚀 Create POT on Devnet
+      </button>
+    </div>
+
+    <!-- Success state (hidden) -->
+    <div id="successState" style="display:none;margin-top:24px">
+      <div class="card" style="text-align:center;padding:32px;border-color:rgba(20,241,149,.3);background:rgba(20,241,149,.06)">
+        <div style="font-size:48px;margin-bottom:12px">🫕</div>
+        <div style="font-size:22px;font-weight:800;color:var(--green);margin-bottom:6px">POT Created!</div>
+        <div style="color:var(--text-muted);font-size:13px;margin-bottom:16px">Your vault is live on Solana Devnet</div>
+        <div style="background:var(--card-2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted);word-break:break-all;margin-bottom:16px">
+          Pot PDA: <span id="generatedPDA" style="color:var(--green)">GJap…AmiK</span>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-lg btn-primary" onclick="openPot()">Open POT →</button>
+          <button class="btn btn-lg btn-secondary">Share invite link</button>
+          <button class="btn btn-lg btn-ghost">View on Solscan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+(function(){
+  // Theme
+  var root = document.documentElement;
+  var KEY = 'potbot-theme';
+  try{ var s=localStorage.getItem(KEY); if(s) root.setAttribute('data-theme',s); }catch(_){}
+  document.getElementById('themeToggle').addEventListener('click',function(){
+    var next=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem(KEY,next);}catch(_){}
+  });
+
+  // ── STATE ──────────────────────────────────────────────
+  var state = {
+    type: 'public',
+    emoji: '🫕',
+    currentStep: 1
+  };
+
+  // ── TYPE SELECTOR ──────────────────────────────────────
+  window.selectType = function(type) {
+    state.type = type;
+    var sel = document.getElementById('typeSelector');
+    sel.setAttribute('data-selected', type);
+
+    // selected indicators
+    document.getElementById('pubSelected').style.display = type==='public'?'flex':'none';
+    document.getElementById('privSelected').style.display = type==='private'?'flex':'none';
+
+    // alert
+    var alert = document.getElementById('typeAlert');
+    if(type==='public'){
+      alert.className='alert info';
+      alert.innerHTML='<span>🌐</span><span><b>Public POT</b> — Your vault will appear in the discovery feed. Anyone can join and deposit. Great for building a following and earning referral fees.</span>';
+    } else {
+      alert.className='alert priv';
+      alert.innerHTML='<span>🔒</span><span><b>Private POT</b> — ZK-shielded vault. Invite-only access via unique link. Your strategy, balances, and governance are encrypted. Powered by Umbra SDK + MagicBlock PER.</span>';
+    }
+
+    // CTA button
+    var btn = document.getElementById('step1Next');
+    if(type==='public'){
+      btn.className='btn btn-lg btn-primary';
+      btn.textContent='Continue with Public POT →';
+    } else {
+      btn.className='btn btn-lg btn-purple';
+      btn.textContent='Continue with Private POT →';
+    }
+  };
+
+  window.toggleDetails = function(e, detailsId, toggleId) {
+    e.stopPropagation();
+    var d=document.getElementById(detailsId);
+    var t=document.getElementById(toggleId);
+    var isOpen=d.classList.contains('open');
+    d.classList.toggle('open',!isOpen);
+    t.classList.toggle('open',!isOpen);
+    t.querySelector('span:first-child').textContent=isOpen?'See all features':'Hide features';
+  };
+
+  // ── EMOJI ──────────────────────────────────────────────
+  window.pickEmoji = function(el) {
+    document.querySelectorAll('.emoji-opt').forEach(function(e){ e.classList.remove('active','private-active'); });
+    el.classList.add(state.type==='private'?'private-active':'active');
+    state.emoji = el.dataset.emoji;
+    document.getElementById('summaryEmoji').textContent = state.emoji;
+  };
+
+  // ── DEPOSIT ────────────────────────────────────────────
+  window.setDeposit = function(v) {
+    document.getElementById('initDeposit').value=v;
+    document.getElementById('usdVal').textContent=Math.round(v*142);
+    document.getElementById('summaryDeposit').textContent=v+' SOL';
+    document.getElementById('warnDeposit').textContent=v+' SOL';
+    document.getElementById('txDeposit').textContent=v.toFixed(6)+' SOL';
+    document.getElementById('txTotal').textContent='≈ '+(v+0.002).toFixed(3)+' SOL';
+  };
+  document.getElementById('initDeposit').addEventListener('input',function(){
+    var v=parseFloat(this.value)||0;
+    document.getElementById('usdVal').textContent=Math.round(v*142);
+    document.getElementById('summaryDeposit').textContent=v+' SOL';
+    document.getElementById('warnDeposit').textContent=v+' SOL';
+    document.getElementById('txDeposit').textContent=v.toFixed(6)+' SOL';
+    document.getElementById('txTotal').textContent='≈ '+(v+0.002).toFixed(3)+' SOL';
+  });
+
+  // ── PROVIDER PICKER ────────────────────────────────────
+  window.pickProvider = function(el) {
+    document.querySelectorAll('.provider-card').forEach(function(c){c.classList.remove('active');});
+    el.classList.add('active');
+  };
+
+  // ── ADVANCED TOGGLE ────────────────────────────────────
+  window.toggleAdvanced = function() {
+    var body=document.getElementById('advBody');
+    var toggle=document.getElementById('advToggle');
+    var isOpen=body.classList.contains('open');
+    body.classList.toggle('open',!isOpen);
+    toggle.classList.toggle('open',!isOpen);
+  };
+
+  // ── STEP NAVIGATION ────────────────────────────────────
+  window.goToStep = function(n) {
+    // hide all
+    [1,2,3].forEach(function(i){
+      document.getElementById('step'+i).classList.remove('active');
+      var ind=document.getElementById('step'+i+'Indicator');
+      if(i<n) { ind.classList.remove('active'); ind.classList.add('done'); document.getElementById('step'+i+'Num').textContent='✓'; }
+      else if(i===n) { ind.classList.add('active'); ind.classList.remove('done'); document.getElementById('step'+i+'Num').textContent=i; }
+      else { ind.classList.remove('active','done'); document.getElementById('step'+i+'Num').textContent=i; }
+    });
+    // lines
+    document.getElementById('line1').style.background = n>1 ? 'var(--green)' : 'var(--border)';
+    document.getElementById('line2').style.background = n>2 ? 'var(--green)' : 'var(--border)';
+
+    document.getElementById('step'+n).classList.add('active');
+    state.currentStep=n;
+
+    // update step 2 content based on type
+    if(n===2){
+      var isPub=state.type==='public';
+      document.getElementById('publicSettings').style.display=isPub?'':'none';
+      document.getElementById('privateSettings').style.display=isPub?'none':'';
+      document.getElementById('step2Next').className='btn btn-lg '+(isPub?'btn-primary':'btn-purple');
+
+      // emoji active class
+      document.querySelectorAll('.emoji-opt').forEach(function(e){
+        e.classList.remove('active','private-active');
+      });
+      var first=document.querySelector('.emoji-opt[data-emoji="🫕"]');
+      if(first) first.classList.add(isPub?'active':'private-active');
+    }
+
+    // update step 3 summary
+    if(n===3){
+      var name=document.getElementById('potName').value||'My POT';
+      var isPub=state.type==='public';
+      var strat=document.getElementById('stratSelect');
+      var stratText=strat.options[strat.selectedIndex].text.split('—')[0].trim();
+      document.getElementById('summaryEmoji').textContent=state.emoji;
+      document.getElementById('summaryName').textContent=name;
+      document.getElementById('summaryTypeLine').textContent=(isPub?'🌐 Public':'🔒 Private')+' · '+stratText;
+      document.getElementById('summaryBadge').textContent=isPub?'PUBLIC':'PRIVATE';
+      document.getElementById('summaryBadge').style.background=isPub?'rgba(20,241,149,.12)':'rgba(153,69,255,.12)';
+      document.getElementById('summaryBadge').style.borderColor=isPub?'rgba(20,241,149,.3)':'rgba(153,69,255,.3)';
+      document.getElementById('summaryBadge').style.color=isPub?'var(--green)':'var(--purple)';
+      document.getElementById('summaryCard').className='summary-card'+(isPub?'':' private-mode');
+      document.getElementById('summaryStrategy').textContent=stratText;
+      document.getElementById('summaryPrivacy').textContent=isPub?'Public · On-chain transparent':'ZK Shielded · Umbra SDK + MagicBlock PER';
+      var launchBtn=document.getElementById('launchBtn');
+      launchBtn.className='btn btn-lg '+(isPub?'btn-primary':'btn-purple')+' ';
+      launchBtn.style.flex='1'; launchBtn.style.fontSize='16px';
+    }
+
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+
+  // ── LAUNCH SIMULATION ──────────────────────────────────
+  window.launchPot = function() {
+    var btn=document.getElementById('launchBtn');
+    btn.disabled=true;
+    btn.textContent='⏳ Signing transaction…';
+    setTimeout(function(){
+      btn.textContent='📡 Broadcasting to Solana…';
+      setTimeout(function(){
+        btn.textContent='✅ Confirmed!';
+        btn.style.opacity='.7';
+        document.getElementById('successState').style.display='block';
+        // random PDA
+        var chars='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz123456789';
+        var pda='';
+        for(var i=0;i<44;i++) pda+=chars[Math.floor(Math.random()*chars.length)];
+        document.getElementById('generatedPDA').textContent=pda.slice(0,4)+'…'+pda.slice(-4);
+        document.getElementById('successState').scrollIntoView({behavior:'smooth',block:'center'});
+      },1200);
+    },1400);
+  };
+
+  window.openPot = function(){
+    window.location.href='potbot-dapp-unified.html';
+  };
+
+  // fee preview update
+  document.getElementById('creatorFee').addEventListener('input',function(){
+    document.getElementById('feePreview').textContent=this.value+'%';
+  });
+  document.getElementById('refFee').addEventListener('input',function(){
+    document.getElementById('refPreview').textContent=this.value+'%';
+  });
+
+})();
+</script>
+</body>
+</html>
