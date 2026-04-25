@@ -229,7 +229,19 @@ async function main() {
     new anchor.Wallet(wallet),
     { commitment: "confirmed", skipPreflight: false }
   );
-  const program = new anchor.Program(idl, PROGRAM_ID, provider);
+  anchor.setProvider(provider);
+
+  // Pre-check: verify BorshCoder initializes (Anchor 0.32 format)
+  try {
+    const _coder = new anchor.BorshCoder(idl);
+    log(`BorshCoder OK — PotAccount size: ${_coder.accounts.size("PotAccount")}`);
+  } catch (e: any) {
+    fail(`BorshCoder init failed: ${e.message}`);
+    return;
+  }
+
+  // Anchor 0.32: Program(idl, provider) — programId comes from idl.address
+  const program = new anchor.Program(idl, provider);
 
   // Derive PDAs
   const [potPda] = getPotPda(POT_NAME, wallet.publicKey);
