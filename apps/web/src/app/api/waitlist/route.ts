@@ -12,6 +12,7 @@ interface DevEntry {
   created_at: string
 }
 const devWaitlist = new Map<string, DevEntry>()
+const waitlistWindows = new Map<string, { count: number; windowStart: number }>()
 
 // Source values we expect from the front-end. Anything else is coerced to 'other'.
 const ALLOWED_SOURCES = new Set(['landing', 'signup', 'telegram', 'twitter', 'referral'])
@@ -40,9 +41,44 @@ function cleanWallet(raw: unknown): string | null {
   }
 }
 
+function getClientIp(req: NextRequest): string {
+  return (
+    req.headers.get('cf-connecting-ip') ??
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    req.headers.get('x-real-ip') ??
+    'unknown'
+  )
+}
+
+function isRateLimited(req: NextRequest, maxPerMinute = 8): boolean {
+  const ip = getClientIp(req)
+  const key = `wl:${ip}`
+  const now = Date.now()
+  const windowMs = 60_000
+  const entry = waitlistWindows.get(key)
+
+  if (!entry || now - entry.windowStart > windowMs) {
+    waitlistWindows.set(key, { count: 1, windowStart: now })
+    return false
+  }
+
+  entry.count += 1
+  return entry.count > maxPerMinute
+}
+
 export async function POST(req: NextRequest) {
   try {
+    if (isRateLimited(req)) {
+      return NextResponse.json({ error: 'Too many requests. Try again in a minute.' }, { status: 429 })
+    }
+
     const body = await req.json().catch(() => ({}))
+
+    // Honeypot field for basic bot filtering. Real UI does not send it.
+    if (typeof body.website === 'string' && body.website.trim().length > 0) {
+      return NextResponse.json({ success: true })
+    }
+
     const email = (body.email ?? '').toString().trim().toLowerCase()
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {

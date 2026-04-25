@@ -597,6 +597,32 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Trust & Risk ── */}
+      <section className="max-w-6xl mx-auto px-4 pb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          {[
+            { k: 'Network', v: 'Solana Devnet', sub: 'Mainnet rollout after hardening' },
+            { k: 'Custody', v: 'Program-controlled vaults', sub: 'No bot-held treasury keys' },
+            { k: 'Execution', v: 'Vote-gated actions', sub: 'AI proposes, members approve' },
+            { k: 'Status', v: 'Live API health', sub: 'Public endpoint: /api/health' },
+          ].map((item) => (
+            <div key={item.k} className="card p-4">
+              <div className="text-[11px] uppercase tracking-wider text-pot-muted">{item.k}</div>
+              <div className="text-white font-bold mt-1">{item.v}</div>
+              <div className="text-xs text-pot-muted mt-1">{item.sub}</div>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-pot-muted mt-4 text-center">
+          Risk disclosure: DeFi strategies can lose principal. Start with demo mode and small sizes.
+        </p>
+        <div className="text-center mt-2">
+          <Link href="/status" className="text-xs text-pot-green hover:underline">
+            View public status checks →
+          </Link>
+        </div>
+      </section>
+
       {/* ── Features grid ── */}
       <section className="max-w-6xl mx-auto px-4 py-16">
         <div className="text-center mb-12">

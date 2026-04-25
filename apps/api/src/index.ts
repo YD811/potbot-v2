@@ -20,6 +20,7 @@ const app = new Hono()
 app.use('*', cors({
   origin: (origin) => {
     const allowed = (process.env.CORS_ORIGINS ?? 'http://localhost:3000').split(',')
+    if (!origin) return allowed[0]
     return allowed.includes(origin) || origin.endsWith('.vercel.app') ? origin : allowed[0]
   },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
