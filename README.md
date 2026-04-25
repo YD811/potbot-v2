@@ -8,7 +8,7 @@ PotBot is a Solana protocol for groups who prefer on-chain votes over chat-based
 
 Built for [Solana Frontier 2026](https://colosseum.com/frontier) · [@PotBot_sol](https://twitter.com/PotBot_sol) · [@CryptoYDao](https://twitter.com/CryptoYDao) · Y-DAO Amsterdam
 
-[![Build](https://img.shields.io/badge/build-passing-00ff88?style=flat-square)](https://github.com/YD811/potbot-v2)
+[![CI](https://github.com/YD811/potbot-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/YD811/potbot-v2/actions/workflows/ci.yml)
 [![Solana](https://img.shields.io/badge/Solana-devnet-9945FF?style=flat-square)](https://solana.com)
 [![Anchor](https://img.shields.io/badge/Anchor-0.30.1-blue?style=flat-square)](https://anchor-lang.com)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square)](https://nextjs.org)
