@@ -123,4 +123,29 @@ Before submitting `execute_swap`, the keeper calls `/svm/balances` to confirm th
 **4. Leaderboard TVL (`/svm/balances` parallel fetch)**  
 The public pot leaderboard aggregates real USD TVL across all active vaults using batched Dune SIM calls — no custom indexer required.
 
+---
+
+## Release
+
+**v0.9.0-hackathon** — April 25, 2026
+
+Tag: `v0.9.0-hackathon` · Target: `main` · [View release](https://github.com/YD811/potbot-v2/releases/tag/v0.9.0-hackathon)
+
+This pre-release represents the full hackathon submission state. All core protocol instructions are written and deployed on devnet. The DApp runs in demo mode at potbot.fun.
+
+---
+
+## Judges Checklist
+
+| What to test | How |
+|---|---|
+| 🌐 Live DApp | https://potbot.fun — no wallet needed |
+| 🔌 MCP tools | `npx @potbot/mcp` then use Claude |
+| 📖 Full docs | [docs/OVERVIEW.md](OVERVIEW.md) |
+| 🔗 On-chain program | `2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL` on devnet |
+| 📊 Analytics API | `curl https://api.potbot.fun/health` |
+| 🏆 Leaderboard | https://potbot.fun/leaderboard |
+| 🤖 AI Agent tab | Open any vault → AI Agent tab |
+| 🌿 Money Tree | Create vault → watch stage evolve |
+
 Files added: `apps/web/src/lib/dune.ts`, `apps/web/src/hooks/useDunePortfolio.ts`, `apps/web/src/hooks/useDuneTrades.ts`, `apps/web/src/components/VaultPortfolio.tsx`, `apps/keeper/src/dune.ts`
