@@ -142,7 +142,7 @@ This pre-release represents the full hackathon submission state. All core protoc
 | 🌐 Live DApp | https://potbot.fun — no wallet needed |
 | 🔌 MCP tools | `npx @potbot/mcp` then use Claude |
 | 📖 Full docs | [docs/OVERVIEW.md](OVERVIEW.md) |
-| 🔗 On-chain program | `2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL` on devnet |
+| 🔗 On-chain program | `GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK` on devnet |
 | 📊 Analytics API | `curl https://api.potbot.fun/health` |
 | 🏆 Leaderboard | https://potbot.fun/leaderboard |
 | 🤖 AI Agent tab | Open any vault → AI Agent tab |
