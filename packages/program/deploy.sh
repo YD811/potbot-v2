@@ -29,7 +29,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
 # Program ID must match declare_id! in lib.rs and Anchor.toml
-PROGRAM_ID="2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL"
+PROGRAM_ID="GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK"
 KEYPAIR_PATH="target/deploy/pot_vault-keypair.json"
 SO_FILE="target/deploy/pot_vault.so"
 

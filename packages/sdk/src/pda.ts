@@ -7,7 +7,7 @@ import { PublicKey } from '@solana/web3.js';
 // to a different address.
 export const PROGRAM_ID = new PublicKey(
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_PROGRAM_ID) ||
-  '2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL'
+  'GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK'
 );
 
 // Back-compat alias — some callers import this name.

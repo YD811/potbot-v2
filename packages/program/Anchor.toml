@@ -3,10 +3,10 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-pot_vault = "2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL"
+pot_vault = "GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK"
 
 [programs.devnet]
-pot_vault = "2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL"
+pot_vault = "GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK"
 
 # ──────────────────────────────────────────────────────────────────────────
 # MAINNET — replace placeholder below with the pubkey of

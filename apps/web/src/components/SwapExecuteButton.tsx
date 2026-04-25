@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useConnection, useWallet } from '@solana/wallet-adapter-react'
-import { VersionedTransaction } from '@solana/web3.js'
+import { useState, useEffect, useMemo } from 'react'
+import { useConnection, useWallet, useAnchorWallet } from '@solana/wallet-adapter-react'
+import { BN } from '@coral-xyz/anchor'
+import { PublicKey } from '@solana/web3.js'
+import { getVaultAddress } from '@potbot/sdk'
 import { getDecimals } from '@/lib/jupiter-swap'
+import { createPotbotClient } from '@/lib/potbot-client'
 
 export interface SwapMeta {
   inputMint: string
@@ -27,12 +30,19 @@ const DEVNET_SOLSCAN = (sig: string) => `https://solscan.io/tx/${sig}?cluster=de
 export default function SwapExecuteButton({ proposalPubkey, potAddress, swapMeta: propsMeta, onSuccess }: Props) {
   const { connection } = useConnection()
   const { publicKey, signTransaction } = useWallet()
+  const anchorWallet = useAnchorWallet()
 
   const [meta,    setMeta]    = useState<SwapMeta | null>(propsMeta ?? null)
   const [status,  setStatus]  = useState<'idle' | 'quoting' | 'signing' | 'sending' | 'done' | 'error'>('idle')
   const [txSig,   setTxSig]   = useState<string | null>(null)
   const [error,   setError]   = useState<string | null>(null)
   const [preview, setPreview] = useState<{ route: string; outAmount: string; priceImpact: string } | null>(null)
+
+  const mockModeEnabled = process.env.NEXT_PUBLIC_MOCK_MODE === 'true'
+  const potbotClient = useMemo(() => {
+    if (!anchorWallet) return null
+    return createPotbotClient(connection, anchorWallet)
+  }, [connection, anchorWallet])
 
   // Load swap meta from server (replaces localStorage)
   useEffect(() => {
@@ -50,65 +60,104 @@ export default function SwapExecuteButton({ proposalPubkey, potAddress, swapMeta
   const inUi = meta.amountLamports / Math.pow(10, inDecimals)
 
   async function handleExecute() {
-    if (!publicKey || !signTransaction) {
+    if (!publicKey) {
       setError('Connect wallet to execute')
       return
     }
+
     setError(null)
-    setStatus('quoting')
 
     try {
-      // 1. Get Jupiter tx from API
-      const res = await fetch(`/api/proposals/${proposalPubkey}/execute`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          inputMint:       meta!.inputMint,
-          outputMint:      meta!.outputMint,
-          amountLamports:  meta!.amountLamports,
-          slippageBps:     50,
-          signerPublicKey: publicKey.toBase58(),
-        }),
-      })
+      if (mockModeEnabled) {
+        if (!signTransaction) {
+          setError('Wallet does not support signing transactions')
+          return
+        }
 
-      const data = await res.json()
-      if (!res.ok || !data.swapTransaction) {
-        throw new Error(data.error ?? 'Failed to build swap transaction')
+        setStatus('quoting')
+
+        // Existing mock/Jupiter path
+        const res = await fetch(`/api/proposals/${proposalPubkey}/execute`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            inputMint:       meta.inputMint,
+            outputMint:      meta.outputMint,
+            amountLamports:  meta.amountLamports,
+            slippageBps:     50,
+            signerPublicKey: publicKey.toBase58(),
+          }),
+        })
+
+        const data = await res.json()
+        if (!res.ok || !data.swapTransaction) {
+          throw new Error(data.error ?? 'Failed to build swap transaction')
+        }
+
+        setPreview({
+          route:       data.route,
+          outAmount:   (Number(data.outAmount) / Math.pow(10, outDecimals)).toFixed(4),
+          priceImpact: (parseFloat(data.priceImpactPct) * 100).toFixed(3),
+        })
+
+        setStatus('signing')
+        const { VersionedTransaction } = await import('@solana/web3.js')
+        const txBytes = Buffer.from(data.swapTransaction, 'base64')
+        const tx = VersionedTransaction.deserialize(txBytes)
+        const signedTx = await signTransaction(tx)
+
+        setStatus('sending')
+        const rawTx = signedTx.serialize()
+        const sig = await connection.sendRawTransaction(rawTx, {
+          skipPreflight:        false,
+          preflightCommitment:  'confirmed',
+          maxRetries:           3,
+        })
+
+        const lbh = await connection.getLatestBlockhash()
+        await connection.confirmTransaction({ signature: sig, ...lbh }, 'confirmed')
+
+        setTxSig(sig)
+        setStatus('done')
+        onSuccess?.(sig)
+      } else {
+        if (!potbotClient) {
+          setError('Anchor wallet unavailable for on-chain call')
+          return
+        }
+        if (!connection.rpcEndpoint.includes('devnet')) {
+          throw new Error('Only devnet is supported for execute_swap')
+        }
+
+        setStatus('sending')
+
+        const potPk = new PublicKey(potAddress)
+        const [vaultPk] = getVaultAddress(potPk)
+
+        const sig = await potbotClient.executeSwap(
+          {
+            fromMint: new PublicKey(meta.inputMint),
+            toMint: new PublicKey(meta.outputMint),
+            amountIn: new BN(meta.amountLamports),
+            minAmountOut: new BN(0),
+          },
+          {
+            pot: potPk,
+            vault: vaultPk,
+            authority: publicKey,
+          },
+        )
+
+        setTxSig(sig)
+        setStatus('done')
+        onSuccess?.(sig)
       }
 
-      setPreview({
-        route:       data.route,
-        outAmount:   (Number(data.outAmount) / Math.pow(10, outDecimals)).toFixed(4),
-        priceImpact: (parseFloat(data.priceImpactPct) * 100).toFixed(3),
-      })
-
-      // 2. Deserialize + sign
-      setStatus('signing')
-      const txBytes = Buffer.from(data.swapTransaction, 'base64')
-      const tx = VersionedTransaction.deserialize(txBytes)
-      const signedTx = await signTransaction(tx)
-
-      // 3. Send
-      setStatus('sending')
-      const rawTx = signedTx.serialize()
-      const sig = await connection.sendRawTransaction(rawTx, {
-        skipPreflight:        false,
-        preflightCommitment:  'confirmed',
-        maxRetries:           3,
-      })
-
-      const lbh = await connection.getLatestBlockhash()
-      await connection.confirmTransaction({ signature: sig, ...lbh }, 'confirmed')
-
-      setTxSig(sig)
-      setStatus('done')
-      onSuccess?.(sig)
-
-      // Clean up meta from server
       fetch(`/api/proposals/${proposalPubkey}/meta`, { method: 'DELETE' }).catch(() => {})
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
       console.error('Swap execute error:', e)
-      setError(e?.message ?? String(e))
+      setError(message)
       setStatus('error')
     }
   }
@@ -136,7 +185,7 @@ export default function SwapExecuteButton({ proposalPubkey, potAddress, swapMeta
     idle:    `⚡ Execute: ${inUi.toFixed(3)} ${meta.inputSymbol ?? 'SOL'} → ${meta.outputSymbol ?? '?'}`,
     quoting: '🔍 Getting quote...',
     signing: '✍️ Sign in wallet...',
-    sending: '📡 Sending...',
+    sending: mockModeEnabled ? '📡 Sending...' : '⛓️ Calling execute_swap...',
     done:    '✅ Done!',
     error:   '⚡ Retry Execute',
   }
