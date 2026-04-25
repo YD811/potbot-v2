@@ -1,5 +1,51 @@
 # @potbot/mcp Changelog
 
+## 0.4.0 — 2026-04-25
+
+### Personal AI Voters — real on-chain delegation
+- New on-chain program upgrade (devnet `GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK`):
+  - `register_delegate(delegate, rules_uri)` — member registers a delegate wallet
+    (typically an AI agent) that may sign votes on their behalf.
+  - `revoke_delegate()` — member revokes the delegation; the PDA is preserved
+    for audit trail.
+  - `vote_as_delegate(approve)` — delegate signer submits a real on-chain vote;
+    weight comes from `member.shares`, double-vote prevented because
+    `VoterRecord` is keyed by the member's wallet (not the delegate's).
+- `MemberDelegate` PDA: `[b"delegate", pot, member]` carries the delegate
+  pubkey, IPFS / Arweave / https `rules_uri` for off-chain transparency,
+  scope mask (reserved), and registered_at / revoked_at timestamps.
+
+### MCP — new tools (4)
+- `register_delegate` — builds the registration ix. Self-signs and submits
+  if `AGENT_KEYPAIR` is the member; otherwise returns base64 unsigned tx
+  for the member's wallet.
+- `revoke_delegate` — same pattern for revocation.
+- `check_delegate` — reads the on-chain MemberDelegate PDA: delegate pubkey,
+  rules URI, registered/revoked timestamps, active flag.
+- `agent_status` — exposes the AI delegate identity loaded by the MCP server
+  (pubkey, devnet SOL balance, source format).
+
+### MCP — `vote_on_proposal` upgrade
+When `proposal_pubkey` and `member_wallet` are passed AND `AGENT_KEYPAIR` is
+loaded AND a matching active delegation exists on-chain, the tool now
+**signs and submits a real `vote_as_delegate` transaction**, returning the
+signature and Solana Explorer link. Falls back to a dApp signing link
+otherwise. This is the first MCP tool in the server that produces real
+on-chain effects rather than instructions for a human signer.
+
+### MCP — internals
+- New `src/anchor.ts` module: discriminator computation
+  (`sha256("global:<snake>")[..8]`), PDA helpers, raw instruction builders,
+  keypair loading (base58 or JSON-array env), tx signing/sending, base64
+  serialization. Deliberately does NOT depend on the IDL — the committed
+  IDL is partial and would drift again.
+- Added `bs58` dependency.
+
+### Verification
+On-chain instructions confirmed via simulateTransaction against devnet —
+program logs `Instruction: RegisterDelegate` and `Instruction: VoteAsDelegate`,
+proving the deployed bytecode recognizes the new entrypoints.
+
 ## 0.3.0 — 2026-04-25
 
 ### Real data (replaces mocks)

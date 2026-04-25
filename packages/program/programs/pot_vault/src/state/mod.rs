@@ -1,6 +1,7 @@
 // Core pot state
 pub mod pot;
 pub mod member;
+pub mod member_delegate;
 pub mod proposal;
 pub mod voter_record;
 pub mod strategy_vault;
@@ -14,6 +15,7 @@ pub mod proposal_swap;
 
 pub use pot::*;
 pub use member::*;
+pub use member_delegate::*;
 pub use proposal::*;
 pub use voter_record::*;
 pub use strategy_vault::*;

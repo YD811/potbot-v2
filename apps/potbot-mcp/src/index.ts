@@ -31,6 +31,20 @@ import {
   ListPromptsRequestSchema,
   GetPromptRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js'
+import { PublicKey } from '@solana/web3.js'
+import {
+  POT_VAULT_PROGRAM_ID,
+  buildRegisterDelegateIx,
+  buildRevokeDelegateIx,
+  buildVoteAsDelegateIx,
+  loadAgentKeypair,
+  sendIxs,
+  unsignedTxBase64,
+  readMemberDelegate,
+  getConnection,
+  delegatePda,
+  rpcUrl,
+} from './anchor.js'
 
 // ── Config ─────────────────────────────────────────────────────────────────
 const POTBOT_API  = process.env.POTBOT_API_URL  ?? 'https://api.potbot.fun'
@@ -454,16 +468,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'vote_on_proposal',
-      description: 'Cast a vote (yes/no) on an active governance proposal in a vault. Returns voting link for wallet signature.',
+      description: 'Cast a vote on a governance proposal. If `proposal_pubkey` and `member_wallet` are provided AND this MCP server has AGENT_KEYPAIR + a registered delegation for that member → submits a real on-chain `vote_as_delegate` tx. Otherwise returns a dApp signing link.',
       inputSchema: {
         type: 'object',
         properties: {
-          vault_pubkey: { type: 'string', description: 'Vault public key' },
-          proposal_id:  { type: 'number', description: 'Proposal ID number' },
-          approve:      { type: 'boolean', description: 'true = YES vote, false = NO vote' },
-          reasoning:    { type: 'string', description: 'Optional explanation for the vote' },
+          vault_pubkey:    { type: 'string', description: 'Pot/vault public key' },
+          proposal_pubkey: { type: 'string', description: 'On-chain proposal account pubkey (required for real on-chain vote)' },
+          proposal_id:     { type: 'number', description: 'Proposal ID — only used to build the dApp deep-link fallback' },
+          member_wallet:   { type: 'string', description: 'The member wallet whose voting power is being delegated. Required for real on-chain vote.' },
+          approve:         { type: 'boolean', description: 'true = YES, false = NO' },
+          reasoning:       { type: 'string', description: 'Optional explanation, logged off-chain' },
         },
-        required: ['vault_pubkey', 'proposal_id', 'approve'],
+        required: ['vault_pubkey', 'approve'],
       },
     },
     {
@@ -510,6 +526,49 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           vault_pubkey: { type: 'string', description: 'Vault public key' },
         },
         required: ['vault_pubkey'],
+      },
+    },
+    {
+      name: 'agent_status',
+      description: 'Report the AI delegate identity available to this MCP server: its pubkey, devnet SOL balance, and whether AGENT_KEYPAIR is loaded. Use this to confirm what wallet will sign on-chain votes.',
+      inputSchema: { type: 'object', properties: {} },
+    },
+    {
+      name: 'register_delegate',
+      description: 'Build the on-chain transaction for a member to register a delegate (typically this MCP agent) for voting on a vault. Returns either a base64 unsigned tx for the member to sign in their wallet, or a signature if AGENT_KEYPAIR is itself the member.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          vault_pubkey:    { type: 'string', description: 'Pot/vault public key' },
+          member_wallet:   { type: 'string', description: 'Member wallet (will sign the registration). If omitted and AGENT_KEYPAIR is set, the agent registers itself (must already be a pot member).' },
+          delegate_wallet: { type: 'string', description: 'Wallet to delegate voting to. If omitted, defaults to AGENT_KEYPAIR pubkey.' },
+          rules_uri:       { type: 'string', description: 'IPFS / Arweave / https URI describing the delegate\'s voting policy (transparency).' },
+        },
+        required: ['vault_pubkey'],
+      },
+    },
+    {
+      name: 'revoke_delegate',
+      description: 'Build the on-chain transaction for a member to revoke their existing delegation. Returns base64 unsigned tx for member to sign, or signature if AGENT_KEYPAIR is itself the member.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          vault_pubkey:  { type: 'string', description: 'Pot/vault public key' },
+          member_wallet: { type: 'string', description: 'Member wallet (will sign the revoke). If omitted, defaults to AGENT_KEYPAIR pubkey.' },
+        },
+        required: ['vault_pubkey'],
+      },
+    },
+    {
+      name: 'check_delegate',
+      description: 'Read the on-chain MemberDelegate PDA for a (vault, member). Returns delegate pubkey, rules URI, registered/revoked timestamps, active flag.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          vault_pubkey:  { type: 'string', description: 'Pot/vault public key' },
+          member_wallet: { type: 'string', description: 'Member wallet whose delegation we are inspecting' },
+        },
+        required: ['vault_pubkey', 'member_wallet'],
       },
     },
   ],
@@ -664,20 +723,227 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       // ── vote_on_proposal ─────────────────────────────────────────────────
       case 'vote_on_proposal': {
-        const { vault_pubkey, proposal_id, approve, reasoning } = args as any
-        if (!vault_pubkey || proposal_id == null || approve == null) {
-          throw new Error('vault_pubkey, proposal_id, approve are required')
+        const { vault_pubkey, proposal_pubkey, proposal_id, member_wallet, approve, reasoning } = args as any
+        if (!vault_pubkey || approve == null) {
+          throw new Error('vault_pubkey and approve are required')
         }
 
+        // Real on-chain delegate vote path
+        if (proposal_pubkey && member_wallet) {
+          const agent = loadAgentKeypair()
+          if (!agent) {
+            return text({
+              action: 'vote',
+              status: 'no_agent_keypair',
+              vault_pubkey, proposal_pubkey, member_wallet, approve,
+              note: 'Set AGENT_KEYPAIR env (base58 secret key or JSON array) to enable real on-chain delegate voting. Falling back to dApp link.',
+              dapp_url: `https://potbot.fun/pots/${vault_pubkey}?tab=governance${proposal_id != null ? `&proposal=${proposal_id}` : ''}`,
+            })
+          }
+
+          const pot = new PublicKey(vault_pubkey)
+          const proposal = new PublicKey(proposal_pubkey)
+          const member = new PublicKey(member_wallet)
+
+          // Check delegation exists & active & names this agent
+          const delegation = await readMemberDelegate(pot, member)
+          if (!delegation.exists) {
+            throw new Error(`No delegation registered for member ${member_wallet} in vault ${vault_pubkey}. Call register_delegate first.`)
+          }
+          if (!delegation.active) {
+            throw new Error(`Delegation for member ${member_wallet} was revoked at unix ${delegation.revoked_at}`)
+          }
+          if (delegation.delegate?.toBase58() !== agent.publicKey.toBase58()) {
+            throw new Error(`Delegation names ${delegation.delegate?.toBase58()} but this MCP agent is ${agent.publicKey.toBase58()}. Cannot vote.`)
+          }
+
+          const ix = buildVoteAsDelegateIx({
+            pot,
+            proposal,
+            memberWallet: member,
+            delegateSigner: agent.publicKey,
+            approve: !!approve,
+          })
+
+          try {
+            const sig = await sendIxs([ix], [agent])
+            return text({
+              action: 'vote_as_delegate',
+              status: 'submitted',
+              network: NETWORK,
+              vault_pubkey,
+              proposal_pubkey,
+              member_wallet,
+              delegate_signer: agent.publicKey.toBase58(),
+              vote: approve ? 'YES ✅' : 'NO ❌',
+              reasoning: reasoning ?? null,
+              signature: sig,
+              explorer_url: `https://explorer.solana.com/tx/${sig}?cluster=${NETWORK}`,
+              rules_uri: delegation.rules_uri,
+            })
+          } catch (err: any) {
+            throw new Error(`On-chain vote_as_delegate failed: ${err.message ?? String(err)}`)
+          }
+        }
+
+        // Fallback: dApp signing link (legacy / no on-chain context)
         return text({
           action:      'vote',
+          status:      'pending_signature',
           vault_pubkey,
-          proposal_id,
+          proposal_id: proposal_id ?? null,
           vote:        approve ? 'YES ✅' : 'NO ❌',
           reasoning:   reasoning ?? 'Agent vote',
-          status:      'pending_signature',
-          next_step:   'Connect your wallet at the dApp to sign the vote transaction.',
-          dapp_url:    `${POTBOT_API}/pots/${vault_pubkey}?tab=governance&proposal=${proposal_id}`,
+          note:        'For real on-chain vote: pass proposal_pubkey + member_wallet (with active delegation to this agent). Otherwise sign in dApp.',
+          dapp_url:    `https://potbot.fun/pots/${vault_pubkey}?tab=governance${proposal_id != null ? `&proposal=${proposal_id}` : ''}`,
+        })
+      }
+
+      // ── agent_status ─────────────────────────────────────────────────────
+      case 'agent_status': {
+        let agentInfo: any = { configured: false, source: 'no AGENT_KEYPAIR env' }
+        try {
+          const kp = loadAgentKeypair()
+          if (kp) {
+            const conn = getConnection()
+            const balance = await conn.getBalance(kp.publicKey).catch(() => 0)
+            agentInfo = {
+              configured: true,
+              pubkey: kp.publicKey.toBase58(),
+              balance_sol: balance / 1e9,
+              source: process.env.AGENT_KEYPAIR?.startsWith('[') ? 'json-array' : 'base58',
+            }
+          }
+        } catch (err: any) {
+          agentInfo = { configured: false, error: err.message ?? String(err) }
+        }
+        return text({
+          agent: agentInfo,
+          program_id: POT_VAULT_PROGRAM_ID.toBase58(),
+          rpc_url: rpcUrl(),
+          network: NETWORK,
+          tools_requiring_agent: ['vote_on_proposal (real on-chain)', 'register_delegate (when self-registering)', 'revoke_delegate (when self-revoking)'],
+        })
+      }
+
+      // ── register_delegate ────────────────────────────────────────────────
+      case 'register_delegate': {
+        const { vault_pubkey, member_wallet, delegate_wallet, rules_uri } = args as any
+        if (!vault_pubkey) throw new Error('vault_pubkey required')
+
+        const agent = loadAgentKeypair()
+        const pot = new PublicKey(vault_pubkey)
+
+        const memberKey = member_wallet
+          ? new PublicKey(member_wallet)
+          : (agent?.publicKey ?? null)
+        if (!memberKey) throw new Error('member_wallet required (or set AGENT_KEYPAIR for self-registration)')
+
+        const delegateKey = delegate_wallet
+          ? new PublicKey(delegate_wallet)
+          : (agent?.publicKey ?? null)
+        if (!delegateKey) throw new Error('delegate_wallet required (or set AGENT_KEYPAIR to delegate to the agent itself)')
+
+        const ix = buildRegisterDelegateIx({
+          pot,
+          memberWallet: memberKey,
+          delegate: delegateKey,
+          rulesUri: rules_uri ?? '',
+        })
+
+        // If the agent IS the member, sign and submit directly
+        if (agent && agent.publicKey.equals(memberKey)) {
+          try {
+            const sig = await sendIxs([ix], [agent])
+            return text({
+              action: 'register_delegate',
+              status: 'submitted',
+              vault_pubkey,
+              member_wallet: memberKey.toBase58(),
+              delegate_wallet: delegateKey.toBase58(),
+              rules_uri: rules_uri ?? '',
+              signature: sig,
+              explorer_url: `https://explorer.solana.com/tx/${sig}?cluster=${NETWORK}`,
+            })
+          } catch (err: any) {
+            throw new Error(`On-chain register_delegate failed: ${err.message ?? String(err)}`)
+          }
+        }
+
+        // Otherwise return unsigned tx for the member to sign
+        const { tx_b64, blockhash } = await unsignedTxBase64([ix], memberKey)
+        return text({
+          action: 'register_delegate',
+          status: 'unsigned_tx',
+          vault_pubkey,
+          member_wallet: memberKey.toBase58(),
+          delegate_wallet: delegateKey.toBase58(),
+          rules_uri: rules_uri ?? '',
+          unsigned_tx_b64: tx_b64,
+          recent_blockhash: blockhash,
+          next_step: 'Have the member wallet sign the unsigned_tx_b64 transaction (e.g. via Phantom partial-sign API or the PotBot dApp) and submit it.',
+        })
+      }
+
+      // ── revoke_delegate ──────────────────────────────────────────────────
+      case 'revoke_delegate': {
+        const { vault_pubkey, member_wallet } = args as any
+        if (!vault_pubkey) throw new Error('vault_pubkey required')
+
+        const agent = loadAgentKeypair()
+        const pot = new PublicKey(vault_pubkey)
+        const memberKey = member_wallet
+          ? new PublicKey(member_wallet)
+          : (agent?.publicKey ?? null)
+        if (!memberKey) throw new Error('member_wallet required (or set AGENT_KEYPAIR)')
+
+        const ix = buildRevokeDelegateIx({ pot, memberWallet: memberKey })
+
+        if (agent && agent.publicKey.equals(memberKey)) {
+          try {
+            const sig = await sendIxs([ix], [agent])
+            return text({
+              action: 'revoke_delegate',
+              status: 'submitted',
+              vault_pubkey,
+              member_wallet: memberKey.toBase58(),
+              signature: sig,
+              explorer_url: `https://explorer.solana.com/tx/${sig}?cluster=${NETWORK}`,
+            })
+          } catch (err: any) {
+            throw new Error(`On-chain revoke_delegate failed: ${err.message ?? String(err)}`)
+          }
+        }
+
+        const { tx_b64, blockhash } = await unsignedTxBase64([ix], memberKey)
+        return text({
+          action: 'revoke_delegate',
+          status: 'unsigned_tx',
+          vault_pubkey,
+          member_wallet: memberKey.toBase58(),
+          unsigned_tx_b64: tx_b64,
+          recent_blockhash: blockhash,
+          next_step: 'Have the member wallet sign the unsigned_tx_b64 and submit.',
+        })
+      }
+
+      // ── check_delegate ───────────────────────────────────────────────────
+      case 'check_delegate': {
+        const { vault_pubkey, member_wallet } = args as any
+        if (!vault_pubkey || !member_wallet) throw new Error('vault_pubkey and member_wallet required')
+
+        const pot = new PublicKey(vault_pubkey)
+        const member = new PublicKey(member_wallet)
+        const [pda] = delegatePda(pot, member)
+        const info = await readMemberDelegate(pot, member)
+
+        return text({
+          vault_pubkey,
+          member_wallet,
+          delegate_pda: pda.toBase58(),
+          ...info,
+          delegate: info.delegate?.toBase58() ?? null,
+          explorer_url: `https://explorer.solana.com/address/${pda.toBase58()}?cluster=${NETWORK}`,
         })
       }
 

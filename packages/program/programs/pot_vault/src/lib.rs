@@ -48,6 +48,30 @@ pub mod pot_vault {
         instructions::vote::handler(ctx, approve)
     }
 
+    /// Vote on a proposal as a registered delegate (e.g. an AI agent) on behalf
+    /// of a member. Vote weight comes from member.shares; double-vote prevented
+    /// because VoterRecord is keyed by member.wallet (not delegate.delegate).
+    pub fn vote_as_delegate(ctx: Context<VoteAsDelegate>, approve: bool) -> Result<()> {
+        instructions::vote_as_delegate::handler(ctx, approve)
+    }
+
+    /// Register (or re-register) a delegate wallet that may sign votes for this
+    /// member. `rules_uri` is an off-chain URI describing the delegate's
+    /// voting policy — purely for transparency, not enforced on-chain.
+    pub fn register_delegate(
+        ctx: Context<RegisterDelegate>,
+        delegate: Pubkey,
+        rules_uri: String,
+    ) -> Result<()> {
+        instructions::delegate::register_handler(ctx, delegate, rules_uri)
+    }
+
+    /// Revoke an existing delegation. The PDA is preserved (not closed) so the
+    /// audit trail remains visible on-chain.
+    pub fn revoke_delegate(ctx: Context<RevokeDelegate>) -> Result<()> {
+        instructions::delegate::revoke_handler(ctx)
+    }
+
     pub fn execute_proposal(ctx: Context<ExecuteProposal>) -> Result<()> {
         instructions::execute_proposal::handler(ctx)
     }
