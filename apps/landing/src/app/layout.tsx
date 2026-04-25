@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     title: 'PotBot — Group Trading Vaults on Solana',
     description: 'Create shared on-chain vaults, vote on trades, and watch your Tamagotchi grow.',
     type: 'website',
-    url: 'https://potbot.xyz',
+    url: 'https://potbot.fun',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
   },
   twitter: {
