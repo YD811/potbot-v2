@@ -26,6 +26,13 @@ const X402_PRICE_USDC = parseFloat(process.env.X402_PRICE_USDC ?? '0.001')
 const POTBOT_API = process.env.POTBOT_API_URL ?? 'https://api.potbot.fun'
 const NETWORK = process.env.SOLANA_NETWORK ?? 'devnet'
 const USDC_RECEIVER = process.env.X402_RECEIVER_WALLET ?? ''
+const RPC_URL = process.env.SOLANA_RPC_URL ?? (NETWORK === 'mainnet' ? 'https://api.mainnet-beta.solana.com' : 'https://api.devnet.solana.com')
+
+// USDC mint (mainnet); for devnet x402 demo we still validate on-chain transfer
+const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+
+// Cache verified payment signatures so a single tx can't be reused (replay protection)
+const SEEN_PAYMENTS = new Set<string>()
 
 // Paid tools (require x402 payment)
 const PAID_TOOLS = new Set([
@@ -42,6 +49,18 @@ interface X402Payment {
   payer: string
 }
 
+async function rpcCall(method: string, params: unknown[]): Promise<any> {
+  const res = await fetch(RPC_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+  })
+  if (!res.ok) throw new Error(`RPC ${res.status}`)
+  const json = (await res.json()) as any
+  if (json.error) throw new Error(`RPC ${method}: ${json.error.message}`)
+  return json.result
+}
+
 async function verifyX402Payment(header: string | undefined): Promise<{
   valid: boolean
   error?: string
@@ -49,37 +68,68 @@ async function verifyX402Payment(header: string | undefined): Promise<{
 }> {
   if (!header) return { valid: false, error: 'Missing X-402-Payment header' }
 
+  let payload: X402Payment
   try {
-    // Decode base64 payment payload
     const payloadStr = Buffer.from(header, 'base64').toString('utf-8')
-    const payload = JSON.parse(payloadStr) as X402Payment
-
-    if (!payload.txSignature) {
-      return { valid: false, error: 'Missing txSignature in payment payload' }
-    }
-
-    if (payload.amount_usdc < X402_PRICE_USDC) {
-      return {
-        valid: false,
-        error: `Insufficient payment: ${payload.amount_usdc} USDC < ${X402_PRICE_USDC} USDC required`,
-      }
-    }
-
-    if (USDC_RECEIVER && payload.receiver !== USDC_RECEIVER) {
-      return { valid: false, error: 'Payment sent to wrong receiver' }
-    }
-
-    // In production: verify tx on-chain via RPC
-    // For hackathon demo: accept if signature looks valid (base58, 87-88 chars)
-    const isValidSig = /^[1-9A-HJ-NP-Za-km-z]{87,88}$/.test(payload.txSignature)
-    if (!isValidSig) {
-      return { valid: false, error: 'Invalid tx signature format' }
-    }
-
-    return { valid: true, payment: payload }
-  } catch (err) {
+    payload = JSON.parse(payloadStr) as X402Payment
+  } catch {
     return { valid: false, error: 'Failed to parse payment payload' }
   }
+
+  if (!payload.txSignature) return { valid: false, error: 'Missing txSignature in payment payload' }
+  if (!/^[1-9A-HJ-NP-Za-km-z]{87,88}$/.test(payload.txSignature)) {
+    return { valid: false, error: 'Invalid tx signature format' }
+  }
+  if (payload.amount_usdc < X402_PRICE_USDC) {
+    return { valid: false, error: `Insufficient payment: ${payload.amount_usdc} USDC < ${X402_PRICE_USDC} USDC required` }
+  }
+  if (USDC_RECEIVER && payload.receiver !== USDC_RECEIVER) {
+    return { valid: false, error: 'Payment sent to wrong receiver' }
+  }
+  if (SEEN_PAYMENTS.has(payload.txSignature)) {
+    return { valid: false, error: 'Payment signature already used (replay)' }
+  }
+
+  // ── On-chain verify ─────────────────────────────────────────────────────
+  let tx: any
+  try {
+    tx = await rpcCall('getTransaction', [
+      payload.txSignature,
+      { commitment: 'confirmed', encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 },
+    ])
+  } catch (err: any) {
+    return { valid: false, error: `RPC lookup failed: ${err.message ?? String(err)}` }
+  }
+  if (!tx) return { valid: false, error: 'Transaction not found on-chain (may be unconfirmed)' }
+  if (tx.meta?.err) return { valid: false, error: `On-chain tx failed: ${JSON.stringify(tx.meta.err)}` }
+
+  // Verify a USDC transfer to USDC_RECEIVER for at least X402_PRICE_USDC
+  if (USDC_RECEIVER) {
+    const pre = (tx.meta?.preTokenBalances ?? []) as any[]
+    const post = (tx.meta?.postTokenBalances ?? []) as any[]
+
+    const findReceiverUsdcBalance = (arr: any[]) =>
+      arr.find(b => b.owner === USDC_RECEIVER && b.mint === USDC_MINT)
+
+    const preBal = findReceiverUsdcBalance(pre)
+    const postBal = findReceiverUsdcBalance(post)
+    const preUi = preBal?.uiTokenAmount?.uiAmount ?? 0
+    const postUi = postBal?.uiTokenAmount?.uiAmount ?? 0
+    const delta = postUi - preUi
+
+    if (delta < X402_PRICE_USDC) {
+      return { valid: false, error: `On-chain USDC delta to receiver is ${delta}, expected >= ${X402_PRICE_USDC}` }
+    }
+  }
+
+  SEEN_PAYMENTS.add(payload.txSignature)
+  // Cap cache size — keep last 10k signatures
+  if (SEEN_PAYMENTS.size > 10_000) {
+    const first = SEEN_PAYMENTS.values().next().value
+    if (first) SEEN_PAYMENTS.delete(first)
+  }
+
+  return { valid: true, payment: payload }
 }
 
 // ── SSE clients ───────────────────────────────────────────────────────────
@@ -119,6 +169,30 @@ async function getJupiterPrices(mints: string[]): Promise<Record<string, number>
   }
 }
 
+async function getDefiLlamaSolanaYields(): Promise<Array<{
+  protocol: string; symbol: string; apy: number; tvl_usd: number; risk: 'low' | 'medium' | 'high'; pool_id: string; url: string;
+}>> {
+  try {
+    const res = await fetch('https://yields.llama.fi/pools')
+    if (!res.ok) return []
+    const json = (await res.json()) as any
+    return (json.data ?? [])
+      .filter((p: any) => p.chain === 'Solana' && typeof p.apy === 'number' && p.tvlUsd > 100_000)
+      .map((p: any) => ({
+        protocol: p.project,
+        symbol: p.symbol,
+        apy: parseFloat(p.apy.toFixed(2)),
+        tvl_usd: Math.round(p.tvlUsd),
+        risk: (p.ilRisk === 'yes' || p.apy > 30 ? 'high' : p.apy > 10 ? 'medium' : 'low') as 'low' | 'medium' | 'high',
+        pool_id: p.pool,
+        url: `https://defillama.com/yields/pool/${p.pool}`,
+      }))
+      .sort((a: any, b: any) => b.tvl_usd - a.tvl_usd)
+  } catch {
+    return []
+  }
+}
+
 const MOCK_VAULTS = [
   { pubkey: 'PotXALPHA11111111111111111111111111111111111', name: 'Alpha Fund', strategy: 'Trend', members: 8, tvl_sol: 45.2, pnl: 12.3, apy: 28.7, win_rate: 0.67, sharpe: 1.42, is_public: true },
   { pubkey: 'PotWHALE111111111111111111111111111111111111', name: 'Whale DAO', strategy: 'DCA', members: 24, tvl_sol: 210.8, pnl: 8.1, apy: 18.4, win_rate: 0.72, sharpe: 1.85, is_public: true },
@@ -154,8 +228,19 @@ async function dispatchTool(name: string, args: Record<string, unknown>): Promis
     }
     case 'get_yield_rates': {
       const risk = args.risk_level as string | undefined
+      const limit = (args.limit as number) ?? 25
+      const live = await getDefiLlamaSolanaYields()
+      if (live.length > 0) {
+        const filtered = (risk ? live.filter(p => p.risk === risk) : live).slice(0, limit)
+        return {
+          yield_rates: filtered,
+          total: filtered.length,
+          source: 'DefiLlama yields.llama.fi/pools (Solana, TVL > $100k)',
+          updated_at: new Date().toISOString(),
+        }
+      }
       const rates = risk ? YIELD_RATES.filter(r => r.risk === risk) : YIELD_RATES
-      return { yield_rates: rates, updated_at: new Date().toISOString() }
+      return { yield_rates: rates, source: 'static fallback', updated_at: new Date().toISOString() }
     }
     case 'get_leaderboard': {
       const metric = (args.metric as string) ?? 'pnl'
@@ -171,7 +256,7 @@ async function dispatchTool(name: string, args: Record<string, unknown>): Promis
 // ── Server info ───────────────────────────────────────────────────────────
 const SERVER_INFO = {
   name: 'potbot-mcp',
-  version: '0.1.0',
+  version: '0.3.0',
   transport: 'http+sse',
   x402_enabled: X402_ENABLED,
   x402_price_usdc: X402_ENABLED ? X402_PRICE_USDC : 0,
@@ -332,7 +417,7 @@ const server = http.createServer(async (req, res) => {
 })
 
 server.listen(PORT, () => {
-  console.log(`🌐 PotBot MCP HTTP Server v0.1.0`)
+  console.log(`🌐 PotBot MCP HTTP Server v0.3.0`)
   console.log(`   Port:    ${PORT}`)
   console.log(`   x402:    ${X402_ENABLED ? `enabled (${X402_PRICE_USDC} USDC/paid-call)` : 'disabled'}`)
   console.log(`   Network: ${NETWORK}`)

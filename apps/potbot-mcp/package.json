@@ -1,6 +1,6 @@
 {
   "name": "@potbot/mcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "PotBot MCP server — AI agent interface for on-chain group vaults on Solana",
   "type": "module",
   "main": "dist/index.js",

@@ -26,15 +26,20 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js'
 
 // ── Config ─────────────────────────────────────────────────────────────────
-const POTBOT_API  = process.env.POTBOT_API_URL  ?? 'https://app.potbot.fun'
+const POTBOT_API  = process.env.POTBOT_API_URL  ?? 'https://api.potbot.fun'
 const RPC_URL     = process.env.SOLANA_RPC_URL  ?? 'https://api.devnet.solana.com'
 const NETWORK     = process.env.SOLANA_NETWORK  ?? 'devnet'
 const PROGRAM_ID  = process.env.PROGRAM_ID      ?? 'GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK'
 
-const JUP_PRICE_URL = 'https://api.jup.ag/price/v2'
+const JUP_PRICE_URL    = 'https://api.jup.ag/price/v2'
+const DEFILLAMA_POOLS  = 'https://yields.llama.fi/pools'
 
 // ── Known mints ────────────────────────────────────────────────────────────
 const MINTS: Record<string, string> = {
@@ -53,22 +58,22 @@ function resolveMint(tokenOrMint: string): string {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-async function getJupiterPrices(mints: string[]): Promise<Record<string, number>> {
+async function getJupiterPrices(mints: string[]): Promise<{ prices: Record<string, number>; warning?: string }> {
   try {
     const res = await fetch(`${JUP_PRICE_URL}?ids=${mints.join(',')}`)
-    if (!res.ok) return {}
+    if (!res.ok) return { prices: {}, warning: `Jupiter Price API ${res.status}` }
     const json = await res.json() as any
     const result: Record<string, number> = {}
     for (const [mint, data] of Object.entries<any>(json.data ?? {})) {
       result[mint] = data.price ?? 0
     }
-    return result
-  } catch {
-    return {}
+    return { prices: result }
+  } catch (err: any) {
+    return { prices: {}, warning: `Jupiter unreachable: ${err.message ?? String(err)}` }
   }
 }
 
-async function getSolBalance(pubkey: string): Promise<number> {
+async function getSolBalance(pubkey: string): Promise<{ sol: number; warning?: string }> {
   try {
     const res = await fetch(RPC_URL, {
       method: 'POST',
@@ -80,9 +85,103 @@ async function getSolBalance(pubkey: string): Promise<number> {
       }),
     })
     const json = await res.json() as any
-    return (json.result?.value ?? 0) / 1e9
-  } catch {
-    return 0
+    if (json.error) return { sol: 0, warning: `RPC getBalance: ${json.error.message}` }
+    return { sol: (json.result?.value ?? 0) / 1e9 }
+  } catch (err: any) {
+    return { sol: 0, warning: `RPC unreachable: ${err.message ?? String(err)}` }
+  }
+}
+
+interface SplHolding {
+  mint: string
+  symbol: string
+  amount: number
+  decimals: number
+}
+
+async function getSplHoldings(pubkey: string): Promise<{ holdings: SplHolding[]; warning?: string }> {
+  try {
+    const res = await fetch(RPC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0', id: 1,
+        method: 'getTokenAccountsByOwner',
+        params: [
+          pubkey,
+          { programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' },
+          { encoding: 'jsonParsed', commitment: 'confirmed' },
+        ],
+      }),
+    })
+    const json = await res.json() as any
+    if (json.error) return { holdings: [], warning: `RPC getTokenAccountsByOwner: ${json.error.message}` }
+
+    const reverseMints: Record<string, string> = Object.fromEntries(
+      Object.entries(MINTS).map(([sym, mint]) => [mint, sym]),
+    )
+
+    const holdings: SplHolding[] = (json.result?.value ?? [])
+      .map((acc: any) => {
+        const info = acc.account?.data?.parsed?.info
+        if (!info) return null
+        const amount = info.tokenAmount?.uiAmount ?? 0
+        if (amount === 0) return null
+        return {
+          mint: info.mint,
+          symbol: reverseMints[info.mint] ?? `${info.mint.slice(0, 4)}…${info.mint.slice(-4)}`,
+          amount,
+          decimals: info.tokenAmount?.decimals ?? 0,
+        }
+      })
+      .filter(Boolean)
+
+    return { holdings }
+  } catch (err: any) {
+    return { holdings: [], warning: `RPC unreachable: ${err.message ?? String(err)}` }
+  }
+}
+
+interface DefiLlamaPool {
+  protocol: string
+  symbol: string
+  apy: number
+  apy_base: number | null
+  apy_reward: number | null
+  tvl_usd: number
+  pool_id: string
+  url: string
+  risk: 'low' | 'medium' | 'high'
+}
+
+function classifyRisk(apy: number, ilRisk: string): 'low' | 'medium' | 'high' {
+  if (ilRisk === 'yes' || apy > 30) return 'high'
+  if (apy > 10) return 'medium'
+  return 'low'
+}
+
+async function getDefiLlamaSolanaYields(): Promise<{ pools: DefiLlamaPool[]; warning?: string }> {
+  try {
+    const res = await fetch(DEFILLAMA_POOLS)
+    if (!res.ok) return { pools: [], warning: `DefiLlama ${res.status}` }
+    const json = await res.json() as any
+    const pools: DefiLlamaPool[] = (json.data ?? [])
+      .filter((p: any) => p.chain === 'Solana' && typeof p.apy === 'number' && p.tvlUsd > 100_000)
+      .map((p: any) => ({
+        protocol: p.project,
+        symbol: p.symbol,
+        apy: parseFloat(p.apy.toFixed(2)),
+        apy_base: p.apyBase != null ? parseFloat(p.apyBase.toFixed(2)) : null,
+        apy_reward: p.apyReward != null ? parseFloat(p.apyReward.toFixed(2)) : null,
+        tvl_usd: Math.round(p.tvlUsd),
+        pool_id: p.pool,
+        url: `https://defillama.com/yields/pool/${p.pool}`,
+        risk: classifyRisk(p.apy, p.ilRisk ?? 'no'),
+      }))
+      .sort((a: DefiLlamaPool, b: DefiLlamaPool) => b.tvl_usd - a.tvl_usd)
+    return { pools }
+  } catch (err: any) {
+    return { pools: [], warning: `DefiLlama unreachable: ${err.message ?? String(err)}` }
   }
 }
 
@@ -134,9 +233,167 @@ const YIELD_RATES = [
 
 // ── MCP Server ─────────────────────────────────────────────────────────────
 const server = new Server(
-  { name: 'potbot-mcp', version: '0.1.0' },
-  { capabilities: { tools: {} } }
+  { name: 'potbot-mcp', version: '0.3.0' },
+  { capabilities: { tools: {}, resources: {}, prompts: {} } }
 )
+
+// ── Resources ──────────────────────────────────────────────────────────────
+const RESOURCES = [
+  {
+    uri: 'potbot://network/info',
+    name: 'PotBot Network Info',
+    description: 'Network, RPC URL, program ID, and dApp links.',
+    mimeType: 'application/json',
+  },
+  {
+    uri: 'potbot://vaults/list',
+    name: 'PotBot Vaults Directory',
+    description: 'Snapshot of known PotBot strategy vaults with performance metadata.',
+    mimeType: 'application/json',
+  },
+  {
+    uri: 'potbot://yields/solana',
+    name: 'Solana DeFi Yields (DefiLlama)',
+    description: 'Live yield pools on Solana from DefiLlama with risk classification.',
+    mimeType: 'application/json',
+  },
+]
+
+server.setRequestHandler(ListResourcesRequestSchema, async () => ({ resources: RESOURCES }))
+
+server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+  const uri = request.params.uri
+  switch (uri) {
+    case 'potbot://network/info': {
+      const payload = {
+        network: NETWORK,
+        rpc_url: RPC_URL,
+        program_id: PROGRAM_ID,
+        api_url: POTBOT_API,
+        dapp: 'https://potbot.fun',
+        explorer: NETWORK === 'devnet'
+          ? `https://explorer.solana.com/address/${PROGRAM_ID}?cluster=devnet`
+          : `https://explorer.solana.com/address/${PROGRAM_ID}`,
+        timestamp: new Date().toISOString(),
+      }
+      return { contents: [{ uri, mimeType: 'application/json', text: JSON.stringify(payload, null, 2) }] }
+    }
+    case 'potbot://vaults/list': {
+      const payload = { vaults: MOCK_VAULTS, network: NETWORK, source: 'mock (devnet seed data)' }
+      return { contents: [{ uri, mimeType: 'application/json', text: JSON.stringify(payload, null, 2) }] }
+    }
+    case 'potbot://yields/solana': {
+      const { pools, warning } = await getDefiLlamaSolanaYields()
+      const payload = { pools: pools.slice(0, 50), source: 'DefiLlama', updated_at: new Date().toISOString(), ...(warning ? { warning } : {}) }
+      return { contents: [{ uri, mimeType: 'application/json', text: JSON.stringify(payload, null, 2) }] }
+    }
+    default:
+      throw new Error(`Unknown resource: ${uri}`)
+  }
+})
+
+// ── Prompts ────────────────────────────────────────────────────────────────
+const PROMPTS = [
+  {
+    name: 'vault_strategist',
+    description: 'Act as a senior crypto vault strategist. Inspect a PotBot vault and recommend a rebalance.',
+    arguments: [
+      { name: 'vault_pubkey', description: 'PotBot vault public key', required: true },
+      { name: 'goal', description: 'Investment goal (e.g. "preserve capital", "max yield", "outperform SOL")', required: false },
+    ],
+  },
+  {
+    name: 'risk_auditor',
+    description: 'Audit a swap proposal for risks: slippage, concentration, governance, downside.',
+    arguments: [
+      { name: 'vault_pubkey', description: 'PotBot vault public key', required: true },
+      { name: 'proposal_id', description: 'On-chain proposal ID', required: true },
+    ],
+  },
+  {
+    name: 'yield_hunter',
+    description: 'Find the best yield strategy on Solana for a given amount and risk tolerance.',
+    arguments: [
+      { name: 'amount_usdc', description: 'Amount in USDC equivalent', required: true },
+      { name: 'risk', description: 'low | medium | high', required: false },
+    ],
+  },
+]
+
+server.setRequestHandler(ListPromptsRequestSchema, async () => ({ prompts: PROMPTS }))
+
+server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+  const name = request.params.name
+  const args = request.params.arguments ?? {}
+
+  switch (name) {
+    case 'vault_strategist':
+      return {
+        description: 'Vault strategist analysis',
+        messages: [{
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `You are a senior crypto vault strategist auditing a PotBot vault.
+
+Vault: ${args.vault_pubkey ?? '<vault_pubkey>'}
+Goal: ${args.goal ?? 'maximize risk-adjusted returns'}
+
+Steps:
+1. Call get_vault_analytics for this vault to inspect NAV and SPL holdings.
+2. Call get_token_prices for each non-stable holding to value the book.
+3. Call get_yield_rates with risk_level matching the goal — pick top 3 pools by TVL.
+4. Call get_leaderboard to compare against peer vaults.
+5. Recommend up to 3 specific actions, each as a draft create_swap_proposal call (do not execute — produce arguments only).
+
+Output a concise rationale with explicit numbers, not generalities.`,
+          },
+        }],
+      }
+    case 'risk_auditor':
+      return {
+        description: 'Proposal risk audit',
+        messages: [{
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `You are a risk auditor reviewing PotBot proposal #${args.proposal_id ?? '<id>'} in vault ${args.vault_pubkey ?? '<vault_pubkey>'}.
+
+Steps:
+1. Pull current vault state via get_vault_analytics.
+2. Pull live prices for affected tokens via get_token_prices.
+3. Identify the four risks: (a) slippage given Jupiter quote vs vault size, (b) concentration after the swap, (c) governance manipulation (whale members), (d) downside if the trade is wrong.
+4. Output a YES/NO recommendation with a one-sentence rationale per risk.
+
+Be blunt. Numbers, not vibes.`,
+          },
+        }],
+      }
+    case 'yield_hunter':
+      return {
+        description: 'Yield strategy recommendation',
+        messages: [{
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `You are a Solana yield strategist.
+
+Capital:    ${args.amount_usdc ?? '<amount_usdc>'} USDC
+Risk band:  ${args.risk ?? 'medium'}
+
+Steps:
+1. Call get_yield_rates with the requested risk level.
+2. Pick the top 3 pools by APY × log(TVL) — explain why.
+3. For each: state the protocol, asset, APY, TVL, IL exposure if any.
+4. Suggest a 60/30/10 allocation across the three.
+5. Flag any pool that is not battle-tested (TVL < $5M, audited?).`,
+          },
+        }],
+      }
+    default:
+      throw new Error(`Unknown prompt: ${name}`)
+  }
+})
 
 // ── Tool list ───────────────────────────────────────────────────────────────
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -224,11 +481,12 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'get_yield_rates',
-      description: 'Get current DeFi yield rates (APY) for Solana protocols: Kamino, Marginfi, Drift. Use to recommend a yield strategy for a vault.',
+      description: 'Get live DeFi yield rates (APY) for Solana from DefiLlama (Kamino, Marginfi, Drift, Jito, Marinade, Orca, Raydium, etc.). Pools with TVL > $100k. Use to recommend a yield strategy for a vault.',
       inputSchema: {
         type: 'object',
         properties: {
-          risk_level: { type: 'string', enum: ['low', 'medium', 'high'], description: 'Filter by risk level' },
+          risk_level: { type: 'string', enum: ['low', 'medium', 'high'], description: 'low: APY<10% no IL. medium: APY 10-30% no IL. high: APY>30% or IL.' },
+          limit:      { type: 'number', description: 'Max pools to return (default 25, sorted by TVL desc)' },
         },
       },
     },
@@ -292,14 +550,34 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const pubkey = args?.vault_pubkey as string
         if (!pubkey) throw new Error('vault_pubkey required')
 
-        const [solBalance, prices] = await Promise.all([
+        const [{ sol: solBalance, warning: solWarn }, holdingsResult, pricesResult] = await Promise.all([
           getSolBalance(pubkey),
+          getSplHoldings(pubkey),
           getJupiterPrices([MINTS.SOL]),
         ])
 
-        const solPrice = prices[MINTS.SOL] ?? 150
-        const nav_usd  = solBalance * solPrice
-        const meta     = MOCK_VAULTS.find(v => v.pubkey === pubkey)
+        const { prices, warning: priceWarn } = pricesResult
+        const solPrice = prices[MINTS.SOL] ?? 0
+        const nav_sol_only = solBalance * solPrice
+
+        // Price all SPL holdings via Jupiter
+        const holdingMints = holdingsResult.holdings.map(h => h.mint)
+        let holdingPrices: Record<string, number> = {}
+        let holdingPricesWarn: string | undefined
+        if (holdingMints.length > 0) {
+          const r = await getJupiterPrices(holdingMints)
+          holdingPrices = r.prices
+          holdingPricesWarn = r.warning
+        }
+
+        const splValueUsd = holdingsResult.holdings.reduce(
+          (sum, h) => sum + (holdingPrices[h.mint] ?? 0) * h.amount,
+          0,
+        )
+        const nav_usd = nav_sol_only + splValueUsd
+
+        const meta = MOCK_VAULTS.find(v => v.pubkey === pubkey)
+        const warnings = [solWarn, priceWarn, holdingsResult.warning, holdingPricesWarn].filter(Boolean)
 
         return text({
           pubkey,
@@ -308,16 +586,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           nav_usd:    parseFloat(nav_usd.toFixed(2)),
           nav_sol:    parseFloat(solBalance.toFixed(4)),
           sol_price:  solPrice,
-          pnl_pct:    meta?.pnl ?? 0,
-          apy_pct:    meta?.apy ?? 0,
-          win_rate:   meta?.win_rate ?? 0,
-          sharpe:     meta?.sharpe ?? 0,
-          members:    meta?.members ?? 0,
-          trades:     meta?.trades ?? 0,
+          spl_holdings: holdingsResult.holdings.map(h => ({
+            ...h,
+            price_usd: holdingPrices[h.mint] ?? null,
+            value_usd: parseFloat(((holdingPrices[h.mint] ?? 0) * h.amount).toFixed(2)),
+          })),
+          spl_value_usd: parseFloat(splValueUsd.toFixed(2)),
+          pnl_pct:    meta?.pnl ?? null,
+          apy_pct:    meta?.apy ?? null,
+          win_rate:   meta?.win_rate ?? null,
+          sharpe:     meta?.sharpe ?? null,
+          members:    meta?.members ?? null,
+          trades:     meta?.trades ?? null,
+          source: {
+            sol_balance:  'Solana RPC getBalance',
+            spl_holdings: 'Solana RPC getTokenAccountsByOwner',
+            prices:       'Jupiter Price API v2',
+            performance:  meta ? 'mock (devnet — no real PnL feed yet)' : 'unavailable',
+          },
           network:    NETWORK,
           program_id: PROGRAM_ID,
           timestamp:  new Date().toISOString(),
-          dapp_url:   `${POTBOT_API}/pots/${pubkey}`,
+          dapp_url:   `https://potbot.fun/pots/${pubkey}`,
+          ...(warnings.length ? { warnings } : {}),
         })
       }
 
@@ -325,7 +616,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'get_token_prices': {
         const tokens = (args?.tokens as string[]) ?? ['SOL']
         const mints  = tokens.map(t => resolveMint(t))
-        const prices = await getJupiterPrices(mints)
+        const { prices, warning } = await getJupiterPrices(mints)
 
         const result = tokens.map((token, i) => ({
           token:     token.toUpperCase(),
@@ -334,7 +625,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           source:    'Jupiter Price API v2',
         }))
 
-        return text({ prices: result, timestamp: new Date().toISOString() })
+        return text({
+          prices: result,
+          timestamp: new Date().toISOString(),
+          ...(warning ? { warnings: [warning] } : {}),
+        })
       }
 
       // ── create_swap_proposal ─────────────────────────────────────────────
@@ -346,7 +641,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         const fromMint = resolveMint(from_token)
         const toMint   = resolveMint(to_token)
-        const prices   = await getJupiterPrices([fromMint, toMint])
+        const { prices, warning } = await getJupiterPrices([fromMint, toMint])
 
         return text({
           type:         'SwapProposal',
@@ -362,7 +657,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           to_price_usd:   prices[toMint] ?? null,
           reason:         reason ?? 'AI agent initiated swap',
           next_step:      'Navigate to the dApp governance tab to sign and submit.',
-          dapp_url:       `${POTBOT_API}/pots/${vault_pubkey}?tab=governance`,
+          dapp_url:       `https://potbot.fun/pots/${vault_pubkey}?tab=governance`,
+          ...(warning ? { warnings: [warning] } : {}),
         })
       }
 
@@ -413,17 +709,42 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // ── get_yield_rates ──────────────────────────────────────────────────
       case 'get_yield_rates': {
         const risk = args?.risk_level as string | undefined
-        const rates = risk ? YIELD_RATES.filter(r => r.risk === risk) : YIELD_RATES
+        const limit = (args?.limit as number) ?? 25
 
+        const { pools, warning } = await getDefiLlamaSolanaYields()
+
+        if (pools.length > 0) {
+          const filtered = (risk ? pools.filter(p => p.risk === risk) : pools).slice(0, limit)
+          return text({
+            yield_rates: filtered,
+            total: filtered.length,
+            summary: {
+              low_risk_avg_apy:    avg(pools.filter(p => p.risk === 'low').map(p => p.apy)),
+              medium_risk_avg_apy: avg(pools.filter(p => p.risk === 'medium').map(p => p.apy)),
+              high_risk_avg_apy:   avg(pools.filter(p => p.risk === 'high').map(p => p.apy)),
+              total_pools_indexed: pools.length,
+            },
+            source: 'DefiLlama yields.llama.fi/pools (Solana, TVL > $100k)',
+            risk_classification: 'low: APY < 10% & no IL. medium: APY 10–30% no IL. high: APY > 30% or IL.',
+            updated_at: new Date().toISOString(),
+            disclaimer: 'APYs are reported by DefiLlama and change continuously. Verify on protocol UI before depositing.',
+            ...(warning ? { warnings: [warning] } : {}),
+          })
+        }
+
+        // Fallback to static estimates if DefiLlama unreachable
+        const rates = risk ? YIELD_RATES.filter(r => r.risk === risk) : YIELD_RATES
         return text({
-          yield_rates:  rates,
+          yield_rates: rates,
           summary: {
             low_risk_avg_apy:    avg(YIELD_RATES.filter(r => r.risk === 'low').map(r => (r.apy_min + r.apy_max) / 2)),
             medium_risk_avg_apy: avg(YIELD_RATES.filter(r => r.risk === 'medium').map(r => (r.apy_min + r.apy_max) / 2)),
             high_risk_avg_apy:   avg(YIELD_RATES.filter(r => r.risk === 'high').map(r => (r.apy_min + r.apy_max) / 2)),
           },
+          source: 'static estimates (DefiLlama fallback)',
           updated_at: new Date().toISOString(),
           disclaimer: 'APY ranges are approximate and change with market conditions.',
+          ...(warning ? { warnings: [warning] } : {}),
         })
       }
 
