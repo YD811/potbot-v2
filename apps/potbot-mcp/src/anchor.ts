@@ -34,12 +34,46 @@ export function ixDiscriminator(snakeCaseName: string): Buffer {
   return createHash('sha256').update(`global:${snakeCaseName}`).digest().subarray(0, 8)
 }
 
+/** Anchor account discriminator: sha256("account:<PascalCaseStruct>")[..8] */
+export function accountDiscriminator(pascalCaseName: string): Buffer {
+  return createHash('sha256').update(`account:${pascalCaseName}`).digest().subarray(0, 8)
+}
+
 /** Borsh-encode a Rust String as `u32 length || utf-8 bytes`. */
 function encodeString(s: string): Buffer {
   const bytes = Buffer.from(s, 'utf-8')
   const len = Buffer.alloc(4)
   len.writeUInt32LE(bytes.length, 0)
   return Buffer.concat([len, bytes])
+}
+
+/** Cursor-based reader for Borsh-encoded Anchor accounts. */
+class BorshReader {
+  private offset = 0
+  constructor(private data: Buffer) {}
+
+  remaining(): number { return this.data.length - this.offset }
+  skip(n: number): void { this.offset += n }
+  pos(): number { return this.offset }
+
+  u8(): number { const v = this.data.readUInt8(this.offset); this.offset += 1; return v }
+  bool(): boolean { return this.u8() !== 0 }
+  u16(): number { const v = this.data.readUInt16LE(this.offset); this.offset += 2; return v }
+  u32(): number { const v = this.data.readUInt32LE(this.offset); this.offset += 4; return v }
+  u64(): bigint { const v = this.data.readBigUInt64LE(this.offset); this.offset += 8; return v }
+  i64(): bigint { const v = this.data.readBigInt64LE(this.offset); this.offset += 8; return v }
+  pubkey(): PublicKey { const v = new PublicKey(this.data.subarray(this.offset, this.offset + 32)); this.offset += 32; return v }
+  string(): string {
+    const len = this.u32()
+    const v = this.data.subarray(this.offset, this.offset + len).toString('utf-8')
+    this.offset += len
+    return v
+  }
+  optionPubkey(): PublicKey | null {
+    const tag = this.u8()
+    if (tag === 0) return null
+    return this.pubkey()
+  }
 }
 
 // ── PDA derivations ────────────────────────────────────────────────────────
@@ -63,6 +97,338 @@ export function voterRecordPda(proposal: PublicKey, member: PublicKey): [PublicK
     [Buffer.from('voter'), proposal.toBuffer(), member.toBuffer()],
     POT_VAULT_PROGRAM_ID,
   )
+}
+
+export function vaultPda(pot: PublicKey): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('vault'), pot.toBuffer()],
+    POT_VAULT_PROGRAM_ID,
+  )
+}
+
+export function proposalPda(pot: PublicKey, proposalId: bigint): [PublicKey, number] {
+  const idLe = Buffer.alloc(8)
+  idLe.writeBigUInt64LE(proposalId, 0)
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('proposal'), pot.toBuffer(), idLe],
+    POT_VAULT_PROGRAM_ID,
+  )
+}
+
+// ── On-chain account decoders ─────────────────────────────────────────────
+//
+// We decode just the fields we need for analytics/listing. Layout pulled from
+// `packages/program/programs/pot_vault/src/state/{pot,proposal}.rs` with the
+// 8-byte Anchor disc prefix on top.
+
+export interface DecodedPot {
+  pubkey: string
+  authority: string
+  name: string
+  emoji: string
+  total_shares: string  // u64 as string to avoid BigInt JSON issues
+  member_count: number
+  trade_count: number
+  total_volume_lamports: string
+  next_proposal_id: string
+  created_at: number
+  high_water_mark: string
+  is_public: boolean
+  min_deposit_lamports: string
+  yield_strategy: 'None' | 'Conservative' | 'Balanced' | 'Aggressive'
+  trade_level: number
+  withdraw_level: number
+  quorum_bps: number
+  vote_timeout_seconds: number
+  agent_pubkey: string | null
+}
+
+export function decodePotAccount(pubkey: PublicKey, data: Buffer): DecodedPot | null {
+  const expectedDisc = accountDiscriminator('PotAccount')
+  if (data.length < 8 || !data.subarray(0, 8).equals(expectedDisc)) return null
+
+  const r = new BorshReader(data)
+  r.skip(8) // discriminator
+  const authority = r.pubkey()
+  const name = r.string()
+  const emoji = r.string()
+  r.skip(2) // vault_bump + pot_bump
+  const total_shares = r.u64()
+  const member_count = r.u32()
+  const trade_count = r.u32()
+  const total_volume = r.u64()
+  r.skip(1 + 8) // tamagotchi_level + tamagotchi_xp
+  r.skip(32 + 32) // community_token_mint + token_mint
+  r.skip(8) // shares_per_sol
+
+  // PotConfig
+  const is_public = r.bool()
+  const min_deposit = r.u64()
+  r.skip(8) // lockup_seconds
+  const yieldStrategyIdx = r.u8()
+  const yield_strategy = (['None', 'Conservative', 'Balanced', 'Aggressive'] as const)[yieldStrategyIdx] ?? 'None'
+  r.skip(2 + 2 + 2) // max_yield_allocation_bps + max_trade_size_bps + max_members
+
+  // GovSettings
+  const trade_level = r.u8()
+  const withdraw_level = r.u8()
+  r.skip(1 + 1 + 1) // member_change_level + settings_change_level + yield_change_level
+  const vote_timeout_seconds = Number(r.i64())
+  const quorum_bps = r.u16()
+  r.skip(8) // timelock_seconds
+
+  const next_proposal_id = r.u64()
+  const created_at = Number(r.i64())
+  const high_water_mark = r.u64()
+  r.skip(2) // protocol_fee_bps
+  r.skip(8) // last_activity_at
+  const agent_pubkey = r.optionPubkey()
+
+  return {
+    pubkey: pubkey.toBase58(),
+    authority: authority.toBase58(),
+    name,
+    emoji,
+    total_shares: total_shares.toString(),
+    member_count,
+    trade_count,
+    total_volume_lamports: total_volume.toString(),
+    next_proposal_id: next_proposal_id.toString(),
+    created_at,
+    high_water_mark: high_water_mark.toString(),
+    is_public,
+    min_deposit_lamports: min_deposit.toString(),
+    yield_strategy,
+    trade_level,
+    withdraw_level,
+    quorum_bps,
+    vote_timeout_seconds,
+    agent_pubkey: agent_pubkey?.toBase58() ?? null,
+  }
+}
+
+export interface DecodedProposal {
+  pubkey: string
+  pot: string
+  proposal_id: string
+  proposer: string
+  proposal_type: string
+  swap?: { from_mint: string; to_mint: string; amount_in: string; min_amount_out: string }
+  description: string
+  status: 'Active' | 'Passed' | 'Rejected' | 'Executed' | 'Expired'
+  yes_shares: string
+  no_shares: string
+  total_shares_snapshot: string
+  created_at: number
+  resolved_at: number
+  passed_at: number
+}
+
+const PROPOSAL_TYPES = [
+  'Swap', 'Withdraw', 'ChangeSettings', 'ChangeYield', 'AddMember',
+  'RemoveMember', 'SetAgent', 'TransferFunds', 'UpdateRiskConfig',
+  'TokenizePot', 'DepositToYield', 'WithdrawFromYield',
+] as const
+
+const PROPOSAL_STATUSES = ['Active', 'Passed', 'Rejected', 'Executed', 'Expired'] as const
+
+export function decodeProposalAccount(pubkey: PublicKey, data: Buffer): DecodedProposal | null {
+  const expectedDisc = accountDiscriminator('ProposalAccount')
+  if (data.length < 8 || !data.subarray(0, 8).equals(expectedDisc)) return null
+
+  const r = new BorshReader(data)
+  r.skip(8)
+  const pot = r.pubkey()
+  const proposal_id = r.u64()
+  const proposer = r.pubkey()
+  const variantIdx = r.u8()
+  const proposal_type = PROPOSAL_TYPES[variantIdx] ?? `Unknown(${variantIdx})`
+
+  let swap: DecodedProposal['swap']
+  if (variantIdx === 0) {
+    const from_mint = r.pubkey()
+    const to_mint = r.pubkey()
+    const amount_in = r.u64()
+    const min_amount_out = r.u64()
+    swap = {
+      from_mint: from_mint.toBase58(),
+      to_mint: to_mint.toBase58(),
+      amount_in: amount_in.toString(),
+      min_amount_out: min_amount_out.toString(),
+    }
+  } else {
+    // Skip other variant fields by walking only enough to reach description
+    // For simplicity we bail out of detailed parsing for non-Swap types.
+    // We can still report the variant name + the universal trailing fields
+    // by reading from the end of the account, but since variant payloads have
+    // variable sizes this is brittle. Return without detailed payload.
+    return {
+      pubkey: pubkey.toBase58(),
+      pot: pot.toBase58(),
+      proposal_id: proposal_id.toString(),
+      proposer: proposer.toBase58(),
+      proposal_type,
+      description: '',
+      status: 'Active',
+      yes_shares: '0',
+      no_shares: '0',
+      total_shares_snapshot: '0',
+      created_at: 0,
+      resolved_at: 0,
+      passed_at: 0,
+    }
+  }
+
+  const description = r.string()
+  const statusIdx = r.u8()
+  const status = PROPOSAL_STATUSES[statusIdx] ?? 'Active'
+  const yes_shares = r.u64()
+  const no_shares = r.u64()
+  const total_shares_snapshot = r.u64()
+  const created_at = Number(r.i64())
+  const resolved_at = Number(r.i64())
+  const passed_at = Number(r.i64())
+
+  return {
+    pubkey: pubkey.toBase58(),
+    pot: pot.toBase58(),
+    proposal_id: proposal_id.toString(),
+    proposer: proposer.toBase58(),
+    proposal_type,
+    swap,
+    description,
+    status,
+    yes_shares: yes_shares.toString(),
+    no_shares: no_shares.toString(),
+    total_shares_snapshot: total_shares_snapshot.toString(),
+    created_at,
+    resolved_at,
+    passed_at,
+  }
+}
+
+// ── On-chain queries ──────────────────────────────────────────────────────
+
+export async function getAllPots(): Promise<DecodedPot[]> {
+  const conn = getConnection()
+  const disc = accountDiscriminator('PotAccount')
+  const accounts = await conn.getProgramAccounts(POT_VAULT_PROGRAM_ID, {
+    filters: [{ memcmp: { offset: 0, bytes: bs58.encode(disc) } }],
+  })
+  const pots: DecodedPot[] = []
+  for (const a of accounts) {
+    const decoded = decodePotAccount(a.pubkey, a.account.data)
+    if (decoded) pots.push(decoded)
+  }
+  return pots
+}
+
+export async function getProposalsForPot(pot: PublicKey): Promise<DecodedProposal[]> {
+  const conn = getConnection()
+  const disc = accountDiscriminator('ProposalAccount')
+  const accounts = await conn.getProgramAccounts(POT_VAULT_PROGRAM_ID, {
+    filters: [
+      { memcmp: { offset: 0, bytes: bs58.encode(disc) } },
+      { memcmp: { offset: 8, bytes: pot.toBase58() } }, // pot field is right after disc
+    ],
+  })
+  const proposals: DecodedProposal[] = []
+  for (const a of accounts) {
+    const decoded = decodeProposalAccount(a.pubkey, a.account.data)
+    if (decoded) proposals.push(decoded)
+  }
+  return proposals.sort((a, b) => Number(b.proposal_id) - Number(a.proposal_id))
+}
+
+export async function readPotAccount(pot: PublicKey): Promise<DecodedPot | null> {
+  const conn = getConnection()
+  const info = await conn.getAccountInfo(pot)
+  if (!info) return null
+  return decodePotAccount(pot, info.data)
+}
+
+// ── Instruction builders for the wider pot lifecycle ─────────────────────
+
+export interface CreateSwapProposalArgs {
+  pot: PublicKey
+  proposer: PublicKey  // signer; must be a member
+  proposalId: bigint   // pot.next_proposal_id
+  fromMint: PublicKey
+  toMint: PublicKey
+  amountInLamports: bigint
+  minAmountOutLamports: bigint
+  description: string
+}
+
+export function buildCreateSwapProposalIx(a: CreateSwapProposalArgs): TransactionInstruction {
+  const [proposal] = proposalPda(a.pot, a.proposalId)
+  const [member] = memberPda(a.pot, a.proposer)
+  const [vault] = vaultPda(a.pot)
+
+  // CreateProposalParams = ProposalType (variant 0 = Swap) + description (String)
+  const amountIn = Buffer.alloc(8); amountIn.writeBigUInt64LE(a.amountInLamports, 0)
+  const minOut = Buffer.alloc(8); minOut.writeBigUInt64LE(a.minAmountOutLamports, 0)
+
+  const data = Buffer.concat([
+    ixDiscriminator('create_proposal'),
+    Buffer.from([0]),  // ProposalType::Swap variant index
+    a.fromMint.toBuffer(),
+    a.toMint.toBuffer(),
+    amountIn,
+    minOut,
+    encodeString(a.description),
+  ])
+
+  return new TransactionInstruction({
+    programId: POT_VAULT_PROGRAM_ID,
+    keys: [
+      { pubkey: a.pot, isSigner: false, isWritable: true },
+      { pubkey: proposal, isSigner: false, isWritable: true },
+      { pubkey: member, isSigner: false, isWritable: false },
+      { pubkey: vault, isSigner: false, isWritable: false },
+      { pubkey: a.proposer, isSigner: true, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data,
+  })
+}
+
+export interface DepositArgs {
+  pot: PublicKey
+  depositor: PublicKey  // signer
+  lamports: bigint
+}
+
+export function buildDepositIx(a: DepositArgs): TransactionInstruction {
+  const [vault] = vaultPda(a.pot)
+  const [member] = memberPda(a.pot, a.depositor)
+
+  const lamportsLe = Buffer.alloc(8)
+  lamportsLe.writeBigUInt64LE(a.lamports, 0)
+
+  const data = Buffer.concat([
+    ixDiscriminator('deposit'),
+    lamportsLe,
+  ])
+
+  return new TransactionInstruction({
+    programId: POT_VAULT_PROGRAM_ID,
+    keys: [
+      { pubkey: a.pot, isSigner: false, isWritable: true },
+      { pubkey: vault, isSigner: false, isWritable: true },
+      { pubkey: member, isSigner: false, isWritable: true },
+      { pubkey: a.depositor, isSigner: true, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data,
+  })
+}
+
+export async function getVaultLamports(pot: PublicKey): Promise<bigint> {
+  const conn = getConnection()
+  const [vault] = vaultPda(pot)
+  const lamports = await conn.getBalance(vault).catch(() => 0)
+  return BigInt(lamports)
 }
 
 // ── Instruction builders ──────────────────────────────────────────────────

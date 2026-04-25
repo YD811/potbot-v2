@@ -1,5 +1,62 @@
 # @potbot/mcp Changelog
 
+## 0.5.0 — 2026-04-25
+
+### Real on-chain reads (no more mock vaults)
+
+The four discovery / analytics tools now hit Solana RPC for real PotAccount
+and ProposalAccount data via `getProgramAccounts` filtered by Anchor
+account discriminators (`sha256("account:<PascalCase>")[..8]`):
+
+- `list_vaults` — discovers every PotAccount under the program ID, fetches
+  each vault PDA balance in parallel, returns name, emoji, authority,
+  is_public, member_count, trade_count, total_shares, governance settings,
+  and live SOL TVL. No more `MOCK_VAULTS`.
+- `get_leaderboard` — same source, sorted by `tvl_lamports`,
+  `member_count`, `trade_count`, or `total_volume_lamports`.
+- `get_vault_analytics` — decodes the full PotAccount header (authority,
+  governance levels, quorum_bps, vote_timeout, min_deposit, yield_strategy,
+  high_water_mark, agent_pubkey, next_proposal_id) plus real vault PDA
+  balance and SPL holdings via `getTokenAccountsByOwner(vault_pda)`.
+- **New `get_proposals`** — lists ProposalAccount PDAs for a vault, decoded
+  with full Swap variant details (from_mint, to_mint, amount_in,
+  min_amount_out), status, vote tally, snapshot, and timestamps.
+
+Internal: new `BorshReader` + `decodePotAccount` / `decodeProposalAccount`
+in `src/anchor.ts`. Deliberately decodes only the prefix fields needed by
+each tool — robust against future field appends to the Rust struct.
+
+### Real on-chain writes — first non-vote tools that actually transact
+
+- `create_swap_proposal` — auto-derives next_proposal_id from PotAccount,
+  builds the real `create_proposal` ix with `ProposalType::Swap`, returns
+  base64 unsigned tx for the proposer to sign, OR signs+submits if
+  `AGENT_KEYPAIR` is the proposer.
+- `join_strategy_vault` — builds the real `deposit` ix (creates
+  MemberAccount via `init_if_needed` on first deposit). Same dual return
+  shape as above.
+
+### E2E verification on devnet
+
+This release was validated by a real flow against the upgraded program
+`GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK`:
+
+1. `scripts/seed-test-pot.mjs` created **MCP Demo Pot** at
+   `CFke4rJqmx1HyWQxNuZWGitFGDSE5rmf7fhr3zJ1dWjC`
+   (tx `5oJpF5Ai...4GQ7hZk`).
+2. `list_vaults` returned the new pot.
+3. MCP `join_strategy_vault` deposited 0.5 SOL, MemberAccount created
+   (tx `4V8i9MD3...HLWn4`).
+4. MCP `create_swap_proposal` created Swap proposal #0
+   (tx `2xQNzisj...g5d3AXn`).
+5. `get_proposals` decoded the new proposal: status=Active, swap params,
+   description, vote tally, total_shares_snapshot=500_000_000.
+
+### Misc
+
+- New `scripts/seed-test-pot.mjs` — one-shot devnet seed for reproducing
+  the E2E demo.
+
 ## 0.4.0 — 2026-04-25
 
 ### Personal AI Voters — real on-chain delegation
