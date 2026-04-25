@@ -1076,6 +1076,110 @@
           }
         ]
       }
+    },
+    {
+      "name": "StrategyCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "strategy",
+            "type": "pubkey"
+          },
+          {
+            "name": "slotId",
+            "type": "u16"
+          },
+          {
+            "name": "inputMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "outputMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "hasYield",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SwapExecuted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "strategy",
+            "type": "pubkey"
+          },
+          {
+            "name": "slotId",
+            "type": "u64"
+          },
+          {
+            "name": "modeTag",
+            "type": "u8"
+          },
+          {
+            "name": "isEntry",
+            "type": "bool"
+          },
+          {
+            "name": "inputMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "outputMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "spent",
+            "type": "u64"
+          },
+          {
+            "name": "received",
+            "type": "u64"
+          },
+          {
+            "name": "trigger",
+            "type": {
+              "defined": {
+                "name": "TriggerReason"
+              }
+            }
+          },
+          {
+            "name": "nonce",
+            "type": "u32"
+          },
+          {
+            "name": "statusAfter",
+            "type": {
+              "defined": {
+                "name": "StrategyStatus"
+              }
+            }
+          },
+          {
+            "name": "signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
     }
   ],
   "events": [
@@ -1090,32 +1194,6 @@
         148,
         232,
         101
-      ],
-      "fields": [
-        {
-          "name": "pot",
-          "type": "pubkey"
-        },
-        {
-          "name": "strategy",
-          "type": "pubkey"
-        },
-        {
-          "name": "slotId",
-          "type": "u16"
-        },
-        {
-          "name": "inputMint",
-          "type": "pubkey"
-        },
-        {
-          "name": "outputMint",
-          "type": "pubkey"
-        },
-        {
-          "name": "hasYield",
-          "type": "bool"
-        }
       ]
     },
     {
@@ -1129,72 +1207,6 @@
         105,
         250,
         130
-      ],
-      "fields": [
-        {
-          "name": "pot",
-          "type": "pubkey"
-        },
-        {
-          "name": "strategy",
-          "type": "pubkey"
-        },
-        {
-          "name": "slotId",
-          "type": "u64"
-        },
-        {
-          "name": "modeTag",
-          "type": "u8"
-        },
-        {
-          "name": "isEntry",
-          "type": "bool"
-        },
-        {
-          "name": "inputMint",
-          "type": "pubkey"
-        },
-        {
-          "name": "outputMint",
-          "type": "pubkey"
-        },
-        {
-          "name": "spent",
-          "type": "u64"
-        },
-        {
-          "name": "received",
-          "type": "u64"
-        },
-        {
-          "name": "trigger",
-          "type": {
-            "defined": {
-              "name": "TriggerReason"
-            }
-          }
-        },
-        {
-          "name": "nonce",
-          "type": "u32"
-        },
-        {
-          "name": "statusAfter",
-          "type": {
-            "defined": {
-              "name": "StrategyStatus"
-            }
-          }
-        },
-        {
-          "name": "signer",
-          "type": "pubkey"
-        },
-        {
-          "name": "timestamp",
-          "type": "i64"
-        }
       ]
     }
   ],
