@@ -11,6 +11,7 @@ interface PotTypeSelectorProps {
 export function PotTypeSelector({ value, onChange }: PotTypeSelectorProps) {
   const [pubOpen, setPubOpen] = useState(false);
   const [privOpen, setPrivOpen] = useState(false);
+  const isPublic = value === 'public';
 
   return (
     <div className="mb-6">
@@ -23,7 +24,7 @@ export function PotTypeSelector({ value, onChange }: PotTypeSelectorProps) {
         className="relative grid grid-cols-2 gap-1.5 p-1.5 rounded-2xl border"
         style={{
           background: 'rgba(17,24,39,1)',
-          borderColor: value === 'public'
+          borderColor: isPublic
             ? 'rgba(20,241,149,0.25)'
             : 'rgba(153,69,255,0.25)',
           transition: 'border-color 0.4s',
@@ -34,17 +35,19 @@ export function PotTypeSelector({ value, onChange }: PotTypeSelectorProps) {
           className="absolute top-1.5 bottom-1.5 rounded-xl pointer-events-none transition-all duration-400"
           style={{
             width: 'calc(50% - 9px)',
-            left: value === 'public' ? '6px' : 'calc(50% + 3px)',
-            background: value === 'public'
+            transform: isPublic ? 'translateX(0)' : 'translateX(calc(100% + 6px))',
+            left: '6px',
+            background: isPublic
               ? 'linear-gradient(135deg,rgba(20,241,149,.18),rgba(20,241,149,.08))'
               : 'linear-gradient(135deg,rgba(153,69,255,.18),rgba(153,69,255,.08))',
-            border: value === 'public'
+            border: isPublic
               ? '1px solid rgba(20,241,149,.35)'
               : '1px solid rgba(153,69,255,.35)',
-            boxShadow: value === 'public'
+            boxShadow: isPublic
               ? '0 0 32px rgba(20,241,149,.12)'
               : '0 0 32px rgba(153,69,255,.15)',
-            transition: 'all 0.4s cubic-bezier(.22,.61,.36,1)',
+            transition: 'transform 0.4s cubic-bezier(.22,.61,.36,1), background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease',
+            willChange: 'transform',
           }}
         />
 
@@ -124,6 +127,7 @@ export function PotTypeSelector({ value, onChange }: PotTypeSelectorProps) {
               ✓ Selected
             </div>
           )}
+          {value !== 'public' && <div className="mt-3 h-[18px]" />}
         </button>
 
         {/* PRIVATE card */}
@@ -206,22 +210,43 @@ export function PotTypeSelector({ value, onChange }: PotTypeSelectorProps) {
               ✓ Selected
             </div>
           )}
+          {value !== 'private' && <div className="mt-3 h-[18px]" />}
         </button>
       </div>
 
       {/* Alert under selector */}
       <div
-        className="mt-3 flex gap-2.5 p-3 rounded-xl text-sm"
-        style={value === 'public'
+        className="mt-3 relative rounded-xl text-sm min-h-[74px] overflow-hidden"
+        style={isPublic
           ? { background: 'rgba(59,130,246,.08)', border: '1px solid rgba(59,130,246,.2)', color: '#93C5FD' }
           : { background: 'rgba(153,69,255,.08)', border: '1px solid rgba(153,69,255,.2)', color: '#C4B5FD' }}
       >
-        <span>{value === 'public' ? '🌐' : '🔒'}</span>
-        <span>
-          {value === 'public'
-            ? <><b>Public POT</b> — Appears in discovery feed. Anyone can join and deposit. Earn referral fees from new members.</>
-            : <><b>Private POT</b> — ZK-shielded vault. Invite-only via unique link. Powered by Umbra SDK + MagicBlock PER.</>}
-        </span>
+        <div
+          className="absolute inset-0 p-3 flex gap-2.5 transition-all duration-300"
+          style={{
+            opacity: isPublic ? 1 : 0,
+            transform: isPublic ? 'translateY(0)' : 'translateY(6px)',
+            pointerEvents: isPublic ? 'auto' : 'none',
+          }}
+        >
+          <span>🌐</span>
+          <span>
+            <b>Public POT</b> — Appears in discovery feed. Anyone can join and deposit. Earn referral fees from new members.
+          </span>
+        </div>
+        <div
+          className="absolute inset-0 p-3 flex gap-2.5 transition-all duration-300"
+          style={{
+            opacity: isPublic ? 0 : 1,
+            transform: isPublic ? 'translateY(6px)' : 'translateY(0)',
+            pointerEvents: isPublic ? 'none' : 'auto',
+          }}
+        >
+          <span>🔒</span>
+          <span>
+            <b>Private POT</b> — ZK-shielded vault. Invite-only via unique link. Powered by Umbra SDK + MagicBlock PER.
+          </span>
+        </div>
       </div>
     </div>
   );
