@@ -38,7 +38,7 @@ friends, vote on every swap, and let an MCP-native AI agent propose trades
 | Product | https://potbot.fun |
 | App (same host, auto-detects on-chain mode) | https://potbot.fun |
 | GitHub | https://github.com/YD811/potbot-v2 |
-| Program (Solscan devnet) | https://solscan.io/account/2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL?cluster=devnet |
+| Program (Solscan devnet) | https://solscan.io/account/GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK?cluster=devnet |
 | SDK (npm/TS) | `packages/sdk/` in the repo |
 | MCP server | `apps/potbot-mcp/` in the repo |
 | Twitter | https://x.com/PotBot_sol |
@@ -46,7 +46,7 @@ friends, vote on every swap, and let an MCP-native AI agent propose trades
 
 ## Tech stack
 
-- **Solana + Anchor 0.30** — `pot_vault` program, program ID `2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL`
+- **Solana + Anchor 0.30** — `pot_vault` program, program ID `GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK`
 - **Jupiter v6 / Ultra API** — swap execution
 - **Pyth** — oracle price guard on every swap
 - **Meteora DLMM, Kamino** — yield strategies for idle capital

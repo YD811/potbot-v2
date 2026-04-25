@@ -6,11 +6,11 @@ export const IDL = {
   // `new Program(idl, provider)` reads to resolve the program's public key.
   // Must match `declare_id!` in programs/pot_vault/src/lib.rs and the
   // value in root vercel.json (NEXT_PUBLIC_PROGRAM_ID).
-  address: '2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL',
+  address: 'GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK',
   version: '0.1.0',
   name: 'pot_vault',
   metadata: {
-    address: '2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL',
+    address: 'GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK',
     name: 'pot_vault',
     version: '0.1.0',
     spec: '0.1.0',
@@ -98,6 +98,21 @@ export const IDL = {
         { name: 'pot', isMut: true, isSigner: false },
       ],
       args: [],
+    },
+    {
+      name: 'executeSwap',
+      accounts: [
+        { name: 'pot', isMut: true, isSigner: false },
+        { name: 'vault', isMut: true, isSigner: false },
+        { name: 'authority', isMut: false, isSigner: true },
+        { name: 'systemProgram', isMut: false, isSigner: false },
+      ],
+      args: [
+        {
+          name: 'params',
+          type: { defined: 'ExecuteSwapParams' },
+        },
+      ],
     },
     {
       name: 'initTokenMint',
@@ -229,6 +244,18 @@ export const IDL = {
         fields: [
           { name: 'proposalType', type: { defined: 'ProposalType' } },
           { name: 'description', type: 'string' },
+        ],
+      },
+    },
+    {
+      name: 'ExecuteSwapParams',
+      type: {
+        kind: 'struct',
+        fields: [
+          { name: 'fromMint', type: 'publicKey' },
+          { name: 'toMint', type: 'publicKey' },
+          { name: 'amountIn', type: 'u64' },
+          { name: 'minAmountOut', type: 'u64' },
         ],
       },
     },
