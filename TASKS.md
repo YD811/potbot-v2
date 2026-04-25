@@ -41,8 +41,8 @@
 - [x] `get_yield_rates` — Kamino/Drift/Marginfi доходность
 - [x] `get_leaderboard` — топ Vaults
 - [x] `get_agent_rules` — правила AI агента
-- [ ] **x402 HTTP mode** — add Hono HTTP/SSE transport + x402 gate to MCP server
-- [ ] **Publish to npm** — `npm publish @potbot/mcp`
+- [ ] **x402 HTTP mode** ✅ — `apps/potbot-mcp/src/http.ts` (HTTP+SSE + x402 gate, v0.2.0)
+- [ ] **Publish to npm** — `npm publish @potbot/mcp` (ready: run `npm run build && npm publish`, needs `npm login`)
 
 ### Backend `apps/api` ✅ ГОТОВО
 - [x] **Price Oracle** — Jupiter Price API v2, 5s TTL (HOT), 60s TTL (COLD), in-memory + Upstash Redis
@@ -143,7 +143,7 @@
 
 | Дата | Задача | Статус |
 |------|--------|--------|
-| Апр 17–20 | Devnet deploy + Jupiter real executor | 🔴 СЕЙЧАС |
+| Апр 17–20 | Devnet deploy + Jupiter real executor | 🔴 В РАБОТЕ |
 | Апр 21–24 | Metaplex NFT Shares + Privy wallet | 🟡 |
 | Апр 25–27 | x402 HTTP mode for MCP + npm publish | 🟡 |
 | Апр 28–30 | Deploy apps/api to Fly.io + connect live data | 🟢 |
