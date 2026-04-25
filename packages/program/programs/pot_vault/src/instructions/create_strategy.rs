@@ -1,4 +1,4 @@
-// PotBot v2 — create_strategy
+/// PotBot v2 — create_strategy
 //
 // Author a strategy slot (SL/TP/trailing + optional yield leg) without
 // executing the entry swap. Entry happens later via `execute_swap`.
