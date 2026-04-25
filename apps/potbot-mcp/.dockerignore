@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.env.local
+.npmrc
+.git
+.github
+*.md
+!README.md
+scripts
+verify_*.mjs

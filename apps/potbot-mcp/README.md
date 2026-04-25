@@ -97,6 +97,34 @@ npm run build      # compile TypeScript
 npm publish        # publish to npm (after npm login)
 ```
 
+## Hosted deployment
+
+For a public URL that any AI agent (or `curl`) can hit, deploy the
+HTTP+SSE server.
+
+### Render (one click)
+
+This package ships a `render.yaml` blueprint. Open
+[Render → Blueprints](https://dashboard.render.com/blueprints), pick
+this repo, and Render builds from `apps/potbot-mcp/Dockerfile` with the
+right env vars wired up. Free tier idles after 15 min — bump to
+`starter` for an always-on demo URL. Then:
+
+- `GET  https://<app>.onrender.com/health` — server info JSON
+- `GET  https://<app>.onrender.com/mcp`    — full tool catalogue
+- `GET  https://<app>.onrender.com/sse`    — SSE stream
+- `POST https://<app>.onrender.com/message` — JSON-RPC
+
+To enable x402: set `X402_ENABLED=true` + `X402_RECEIVER_WALLET=<USDC pubkey>`
+in the Render dashboard (don't commit a real receiver).
+
+### Docker (anywhere — Fly.io, Railway, Cloud Run, k8s)
+
+```bash
+docker build -f apps/potbot-mcp/Dockerfile -t potbot-mcp:latest .
+docker run --rm -p 3002:3002 -e SOLANA_NETWORK=devnet potbot-mcp:latest
+```
+
 ## Links
 
 - [Full MCP Guide](https://github.com/YD811/potbot-v2/blob/main/docs/MCP.md)

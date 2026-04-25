@@ -1,0 +1,36 @@
+# Render.com Blueprint for the PotBot MCP HTTP+SSE server.
+#
+# Deploy: https://dashboard.render.com/blueprints → New Blueprint Instance →
+# pick this repo. Render detects this file and provisions the service.
+#
+# Free tier OK for the demo (idles after 15 min of inactivity).
+# Switch `plan: free` to `plan: starter` for always-on production use.
+
+services:
+  - type: web
+    name: potbot-mcp
+    runtime: docker
+    rootDir: .
+    dockerfilePath: ./apps/potbot-mcp/Dockerfile
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true
+    branch: main
+    envVars:
+      - key: PORT
+        value: "3002"
+      - key: SOLANA_NETWORK
+        value: devnet
+      - key: SOLANA_RPC_URL
+        value: https://api.devnet.solana.com
+      - key: PROGRAM_ID
+        value: GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK
+      - key: POTBOT_API_URL
+        value: https://api.potbot.fun
+      - key: X402_ENABLED
+        value: "false"  # set to "true" via dashboard once X402_RECEIVER_WALLET is configured
+      - key: X402_PRICE_USDC
+        value: "0.001"
+      # Set X402_RECEIVER_WALLET in the Render dashboard (do not commit a real receiver).
+      # Set AGENT_KEYPAIR (base58 secret key) only if this deployment should auto-sign votes.
+      #   For demos prefer leaving it unset — clients should bring their own.
