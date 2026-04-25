@@ -2,7 +2,10 @@ import 'dotenv/config'
 import http from 'node:http'
 
 const CLUSTER = process.env.SOLANA_CLUSTER ?? 'devnet'
-const PROGRAM_ID = process.env.POTBOT_PROGRAM_ID ?? 'GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK'
+const PROGRAM_ID =
+  process.env.POTBOT_PROGRAM_ID ??
+  process.env.PROGRAM_ID ??
+  'GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK'
 const PORT = Number(process.env.KEEPER_PORT ?? 8787)
 
 const strategyPubkeys = new Set<string>()
