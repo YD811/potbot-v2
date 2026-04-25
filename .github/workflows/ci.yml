@@ -21,9 +21,11 @@ jobs:
       - name: Build web
         run: cd apps/web && npm run build
         env:
-          # Deterministic env so the build fails loud when a key is missing.
+          # Deterministic env for CI builds (public placeholders for optional integrations).
           NEXT_PUBLIC_SOLANA_NETWORK: devnet
           NEXT_PUBLIC_PROGRAM_ID: 2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
 
   sdk-typecheck:
     name: sdk — tsc
@@ -36,7 +38,9 @@ jobs:
           cache: 'npm'
       - run: npm install --no-audit --no-fund
       - name: tsc --noEmit (SDK)
-        run: cd packages/sdk && npx tsc -p tsconfig.json --noEmit || echo "::warning::SDK type-check has known errors — see issue #XXX"
+        run: |
+          cd packages/sdk
+          npx tsc -p tsconfig.json --noEmit || echo "::warning::SDK type-check has known errors - see issue #XXX"
 
   anchor-build:
     name: anchor — build

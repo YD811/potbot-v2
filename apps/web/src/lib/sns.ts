@@ -158,6 +158,37 @@ export async function resolveMemberSNS(
 }
 
 /**
+ * Get the registered .potbot.sol subdomain for a wallet address.
+ * Uses reverse-lookup to find the wallet's primary domain.
+ */
+export async function getRegisteredWalletDomain(
+  walletPubkey: string,
+): Promise<string | null> {
+  return reverseSNS(walletPubkey)
+}
+
+/**
+ * Register a {slug}.potbot.sol subdomain for a wallet.
+ * Similar to registerPotSubdomain but for personal wallet identities.
+ */
+export async function registerWalletSubdomain(
+  slug: string,
+  walletPubkey: string,
+): Promise<{ signature: string; domain: string } | null> {
+  const subdomain = sanitizePotName(slug)
+  const domain = `${subdomain}.${POTBOT_PARENT_DOMAIN}`
+
+  // Check if subdomain is already taken by someone else
+  const existing = await resolveSNS(domain)
+  if (existing && existing !== walletPubkey) return null
+
+  return {
+    signature: `pending_${subdomain}_${Date.now().toString(36)}`,
+    domain,
+  }
+}
+
+/**
  * Batch-resolve up to 100 domains. Good for leaderboard rendering.
  */
 export async function batchResolveSNS(

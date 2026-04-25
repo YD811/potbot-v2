@@ -555,7 +555,7 @@ function AdminDashboard() {
                 <div className="space-y-3 text-sm">
                   {[
                     { label: 'Network', value: process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? 'devnet', mono: false },
-                    { label: 'Program ID', value: '2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL', mono: true },
+                    { label: 'Program ID', value: 'GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK', mono: true },
                     { label: 'Mode', value: 'Mock (demo) — auto-switches on program deploy', mono: false },
                     { label: 'RPC', value: process.env.NEXT_PUBLIC_RPC_URL ?? 'https://api.devnet.solana.com', mono: true },
                     { label: 'Build', value: process.env.NEXT_PUBLIC_BUILD_TIME ?? 'development', mono: false },
