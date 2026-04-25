@@ -16,11 +16,31 @@ import { analyticsGate } from './middleware/x402.js'
 
 const app = new Hono()
 
+function normalizeOrigins(raw: string): string[] {
+  return raw
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+}
+
+function isAllowedOrigin(origin: string, allowedOrigins: string[]): boolean {
+  if (allowedOrigins.includes(origin)) return true
+
+  // Allow only Vercel preview URLs for this project naming convention.
+  return /^https:\/\/potbot(?:-[a-z0-9-]+)?\.vercel\.app$/i.test(origin)
+}
+
 // ── Global Middleware ────────────────────────────────────────────────────────
 app.use('*', cors({
   origin: (origin) => {
-    const allowed = (process.env.CORS_ORIGINS ?? 'http://localhost:3000').split(',')
-    return allowed.includes(origin) || origin.endsWith('.vercel.app') ? origin : allowed[0]
+    const allowed = normalizeOrigins(
+      process.env.CORS_ORIGINS ??
+      'http://localhost:3000,https://potbot.fun,https://www.potbot.fun',
+    )
+
+    // Non-browser callers may omit Origin. In that case return the primary configured origin.
+    if (!origin) return allowed[0] ?? 'http://localhost:3000'
+    return isAllowedOrigin(origin, allowed) ? origin : allowed[0] ?? origin
   },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-PAYMENT'],

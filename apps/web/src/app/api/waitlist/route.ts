@@ -12,6 +12,10 @@ interface DevEntry {
   created_at: string
 }
 const devWaitlist = new Map<string, DevEntry>()
+const waitlistWindows = new Map<string, { count: number; windowStart: number }>()
+const WAITLIST_WINDOW_MS = 60_000
+const WAITLIST_MAX_PER_MINUTE = 8
+const WAITLIST_SWEEP_FLAG = '__potbotWaitlistSweepStarted'
 
 // Source values we expect from the front-end. Anything else is coerced to 'other'.
 const ALLOWED_SOURCES = new Set(['landing', 'signup', 'telegram', 'twitter', 'referral'])
@@ -40,9 +44,92 @@ function cleanWallet(raw: unknown): string | null {
   }
 }
 
+function getClientIp(req: NextRequest): string {
+  return (
+    req.headers.get('cf-connecting-ip') ??
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    req.headers.get('x-real-ip') ??
+    'unknown'
+  )
+}
+
+function isRateLimited(req: NextRequest, maxPerMinute = 8): boolean {
+  const ip = getClientIp(req)
+  const key = `wl:${ip}`
+  const now = Date.now()
+  const windowMs = WAITLIST_WINDOW_MS
+  const entry = waitlistWindows.get(key)
+
+  if (!entry || now - entry.windowStart > windowMs) {
+    waitlistWindows.set(key, { count: 1, windowStart: now })
+    return false
+  }
+
+  entry.count += 1
+  return entry.count > maxPerMinute
+}
+
+function isTrustedOrigin(req: NextRequest): boolean {
+  const origin = req.headers.get('origin')
+  const host = req.headers.get('host')
+  const referer = req.headers.get('referer')
+
+  const allowed = new Set<string>([
+    'http://localhost:3000',
+    'https://potbot.fun',
+    'https://www.potbot.fun',
+  ])
+
+  if (host) {
+    allowed.add(`https://${host}`)
+    allowed.add(`http://${host}`)
+  }
+
+  if (origin && allowed.has(origin)) return true
+  if (!origin && referer) {
+    try {
+      return allowed.has(new URL(referer).origin)
+    } catch {
+      return false
+    }
+  }
+
+  // Allow non-browser requests without origin/referer (server-to-server).
+  return !origin && !referer
+}
+
+function withRateHeaders(res: NextResponse, req: NextRequest): NextResponse {
+  const ip = getClientIp(req)
+  const key = `wl:${ip}`
+  const entry = waitlistWindows.get(key)
+  const remaining = entry ? Math.max(0, WAITLIST_MAX_PER_MINUTE - entry.count) : WAITLIST_MAX_PER_MINUTE
+  const resetAt = entry ? Math.ceil((entry.windowStart + WAITLIST_WINDOW_MS) / 1000) : Math.ceil((Date.now() + WAITLIST_WINDOW_MS) / 1000)
+  res.headers.set('X-RateLimit-Limit', String(WAITLIST_MAX_PER_MINUTE))
+  res.headers.set('X-RateLimit-Remaining', String(remaining))
+  res.headers.set('X-RateLimit-Reset', String(resetAt))
+  return res
+}
+
 export async function POST(req: NextRequest) {
   try {
+    if (!isTrustedOrigin(req)) {
+      return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 })
+    }
+
+    if (isRateLimited(req)) {
+      return withRateHeaders(
+        NextResponse.json({ error: 'Too many requests. Try again in a minute.' }, { status: 429 }),
+        req,
+      )
+    }
+
     const body = await req.json().catch(() => ({}))
+
+    // Honeypot field for basic bot filtering. Real UI does not send it.
+    if (typeof body.website === 'string' && body.website.trim().length > 0) {
+      return withRateHeaders(NextResponse.json({ success: true }), req)
+    }
+
     const email = (body.email ?? '').toString().trim().toLowerCase()
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -116,10 +203,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true })
+    return withRateHeaders(NextResponse.json({ success: true }), req)
   } catch (e) {
     console.error('[waitlist] error:', e)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    return withRateHeaders(NextResponse.json({ error: 'Server error' }, { status: 500 }), req)
   }
 }
 
@@ -140,4 +227,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ count })
   }
   return NextResponse.json({ count: devWaitlist.size, mode: 'demo' })
+}
+
+const globalForWaitlist = globalThis as typeof globalThis & Record<string, unknown>
+if (!globalForWaitlist[WAITLIST_SWEEP_FLAG]) {
+  globalForWaitlist[WAITLIST_SWEEP_FLAG] = true
+  setInterval(() => {
+    const now = Date.now()
+    for (const [key, value] of waitlistWindows) {
+      if (now - value.windowStart > WAITLIST_WINDOW_MS * 2) {
+        waitlistWindows.delete(key)
+      }
+    }
+  }, 5 * 60_000)
 }

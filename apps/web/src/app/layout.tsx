@@ -6,6 +6,22 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'PotBot v2 — Group Trading Vaults on Solana',
   description: 'Create group trading vaults, govern together, trade together, win together.',
+  metadataBase: new URL('https://potbot.fun'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'PotBot v2 — Group Trading Vaults on Solana',
+    description: 'Create group trading vaults, govern together, trade together, win together.',
+    url: 'https://potbot.fun',
+    siteName: 'PotBot',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PotBot v2 — Group Trading Vaults on Solana',
+    description: 'Create group trading vaults, govern together, trade together, win together.',
+  },
 }
 
 // Runs before React hydrates — prevents light/dark flash on first paint.
