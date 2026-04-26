@@ -28,6 +28,7 @@ import SwapExecuteButton from '@/components/SwapExecuteButton'
 import CreateProposalModal from '@/components/pot/CreateProposalModal'
 import { PublicKey } from '@solana/web3.js'
 import VaultPortfolio from '@/components/VaultPortfolio'
+import PotAnalyticsWidget from '@/components/PotAnalyticsWidget'
 
 
 // SSR-safe wallet button (same pattern as Navbar)
@@ -42,7 +43,7 @@ const WalletMultiButtonDynamic = dynamic(
    Secondary tabs keep existing power-user views (positions, strategy, governance, agent, members, referral). */
 const TABS = [
   'deposit', 'overview', 'vault', 'proposals', 'tamagotchi', 'shares',
-  'positions', 'strategy', 'governance', 'agent', 'members', 'referral',
+  'positions', 'analytics', 'strategy', 'governance', 'agent', 'members', 'referral',
 ] as const
 type Tab = (typeof TABS)[number]
 
@@ -54,6 +55,7 @@ const TAB_LABELS: Record<Tab, string> = {
   tamagotchi: '🌱 Tamagotchi',
   shares:     '🪙 Shares',
   positions:  '📊 P&L',
+  analytics:  '🔎 Analytics',
   strategy:   '⚙️ Strategy',
   governance: '🏛️ Gov',
   agent:      '🤖 AI',
@@ -656,6 +658,12 @@ export default function PotPage() {
             {/* PnL dashboard (mock-mode / on-chain) */}
             <PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} />
           </div>
+        )}
+
+
+        {/* ── Analytics ── */}
+        {activeTab === 'analytics' && (
+          <PotAnalyticsWidget potPubkey={pubkey} vaultPubkey={vaultPda || undefined} />
         )}
 
         {/* ── Strategy ── */}

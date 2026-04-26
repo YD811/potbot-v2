@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Connection, PublicKey } from "@solana/web3.js";
+import { getRpcUrl } from "@/lib/rpc";
 
 interface NAVData {
   pubkey: string;
@@ -69,7 +70,7 @@ export async function GET(
 
     // Initialize connection
     const connection = new Connection(
-      process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com"
+      process.env.SOLANA_RPC_URL || getRpcUrl()
     );
 
     // Fetch account info
