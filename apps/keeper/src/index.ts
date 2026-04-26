@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import http from 'node:http'
+import { handleHeliusWebhook } from './webhooks/helius.js'
 
 const CLUSTER = process.env.SOLANA_CLUSTER ?? 'devnet'
 const PROGRAM_ID = process.env.POTBOT_PROGRAM_ID ?? 'GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK'
@@ -49,6 +50,11 @@ const server = http.createServer((req, res) => {
     })
     res.writeHead(200, { 'Content-Type': 'application/json' })
     res.end(body)
+    return
+  }
+
+  if (req.method === 'POST' && req.url === '/webhooks/helius') {
+    void handleHeliusWebhook(req, res)
     return
   }
 
