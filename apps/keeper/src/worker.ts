@@ -1,15 +1,31 @@
+// apps/keeper/src/worker.ts
+// Polls on-chain registry every SYNC_INTERVAL_MS and pushes snapshots to Supabase.
+
 import { Connection, PublicKey } from '@solana/web3.js'
-import { syncPotsToSupabase, syncStrategiesToSupabase, type PotSnapshot, type StrategySnapshot } from './supabase-sync'
+import {
+  syncPotsToSupabase,
+  syncStrategiesToSupabase,
+  type PotSnapshot,
+  type StrategySnapshot,
+} from './supabase-sync'
 import { setStrategiesMonitored } from './index'
 
 const RPC_URL = process.env.SOLANA_RPC_URL ?? 'https://api.devnet.solana.com'
 const PROGRAM_ID_STR = process.env.POTBOT_PROGRAM_ID ?? '2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL'
 const SYNC_INTERVAL_MS = Number(process.env.KEEPER_SYNC_INTERVAL_MS ?? 30_000)
 
-// Anchor account discriminators (sha256("account:<Name>")[..8])
-// We rely on getProgramAccounts with a memcmp-style filter on the first 8 bytes.
-// To stay robust without requiring the full IDL+Anchor coder here, we accept that
-// account layouts may evolve; we only extract minimal fields by offset.
+let connection: Connection | null = null
+let programId: PublicKey | null = null
+
+function getConnection(): Connection {
+  if (!connection) connection = new Connection(RPC_URL, 'confirmed')
+  return connection
+}
+
+function getProgramId(): PublicKey {
+  if (!programId) programId = new PublicKey(PROGRAM_ID_STR)
+  return programId
+}
 
 interface RegistryState {
   pots: Map<string, PotSnapshot>
@@ -23,34 +39,17 @@ const state: RegistryState = {
   lastRefreshTs: 0,
 }
 
-let connection: Connection | null = null
-let programId: PublicKey | null = null
-
-function getConnection(): Connection {
-  if (!connection) {
-    connection = new Connection(RPC_URL, 'confirmed')
-  }
-  return connection
-}
-
-function getProgramId(): PublicKey {
-  if (!programId) {
-    programId = new PublicKey(PROGRAM_ID_STR)
-  }
-  return programId
-}
-
 /**
- * Refresh the in-memory registry by scanning program accounts on-chain.
- * Falls back gracefully if RPC is unreachable (keeps last known state).
+ * Refresh registry from chain. This is intentionally minimal: we discover all
+ * accounts owned by the program and classify them by data length so the keeper
+ * has *something* to sync without requiring a full Anchor coder here. As the
+ * IDL stabilises, swap this for a proper account decoder.
  */
 export async function refreshRegistry(): Promise<RegistryState> {
   try {
     const conn = getConnection()
     const pid = getProgramId()
-    const accounts = await conn.getProgramAccounts(pid, {
-      commitment: 'confirmed',
-    })
+    const accounts = await conn.getProgramAccounts(pid, { commitment: 'confirmed' })
 
     const nextPots = new Map<string, PotSnapshot>()
     const nextStrategies = new Map<string, StrategySnapshot>()
@@ -58,28 +57,35 @@ export async function refreshRegistry(): Promise<RegistryState> {
     for (const { pubkey, account } of accounts) {
       const data = account.data
       if (!data || data.length < 8) continue
-      // Heuristic classification by data length until full IDL coder is wired in.
-      // Pot accounts are typically larger (members vector); strategies are smaller fixed-size.
-      const key = pubkey.toBase58()
+      const addr = pubkey
       if (data.length >= 200 && data.length < 4096) {
-        // Treat as pot snapshot stub
-        nextPots.set(key, {
-          pubkey: key,
-          name: '',
-          baseMint: '',
-          totalDeposits: 0,
-          memberCount: 0,
-          tradesCount: 0,
-          createdAt: Math.floor(Date.now() / 1000),
+        // Pot stub: real fields filled in once Anchor coder is wired.
+        nextPots.set(pubkey.toBase58(), {
+          address: addr,
+          authority: addr,
+          agentAuthority: null,
+          paused: false,
+          feeReserveLamports: 0,
+          allowedMints: [],
         })
       } else if (data.length >= 64 && data.length < 200) {
-        nextStrategies.set(key, {
-          pubkey: key,
-          potPubkey: '',
-          kind: 'unknown',
-          status: 'active',
-          params: {},
-          createdAt: Math.floor(Date.now() / 1000),
+        nextStrategies.set(pubkey.toBase58(), {
+          address: addr,
+          pot: addr,
+          slotId: 0,
+          status: 'Pending',
+          inputMint: addr,
+          outputMint: addr,
+          priceFeedId: null,
+          entryPriceX64: { toString: () => '0' },
+          trailingHighPriceX64: { toString: () => '0' },
+          stopLossBps: null,
+          takeProfitBps: null,
+          trailingStopBps: null,
+          sizeIn: { toString: () => '0' },
+          sizeOut: { toString: () => '0' },
+          executorNonce: 0,
+          executedAt: null,
         })
       }
     }
@@ -101,13 +107,10 @@ export function getRegistrySnapshot(): RegistryState {
 }
 
 /**
- * One tick of the keeper loop:
- *  1. Refresh on-chain registry
- *  2. Push pots + strategies to Supabase
+ * One tick: refresh the registry, then push to Supabase.
  */
 export async function tick(): Promise<void> {
   await refreshRegistry()
-
   const pots = Array.from(state.pots.values())
   const strategies = Array.from(state.strategies.values())
 
@@ -130,7 +133,6 @@ export function startWorker(): void {
   if (timer) return
   // eslint-disable-next-line no-console
   console.log('[keeper.worker] starting tick loop, interval=' + SYNC_INTERVAL_MS + 'ms')
-  // Fire immediately, then on interval
   void tick()
   timer = setInterval(() => {
     void tick()
