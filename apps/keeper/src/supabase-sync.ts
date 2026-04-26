@@ -164,3 +164,62 @@ export async function syncAllToSupabase(
     }
   }
 }
+
+// ─── Leaderboard cache refresh (called less often than tick) ──────────────────
+
+/**
+ * Recompute the `leaderboard_cache` table from `trade_log` aggregates.
+ * Designed to run every few minutes (much less often than the 30s tick).
+ * Uses an RPC if available, otherwise falls back to a SQL aggregation.
+ */
+export async function refreshLeaderboardCache(): Promise<void> {
+  const db = getClient()
+
+  // Try the canonical RPC first; if it does not exist we silently ignore so
+  // the keeper still works on stacks that prefer triggers/materialised views.
+  const { error: rpcError } = await db.rpc('refresh_leaderboard_cache')
+  if (!rpcError) return
+  if (!/function .* does not exist|Could not find the function/i.test(rpcError.message)) {
+    // Real error worth surfacing
+    throw new Error('refreshLeaderboardCache: ' + rpcError.message)
+  }
+
+  // Fallback: aggregate trade_log → leaderboard_cache in app code. Cheap enough
+  // for hackathon scale; should be replaced by a SQL trigger or materialised
+  // view in production.
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const { data: trades, error: tradesError } = await db
+    .from('trade_log')
+    .select('pot, pnl_usd, executed_at, signature')
+    .gte('executed_at', since)
+  if (tradesError) throw new Error('refreshLeaderboardCache.trades: ' + tradesError.message)
+  if (!trades) return
+
+  const byPot = new Map<string, { pnl7d: number; trades: number; lastTradeAt: string | null }>()
+  for (const t of trades as Array<{ pot: string; pnl_usd: number | null; executed_at: string }>) {
+    const cur = byPot.get(t.pot) ?? { pnl7d: 0, trades: 0, lastTradeAt: null }
+    cur.pnl7d += Number(t.pnl_usd ?? 0)
+    cur.trades += 1
+    if (!cur.lastTradeAt || t.executed_at > cur.lastTradeAt) cur.lastTradeAt = t.executed_at
+    byPot.set(t.pot, cur)
+  }
+
+  if (byPot.size === 0) return
+
+  const rows = Array.from(byPot.entries()).map(([pot, agg]) => ({
+    pot,
+    total_volume_usd: 0, // requires deeper aggregation; left for SQL view
+    pnl_7d_usd: agg.pnl7d,
+    pnl_7d_pct: 0,
+    pnl_all_time_usd: 0,
+    member_count: 0,
+    trade_count: agg.trades,
+    last_trade_at: agg.lastTradeAt,
+    refreshed_at: new Date().toISOString(),
+  }))
+
+  const { error } = await db
+    .from('leaderboard_cache')
+    .upsert(rows, { onConflict: 'pot', ignoreDuplicates: false })
+  if (error) throw new Error('refreshLeaderboardCache.upsert: ' + error.message)
+}
