@@ -36,11 +36,11 @@ const idl = JSON.parse(
 ) as Idl
 const coder = new BorshAccountsCoder(idl)
 
-// Discriminators copied verbatim from `idl/pot_vault.json` so a desync between
-// the loaded IDL and the on-chain program manifests as zero matches (rather
-// than silent mis-decodes).
-const POT_DISC = Buffer.from([99, 152, 241, 244, 52, 100, 153, 189])
-const STRAT_DISC = Buffer.from([27, 75, 18, 68, 100, 120, 211, 48])
+// Anchor-spec discriminators: sha256("account:<PascalCase>")[..8].
+// These match the on-chain program at GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK
+// and the discriminator field in idl/pot_vault.json.
+const POT_DISC = Buffer.from([202, 25, 205, 47, 59, 253, 100, 118])
+const STRAT_DISC = Buffer.from([97, 218, 254, 239, 248, 146, 59, 42])
 
 function discMatches(data: Buffer, disc: Buffer): boolean {
   if (data.length < 8) return false
