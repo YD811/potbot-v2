@@ -29,6 +29,12 @@ const nextConfig = {
       path: false,
       crypto: false,
     }
+    // Privy 3.x lazily imports an optional Farcaster connector. Stub it so
+    // webpack does not fail the build when we don't ship Farcaster auth.
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@farcaster/mini-app-solana': false,
+    }
     return config
   },
 }
