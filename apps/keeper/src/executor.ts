@@ -1,39 +1,39 @@
+// apps/keeper/src/executor.ts
+// Confirms a swap signature on-chain and logs the resulting trade row to Supabase.
+
 import { Connection, PublicKey, type TransactionSignature } from '@solana/web3.js'
-import { logTradeToSupabase, type TradeLogInput } from './supabase-sync'
+import { logTradeToSupabase } from './supabase-sync'
 
 const RPC_URL = process.env.SOLANA_RPC_URL ?? 'https://api.devnet.solana.com'
 
 let connection: Connection | null = null
 function getConnection(): Connection {
-  if (!connection) {
-    connection = new Connection(RPC_URL, 'confirmed')
-  }
+  if (!connection) connection = new Connection(RPC_URL, 'confirmed')
   return connection
 }
 
 export interface TriggerContext {
   potPubkey: string
-  strategyPubkey: string
-  reason: string
+  strategyAddress: string
   inputMint: string
   outputMint: string
-  inputAmount: number
-  expectedOutputAmount: number
+  amountIn: bigint
+  amountOut: bigint
+  priceUsdEntry: number | null
+  priceUsdExit: number | null
+  triggerReason: string
 }
 
 export interface TriggerResult {
   signature: TransactionSignature
-  realizedOutputAmount: number
-  feeLamports: number
   status: 'confirmed' | 'failed'
+  feeLamports: number
   errorMessage?: string
 }
 
 /**
- * Fire a trigger by sending the prepared swap transaction (passed in as a base64 tx
- * blob in production). For now this is a thin wrapper that takes a pre-confirmed
- * signature and logs the trade into Supabase. The full Jupiter integration lives
- * upstream in the strategy module — we keep this layer dumb on purpose.
+ * Confirm a previously-sent swap signature, then write a row to trade_log.
+ * Logging is best-effort: a failure to write Supabase does not throw.
  */
 export async function fireTrigger(
   ctx: TriggerContext,
@@ -41,7 +41,6 @@ export async function fireTrigger(
 ): Promise<TriggerResult> {
   const conn = getConnection()
   let status: 'confirmed' | 'failed' = 'failed'
-  let realizedOutputAmount = 0
   let feeLamports = 0
   let errorMessage: string | undefined
 
@@ -55,52 +54,34 @@ export async function fireTrigger(
         commitment: 'confirmed',
         maxSupportedTransactionVersion: 0,
       })
-      if (tx?.meta) {
-        feeLamports = tx.meta.fee ?? 0
-        // Best-effort realized output extraction left to upstream parsers.
-        realizedOutputAmount = ctx.expectedOutputAmount
-      }
+      if (tx?.meta) feeLamports = tx.meta.fee ?? 0
     }
   } catch (err) {
     errorMessage = (err as Error).message
   }
 
-  // Log the trade regardless of outcome so users have an audit trail.
-  const entry: TradeLogInput = {
-    pot: ctx.potPubkey,
-    strategy: ctx.strategyPubkey,
-    signature,
-    side: 'swap',
-    inputMint: ctx.inputMint,
-    outputMint: ctx.outputMint,
-    inputAmount: ctx.inputAmount,
-    outputAmount: realizedOutputAmount,
-    feeLamports,
-    status,
-    reason: ctx.reason,
-    errorMessage,
-    timestamp: Math.floor(Date.now() / 1000),
-  }
-
   try {
-    await logTradeToSupabase(entry)
+    await logTradeToSupabase({
+      potPubkey: ctx.potPubkey,
+      strategyAddress: ctx.strategyAddress,
+      signature,
+      inputMint: ctx.inputMint,
+      outputMint: ctx.outputMint,
+      amountIn: ctx.amountIn,
+      amountOut: ctx.amountOut,
+      priceUsdEntry: ctx.priceUsdEntry,
+      priceUsdExit: ctx.priceUsdExit,
+      triggerReason: ctx.triggerReason,
+    })
   } catch (err) {
     // eslint-disable-next-line no-console
     console.warn('[keeper.executor] logTradeToSupabase failed:', (err as Error).message)
   }
 
-  return {
-    signature,
-    realizedOutputAmount,
-    feeLamports,
-    status,
-    errorMessage,
-  }
+  return { signature, status, feeLamports, errorMessage }
 }
 
-/**
- * Used by tests / dry-runs: validate that a pubkey string parses cleanly.
- */
+/** Validates that a pubkey string parses cleanly. */
 export function assertValidPubkey(pk: string): PublicKey {
   return new PublicKey(pk)
 }
