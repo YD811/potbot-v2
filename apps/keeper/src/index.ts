@@ -9,6 +9,22 @@ const ENABLE_WORKER = (process.env.KEEPER_ENABLE_WORKER ?? 'true').toLowerCase()
 const strategyPubkeys = new Set<string>()
 let lastCheckTs = Math.floor(Date.now() / 1000)
 
+interface WorkerMetrics {
+  ticks: number
+  potsSynced: number
+  strategiesSynced: number
+  lastTickMs: number
+  lastTickAt: number
+}
+
+const metrics: WorkerMetrics = {
+  ticks: 0,
+  potsSynced: 0,
+  strategiesSynced: 0,
+  lastTickMs: 0,
+  lastTickAt: 0,
+}
+
 function updateHealthTick(): void {
   lastCheckTs = Math.floor(Date.now() / 1000)
 }
@@ -36,6 +52,21 @@ const server = http.createServer((req, res) => {
     return
   }
 
+  if (req.method === 'GET' && req.url === '/metrics') {
+    const body = JSON.stringify({
+      ticks: metrics.ticks,
+      pots_synced: metrics.potsSynced,
+      strategies_synced: metrics.strategiesSynced,
+      last_tick_ms: metrics.lastTickMs,
+      last_tick_at: metrics.lastTickAt,
+      strategies_monitored: strategyPubkeys.size,
+      worker_enabled: ENABLE_WORKER,
+    })
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(body)
+    return
+  }
+
   res.statusCode = 404
   res.end('Not Found')
 })
@@ -46,8 +77,7 @@ server.listen(PORT, () => {
   console.log(`[keeper] listening on :${PORT} (cluster=${CLUSTER})`)
 
   if (ENABLE_WORKER) {
-    // Lazy-import to avoid pulling @solana/web3.js if the worker is disabled
-    // (e.g. in pure HTTP-health deployments).
+    // Lazy-import to avoid pulling @solana/web3.js if the worker is disabled.
     import('./worker')
       .then(({ startWorker }) => {
         startWorker()
@@ -65,4 +95,17 @@ export function setStrategiesMonitored(pubkeys: string[]): void {
     if (key) strategyPubkeys.add(key)
   }
   updateHealthTick()
+}
+
+export function recordWorkerMetric(update: {
+  ticks?: number
+  lastTickMs?: number
+  potsSynced?: number
+  strategiesSynced?: number
+}): void {
+  if (typeof update.ticks === 'number') metrics.ticks += update.ticks
+  if (typeof update.lastTickMs === 'number') metrics.lastTickMs = update.lastTickMs
+  if (typeof update.potsSynced === 'number') metrics.potsSynced = update.potsSynced
+  if (typeof update.strategiesSynced === 'number') metrics.strategiesSynced = update.strategiesSynced
+  metrics.lastTickAt = Math.floor(Date.now() / 1000)
 }
