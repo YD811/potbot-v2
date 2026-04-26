@@ -5,15 +5,19 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && npm run copy-idl",
+    "copy-idl": "node -e \"const fs=require('fs'),p=require('path');fs.mkdirSync(p.join('dist','idl'),{recursive:true});fs.copyFileSync(p.join('src','idl','pot_vault.json'),p.join('dist','idl','pot_vault.json'))\"",
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
     "@solana/web3.js": "^1.95.0",
     "@supabase/supabase-js": "^2.45.0",
+    "bn.js": "^5.2.1",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
+    "@types/bn.js": "^5.1.5",
     "@types/node": "^20.14.0",
     "tsx": "^4.16.0",
     "typescript": "^5.5.0"
