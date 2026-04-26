@@ -86,6 +86,10 @@ A private POT is a pot whose `members` set is enforced both on-chain and in the 
             | Meteora | Yield | (Roadmap) idle vault funds routed to Meteora pools when strategy permits |
             | Drift | Perps | (Roadmap) leveraged strategies for advanced pots |
 
+            ### Squads
+
+            Squads v4 multisig support is now first-class for creator actions in the web app. When a pot creator address is a Squads vault PDA, Strategy and Governance actions can be routed into a Squads proposal flow instead of direct single-signer submission. This is an optional handoff at the UI/SDK layer (no `pot_vault` program changes) so high-value pots can enforce threshold approvals before creator-only changes are finalized.
+
             ## Roadmap signals
 
             - Streaming push notifications via Helius webhooks when a pot member proposes or executes a trade.

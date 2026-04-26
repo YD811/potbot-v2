@@ -1,8 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useConnection, useWallet } from '@solana/wallet-adapter-react'
+import { PublicKey, TransactionInstruction } from '@solana/web3.js'
 import { withTxToast } from '@/components/TxToast'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import toast from 'react-hot-toast'
+import { buildSquadsTransactionUrl, getMultisigForCreator, isSquadsVault, proposeViaSquads } from '@/lib/squads'
 
 /* ── Types ── */
 
@@ -91,6 +95,8 @@ interface Props {
 }
 
 export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
+  const { connection } = useConnection()
+  const wallet = useWallet()
   const [settings, setSettingsState] = useState<GovSettings>(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
   const [saved, setSaved] = useState(false)
@@ -136,6 +142,35 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
   }
 
   async function saveSettings() {
+    if (wallet.publicKey && wallet.signTransaction && (await isSquadsVault(wallet.publicKey, connection))) {
+      const multisigPda = await getMultisigForCreator(wallet.publicKey, connection)
+      if (multisigPda) {
+        const memoInstruction = new TransactionInstruction({
+          programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
+          keys: [],
+          data: Buffer.from(`potbot:governance-update:${potPubkey}`, 'utf8'),
+        })
+
+        const queued = await proposeViaSquads({
+          multisig: multisigPda,
+          instruction: memoInstruction,
+          signer: { publicKey: wallet.publicKey, signTransaction: wallet.signTransaction },
+          connection,
+        })
+
+        toast.success(
+          <div className="flex flex-col gap-1">
+            <span>Queued in Squads multisig (tx #{queued.txIndex}). Awaiting threshold approvals.</span>
+            <a href={buildSquadsTransactionUrl(multisigPda, queued.txIndex)} target="_blank" rel="noreferrer" className="text-xs underline">
+              Open in Squads ↗
+            </a>
+          </div>
+        )
+        setSaved(true)
+        return
+      }
+    }
+
     await withTxToast(
       async () => {
         if (!isSupabaseConfigured) return

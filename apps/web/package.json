@@ -18,6 +18,7 @@
     "@solana/wallet-adapter-react-ui": "^0.9.35",
     "@solana/wallet-adapter-wallets": "^0.19.32",
     "@solana/web3.js": "^1.95.3",
+    "@sqds/multisig": "^2.1.4",
     "@supabase/supabase-js": "^2.44.4",
     "@tanstack/react-query": "^5.51.1",
     "autoprefixer": "^10.4.19",

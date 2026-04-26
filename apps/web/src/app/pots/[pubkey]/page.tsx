@@ -23,6 +23,7 @@ import { VaultTab } from '@/components/VaultTab'
 import DepositPanel from '@/components/DepositPanel'
 import SharesTab from '@/components/SharesTab'
 import ReferralPanel from '@/components/ReferralPanel'
+import { SquadsBanner } from '@/components/SquadsBanner'
 import { reverseSNS } from '@/lib/sns'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import SwapExecuteButton from '@/components/SwapExecuteButton'
@@ -692,6 +693,7 @@ export default function PotPage() {
         {/* ── Strategy ── */}
         {activeTab === 'strategy' && (
           <div className="space-y-4">
+            <SquadsBanner potPubkey={pubkey} />
             <div className="flex gap-2 justify-end">
               <button
                 disabled={!isOwner}
@@ -715,6 +717,7 @@ export default function PotPage() {
         {/* ── Governance Settings ── */}
         {activeTab === 'governance' && (
           <div className="space-y-4">
+            <SquadsBanner potPubkey={pubkey} />
             <div className="flex gap-2 justify-end">
               <button
                 disabled={!isOwner}
