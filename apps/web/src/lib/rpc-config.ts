@@ -12,8 +12,9 @@
  * holds the devnet defaults so PR previews work out of the box.
  */
 
-import { Connection, PublicKey, Commitment, clusterApiUrl } from '@solana/web3.js'
+import { Connection, PublicKey, Commitment } from '@solana/web3.js'
 import { PROGRAM_ID as SDK_PROGRAM_ID } from '@potbot/sdk'
+import { getRpcUrl as getEnvRpcUrl } from '@/lib/rpc'
 
 export type Cluster = 'devnet' | 'mainnet-beta' | 'localnet'
 
@@ -36,19 +37,9 @@ export function isDevnet(): boolean {
 }
 
 export function getRpcUrl(): string {
-  const override = process.env.NEXT_PUBLIC_RPC_URL
-  if (override) return override
   const cluster = getCluster()
   if (cluster === 'localnet') return 'http://127.0.0.1:8899'
-  if (cluster === 'mainnet-beta') {
-    const key = process.env.NEXT_PUBLIC_HELIUS_API_KEY
-    if (key) return `https://mainnet.helius-rpc.com/?api-key=${key}`
-    console.warn(
-      '[rpc-config] mainnet without NEXT_PUBLIC_HELIUS_API_KEY — falling back to public RPC (rate-limited, not production-safe)',
-    )
-    return clusterApiUrl('mainnet-beta')
-  }
-  return clusterApiUrl('devnet')
+  return getEnvRpcUrl()
 }
 
 export function getProgramId(): PublicKey {

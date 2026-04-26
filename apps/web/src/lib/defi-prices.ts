@@ -1,5 +1,6 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getRpcUrl } from "@/lib/rpc";
 
 interface TokenPrice {
   mint: string;
@@ -44,7 +45,7 @@ class DefiPriceManager {
     },
   ];
 
-  constructor(rpcEndpoint: string = "https://api.mainnet-beta.solana.com") {
+  constructor(rpcEndpoint: string = getRpcUrl()) {
     this.connection = new Connection(rpcEndpoint);
   }
 

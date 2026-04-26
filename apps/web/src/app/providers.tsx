@@ -10,9 +10,9 @@ import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
 } from '@solana/wallet-adapter-wallets'
-import { clusterApiUrl } from '@solana/web3.js'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
+import { getRpcUrl } from '@/lib/rpc'
 
 import '@solana/wallet-adapter-react-ui/styles.css'
 
@@ -28,7 +28,7 @@ const queryClient = new QueryClient({
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const endpoint = useMemo(
-    () => process.env.NEXT_PUBLIC_RPC_URL || clusterApiUrl('devnet'),
+    () => getRpcUrl(),
     []
   )
 

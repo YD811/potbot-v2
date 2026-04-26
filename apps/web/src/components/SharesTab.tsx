@@ -5,6 +5,7 @@ import { useMockStore } from '@/lib/mock-store'
 
 interface Props {
   potPubkey: string
+  canWithdraw?: boolean
 }
 
 interface ShareData {
@@ -28,7 +29,7 @@ function deriveTokenSymbol(potName: string): string {
   )
 }
 
-export default function SharesTab({ potPubkey }: Props) {
+export default function SharesTab({ potPubkey, canWithdraw = true }: Props) {
   const { pots, members } = useMockStore()
 
   const pot = useMemo(() => pots.find((p) => p.pubkey === potPubkey), [pots, potPubkey])
@@ -130,7 +131,13 @@ export default function SharesTab({ potPubkey }: Props) {
               <div className="text-xs text-pot-muted">SOL</div>
             </div>
           </div>
-          <button className="btn-secondary w-full mt-4 py-3 text-sm">🔥 Redeem Shares</button>
+          <button
+            disabled={!canWithdraw}
+            title={!canWithdraw ? 'Members only' : undefined}
+            className="btn-secondary w-full mt-4 py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            🔥 Redeem Shares
+          </button>
         </div>
       ) : (
         <div className="card p-5 border border-pot-border text-center">

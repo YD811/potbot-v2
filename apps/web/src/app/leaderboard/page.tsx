@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { usePots } from '@/hooks/usePots'
 import { useVaultAnalyticsBatch } from '@/hooks/useAnalytics'
+import { useSupabaseLeaderboard } from '@/hooks/useSupabaseLeaderboard'
 import { useSolPrice } from '@/lib/prices'
 import { reverseSNS } from '@/lib/sns'
 
@@ -76,6 +77,12 @@ export default function LeaderboardPage() {
   )
   const pubkeys = useMemo(() => publicPots.map((p: any) => p.pubkey as string), [publicPots])
   const { dataMap: analyticsMap, isAllSettled } = useVaultAnalyticsBatch(pubkeys)
+  const { data: lbCache, error: lbError, refreshedAt: lbRefreshedAt } = useSupabaseLeaderboard(50)
+  const cacheMap = useMemo(() => {
+    const m = new Map<string, (typeof lbCache)[number]>()
+    for (const e of lbCache) m.set(e.pot, e)
+    return m
+  }, [lbCache])
 
   useEffect(() => {
     Promise.all(
@@ -93,13 +100,17 @@ export default function LeaderboardPage() {
   const enriched = useMemo(() => {
     return publicPots.map((p: any) => {
       const a = analyticsMap[p.pubkey]
+      const c = cacheMap.get(p.pubkey)
       const navUsd  = a?.navUsd  ?? (p.balance * (solUsd ?? 0))
-      const pnlPct  = a?.pnlPct  ?? 0
+      // Prefer live analytics; fall back to Supabase 7d PnL when keeper has it.
+      const pnlPct  = a?.pnlPct  ?? (c?.pnl_7d_pct ?? 0)
       const apy30d  = a?.apy30d  ?? 0
+      const tradeCount = a?.tradeCount ?? c?.trade_count ?? p.tradeCount
       const hasLive = !!a
-      return { ...p, navUsd, pnlPct, apy30d, hasLive }
+      const hasCached = !a && !!c
+      return { ...p, navUsd, pnlPct, apy30d, tradeCount, hasLive, hasCached }
     })
-  }, [publicPots, analyticsMap, solUsd])
+  }, [publicPots, analyticsMap, cacheMap, solUsd])
 
   const sorted = useMemo(() => {
     const filtered = enriched.filter((p: any) =>
@@ -126,6 +137,8 @@ export default function LeaderboardPage() {
     ? enriched.reduce((s: number, p: any) => s + p.apy30d, 0) / enriched.length
     : 0
   const liveCount = enriched.filter((p: any) => p.hasLive).length
+  const cachedCount = enriched.filter((p: any) => p.hasCached).length
+  const cacheAgeSec = lbRefreshedAt ? Math.floor((Date.now() - lbRefreshedAt) / 1000) : null
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -138,12 +151,20 @@ export default function LeaderboardPage() {
             Top performing public vaults — ranked by TVL, PnL, and APY
           </p>
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] text-pot-muted">
-          <span className={`w-1.5 h-1.5 rounded-full ${isAllSettled && liveCount > 0 ? 'bg-pot-green animate-pulse' : 'bg-pot-muted'}`} />
-          {isAllSettled && liveCount > 0
-            ? <span className="text-pot-green">{liveCount} live · Analytics API</span>
-            : <span>Loading analytics…</span>
-          }
+        <div className="flex flex-col items-end gap-1 text-[10px] text-pot-muted">
+          <div className="flex items-center gap-1.5">
+            <span className={`w-1.5 h-1.5 rounded-full ${isAllSettled && liveCount > 0 ? 'bg-pot-green animate-pulse' : 'bg-pot-muted'}`} />
+            {isAllSettled && liveCount > 0
+              ? <span className="text-pot-green">{liveCount} live · Analytics API</span>
+              : <span>Loading analytics…</span>
+            }
+          </div>
+          {cachedCount > 0 && !lbError && (
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-pot-accent" />
+              <span className="text-pot-accent">{cachedCount} cached · Supabase{cacheAgeSec != null ? ` · ${cacheAgeSec}s ago` : ''}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -259,6 +280,14 @@ export default function LeaderboardPage() {
                       {snsName && <><span className="text-pot-green font-mono">{snsName}</span><span>·</span></>}
                       <span>{pot.memberCount} members</span>
                       {pot.hasLive && <><span>·</span><LiveDot /></>}
+                      {pot.hasCached && (
+                        <><span>·</span>
+                          <span className="inline-flex items-center gap-1 text-[10px] text-pot-accent">
+                            <span className="w-1.5 h-1.5 rounded-full bg-pot-accent" />
+                            Cached
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -270,7 +299,9 @@ export default function LeaderboardPage() {
                     {solUsd && pot.navUsd > 0 && <div className="text-[10px] text-pot-muted">{pot.balance.toFixed(2)} SOL</div>}
                   </div>
                   <div className="w-[6rem] text-right">
-                    {pot.hasLive ? <PnLBadge pct={pot.pnlPct} /> : <span className="text-xs text-pot-muted">—</span>}
+                    {pot.hasLive || pot.hasCached
+                      ? <PnLBadge pct={pot.pnlPct} />
+                      : <span className="text-xs text-pot-muted">—</span>}
                   </div>
                   <div className="w-[6rem] text-right">
                     {pot.hasLive && pot.apy30d !== 0 ? (
@@ -280,7 +311,7 @@ export default function LeaderboardPage() {
                     ) : <span className="text-xs text-pot-muted">—</span>}
                   </div>
                   <div className="w-[5rem] text-right">
-                    <div className="text-sm font-medium text-white">{pot.tradeCount}</div>
+                    <div className="text-sm font-medium text-white">{pot.tradeCount ?? 0}</div>
                     <div className="text-[10px] text-pot-muted">trades</div>
                   </div>
                   <div className="w-[6rem] text-right">
