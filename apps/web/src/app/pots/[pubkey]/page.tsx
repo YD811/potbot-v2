@@ -29,6 +29,7 @@ import SwapExecuteButton from '@/components/SwapExecuteButton'
 import CreateProposalModal from '@/components/pot/CreateProposalModal'
 import { PublicKey } from '@solana/web3.js'
 import VaultPortfolio from '@/components/VaultPortfolio'
+import PotNotificationFeed from '@/components/PotNotificationFeed'
 import PotAnalyticsWidget from '@/components/PotAnalyticsWidget'
 
 
@@ -505,8 +506,9 @@ export default function PotPage() {
               <div className="lg:col-span-2 w-full">
                 <SharesPanel potPubkey={pubkey} />
               </div>
-              <div className="w-full">
+              <div className="w-full space-y-6">
                 <PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} />
+                <PotNotificationFeed potPubkey={pubkey} />
               </div>
             </div>
 
