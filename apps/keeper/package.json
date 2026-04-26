@@ -9,6 +9,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
