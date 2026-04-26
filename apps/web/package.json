@@ -13,6 +13,7 @@
     "@bonfida/spl-name-service": "^3.0.21",
     "@coral-xyz/anchor": "^0.30.1",
     "@potbot/sdk": "*",
+    "@privy-io/react-auth": "^3.22.2",
     "@solana/wallet-adapter-base": "^0.9.23",
     "@solana/wallet-adapter-react": "^0.15.35",
     "@solana/wallet-adapter-react-ui": "^0.9.35",

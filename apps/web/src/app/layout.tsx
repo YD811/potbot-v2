@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { AppProviders } from './providers'
 import { Navbar } from '@/components/Navbar'
+import { PrivyProviders } from '@/components/PrivyProviders'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -50,12 +51,14 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
       </head>
       <body className="min-h-screen bg-pot-dark text-white antialiased">
-        <AppProviders>
-          <Navbar />
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {children}
-          </main>
-        </AppProviders>
+        <PrivyProviders>
+          <AppProviders>
+            <Navbar />
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              {children}
+            </main>
+          </AppProviders>
+        </PrivyProviders>
       </body>
     </html>
   )

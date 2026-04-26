@@ -3,18 +3,12 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useQuery } from '@tanstack/react-query'
 import { useSolPrice } from '@/lib/prices'
 import { healthApi } from '@/lib/api-client'
 import { ThemeToggle } from '@/components/ThemeToggle'
-
-const WalletMultiButtonDynamic = dynamic(
-  async () =>
-    (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  { ssr: false }
-)
+import { AuthButton } from '@/components/AuthButton'
 
 function LivePriceTicker() {
   const { price: solPrice } = useSolPrice()
@@ -115,7 +109,7 @@ export function Navbar() {
               {publicKey.toBase58().slice(0, 4)}…{publicKey.toBase58().slice(-4)}
             </span>
           )}
-          <WalletMultiButtonDynamic />
+          <AuthButton />
           <button onClick={() => setMenuOpen((v) => !v)}
             className="sm:hidden ml-1 p-2 rounded-lg text-pot-muted hover:text-white hover:bg-pot-card transition" aria-label="Toggle menu">
             {menuOpen ? (
