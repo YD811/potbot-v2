@@ -1,8 +1,9 @@
 import 'dotenv/config'
 import http from 'node:http'
+import { handleHeliusWebhook } from './webhooks/helius.js'
 
 const CLUSTER = process.env.SOLANA_CLUSTER ?? 'devnet'
-const PROGRAM_ID = process.env.POTBOT_PROGRAM_ID ?? '2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL'
+const PROGRAM_ID = process.env.POTBOT_PROGRAM_ID ?? 'GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK'
 const PORT = Number(process.env.KEEPER_PORT ?? 8787)
 const ENABLE_WORKER = (process.env.KEEPER_ENABLE_WORKER ?? 'true').toLowerCase() !== 'false'
 
@@ -52,6 +53,11 @@ const server = http.createServer((req, res) => {
     return
   }
 
+  if (req.method === 'POST' && req.url === '/webhooks/helius') {
+    void handleHeliusWebhook(req, res)
+    return
+  }
+
   if (req.method === 'GET' && req.url === '/metrics') {
     const body = JSON.stringify({
       ticks: metrics.ticks,
@@ -78,7 +84,7 @@ server.listen(PORT, () => {
 
   if (ENABLE_WORKER) {
     // Lazy-import to avoid pulling @solana/web3.js if the worker is disabled.
-    import('./worker')
+    import('./worker.js')
       .then(({ startWorker }) => {
         startWorker()
       })

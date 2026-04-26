@@ -2,8 +2,8 @@
 
 import toast, { Toast } from 'react-hot-toast'
 
-const EXPLORER_BASE = 'https://explorer.solana.com/tx'
-const CLUSTER = process.env.NEXT_PUBLIC_RPC_URL?.includes('devnet') ? 'devnet' : 'mainnet-beta'
+import { solscanTx } from '@/lib/explorer'
+
 
 /** Show a loading toast while a promise resolves */
 export function txLoading(message: string): string {
@@ -21,13 +21,13 @@ export function txSuccess(message: string, signature?: string): void {
         <span className="font-semibold">{message}</span>
         {signature && (
           <a
-            href={`${EXPLORER_BASE}/${signature}?cluster=${CLUSTER}`}
+            href={solscanTx(signature)}
             target="_blank"
             rel="noreferrer"
             className="text-xs text-purple-300 hover:text-purple-100 underline"
             onClick={() => toast.dismiss(t.id)}
           >
-            View on Explorer ↗
+            View on Solscan ↗
           </a>
         )}
       </div>

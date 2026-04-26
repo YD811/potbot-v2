@@ -11,6 +11,7 @@ import {
   useProposals,
   useVote,
 } from '@/hooks/usePots'
+import { usePotRole } from '@/hooks/usePotRole'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 import { PnLDashboard } from '@/components/PnLDashboard'
 import { SharesPanel } from '@/components/SharesPanel'
@@ -28,6 +29,8 @@ import SwapExecuteButton from '@/components/SwapExecuteButton'
 import CreateProposalModal from '@/components/pot/CreateProposalModal'
 import { PublicKey } from '@solana/web3.js'
 import VaultPortfolio from '@/components/VaultPortfolio'
+import PotNotificationFeed from '@/components/PotNotificationFeed'
+import PotAnalyticsWidget from '@/components/PotAnalyticsWidget'
 
 
 // SSR-safe wallet button (same pattern as Navbar)
@@ -42,7 +45,7 @@ const WalletMultiButtonDynamic = dynamic(
    Secondary tabs keep existing power-user views (positions, strategy, governance, agent, members, referral). */
 const TABS = [
   'deposit', 'overview', 'vault', 'proposals', 'tamagotchi', 'shares',
-  'positions', 'strategy', 'governance', 'agent', 'members', 'referral',
+  'positions', 'analytics', 'strategy', 'governance', 'agent', 'members', 'referral',
 ] as const
 type Tab = (typeof TABS)[number]
 
@@ -54,6 +57,7 @@ const TAB_LABELS: Record<Tab, string> = {
   tamagotchi: '🌱 Tamagotchi',
   shares:     '🪙 Shares',
   positions:  '📊 P&L',
+  analytics:  '🔎 Analytics',
   strategy:   '⚙️ Strategy',
   governance: '🏛️ Gov',
   agent:      '🤖 AI',
@@ -315,6 +319,7 @@ export default function PotPage() {
   const { data: pot, isLoading: isPotLoading } = usePot(pubkey)
   const { data: members = [] } = useMembers(pubkey)
   const { data: proposals = [] } = useProposals(pubkey)
+  const { role } = usePotRole(pubkey)
 
   // Default landing tab is deposit — first thing user can do.
   const [activeTab, setActiveTab] = useState<Tab>('deposit')
@@ -363,11 +368,12 @@ export default function PotPage() {
   }
 
   const potAny = pot as any
-  const ownerAddress: string = potAny.authority ?? potAny.owner ?? ''
-  const isOwner = userPubkey?.toString() === ownerAddress
-  const canManage = isOwner || isMember
+  const ownerAddress: string = potAny.authority ?? potAny.creator ?? potAny.owner ?? ''
+  const isOwner = role === 'creator'
+  const canManage = role === 'creator' || role === 'member'
   const canVote = canManage
   const canExecute = isOwner
+  const canWithdraw = canManage
 
   const tamaStats = calculateTamaStats({
     tradeVolume: potAny.totalVolume ?? 0,
@@ -392,6 +398,11 @@ export default function PotPage() {
                 <h1 className="text-3xl font-bold text-white mb-1 break-words">{pot.name}</h1>
                 {snsName && <p className="text-sm font-mono text-pot-green">{snsName}</p>}
                 <p className="text-xs text-pot-muted font-mono mt-1 break-all">{pubkey}</p>
+                <div className="mt-2">
+                  <span className="px-3 py-1 bg-pot-card border border-pot-border text-xs rounded-full text-pot-muted">
+                    You: {role === 'creator' ? 'Creator' : role === 'member' ? 'Member' : 'Viewer'}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="flex flex-col items-end gap-2 shrink-0">
@@ -495,8 +506,9 @@ export default function PotPage() {
               <div className="lg:col-span-2 w-full">
                 <SharesPanel potPubkey={pubkey} />
               </div>
-              <div className="w-full">
+              <div className="w-full space-y-6">
                 <PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} />
+                <PotNotificationFeed potPubkey={pubkey} />
               </div>
             </div>
 
@@ -644,7 +656,20 @@ export default function PotPage() {
         {activeTab === 'tamagotchi' && <TamagotchiTab stats={tamaStats} />}
 
         {/* ── Shares ── */}
-        {activeTab === 'shares' && <SharesTab potPubkey={pubkey} />}
+        {activeTab === 'shares' && (
+          <div className="space-y-4">
+            <div className="flex justify-end">
+              <button
+                disabled={!canWithdraw}
+                title={!canWithdraw ? 'Members only' : undefined}
+                className="px-4 py-2 rounded-lg border border-pot-border text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Withdraw
+              </button>
+            </div>
+            <SharesTab potPubkey={pubkey} canWithdraw={canWithdraw} />
+          </div>
+        )}
 
         {/* ── Positions / P&L — powered by Dune SIM ── */}
         {activeTab === 'positions' && (
@@ -658,11 +683,57 @@ export default function PotPage() {
           </div>
         )}
 
+
+        {/* ── Analytics ── */}
+        {activeTab === 'analytics' && (
+          <PotAnalyticsWidget potPubkey={pubkey} vaultPubkey={vaultPda || undefined} />
+        )}
+
         {/* ── Strategy ── */}
-        {activeTab === 'strategy' && <StrategyPanel potPubkey={pubkey} />}
+        {activeTab === 'strategy' && (
+          <div className="space-y-4">
+            <div className="flex gap-2 justify-end">
+              <button
+                disabled={!isOwner}
+                title={!isOwner ? 'Creator only' : undefined}
+                className="px-4 py-2 rounded-lg border border-pot-border text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Edit Strategy
+              </button>
+              <button
+                disabled={!isOwner}
+                title={!isOwner ? 'Creator only' : undefined}
+                className="px-4 py-2 rounded-lg border border-pot-border text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Pause
+              </button>
+            </div>
+            <StrategyPanel potPubkey={pubkey} />
+          </div>
+        )}
 
         {/* ── Governance Settings ── */}
-        {activeTab === 'governance' && <GovernanceSettings isAdmin={isOwner} potPubkey={pubkey} />}
+        {activeTab === 'governance' && (
+          <div className="space-y-4">
+            <div className="flex gap-2 justify-end">
+              <button
+                disabled={!isOwner}
+                title={!isOwner ? 'Creator only' : undefined}
+                className="px-4 py-2 rounded-lg border border-pot-border text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add Member
+              </button>
+              <button
+                disabled={!isOwner}
+                title={!isOwner ? 'Creator only' : undefined}
+                className="px-4 py-2 rounded-lg border border-pot-border text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Remove Member
+              </button>
+            </div>
+            <GovernanceSettings isAdmin={isOwner} potPubkey={pubkey} />
+          </div>
+        )}
 
         {/* ── AI Agent ── */}
         {activeTab === 'agent' && <AIAgentPanel potPubkey={pubkey} pot={pot} />}
@@ -670,6 +741,15 @@ export default function PotPage() {
         {/* ── Members ── */}
         {activeTab === 'members' && (
           <div className="space-y-4 w-full">
+            <div className="flex justify-end">
+              <button
+                disabled={!isOwner}
+                title={!isOwner ? 'Creator only' : undefined}
+                className="px-4 py-2 rounded-lg border border-pot-border text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Manage
+              </button>
+            </div>
             {members.length === 0 ? (
               <div className="text-center py-12 bg-pot-card border border-pot-border rounded-2xl">
                 <p className="text-pot-muted">No members yet</p>

@@ -1,3 +1,5 @@
+import { getRpcUrl } from '@/lib/rpc'
+
 /**
  * Kora Protocol integration for PotBot — Gasless Transactions
  *
@@ -362,7 +364,7 @@ export async function gaslessVote(params: GaslessVoteParams): Promise<GaslessRes
  */
 export const KORA_NODE_CONFIG_TEMPLATE = {
   signer:          '<vault_fee_payer_keypair_base58>',
-  rpcUrl:          'https://api.mainnet-beta.solana.com',
+  rpcUrl:          getRpcUrl(),
   allowedTokens:   [TOKEN_MINTS.USDC, TOKEN_MINTS.BONK, TOKEN_MINTS.USDT, TOKEN_MINTS.JUP],
   maxFeeLamports:  5000,
   port:            8080,

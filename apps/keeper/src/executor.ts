@@ -2,7 +2,7 @@
 // Confirms a swap signature on-chain and logs the resulting trade row to Supabase.
 
 import { Connection, PublicKey, type TransactionSignature } from '@solana/web3.js'
-import { logTradeToSupabase } from './supabase-sync'
+import { logTradeToSupabase } from './supabase-sync.js'
 
 const RPC_URL = process.env.SOLANA_RPC_URL ?? 'https://api.devnet.solana.com'
 

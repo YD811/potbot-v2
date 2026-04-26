@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Connection, PublicKey } from "@solana/web3.js";
+import { getRpcUrl } from "@/lib/rpc";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { priceManager } from "@/lib/defi-prices";
 
@@ -66,7 +67,7 @@ export async function GET(
 
     // Initialize Solana connection
     const connection = new Connection(
-      process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com"
+      process.env.SOLANA_RPC_URL || getRpcUrl()
     );
 
     // Get token accounts for wallet
