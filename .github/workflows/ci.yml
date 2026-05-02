@@ -94,6 +94,7 @@ jobs:
       - name: anchor build
         env:
           CARGO_BUILD_LOCKED: "true"
+          RUSTUP_TOOLCHAIN: "1.85.0"
         run: cd packages/program && anchor build
       - name: Upload IDL artifact
         uses: actions/upload-artifact@v4
