@@ -9,6 +9,8 @@ import { useMockStore } from '@/lib/mock-store'
 import { useSolPrice } from '@/lib/prices'
 import LandingPage from '@/components/LandingPage'
 import { TrustBadge } from '@/components/TrustBadge'
+import { OnePotBanner } from '@/components/OnePotBanner'
+import { PotTokenCard } from '@/components/PotTokenCard'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -46,8 +48,8 @@ export default function DashboardPage() {
   const { publicKey, connected } = useWallet()
   const { data: pots, isLoading } = usePots()
   const { price: solPrice } = useSolPrice()
-  const [search, setSearch]     = useState('')
-  const [tab, setTab]           = useState<'all' | 'mine'>('all')
+  const [search, setSearch] = useState('')
+  const [tab, setTab] = useState<'all' | 'mine'>('all')
 
   const walletStr = publicKey?.toBase58() ?? ''
 
@@ -94,6 +96,9 @@ export default function DashboardPage() {
     <div>
       <HackathonButton />
 
+      {/* ── ONE POT Featured Banner ── */}
+      <OnePotBanner />
+
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         <div className="card p-4 text-center glow-green">
@@ -123,26 +128,45 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Leaderboard teaser */}
-      <Link
-        href="/leaderboard"
-        className="flex items-center justify-between p-4 mb-6 bg-gradient-to-r from-amber-500/10 to-violet-500/10 border border-amber-500/20 rounded-2xl hover:border-amber-500/40 transition group"
-      >
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">🏆</span>
-          <div>
-            <div className="text-sm font-semibold text-white">Public Leaderboard</div>
-            <div className="text-xs text-pot-muted">
-              {pots?.filter((p) => p.isPublic).length ?? 0} public pots competing — see top performers
+      {/* Quick links row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+        <Link
+          href="/leaderboard"
+          className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-500/10 to-violet-500/10 border border-amber-500/20 rounded-2xl hover:border-amber-500/40 transition group"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🏆</span>
+            <div>
+              <div className="text-sm font-semibold text-white">Public Leaderboard</div>
+              <div className="text-xs text-pot-muted">
+                {pots?.filter((p) => p.isPublic).length ?? 0} public pots — see top performers
+              </div>
             </div>
           </div>
-        </div>
-        <span className="text-pot-muted text-sm group-hover:text-white transition">View →</span>
-      </Link>
+          <span className="text-pot-muted text-sm group-hover:text-white transition">View →</span>
+        </Link>
+
+        <Link
+          href="/dashboard"
+          className="flex items-center justify-between p-4 bg-gradient-to-r from-pot-green/5 to-pot-accent/5 border border-pot-green/20 rounded-2xl hover:border-pot-green/40 transition group"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📊</span>
+            <div>
+              <div className="text-sm font-semibold text-white">My Dashboard</div>
+              <div className="text-xs text-pot-muted">Portfolio · Votes · Quests · Referrals</div>
+            </div>
+          </div>
+          <span className="text-pot-muted text-sm group-hover:text-white transition">Open →</span>
+        </Link>
+      </div>
+
+      {/* ── $POT Token Buyback Card ── */}
+      <PotTokenCard />
 
       {/* Header + Search + Tabs */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-        <h2 className="text-2xl font-bold">POTs</h2>
+        <h2 className="text-2xl font-bold">All POTs</h2>
         <div className="flex gap-3 w-full sm:w-auto">
           <input
             type="text"
@@ -186,7 +210,7 @@ export default function DashboardPage() {
           )}
         </button>
         {tab === 'mine' && (
-          <Link href="/my-pots" className="ml-auto text-xs text-pot-muted hover:text-white transition">
+          <Link href="/dashboard" className="ml-auto text-xs text-pot-muted hover:text-white transition">
             Full dashboard →
           </Link>
         )}
@@ -257,7 +281,6 @@ export default function DashboardPage() {
                   <span className="text-xl">{pot.tamagotchiEmoji}</span>
                 </div>
 
-                {/* Balance in SOL + USD */}
                 <div className="mb-3">
                   <div className="text-xl font-bold text-pot-green">
                     {pot.balance.toFixed(2)} SOL
