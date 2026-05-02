@@ -46,6 +46,11 @@ function LivePriceTicker() {
             {apiDown ? 'Demo Mode' : 'Live'}
           </span>
         </div>
+        {/* Season 1 ticker */}
+        <div className="hidden sm:flex items-center gap-1.5 text-[11px]">
+          <span className="text-pot-muted">|</span>
+          <span className="text-pot-accent">🌱 Season 1: The Garden</span>
+        </div>
         <div className="ml-auto flex items-center gap-3 text-[11px] text-pot-muted">
           <Link href="/for-agents" className="hover:text-pot-green transition hidden sm:block">
             🤖 For AI Agents
@@ -57,7 +62,7 @@ function LivePriceTicker() {
 }
 
 const NAV_LINKS = [
-  { href: '/',            label: 'Dashboard' },
+  { href: '/',            label: 'Home' },
   { href: '/leaderboard', label: '🏆 Leaderboard' },
   { href: '/vaults',      label: '⚡ Vaults' },
   { href: '/create',      label: '+ Create' },
@@ -71,7 +76,6 @@ export function Navbar() {
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
 
-  // Hide the Waitlist CTA on the signup page itself — no point linking to where we are.
   const showWaitlistCta = !pathname.startsWith('/signup')
 
   return (
@@ -90,17 +94,18 @@ export function Navbar() {
             }`}>{label}</Link>
           ))}
           {publicKey && (
-            <Link href="/my-pots" className={`px-3 py-1.5 rounded-lg transition ${
-              isActive('/my-pots') ? 'text-pot-accent bg-pot-accent/10 border border-pot-accent/30' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
-            }`}>My POTs</Link>
+            <Link href="/dashboard" className={`px-3 py-1.5 rounded-lg transition ${
+              isActive('/dashboard') ? 'text-pot-accent bg-pot-accent/10 border border-pot-accent/30' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
+            }`}>My Dashboard</Link>
           )}
+          <Link href="/faq" className={`px-3 py-1.5 rounded-lg transition ${
+            isActive('/faq') ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
+          }`}>FAQ</Link>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Theme slider (dark ↔ light) */}
           <ThemeToggle />
 
-          {/* Waitlist / Early-Access CTA — visible on every page */}
           {showWaitlistCta && (
             <Link
               href="/signup"
@@ -133,7 +138,6 @@ export function Navbar() {
 
       {menuOpen && (
         <div className="sm:hidden border-t border-pot-border bg-pot-dark/95 backdrop-blur-xl px-4 py-3 space-y-1">
-          {/* Mobile Waitlist CTA — top of the drawer so it's impossible to miss */}
           {showWaitlistCta && (
             <Link
               href="/signup"
@@ -151,11 +155,15 @@ export function Navbar() {
               }`}>{label}</Link>
           ))}
           {publicKey && (
-            <Link href="/my-pots" onClick={() => setMenuOpen(false)}
+            <Link href="/dashboard" onClick={() => setMenuOpen(false)}
               className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
-                isActive('/my-pots') ? 'text-pot-accent bg-pot-accent/10 border border-pot-accent/30' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
-              }`}>My POTs</Link>
+                isActive('/dashboard') ? 'text-pot-accent bg-pot-accent/10 border border-pot-accent/30' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
+              }`}>My Dashboard</Link>
           )}
+          <Link href="/faq" onClick={() => setMenuOpen(false)}
+            className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+              isActive('/faq') ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
+            }`}>FAQ</Link>
           <div className="pt-2 border-t border-pot-border/50">
             <Link href="/for-agents" onClick={() => setMenuOpen(false)}
               className="block px-4 py-2 text-sm text-pot-muted hover:text-pot-green transition">
