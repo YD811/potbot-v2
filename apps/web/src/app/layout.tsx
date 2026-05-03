@@ -1,7 +1,8 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import Link from 'next/link'
 import { AppProviders } from './providers'
 import { Navbar } from '@/components/Navbar'
+import { OnboardingTutorial } from '@/components/OnboardingTutorial'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -15,12 +16,29 @@ export const metadata: Metadata = {
     url: 'https://potbot.fun',
     siteName: 'PotBot',
     type: 'website',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'PotBot — Group Trading Vaults on Solana',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
+    site: '@PotBot_sol',
+    creator: '@PotBot_sol',
     title: 'PotBot — Group Trading Vaults on Solana',
     description: 'Pool funds, vote on swaps, withdraw any time. Trustless group treasury management on Solana.',
+    images: ['/og-image.png'],
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 }
 
 const THEME_BOOTSTRAP = `
@@ -55,6 +73,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-pot-dark text-white antialiased flex flex-col">
         <AppProviders>
           <Navbar />
+
+          {/* ── First-time onboarding tutorial ── */}
+          <OnboardingTutorial />
+
           <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
             {children}
           </main>
