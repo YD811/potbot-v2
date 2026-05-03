@@ -1,0 +1,11 @@
+# Shared agent rules
+
+- Read TASK.md first. Do not deviate from scope.
+- Никогда не коммить .env, ключи, id.json, target/, .anchor/.
+- Conventional commits, мелкие коммиты.
+- Перед финальным push:
+  - `anchor build` (если трогал программу)
+  - `pnpm build && pnpm lint` (если трогал app)
+- Если упёрся в неоднозначность — стоп, опиши вопрос в TASK.md в конце
+  раздела "QUESTIONS" и не выдумывай.
+- Не открывай PR, не мержи в main. Только push своей ветки.
