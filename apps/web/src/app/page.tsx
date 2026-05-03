@@ -10,6 +10,7 @@ import { useSolPrice } from '@/lib/prices'
 import LandingPage from '@/components/LandingPage'
 import { TrustBadge } from '@/components/TrustBadge'
 import { OnePotBanner } from '@/components/OnePotBanner'
+import { PotTokenCard } from '@/components/PotTokenCard'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -159,6 +160,9 @@ export default function DashboardPage() {
           <span className="text-pot-muted text-sm group-hover:text-white transition">Open →</span>
         </Link>
       </div>
+
+      {/* ── $POT Token Buyback Card ── */}
+      <PotTokenCard />
 
       {/* Header + Search + Tabs */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
