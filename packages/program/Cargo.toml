@@ -15,4 +15,4 @@ codegen-units = 1
 overflow-checks = true
 
 [patch.crates-io]
-proc-macro2 = { git = "https://github.com/dtolnay/proc-macro2", tag = "1.0.86" }
+anchor-syn = { path = "vendor/anchor-syn-0.30.1" }

@@ -33,7 +33,7 @@ export async function createPot(
   authority: PublicKey,
   params: CreatePotParams
 ) {
-  const [potPda] = getPotAddress(authority, params.name)
+  const [potPda] = getPotAddress(params.name, authority)
   const [vaultPda] = getVaultAddress(potPda)
 
   return program.methods

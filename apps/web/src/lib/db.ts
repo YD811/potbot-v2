@@ -195,7 +195,7 @@ export async function upsertAgentRule(rule: Omit<DbAgentRule, 'id' | 'created_at
 export async function markRuleTriggered(potPubkey: string, ruleId: string) {
   const db = createServerSupabase()
   await db.from('agent_rules')
-    .update({ last_triggered_at: new Date().toISOString() })
+    .update({ last_fired_at: new Date().toISOString(), last_triggered_at: new Date().toISOString() })
     .eq('pot_pubkey', potPubkey)
     .eq('rule_id', ruleId)
 }

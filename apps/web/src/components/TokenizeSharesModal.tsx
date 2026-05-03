@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { PotSDK } from '@potbot/sdk';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 
 interface TokenizeSharesModalProps {
   potPubkey: PublicKey;

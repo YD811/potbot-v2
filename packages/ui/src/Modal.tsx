@@ -1,1 +1,41 @@
-J3VzZSBjbGllbnQnCgppbXBvcnQgeyB1c2VFZmZlY3QgfSBmcm9tICdyZWFjdCcKaW1wb3J0IHsgY2xzeCB9IGZyb20gJ2Nsc3gnCgppbnRlcmZhY2UgTW9kYWxQcm9wcyB7CiAgb3BlbjogYm9vbGVhbgogIG9uQ2xvc2U6ICgpID0+IHZvaWQKICBjaGlsZHJlbjogUmVhY3QuUmVhY3ROb2RlCiAgY2xhc3NOYW1lPzogc3RyaW5nCn0KCmV4cG9ydCBmdW5jdGlvbiBNb2RhbCh7IG9wZW4sIG9uQ2xvc2UsIGNoaWxkcmVuLCBjbGFzc05hbWUgfTogTW9kYWxQcm9wcykgewogIHVzZUVmZmVjdCgoKSA9PiB7CiAgICBjb25zdCBoYW5kbGVyID0gKGU6IEtleWJvYXJkRXZlbnQpID0+IGUua2V5ID09PSAnRXNjYXBlJyAmJiBvbkNsb3NlKCkKICAgIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKCdrZXlkb3duJywgaGFuZGxlcikKICAgIHJldHVybiAoKSA9PiB3aW5kb3cucmVtb3ZlRXZlbnRMaXN0ZW5lcigna2V5ZG93bicsIGhhbmRsZXIpCiAgfSwgW29uQ2xvc2VdKQoKICBpZiAoIW9wZW4pIHJldHVybiBudWxsCgogIHJldHVybiAoCiAgICA8ZGl2CiAgICAgIGNsYXNzTmFtZT0iZml4ZWQgaW5zZXQtMCB6LTUwIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHAtNCBiZy1ibGFjay82MCBiYWNrZHJvcC1ibHVyLXNtIgogICAgICBvbkNsaWNrPXsoZSkgPT4gZS50YXJnZXQgPT09IGUuY3VycmVudFRhcmdldCAmJiBvbkNsb3NlKCl9CiAgICA+CiAgICAgIDxkaXYgY2xhc3NOYW1lPXtjbHN4KAogICAgICAgICdiZy1bIzBEMTExN10gYm9yZGVyIGJvcmRlci1bIzFBMjMzMl0gcm91bmRlZC0yeGwgdy1mdWxsIG1heC13LWxnIHNoYWRvdy0yeGwnLAogICAgICAgIGNsYXNzTmFtZQogICAgICApfT4KICAgICAgICB7Y2hpbGRyZW59CiAgICAgIDwvZGl2PgogICAgPC9kaXY+CiAgKQp9Cg==
+'use client'
+
+import { useEffect } from 'react'
+import type { ReactNode } from 'react'
+
+interface ModalProps {
+  open: boolean
+  onClose: () => void
+  children: ReactNode
+  className?: string
+}
+
+function cx(...parts: Array<string | false | null | undefined>) {
+  return parts.filter(Boolean).join(' ')
+}
+
+export function Modal({ open, onClose, children, className }: ModalProps) {
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  if (!open) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose()
+      }}
+    >
+      <div className={cx('bg-[#0D1117] border border-[#1A2332] rounded-2xl w-full max-w-lg shadow-2xl', className)}>
+        {children}
+      </div>
+    </div>
+  )
+}

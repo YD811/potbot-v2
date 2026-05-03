@@ -249,7 +249,7 @@ export class PotSDK {
   async fetchPrivatePot(potPubkey: PublicKey) {
     try {
       const [privatePotAddress] = getPrivatePotAddress(potPubkey);
-      return await this.program.account.privatePotAccount.fetch(privatePotAddress);
+      return await (this.program.account as any).privatePotAccount.fetch(privatePotAddress);
     } catch (error) {
       return null; // Not a private pot
     }
@@ -261,7 +261,7 @@ export class PotSDK {
   async fetchSnsDomain(potPubkey: PublicKey) {
     try {
       const [snsAddress] = getSnsAddress(potPubkey);
-      return await this.program.account.snsAccount.fetch(snsAddress);
+      return await (this.program.account as any).snsAccount.fetch(snsAddress);
     } catch (error) {
       return null; // No SNS domain
     }
@@ -273,7 +273,7 @@ export class PotSDK {
   async fetchTamagotchiNft(potPubkey: PublicKey) {
     try {
       const [tamagotchiAddress] = getTamagotchiNftAddress(potPubkey);
-      return await this.program.account.tamagotchiNftAccount.fetch(tamagotchiAddress);
+      return await (this.program.account as any).tamagotchiNftAccount.fetch(tamagotchiAddress);
     } catch (error) {
       return null; // No Tamagotchi NFT
     }
@@ -284,7 +284,7 @@ export class PotSDK {
    */
   async isTokenized(potPubkey: PublicKey): Promise<boolean> {
     try {
-      const pot = await this.program.account.potAccount.fetch(potPubkey);
+      const pot = await (this.program.account as any).potAccount.fetch(potPubkey);
       return pot.tokenMint.toString() !== PublicKey.default.toString();
     } catch (error) {
       return false;
@@ -296,7 +296,7 @@ export class PotSDK {
    */
   async getTokenMint(potPubkey: PublicKey): Promise<PublicKey | null> {
     try {
-      const pot = await this.program.account.potAccount.fetch(potPubkey);
+      const pot = await (this.program.account as any).potAccount.fetch(potPubkey);
       if (pot.tokenMint.toString() === PublicKey.default.toString()) {
         return null;
       }
@@ -367,16 +367,16 @@ export class PotSDK {
   }
 
   async fetchPot(potPubkey: PublicKey) {
-    return this.program.account.potAccount.fetch(potPubkey);
+    return (this.program.account as any).potAccount.fetch(potPubkey);
   }
 
   async fetchMember(potPubkey: PublicKey, wallet: PublicKey) {
     const [memberAddress] = getMemberAddress(potPubkey, wallet);
-    return this.program.account.memberAccount.fetch(memberAddress);
+    return (this.program.account as any).memberAccount.fetch(memberAddress);
   }
 
   async fetchProposal(potPubkey: PublicKey, proposalId: number) {
     const [proposalAddress] = getProposalAddress(potPubkey, proposalId);
-    return this.program.account.proposalAccount.fetch(proposalAddress);
+    return (this.program.account as any).proposalAccount.fetch(proposalAddress);
   }
 }

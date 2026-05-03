@@ -310,10 +310,10 @@ export default function PotPage() {
   useEffect(() => {
     const ref = searchParams.get('ref')
     if (!ref || !pubkey || !isSupabaseConfigured) return
-    supabase.from('referrals').upsert(
+    Promise.resolve(supabase.from('referrals').upsert(
       { pot_pubkey: pubkey, referrer_code: ref, visited_at: new Date().toISOString() },
       { onConflict: 'pot_pubkey,referrer_code' },
-    ).catch(() => {})
+    )).catch(() => {})
   }, [searchParams, pubkey])
 
   const { data: pot, isLoading: isPotLoading } = usePot(pubkey)

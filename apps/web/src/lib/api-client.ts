@@ -40,6 +40,7 @@ export interface VaultAnalytics {
   positions: PositionWithPnl[]
   solBalanceLamports: number
   solBalanceUsd: number
+  tradeCount?: number
   updatedAt: number
   cached?: boolean
 }

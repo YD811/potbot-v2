@@ -302,6 +302,7 @@ export async function upsertPotMetadata(
 export type DbPot = Pot & {
   balance?: number
   total_shares?: number
+  member_count?: number
   trade_count?: number
   total_volume?: number
   yield_strategy?: number
@@ -317,7 +318,32 @@ export type DbPot = Pot & {
 }
 
 /** @deprecated Use Member instead */
-export type DbMember = Omit<Member, 'pot'> & { pot_pubkey?: string }
+export type DbMember = Omit<Member, 'pot' | 'shares' | 'deposit_total'> & {
+  pot_pubkey?: string
+  shares: string | number
+  deposit_total: string | number
+}
+
+export interface DbVote {
+  id?: string
+  proposal_pubkey: string
+  voter: string
+  approve: boolean
+  shares: number
+  voted_at?: string
+}
+
+export interface DbReferral {
+  id?: string
+  pot_pubkey: string
+  referrer: string
+  parent_referrer?: string | null
+  referee: string
+  deposit_amount: number
+  level1_earning: number
+  level2_earning: number
+  created_at?: string
+}
 
 /** @deprecated Use Proposal instead */
 export interface DbProposal {
@@ -338,7 +364,7 @@ export interface DbProposal {
 }
 
 /** @deprecated Use AgentRule instead */
-export type DbAgentRule = AgentRule & { pot_pubkey?: string; rule_id?: string }
+export type DbAgentRule = AgentRule & { pot_pubkey?: string; rule_id?: string; last_triggered_at?: string | null }
 
 /** @deprecated Use GovernanceSettings instead */
 export type DbGovernanceSettings = GovernanceSettings & { pot_pubkey?: string }

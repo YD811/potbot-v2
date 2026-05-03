@@ -25,7 +25,7 @@ export async function POST(
 
     // Get voter's shares for voting power
     const member = await getMember(proposal.pot_pubkey, voter)
-    const shares = member?.shares ?? 0
+    const shares = Number(member?.shares ?? 0)
 
     await castVote({
       proposal_pubkey: params.pubkey,

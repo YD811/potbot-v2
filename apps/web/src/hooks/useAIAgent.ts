@@ -90,11 +90,11 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
   /* ── Load config from Supabase on mount ── */
   useEffect(() => {
     if (!isSupabaseConfigured) return
-    supabase
+    Promise.resolve(supabase
       .from('agent_configs')
       .select('config_json')
       .eq('pot_pubkey', potPubkey)
-      .single()
+      .single())
       .then(({ data }) => {
         if (data?.config_json) {
           setConfigState(data.config_json as AgentConfig)
@@ -107,11 +107,11 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
   const setConfig = useCallback((newConfig: AgentConfig) => {
     setConfigState(newConfig)
     if (isSupabaseConfigured) {
-      supabase.from('agent_configs').upsert({
+      Promise.resolve(supabase.from('agent_configs').upsert({
         pot_pubkey:  potPubkey,
         config_json: newConfig,
         updated_at:  new Date().toISOString(),
-      }, { onConflict: 'pot_pubkey' }).catch(() => {})
+      }, { onConflict: 'pot_pubkey' })).catch(() => {})
     }
     agentApi.updateRules(potPubkey, toBackendRules(newConfig)).catch(() => {})
   }, [potPubkey])
@@ -242,7 +242,9 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
           ruleName: rule.name,
         })
 
-        if (rule.action.type === 'alert') {
+        const actionType = (rule.action as any).type
+
+        if (actionType === 'alert') {
           addLog({
             level:    'warn',
             message:  `⚠️ Alert: ${(rule.action as any).label}`,
@@ -250,7 +252,7 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
             ruleName: rule.name,
           })
 
-        } else if (rule.action.type === 'propose_swap') {
+        } else if (actionType === 'propose_swap') {
           const amountSol = (((rule.action as any).amountPct ?? 10) / 100) * (pot?.balance ?? 0)
           if (amountSol < 0.01) {
             addLog({ level: 'warn', message: `⚠️ Skipped: vault balance too low for swap proposal`, ruleId: rule.id, ruleName: rule.name })
@@ -288,7 +290,7 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
             addLog({ level: 'error', message: `❌ Swap proposal failed: ${err instanceof Error ? err.message : String(err)}`, ruleId: rule.id, ruleName: rule.name })
           }
 
-        } else if (rule.action.type === 'propose_limit_order') {
+        } else if (actionType === 'propose_limit_order') {
           const action = rule.action as any
           const amountSol = ((action.amountPct ?? 10) / 100) * (pot?.balance ?? 0)
           if (amountSol < 0.01) {
@@ -317,7 +319,7 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
             addLog({ level: 'error', message: `❌ Limit order proposal failed: ${err instanceof Error ? err.message : String(err)}`, ruleId: rule.id, ruleName: rule.name })
           }
 
-        } else if (rule.action.type === 'propose_dca') {
+        } else if (actionType === 'propose_dca') {
           const action = rule.action as any
           const totalAmountSol    = ((action.amountPct ?? 20) / 100) * (pot?.balance ?? 0)
           const totalCycles       = action.totalCycles ?? 7

@@ -351,7 +351,7 @@ export function useCreatePot() {
 
       if (isLive && program) {
         try {
-          const [potPda] = getPotAddress(publicKey, params.name)
+          const [potPda] = getPotAddress(params.name, publicKey)
           const [vaultPda] = getVaultAddress(potPda)
           // @ts-ignore — Anchor IDL types are too deeply nested for TS inference
           const tx = await program.methods
@@ -576,6 +576,7 @@ export function useVote() {
           const proposalPk = new PublicKey(params.proposalAddress)
           const [memberPda] = getMemberAddress(potPk, publicKey)
           const [voterRecordPda] = getVoterRecordAddress(proposalPk, publicKey)
+          // @ts-ignore — Anchor method builder types are too deep for TS inference here.
           const tx = await program.methods
             .vote(params.approve)
             .accounts({

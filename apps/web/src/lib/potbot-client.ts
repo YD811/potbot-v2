@@ -50,9 +50,9 @@ export type StrategyAccount = Record<string, unknown>
 export class PotbotClient {
   readonly program: Program
 
-  constructor(connection: Connection, wallet: Wallet) {
+  constructor(connection: Connection, wallet: Wallet | any) {
     const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed' })
-    this.program = new Program(IDL as Idl, provider)
+    this.program = new Program((IDL as unknown) as Idl, provider)
   }
 
   private method(name: string, args: unknown[]): RpcFn {
@@ -178,6 +178,6 @@ export class PotbotClient {
   }
 }
 
-export function createPotbotClient(connection: Connection, wallet: Wallet) {
+export function createPotbotClient(connection: Connection, wallet: Wallet | any) {
   return new PotbotClient(connection, wallet)
 }

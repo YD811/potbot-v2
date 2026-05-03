@@ -49,8 +49,9 @@ export async function GET(req: NextRequest) {
 
     for (const rule of rules) {
       // Check cooldown
-      if (rule.last_triggered_at) {
-        const lastMs = new Date(rule.last_triggered_at).getTime()
+      const lastFiredAt = rule.last_fired_at ?? rule.last_triggered_at
+      if (lastFiredAt) {
+        const lastMs = new Date(lastFiredAt).getTime()
         const cooldownMs = (rule.cooldown_minutes ?? 60) * 60_000
         if (Date.now() - lastMs < cooldownMs) continue
       }

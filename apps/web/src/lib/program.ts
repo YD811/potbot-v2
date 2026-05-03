@@ -7,5 +7,5 @@ import { IDL } from '@potbot/sdk'
 /** Build an Anchor Program client against the configured network + program id. */
 export function makeProgram(wallet: Wallet): Program {
   const provider = new AnchorProvider(getRpcConnection(), wallet, { commitment: 'confirmed' })
-  return new Program({ ...(IDL as Idl), address: getProgramId().toBase58() } as Idl, provider)
+  return new Program({ ...((IDL as unknown) as Idl), address: getProgramId().toBase58() } as Idl, provider)
 }

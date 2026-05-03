@@ -11,7 +11,7 @@ interface PremiumFeaturesProps {
   potName: string;
   tamagotchiLevel: number;
   isTokenized: boolean;
-  hasSnsdomain: boolean;
+  hasSnsAddress: boolean;
   hasTamagotchiNft: boolean;
   snsAddress?: string;
 }

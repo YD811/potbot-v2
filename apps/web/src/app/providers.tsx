@@ -26,6 +26,10 @@ const queryClient = new QueryClient({
   },
 })
 
+const SolanaConnectionProvider = ConnectionProvider as any
+const SolanaWalletProvider = WalletProvider as any
+const SolanaWalletModalProvider = WalletModalProvider as any
+
 export function AppProviders({ children }: { children: ReactNode }) {
   const endpoint = useMemo(
     () => getRpcUrl(),
@@ -41,10 +45,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
   )
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
+    <SolanaConnectionProvider endpoint={endpoint}>
       {/* autoConnect: false — prevents the adapter from probing MetaMask/EVM extensions on load */}
-      <WalletProvider wallets={wallets} autoConnect={false}>
-        <WalletModalProvider>
+      <SolanaWalletProvider wallets={wallets} autoConnect={false}>
+        <SolanaWalletModalProvider>
           <QueryClientProvider client={queryClient}>
             {children}
             <Toaster
@@ -59,8 +63,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
               }}
             />
           </QueryClientProvider>
-        </WalletModalProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+        </SolanaWalletModalProvider>
+      </SolanaWalletProvider>
+    </SolanaConnectionProvider>
   )
 }

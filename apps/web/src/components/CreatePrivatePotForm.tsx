@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PotSDK } from '@potbot/sdk';
-import { toast } from 'sonner';
+import { getPotAddress } from '@potbot/sdk';
+import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
 interface CreatePrivatePotFormProps {
@@ -74,7 +75,7 @@ export function CreatePrivatePotForm({ onSuccess }: CreatePrivatePotFormProps) {
       onSuccess?.();
       
       // Navigate to the new pot
-      const potPubkey = sdk.getPotAddress(formData.name, wallet.publicKey)[0];
+      const potPubkey = getPotAddress(formData.name, wallet.publicKey)[0];
       router.push(`/pots/${potPubkey.toString()}`);
       
     } catch (error: any) {

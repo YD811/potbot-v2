@@ -25,7 +25,9 @@ export async function POST(
     }
 
     // Calculate shares: NAV = balance / total_shares (or 1 if first deposit)
-    const nav = pot.total_shares > 0 ? pot.balance / pot.total_shares : 1
+    const balance = Number(pot.balance ?? 0)
+    const totalShares = Number(pot.total_shares ?? 0)
+    const nav = totalShares > 0 ? balance / totalShares : 1
     const newShares = amountSol / nav
 
     // Upsert member
@@ -33,16 +35,17 @@ export async function POST(
     await upsertMember({
       pot_pubkey: potPubkey,
       wallet,
-      shares: (existing?.shares ?? 0) + newShares,
-      deposit_total: (existing?.deposit_total ?? 0) + amountSol,
+      shares: Number(existing?.shares ?? 0) + newShares,
+      deposit_total: Number(existing?.deposit_total ?? 0) + amountSol,
+      synced_at: new Date().toISOString(),
     })
 
     // Update pot
     const db = createServerSupabase()
     await db.from('pots').update({
-      balance: pot.balance + amountSol,
-      total_shares: pot.total_shares + newShares,
-      member_count: existing ? pot.member_count : pot.member_count + 1,
+      balance: balance + amountSol,
+      total_shares: totalShares + newShares,
+      member_count: existing ? (pot.member_count ?? 0) : (pot.member_count ?? 0) + 1,
       updated_at: new Date().toISOString(),
     }).eq('pubkey', potPubkey)
 

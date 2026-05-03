@@ -95,10 +95,10 @@ function AdminDashboard() {
     if (!pots || !isSupabaseConfigured) return
     const pubkeys = pots.map((p) => p.pubkey)
     if (pubkeys.length === 0) return
-    supabase
+    Promise.resolve(supabase
       .from('agent_configs')
       .select('pot_pubkey, config_json')
-      .in('pot_pubkey', pubkeys)
+      .in('pot_pubkey', pubkeys))
       .then(({ data }) => {
         if (!data) return
         const loaded = data.map((row) => ({
