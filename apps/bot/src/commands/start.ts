@@ -1,1 +1,84 @@
-aW1wb3J0IHsgUHVibGljS2V5IH0gZnJvbSAnQHNvbGFuYS93ZWIzLmpzJwppbXBvcnQgeyBJbmxpbmVLZXlib2FyZCB9IGZyb20gJ2dyYW1teScKaW1wb3J0IHR5cGUgeyBCb3RDb250ZXh0IH0gZnJvbSAnLi4vdHlwZXMuanMnCgpjb25zdCBBUFBfVVJMID0gcHJvY2Vzcy5lbnYuQVBQX1VSTCA/PyAnaHR0cHM6Ly9hcHAucG90Ym90LmZ1bicKCi8qKgogKiAvc3RhcnQgWzx3YWxsZXRfYWRkcmVzcz5dCiAqCiAqIENhbGxlZCBpbiB0d28gc2NlbmFyaW9zOgogKiAgIDEuIFBsYWluIC9zdGFydCAg4oCUIHNob3dzIHdlbGNvbWUgd2l0aCBjdXJyZW50IGxpbmsgc3RhdHVzCiAqICAgMi4gL3N0YXJ0IDxhZGRyPiDigJQgZGVlcC1saW5rIGZyb20gdGhlIHdlYiBhcHAgYWZ0ZXIgd2FsbGV0IGNvbm5lY3Q7CiAqICAgICAgdmFsaWRhdGVzICsgcGVyc2lzdHMgdGhlIFNvbGFuYSBhZGRyZXNzIHRvIHRoZSBzZXNzaW9uLgogKgogKiBUaGUgd2ViIGFwcCBnZW5lcmF0ZXMgdGhlIGRlZXAtbGluayBhczoKICogICBodHRwczovL3QubWUvPEJPVF9VU0VSTkFNRT4/c3RhcnQ9PGJhc2U1OF93YWxsZXRfYWRkcmVzcz4KICogVGVsZWdyYW0gc2V0cyBjdHgubWF0Y2ggdG8gdGhlIHBheWxvYWQgYWZ0ZXIgInN0YXJ0ICIuCiAqLwpleHBvcnQgYXN5bmMgZnVuY3Rpb24gc3RhcnRDb21tYW5kKGN0eDogQm90Q29udGV4dCkgewogIGNvbnN0IHBheWxvYWQgPSAoY3R4Lm1hdGNoIGFzIHN0cmluZyB8IHVuZGVmaW5lZCk/LnRyaW0oKSA/PyAnJwoKICAvLyDilIDilIAgRGVlcC1saW5rOiB3YWxsZXQgYWRkcmVzcyBwYXNzZWQgYXMgcGF5bG9hZCDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKICBpZiAocGF5bG9hZC5sZW5ndGggPiAwKSB7CiAgICB0cnkgewogICAgICBuZXcgUHVibGljS2V5KHBheWxvYWQpIC8vIHRocm93cyBpZiBpbnZhbGlkIGJhc2U1OCAvIHdyb25nIGxlbmd0aAogICAgICBjdHguc2Vzc2lvbi53YWxsZXRBZGRyZXNzID0gcGF5bG9hZAoKICAgICAgY29uc3Qgc2hvcnQgPSBgJHtwYXlsb2FkLnNsaWNlKDAsIDYpfeKApiR7cGF5bG9hZC5zbGljZSgtNil9YAogICAgICBjb25zdCBrZXlib2FyZCA9IG5ldyBJbmxpbmVLZXlib2FyZCgpCiAgICAgICAgLnVybCgn8J+qtCBNeSBQT1RzJywgYCR7QVBQX1VSTH0vZGFzaGJvYXJkYCkKICAgICAgICAucm93KCkKICAgICAgICAudXJsKCfwn5OWIERvY3MnLCAnaHR0cHM6Ly9kb2NzLnBvdGJvdC5mdW4nKQoKICAgICAgcmV0dXJuIGN0eC5yZXBseSgKICAgICAgICBg4pyFICpXYWxsZXQgbGlua2VkISpcblxuYCArCiAgICAgICAgYEFkZHJlc3M6IFxgJHtzaG9ydH1cYFxuXG5gICsKICAgICAgICBgWW91J3JlIGFsbCBzZXQuIFVzZSB0aGUgY29tbWFuZHMgYmVsb3cgdG8gbWFuYWdlIHlvdXIgdmF1bHRzOlxuXG5gICsKICAgICAgICBgL3BvdCDigJQgdmlldyAmIG1hbmFnZSB5b3VyIFBPVHNcbmAgKwogICAgICAgIGAvc3dhcCDigJQgcHJvcG9zZSBhIHRva2VuIHN3YXBcbmAgKwogICAgICAgIGAvZHVlbCDigJQgY2hhbGxlbmdlIGFub3RoZXIgdmF1bHRcbmAgKwogICAgICAgIGAvaGVscCDigJQgZnVsbCBjb21tYW5kIHJlZmVyZW5jZWAsCiAgICAgICAgeyBwYXJzZV9tb2RlOiAnTWFya2Rvd24nLCByZXBseV9tYXJrdXA6IGtleWJvYXJkIH0KICAgICAgKQogICAgfSBjYXRjaCB7CiAgICAgIC8vIFBheWxvYWQgZXhpc3RzIGJ1dCBpc24ndCBhIHZhbGlkIFNvbGFuYSBwdWJrZXkKICAgICAgcmV0dXJuIGN0eC5yZXBseSgKICAgICAgICBg4p2MICpJbnZhbGlkIHdhbGxldCBhZGRyZXNzLipcblxuYCArCiAgICAgICAgYFRoZSBsaW5rIGFwcGVhcnMgdG8gYmUgbWFsZm9ybWVkLiBQbGVhc2UgY29ubmVjdCB5b3VyIHdhbGxldCBmcm9tIHRoZSBhcHAgYWdhaW4uYCwKICAgICAgICB7IHBhcnNlX21vZGU6ICdNYXJrZG93bicgfQogICAgICApCiAgICB9CiAgfQoKICAvLyDilIDilIAgUGxhaW4gL3N0YXJ0IOKAlCB3ZWxjb21lIHNjcmVlbiDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKICBjb25zdCBsaW5rZWQgPSBjdHguc2Vzc2lvbi53YWxsZXRBZGRyZXNzCiAgY29uc3Qgc2hvcnQgID0gbGlua2VkID8gYCR7bGlua2VkLnNsaWNlKDAsIDYpfeKApiR7bGlua2VkLnNsaWNlKC02KX1gIDogbnVsbAoKICBjb25zdCBrZXlib2FyZCA9IG5ldyBJbmxpbmVLZXlib2FyZCgpCiAgICAudXJsKAogICAgICBsaW5rZWQgPyAn8J+qtCBNeSBQT1RzJyA6ICfwn5SXIENvbm5lY3QgV2FsbGV0JywKICAgICAgbGlua2VkCiAgICAgICAgPyBgJHtBUFBfVVJMfS9kYXNoYm9hcmRgCiAgICAgICAgOiBgJHtBUFBfVVJMfS9kYXNoYm9hcmQ/YWN0aW9uPWNvbm5lY3RgCiAgICApCiAgICAucm93KCkKICAgIC51cmwoJ/Cfk5YgRG9jcycsICdodHRwczovL2RvY3MucG90Ym90LmZ1bicpCgogIGNvbnN0IHN0YXR1c0xpbmUgPSBsaW5rZWQKICAgID8gYPCflJcgV2FsbGV0OiBcYCR7c2hvcnR9XGBgCiAgICA6IGDwn5SXIE5vIHdhbGxldCBsaW5rZWQgeWV0IOKAlCB0YXAgKkNvbm5lY3QgV2FsbGV0KiBiZWxvdy5gCgogIGF3YWl0IGN0eC5yZXBseSgKICAgIGDwn6q0ICpXZWxjb21lIHRvIFBvdEJvdCEqXG5cbmAgKwogICAgYENvbGxlY3RpdmUgdHJhZGluZyB2YXVsdHMgb24gU29sYW5hLlxuYCArCiAgICBgUG9vbCBmdW5kcyB3aXRoIHlvdXIgY3Jldywgdm90ZSBvbiBzd2FwcywgYW5kIGdyb3cgeW91ciBvbi1jaGFpbiBUYW1hZ290Y2hpLlxuXG5gICsKICAgIHN0YXR1c0xpbmUgKyBgXG5cbmAgKwogICAgYCpDb21tYW5kczoqXG5gICsKICAgIGAvcG90ICDigJQgbWFuYWdlIHlvdXIgUE9UIHZhdWx0c1xuYCArCiAgICBgL3N3YXAg4oCUIHByb3Bvc2UgYSB0b2tlbiBzd2FwXG5gICsKICAgIGAvZHVlbCDigJQgY2hhbGxlbmdlIGFub3RoZXIgdmF1bHRcbmAgKwogICAgYC9oZWxwIOKAlCBzaG93IGFsbCBjb21tYW5kc2AsCiAgICB7IHBhcnNlX21vZGU6ICdNYXJrZG93bicsIHJlcGx5X21hcmt1cDoga2V5Ym9hcmQgfQogICkKfQo=
+import { PublicKey } from '@solana/web3.js'
+import { InlineKeyboard } from 'grammy'
+import type { BotContext } from '../types.js'
+
+const APP_URL = process.env.APP_URL ?? 'https://app.potbot.fun'
+
+/**
+ * /start [<wallet_address>]
+ *
+ * Called in two scenarios:
+ *   1. Plain /start  — shows welcome with current link status
+ *   2. /start <addr> — deep-link from the web app after wallet connect;
+ *      validates + persists the Solana address to the session.
+ *
+ * The web app generates the deep-link as:
+ *   https://t.me/<BOT_USERNAME>?start=<base58_wallet_address>
+ * Telegram sets ctx.match to the payload after "start ".
+ */
+export async function startCommand(ctx: BotContext) {
+  const payload = (ctx.match as string | undefined)?.trim() ?? ''
+
+  // ── Deep-link: wallet address passed as payload ───────────────────────────
+  if (payload.length > 0) {
+    try {
+      new PublicKey(payload) // throws if invalid base58 / wrong length
+      ctx.session.walletAddress = payload
+
+      const short = `${payload.slice(0, 6)}…${payload.slice(-6)}`
+      const keyboard = new InlineKeyboard()
+        .url('🪴 My POTs', `${APP_URL}/dashboard`)
+        .row()
+        .url('📖 Docs', 'https://docs.potbot.fun')
+
+      return ctx.reply(
+        `✅ *Wallet linked!*\n\n` +
+        `Address: \`${short}\`\n\n` +
+        `You're all set. Use the commands below to manage your vaults:\n\n` +
+        `/pot — view & manage your POTs\n` +
+        `/swap — propose a token swap\n` +
+        `/duel — challenge another vault\n` +
+        `/help — full command reference`,
+        { parse_mode: 'Markdown', reply_markup: keyboard }
+      )
+    } catch {
+      // Payload exists but isn't a valid Solana pubkey
+      return ctx.reply(
+        `❌ *Invalid wallet address.*\n\n` +
+        `The link appears to be malformed. Please connect your wallet from the app again.`,
+        { parse_mode: 'Markdown' }
+      )
+    }
+  }
+
+  // ── Plain /start — welcome screen ─────────────────────────────────────────
+  const linked = ctx.session.walletAddress
+  const short  = linked ? `${linked.slice(0, 6)}…${linked.slice(-6)}` : null
+
+  const keyboard = new InlineKeyboard()
+    .url(
+      linked ? '🪴 My POTs' : '🔗 Connect Wallet',
+      linked
+        ? `${APP_URL}/dashboard`
+        : `${APP_URL}/dashboard?action=connect`
+    )
+    .row()
+    .url('📖 Docs', 'https://docs.potbot.fun')
+
+  const statusLine = linked
+    ? `🔗 Wallet: \`${short}\``
+    : `🔗 No wallet linked yet — tap *Connect Wallet* below.`
+
+  await ctx.reply(
+    `🪴 *Welcome to PotBot!*\n\n` +
+    `Collective trading vaults on Solana.\n` +
+    `Pool funds with your crew, vote on swaps, and grow your on-chain Tamagotchi.\n\n` +
+    statusLine + `\n\n` +
+    `*Commands:*\n` +
+    `/pot  — manage your POT vaults\n` +
+    `/swap — propose a token swap\n` +
+    `/duel — challenge another vault\n` +
+    `/help — show all commands`,
+    { parse_mode: 'Markdown', reply_markup: keyboard }
+  )
+}

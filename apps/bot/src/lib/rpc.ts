@@ -1,1 +1,78 @@
-LyoqCiAqIFNoYXJlZCBTb2xhbmEgY29ubmVjdGlvbiArIHByb2dyYW0gaW5zdGFuY2VzIGZvciB0aGUgYm90LgogKiBVc2VzIGEgcmVhZC1vbmx5IHByb3ZpZGVyIChubyBzaWduaW5nKSBmb3IgcXVlcmllcy4KICogQWN0dWFsIHRyYW5zYWN0aW9ucyByZXF1aXJlIHVzZXJzIHRvIHNpZ24gdmlhIHRoZSB3ZWIgYXBwIG9yIGRlZXAtbGluay4KICovCmltcG9ydCB7IENvbm5lY3Rpb24sIFB1YmxpY0tleSwgTEFNUE9SVFNfUEVSX1NPTCB9IGZyb20gJ0Bzb2xhbmEvd2ViMy5qcycKCmNvbnN0IFJQQ19VUkwgPSBwcm9jZXNzLmVudi5SUENfVVJMID8/ICdodHRwczovL2FwaS5kZXZuZXQuc29sYW5hLmNvbScKY29uc3QgUE9UX1BST0dSQU1fSUQgPSBuZXcgUHVibGljS2V5KAogIHByb2Nlc3MuZW52LlBPVF9QUk9HUkFNX0lEID8/ICdQb3RWTFQxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMScKKQpjb25zdCBEVUVMX1BST0dSQU1fSUQgPSBuZXcgUHVibGljS2V5KAogIHByb2Nlc3MuZW52LkRVRUxfUFJPR1JBTV9JRCA/PyAnUG90RFVMMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTEnCikKCmV4cG9ydCBjb25zdCBjb25uZWN0aW9uID0gbmV3IENvbm5lY3Rpb24oUlBDX1VSTCwgJ2NvbmZpcm1lZCcpCmV4cG9ydCB7IFBPVF9QUk9HUkFNX0lELCBEVUVMX1BST0dSQU1fSUQgfQoKLy8g4pSA4pSAIFF1ZXJ5IGhlbHBlcnMg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACgpleHBvcnQgaW50ZXJmYWNlIFBvdEluZm8gewogIHB1YmtleTogc3RyaW5nCiAgbmFtZTogc3RyaW5nCiAgbWVtYmVyQ291bnQ6IG51bWJlcgogIHRvdGFsU2hhcmVzOiBiaWdpbnQKICB0YW1hZ290Y2hpTGV2ZWw6IG51bWJlcgogIHRyYWRlQ291bnQ6IGJpZ2ludAp9CgovKioKICogRmV0Y2ggYWxsIFBPVCBhY2NvdW50cyB3aGVyZSBgYXV0aG9yaXR5YCBtYXRjaGVzIHRoZSBnaXZlbiB3YWxsZXQuCiAqIFJlcXVpcmVzIHRoZSBJREwgdG8gYmUgYXZhaWxhYmxlIOKAlCBmYWxscyBiYWNrIHRvIGVtcHR5IGFycmF5IGlmIG5vdCBkZXBsb3llZC4KICovCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBmZXRjaFBvdHNGb3JXYWxsZXQod2FsbGV0QjU4OiBzdHJpbmcpOiBQcm9taXNlPFBvdEluZm9bXT4gewogIHRyeSB7CiAgICBjb25zdCB3YWxsZXQgPSBuZXcgUHVibGljS2V5KHdhbGxldEI1OCkKICAgIGNvbnN0IGFjY291bnRzID0gYXdhaXQgY29ubmVjdGlvbi5nZXRQcm9ncmFtQWNjb3VudHMoUE9UX1BST0dSQU1fSUQsIHsKICAgICAgZmlsdGVyczogWwogICAgICAgIHsKICAgICAgICAgIG1lbWNtcDogewogICAgICAgICAgICBvZmZzZXQ6IDgsIC8vIHNraXAgOC1ieXRlIEFuY2hvciBkaXNjcmltaW5hdG9yCiAgICAgICAgICAgIGJ5dGVzOiB3YWxsZXQudG9CYXNlNTgoKSwKICAgICAgICAgIH0sCiAgICAgICAgfSwKICAgICAgXSwKICAgIH0pCgogICAgLy8gV2l0aG91dCB0aGUgSURMIGxvYWRlZCB3ZSBjYW4gYXQgbGVhc3QgcmV0dXJuIHN0dWJzIHdpdGggdGhlIHB1YmtleQogICAgcmV0dXJuIGFjY291bnRzLm1hcCgoYSkgPT4gKHsKICAgICAgcHVia2V5OiBhLnB1YmtleS50b0Jhc2U1OCgpLAogICAgICBuYW1lOiAnKGxvYWRpbmfigKYpJywKICAgICAgbWVtYmVyQ291bnQ6IDAsCiAgICAgIHRvdGFsU2hhcmVzOiAwbiwKICAgICAgdGFtYWdvdGNoaUxldmVsOiAwLAogICAgICB0cmFkZUNvdW50OiAwbiwKICAgIH0pKQogIH0gY2F0Y2ggewogICAgcmV0dXJuIFtdCiAgfQp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gZ2V0VmF1bHRCYWxhbmNlKHZhdWx0UHVia2V5OiBzdHJpbmcpOiBQcm9taXNlPG51bWJlcj4gewogIHRyeSB7CiAgICBjb25zdCBpbmZvID0gYXdhaXQgY29ubmVjdGlvbi5nZXRBY2NvdW50SW5mbyhuZXcgUHVibGljS2V5KHZhdWx0UHVia2V5KSkKICAgIHJldHVybiAoaW5mbz8ubGFtcG9ydHMgPz8gMCkgLyBMQU1QT1JUU19QRVJfU09MCiAgfSBjYXRjaCB7CiAgICByZXR1cm4gMAogIH0KfQoKLy8g4pSA4pSAIERlZXAtbGluayBoZWxwZXJzIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKY29uc3QgQVBQX1VSTCA9IHByb2Nlc3MuZW52LkFQUF9VUkwgPz8gJ2h0dHBzOi8vYXBwLnBvdGJvdC5mdW4nCgpleHBvcnQgZnVuY3Rpb24gY3JlYXRlUG90TGluaygpICAgeyByZXR1cm4gYCR7QVBQX1VSTH0vZGFzaGJvYXJkP2FjdGlvbj1jcmVhdGVgIH0KZXhwb3J0IGZ1bmN0aW9uIHBvdERldGFpbExpbmsocGs6IHN0cmluZykgeyByZXR1cm4gYCR7QVBQX1VSTH0vcG90cy8ke3BrfWAgfQpleHBvcnQgZnVuY3Rpb24gZHVlbExpbmsoKSAgICAgICAgeyByZXR1cm4gYCR7QVBQX1VSTH0vZHVlbGAgfQpleHBvcnQgZnVuY3Rpb24gZGVwb3NpdExpbmsocGs6IHN0cmluZykgeyByZXR1cm4gYCR7QVBQX1VSTH0vcG90cy8ke3BrfT90YWI9ZGVwb3NpdGAgfQo=
+/**
+ * Shared Solana connection + program instances for the bot.
+ * Uses a read-only provider (no signing) for queries.
+ * Actual transactions require users to sign via the web app or deep-link.
+ */
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
+
+const RPC_URL = process.env.RPC_URL ?? 'https://api.devnet.solana.com'
+const POT_PROGRAM_ID = new PublicKey(
+  process.env.POT_PROGRAM_ID ?? 'PotVLT11111111111111111111111111111111111111'
+)
+const DUEL_PROGRAM_ID = new PublicKey(
+  process.env.DUEL_PROGRAM_ID ?? 'PotDUL11111111111111111111111111111111111111'
+)
+
+export const connection = new Connection(RPC_URL, 'confirmed')
+export { POT_PROGRAM_ID, DUEL_PROGRAM_ID }
+
+// ── Query helpers ──────────────────────────────────────────────────────────
+
+export interface PotInfo {
+  pubkey: string
+  name: string
+  memberCount: number
+  totalShares: bigint
+  tamagotchiLevel: number
+  tradeCount: bigint
+}
+
+/**
+ * Fetch all POT accounts where `authority` matches the given wallet.
+ * Requires the IDL to be available — falls back to empty array if not deployed.
+ */
+export async function fetchPotsForWallet(walletB58: string): Promise<PotInfo[]> {
+  try {
+    const wallet = new PublicKey(walletB58)
+    const accounts = await connection.getProgramAccounts(POT_PROGRAM_ID, {
+      filters: [
+        {
+          memcmp: {
+            offset: 8, // skip 8-byte Anchor discriminator
+            bytes: wallet.toBase58(),
+          },
+        },
+      ],
+    })
+
+    // Without the IDL loaded we can at least return stubs with the pubkey
+    return accounts.map((a) => ({
+      pubkey: a.pubkey.toBase58(),
+      name: '(loading…)',
+      memberCount: 0,
+      totalShares: 0n,
+      tamagotchiLevel: 0,
+      tradeCount: 0n,
+    }))
+  } catch {
+    return []
+  }
+}
+
+export async function getVaultBalance(vaultPubkey: string): Promise<number> {
+  try {
+    const info = await connection.getAccountInfo(new PublicKey(vaultPubkey))
+    return (info?.lamports ?? 0) / LAMPORTS_PER_SOL
+  } catch {
+    return 0
+  }
+}
+
+// ── Deep-link helpers ──────────────────────────────────────────────────────
+
+const APP_URL = process.env.APP_URL ?? 'https://app.potbot.fun'
+
+export function createPotLink()   { return `${APP_URL}/dashboard?action=create` }
+export function potDetailLink(pk: string) { return `${APP_URL}/pots/${pk}` }
+export function duelLink()        { return `${APP_URL}/duel` }
+export function depositLink(pk: string) { return `${APP_URL}/pots/${pk}?tab=deposit` }

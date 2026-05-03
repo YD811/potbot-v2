@@ -1,1 +1,69 @@
-aW1wb3J0IHR5cGUgeyBDb250ZXh0IH0gZnJvbSAnZ3JhbW15JwppbXBvcnQgeyBJbmxpbmVLZXlib2FyZCB9IGZyb20gJ2dyYW1teScKCmNvbnN0IEtOT1dOX1RPS0VOUzogUmVjb3JkPHN0cmluZywgc3RyaW5nPiA9IHsKICBTT0w6ICAnU28xMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMicsCiAgVVNEQzogJ0VQakZXZGQ1QXVmcVNTcWVNMnFOMXh6eWJhcEM4RzR3RUdHa1p3eVREdDF2JywKICBKVVA6ICAnSlVQeWl3cllKRnNrVVBpSGE3aGtlUjhWVXRBZUZvU1liS2VkWk5zRHZDTicsCiAgQk9OSzogJ0RlelhBWjh6N1Bucm5SSmp6M3dYQm9SZ2l4Q2E2eGpuQjdZYUIxcFBCMjYzJywKICBXSUY6ICAnRUtwUUdTSnRqTUZxS1o5S1FhblNxWVhSY0Y4ZkJvcHpMSFl4ZE02NXpjam0nLAogIFBZVEg6ICdIWjFKb3ZOaVZ2R3JHTmlpWXZFb3pFVmdaNTh4YVUzUkt3WDhlQUNRQkN0MycsCn0KCi8qKgogKiAvc3dhcCA8YW1vdW50PiA8RlJPTT4gPFRPPgogKiBDcmVhdGVzIGEgZ292ZXJuYW5jZSBwcm9wb3NhbCBpbiB0aGUgdXNlcidzIGFjdGl2ZSBQT1QgdmlhIHdlYiBhcHAgZGVlcC1saW5rLgogKiBUaGUgYWN0dWFsIHN3YXAgZXhlY3V0ZXMgb24tY2hhaW4gYWZ0ZXIgbWVtYmVycyBhcHByb3ZlLgogKi8KZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIHN3YXBDb21tYW5kKGN0eDogQ29udGV4dCkgewogIGNvbnN0IGFyZ3MgPSBjdHgubWVzc2FnZT8udGV4dD8uc3BsaXQoJyAnKS5zbGljZSgxKSA/PyBbXQoKICBpZiAoYXJncy5sZW5ndGggPCAzKSB7CiAgICByZXR1cm4gY3R4LnJlcGx5KAogICAgICBg4pqhICpTd2FwIENvbW1hbmQqXG5cbmAgKwogICAgICBgVXNhZ2U6IFxgL3N3YXAgPGFtb3VudD4gPEZST00+IDxUTz5cYFxuXG5gICsKICAgICAgYEV4YW1wbGVzOlxuYCArCiAgICAgIGBcYC9zd2FwIDEwIFNPTCBKVVBcYFxuYCArCiAgICAgIGBcYC9zd2FwIDUwMCBVU0RDIEJPTktcYFxuXG5gICsKICAgICAgYFN1cHBvcnRlZCB0b2tlbnM6ICR7T2JqZWN0LmtleXMoS05PV05fVE9LRU5TKS5qb2luKCcsICcpfWAsCiAgICAgIHsgcGFyc2VfbW9kZTogJ01hcmtkb3duJyB9CiAgICApCiAgfQoKICBjb25zdCBbcmF3QW1vdW50LCByYXdGcm9tLCByYXdUb10gPSBhcmdzCiAgY29uc3QgYW1vdW50ID0gcGFyc2VGbG9hdChyYXdBbW91bnQpCiAgY29uc3QgZnJvbSA9IHJhd0Zyb20udG9VcHBlckNhc2UoKQogIGNvbnN0IHRvICAgPSByYXdUby50b1VwcGVyQ2FzZSgpCgogIGlmIChpc05hTihhbW91bnQpIHx8IGFtb3VudCA8PSAwKSB7CiAgICByZXR1cm4gY3R4LnJlcGx5KCfinYwgSW52YWxpZCBhbW91bnQuIFVzZSBhIHBvc2l0aXZlIG51bWJlci4nKQogIH0KCiAgY29uc3QgZnJvbU1pbnQgPSBLTk9XTl9UT0tFTlNbZnJvbV0KICBjb25zdCB0b01pbnQgICA9IEtOT1dOX1RPS0VOU1t0b10KCiAgaWYgKCFmcm9tTWludCkgcmV0dXJuIGN0eC5yZXBseShg4p2MIFVua25vd24gdG9rZW46ICR7ZnJvbX0uIFN1cHBvcnRlZDogJHtPYmplY3Qua2V5cyhLTk9XTl9UT0tFTlMpLmpvaW4oJywgJyl9YCkKICBpZiAoIXRvTWludCkgICByZXR1cm4gY3R4LnJlcGx5KGDinYwgVW5rbm93biB0b2tlbjogJHt0b30uIFN1cHBvcnRlZDogJHtPYmplY3Qua2V5cyhLTk9XTl9UT0tFTlMpLmpvaW4oJywgJyl9YCkKICBpZiAoZnJvbSA9PT0gdG8pIHJldHVybiBjdHgucmVwbHkoJ+KdjCBGUk9NIGFuZCBUTyB0b2tlbnMgbXVzdCBiZSBkaWZmZXJlbnQuJykKCiAgLy8gQnVpbGQgSnVwaXRlciBxdW90ZSBVUkwgZm9yIHRoZSB1c2VyIHRvIHByZXZpZXcKICBjb25zdCBqdXBpdGVyVXJsID0gYGh0dHBzOi8vanVwLmFnL3N3YXAvJHtmcm9tfS0ke3RvfWAKCiAgLy8gRGVlcC1saW5rIGludG8gYXBwIHRvIGNyZWF0ZSB0aGUgZ292ZXJuYW5jZSBwcm9wb3NhbAogIGNvbnN0IGFwcFVybCA9IHByb2Nlc3MuZW52LkFQUF9VUkwgPz8gJ2h0dHBzOi8vYXBwLnBvdGJvdC5mdW4nCiAgY29uc3QgcHJvcG9zYWxVcmwgPSBgJHthcHBVcmx9L2Rhc2hib2FyZD9hY3Rpb249c3dhcCZmcm9tPSR7ZnJvbU1pbnR9JnRvPSR7dG9NaW50fSZhbW91bnQ9JHthbW91bnR9YAoKICBjb25zdCBrZXlib2FyZCA9IG5ldyBJbmxpbmVLZXlib2FyZCgpCiAgICAudXJsKCfwn5ez77iPIENyZWF0ZSBTd2FwIFByb3Bvc2FsJywgcHJvcG9zYWxVcmwpCiAgICAucm93KCkKICAgIC51cmwoJ/Cfk4ogUHJldmlldyBSb3V0ZSAoSnVwaXRlciknLCBqdXBpdGVyVXJsKQoKICBhd2FpdCBjdHgucmVwbHkoCiAgICBg4pqhICpTd2FwIFByb3Bvc2FsKlxuXG5gICsKICAgIGAqJHthbW91bnR9ICR7ZnJvbX0qIOKGkiAqJHt0b30qXG5cbmAgKwogICAgYFRoaXMgd2lsbCBjcmVhdGUgYSBnb3Zlcm5hbmNlIHByb3Bvc2FsIGluIHlvdXIgYWN0aXZlIFBPVC5cbmAgKwogICAgYE1lbWJlcnMgbXVzdCB2b3RlIHRvIGFwcHJvdmUgYmVmb3JlIHRoZSBzd2FwIGV4ZWN1dGVzLlxuXG5gICsKICAgIGBUYXAgYmVsb3cgdG8gc3VibWl0OmAsCiAgICB7IHBhcnNlX21vZGU6ICdNYXJrZG93bicsIHJlcGx5X21hcmt1cDoga2V5Ym9hcmQgfQogICkKfQo=
+import type { Context } from 'grammy'
+import { InlineKeyboard } from 'grammy'
+
+const KNOWN_TOKENS: Record<string, string> = {
+  SOL:  'So11111111111111111111111111111111111111112',
+  USDC: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+  JUP:  'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN',
+  BONK: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
+  WIF:  'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm',
+  PYTH: 'HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3',
+}
+
+/**
+ * /swap <amount> <FROM> <TO>
+ * Creates a governance proposal in the user's active POT via web app deep-link.
+ * The actual swap executes on-chain after members approve.
+ */
+export async function swapCommand(ctx: Context) {
+  const args = ctx.message?.text?.split(' ').slice(1) ?? []
+
+  if (args.length < 3) {
+    return ctx.reply(
+      `⚡ *Swap Command*\n\n` +
+      `Usage: \`/swap <amount> <FROM> <TO>\`\n\n` +
+      `Examples:\n` +
+      `\`/swap 10 SOL JUP\`\n` +
+      `\`/swap 500 USDC BONK\`\n\n` +
+      `Supported tokens: ${Object.keys(KNOWN_TOKENS).join(', ')}`,
+      { parse_mode: 'Markdown' }
+    )
+  }
+
+  const [rawAmount, rawFrom, rawTo] = args
+  const amount = parseFloat(rawAmount)
+  const from = rawFrom.toUpperCase()
+  const to   = rawTo.toUpperCase()
+
+  if (isNaN(amount) || amount <= 0) {
+    return ctx.reply('❌ Invalid amount. Use a positive number.')
+  }
+
+  const fromMint = KNOWN_TOKENS[from]
+  const toMint   = KNOWN_TOKENS[to]
+
+  if (!fromMint) return ctx.reply(`❌ Unknown token: ${from}. Supported: ${Object.keys(KNOWN_TOKENS).join(', ')}`)
+  if (!toMint)   return ctx.reply(`❌ Unknown token: ${to}. Supported: ${Object.keys(KNOWN_TOKENS).join(', ')}`)
+  if (from === to) return ctx.reply('❌ FROM and TO tokens must be different.')
+
+  // Build Jupiter quote URL for the user to preview
+  const jupiterUrl = `https://jup.ag/swap/${from}-${to}`
+
+  // Deep-link into app to create the governance proposal
+  const appUrl = process.env.APP_URL ?? 'https://app.potbot.fun'
+  const proposalUrl = `${appUrl}/dashboard?action=swap&from=${fromMint}&to=${toMint}&amount=${amount}`
+
+  const keyboard = new InlineKeyboard()
+    .url('🗳️ Create Swap Proposal', proposalUrl)
+    .row()
+    .url('📊 Preview Route (Jupiter)', jupiterUrl)
+
+  await ctx.reply(
+    `⚡ *Swap Proposal*\n\n` +
+    `*${amount} ${from}* → *${to}*\n\n` +
+    `This will create a governance proposal in your active POT.\n` +
+    `Members must vote to approve before the swap executes.\n\n` +
+    `Tap below to submit:`,
+    { parse_mode: 'Markdown', reply_markup: keyboard }
+  )
+}

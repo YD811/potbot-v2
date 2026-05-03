@@ -1,1 +1,35 @@
-aW1wb3J0IHsgY2xzeCB9IGZyb20gJ2Nsc3gnCgppbnRlcmZhY2UgUHJvZ3Jlc3NCYXJQcm9wcyB7CiAgdmFsdWU6IG51bWJlciAgICAgLy8gMC0xMDAKICBjb2xvcj86ICdwdXJwbGUnIHwgJ2dyZWVuJyB8ICdyZWQnIHwgJ3llbGxvdycKICBsYWJlbD86IHN0cmluZwogIGNsYXNzTmFtZT86IHN0cmluZwp9Cgpjb25zdCBDT0xPUlMgPSB7CiAgcHVycGxlOiAnYmctWyM5OTQ1RkZdJywKICBncmVlbjogICdiZy1bIzE0RjE5NV0nLAogIHJlZDogICAgJ2JnLVsjRkY0NTQ1XScsCiAgeWVsbG93OiAnYmcteWVsbG93LTQwMCcsCn0KCmV4cG9ydCBmdW5jdGlvbiBQcm9ncmVzc0Jhcih7IHZhbHVlLCBjb2xvciA9ICdwdXJwbGUnLCBsYWJlbCwgY2xhc3NOYW1lIH06IFByb2dyZXNzQmFyUHJvcHMpIHsKICBjb25zdCBjbGFtcGVkID0gTWF0aC5taW4oMTAwLCBNYXRoLm1heCgwLCB2YWx1ZSkpCiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPXtjbHN4KCd3LWZ1bGwnLCBjbGFzc05hbWUpfT4KICAgICAge2xhYmVsICYmICgKICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBqdXN0aWZ5LWJldHdlZW4gdGV4dC14cyB0ZXh0LWdyYXktNDAwIG1iLTEiPgogICAgICAgICAgPHNwYW4+e2xhYmVsfTwvc3Bhbj4KICAgICAgICAgIDxzcGFuPntjbGFtcGVkLnRvRml4ZWQoMCl9JTwvc3Bhbj4KICAgICAgICA8L2Rpdj4KICAgICAgKX0KICAgICAgPGRpdiBjbGFzc05hbWU9ImgtMiBiZy1bIzFBMjMzMl0gcm91bmRlZC1mdWxsIG92ZXJmbG93LWhpZGRlbiI+CiAgICAgICAgPGRpdgogICAgICAgICAgY2xhc3NOYW1lPXtjbHN4KCdoLWZ1bGwgcm91bmRlZC1mdWxsIHRyYW5zaXRpb24tYWxsIGR1cmF0aW9uLTUwMCcsIENPTE9SU1tjb2xvcl0pfQogICAgICAgICAgc3R5bGU9e3sgd2lkdGg6IGAke2NsYW1wZWR9JWAgfX0KICAgICAgICAvPgogICAgICA8L2Rpdj4KICAgIDwvZGl2PgogICkKfQo=
+import { clsx } from 'clsx'
+
+interface ProgressBarProps {
+  value: number     // 0-100
+  color?: 'purple' | 'green' | 'red' | 'yellow'
+  label?: string
+  className?: string
+}
+
+const COLORS = {
+  purple: 'bg-[#9945FF]',
+  green:  'bg-[#14F195]',
+  red:    'bg-[#FF4545]',
+  yellow: 'bg-yellow-400',
+}
+
+export function ProgressBar({ value, color = 'purple', label, className }: ProgressBarProps) {
+  const clamped = Math.min(100, Math.max(0, value))
+  return (
+    <div className={clsx('w-full', className)}>
+      {label && (
+        <div className="flex justify-between text-xs text-gray-400 mb-1">
+          <span>{label}</span>
+          <span>{clamped.toFixed(0)}%</span>
+        </div>
+      )}
+      <div className="h-2 bg-[#1A2332] rounded-full overflow-hidden">
+        <div
+          className={clsx('h-full rounded-full transition-all duration-500', COLORS[color])}
+          style={{ width: `${clamped}%` }}
+        />
+      </div>
+    </div>
+  )
+}

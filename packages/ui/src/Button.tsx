@@ -1,1 +1,49 @@
-aW1wb3J0IHsgY2xzeCB9IGZyb20gJ2Nsc3gnCmltcG9ydCB0eXBlIHsgQnV0dG9uSFRNTEF0dHJpYnV0ZXMgfSBmcm9tICdyZWFjdCcKCnR5cGUgVmFyaWFudCA9ICdwcmltYXJ5JyB8ICdzZWNvbmRhcnknIHwgJ2RhbmdlcicgfCAnZ2hvc3QnCnR5cGUgU2l6ZSA9ICdzbScgfCAnbWQnIHwgJ2xnJwoKaW50ZXJmYWNlIEJ1dHRvblByb3BzIGV4dGVuZHMgQnV0dG9uSFRNTEF0dHJpYnV0ZXM8SFRNTEJ1dHRvbkVsZW1lbnQ+IHsKICB2YXJpYW50PzogVmFyaWFudAogIHNpemU/OiBTaXplCiAgbG9hZGluZz86IGJvb2xlYW4KfQoKY29uc3QgVkFSSUFOVFM6IFJlY29yZDxWYXJpYW50LCBzdHJpbmc+ID0gewogIHByaW1hcnk6ICAgJ2JnLVsjOTk0NUZGXSBob3ZlcjpiZy1bIzdCMzVEOV0gdGV4dC13aGl0ZScsCiAgc2Vjb25kYXJ5OiAnYm9yZGVyIGJvcmRlci1bIzFBMjMzMl0gaG92ZXI6Ym9yZGVyLVsjOTk0NUZGXSB0ZXh0LXdoaXRlJywKICBkYW5nZXI6ICAgICdiZy1bI0ZGNDU0NV0vMjAgaG92ZXI6YmctWyNGRjQ1NDVdLzQwIHRleHQtWyNGRjQ1NDVdIGJvcmRlciBib3JkZXItWyNGRjQ1NDVdLzMwJywKICBnaG9zdDogICAgICd0ZXh0LWdyYXktNDAwIGhvdmVyOnRleHQtd2hpdGUnLAp9CmNvbnN0IFNJWkVTOiBSZWNvcmQ8U2l6ZSwgc3RyaW5nPiA9IHsKICBzbTogJ3B4LTMgcHktMS41IHRleHQteHMnLAogIG1kOiAncHgtNSBweS0yLjUgdGV4dC1zbScsCiAgbGc6ICdweC03IHB5LTMuNSB0ZXh0LWJhc2UnLAp9CgpleHBvcnQgZnVuY3Rpb24gQnV0dG9uKHsKICB2YXJpYW50ID0gJ3ByaW1hcnknLAogIHNpemUgPSAnbWQnLAogIGxvYWRpbmcgPSBmYWxzZSwKICBkaXNhYmxlZCwKICBjbGFzc05hbWUsCiAgY2hpbGRyZW4sCiAgLi4ucHJvcHMKfTogQnV0dG9uUHJvcHMpIHsKICByZXR1cm4gKAogICAgPGJ1dHRvbgogICAgICB7Li4ucHJvcHN9CiAgICAgIGRpc2FibGVkPXtkaXNhYmxlZCB8fCBsb2FkaW5nfQogICAgICBjbGFzc05hbWU9e2Nsc3goCiAgICAgICAgJ2ZvbnQtc2VtaWJvbGQgcm91bmRlZC14bCB0cmFuc2l0aW9uLWFsbCBkdXJhdGlvbi0yMDAgaG92ZXI6c2NhbGUtMTA1IGFjdGl2ZTpzY2FsZS05NScsCiAgICAgICAgJ2Rpc2FibGVkOm9wYWNpdHktNTAgZGlzYWJsZWQ6Y3Vyc29yLW5vdC1hbGxvd2VkIGRpc2FibGVkOnNjYWxlLTEwMCcsCiAgICAgICAgVkFSSUFOVFNbdmFyaWFudF0sCiAgICAgICAgU0laRVNbc2l6ZV0sCiAgICAgICAgY2xhc3NOYW1lCiAgICAgICl9CiAgICA+CiAgICAgIHtsb2FkaW5nID8gPHNwYW4gY2xhc3NOYW1lPSJhbmltYXRlLXNwaW4iPuKPszwvc3Bhbj4gOiBjaGlsZHJlbn0KICAgIDwvYnV0dG9uPgogICkKfQo=
+import { clsx } from 'clsx'
+import type { ButtonHTMLAttributes } from 'react'
+
+type Variant = 'primary' | 'secondary' | 'danger' | 'ghost'
+type Size = 'sm' | 'md' | 'lg'
+
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: Variant
+  size?: Size
+  loading?: boolean
+}
+
+const VARIANTS: Record<Variant, string> = {
+  primary:   'bg-[#9945FF] hover:bg-[#7B35D9] text-white',
+  secondary: 'border border-[#1A2332] hover:border-[#9945FF] text-white',
+  danger:    'bg-[#FF4545]/20 hover:bg-[#FF4545]/40 text-[#FF4545] border border-[#FF4545]/30',
+  ghost:     'text-gray-400 hover:text-white',
+}
+const SIZES: Record<Size, string> = {
+  sm: 'px-3 py-1.5 text-xs',
+  md: 'px-5 py-2.5 text-sm',
+  lg: 'px-7 py-3.5 text-base',
+}
+
+export function Button({
+  variant = 'primary',
+  size = 'md',
+  loading = false,
+  disabled,
+  className,
+  children,
+  ...props
+}: ButtonProps) {
+  return (
+    <button
+      {...props}
+      disabled={disabled || loading}
+      className={clsx(
+        'font-semibold rounded-xl transition-all duration-200 hover:scale-105 active:scale-95',
+        'disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100',
+        VARIANTS[variant],
+        SIZES[size],
+        className
+      )}
+    >
+      {loading ? <span className="animate-spin">⏳</span> : children}
+    </button>
+  )
+}

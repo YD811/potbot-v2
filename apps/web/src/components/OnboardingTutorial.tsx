@@ -18,7 +18,7 @@ const STEPS: Step[] = [
     id: 0,
     emoji: '🪴',
     title: 'Welcome to PotBot',
-    body: 'PotBot is a group trading vault on Solana. Pool funds with friends, vote on swaps together, and grow a living plant that tracks your community's health.',
+    body: 'PotBot is a group trading vault on Solana. Pool funds with friends, vote on swaps together, and grow a living plant that tracks your community\'s health.',
     highlight: 'Not a fund. Not a casino. A coordination tool.',
   },
   {
@@ -39,7 +39,7 @@ const STEPS: Step[] = [
     id: 3,
     emoji: '🌱',
     title: 'Grow Your Plant',
-    body: 'Your pot's plant grows with community activity — deposits, votes, proposals, and new members all boost plant health. Top 3 plants on the Season 1 leaderboard win prize pool rewards.',
+    body: 'Your pot\'s plant grows with community activity — deposits, votes, proposals, and new members all boost plant health. Top 3 plants on the Season 1 leaderboard win prize pool rewards.',
     highlight: 'Plant health is activity-based. Not tied to trading P&L.',
   },
 ]

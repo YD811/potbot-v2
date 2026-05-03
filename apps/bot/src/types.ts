@@ -1,1 +1,18 @@
-aW1wb3J0IHR5cGUgeyBDb250ZXh0LCBTZXNzaW9uRmxhdm9yIH0gZnJvbSAnZ3JhbW15JwoKLyoqCiAqIEJvdCBzZXNzaW9uIGRhdGEgcGVyc2lzdGVkIHBlciBUZWxlZ3JhbSB1c2VyLgogKiBTdG9yZWQgaW4tbWVtb3J5IGJ5IGRlZmF1bHQ7IHN3YXAgc3RvcmFnZSBhZGFwdGVyIGZvciBSZWRpcy9TdXBhYmFzZSBpbiBwcm9kLgogKi8KZXhwb3J0IGludGVyZmFjZSBTZXNzaW9uRGF0YSB7CiAgLyoqIExpbmtlZCBTb2xhbmEgd2FsbGV0IGFkZHJlc3MgKGJhc2U1OCkuIE51bGwgdW50aWwgdXNlciBjb25uZWN0cyB2aWEgYXBwLiAqLwogIHdhbGxldEFkZHJlc3M6IHN0cmluZyB8IG51bGwKICAvKiogTGFzdCBQT1QgcHVia2V5IHRoZSB1c2VyIGludGVyYWN0ZWQgd2l0aCDigJQgdXNlZCBhcyBkZWZhdWx0IGZvciAvc3dhcCwgL2R1ZWwuICovCiAgYWN0aXZlUG90OiBzdHJpbmcgfCBudWxsCn0KCi8qKgogKiBGbGF2b3JlZCBncmFtbVkgQ29udGV4dCB0aGF0IGNhcnJpZXMgdGhlIHR5cGVkIHNlc3Npb24uCiAqIEltcG9ydCB0aGlzIGluIGV2ZXJ5IGNvbW1hbmQgZmlsZSBpbnN0ZWFkIG9mIGJhcmUgYENvbnRleHRgLgogKi8KZXhwb3J0IHR5cGUgQm90Q29udGV4dCA9IENvbnRleHQgJiBTZXNzaW9uRmxhdm9yPFNlc3Npb25EYXRhPgo=
+import type { Context, SessionFlavor } from 'grammy'
+
+/**
+ * Bot session data persisted per Telegram user.
+ * Stored in-memory by default; swap storage adapter for Redis/Supabase in prod.
+ */
+export interface SessionData {
+  /** Linked Solana wallet address (base58). Null until user connects via app. */
+  walletAddress: string | null
+  /** Last POT pubkey the user interacted with — used as default for /swap, /duel. */
+  activePot: string | null
+}
+
+/**
+ * Flavored grammY Context that carries the typed session.
+ * Import this in every command file instead of bare `Context`.
+ */
+export type BotContext = Context & SessionFlavor<SessionData>
