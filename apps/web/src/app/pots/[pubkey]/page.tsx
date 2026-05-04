@@ -25,6 +25,7 @@ import SharesTab from '@/components/SharesTab'
 import ReferralPanel from '@/components/ReferralPanel'
 import { SquadsBanner } from '@/components/SquadsBanner'
 import { ShareBlinkButton } from '@/components/ShareBlinkButton'
+import { StrategyProposalBuilder } from '@/components/StrategyProposalBuilder'
 import { reverseSNS } from '@/lib/sns'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import SwapExecuteButton from '@/components/SwapExecuteButton'
@@ -132,11 +133,17 @@ function ProposalCard({
   canExecute: boolean
 }) {
   const vote = useVote()
+  const [expanded, setExpanded] = useState(false)
   const statusClass = STATUS_COLORS[proposal.status] ?? 'bg-pot-muted/20 text-pot-muted'
   const statusLabel = STATUS_LABELS[proposal.status] ?? proposal.status
 
   return (
-    <div className="bg-pot-card border border-pot-border rounded-2xl p-5 space-y-4 w-full">
+    <div
+      className="bg-pot-card border border-pot-border hover:border-pot-accent/30 rounded-2xl p-5 space-y-4 w-full transition cursor-pointer"
+      onClick={() => setExpanded((v) => !v)}
+      role="button"
+      aria-expanded={expanded}
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
@@ -168,10 +175,23 @@ function ProposalCard({
         </div>
       </div>
 
+      {/* Expanded details — full description + voter count */}
+      {expanded && (
+        <div className="border-t border-pot-border/50 pt-3 text-xs text-pot-muted space-y-1">
+          <div><span className="text-pot-muted">Pubkey:</span> <span className="font-mono text-pot-green break-all">{proposal.pubkey}</span></div>
+          {proposal.totalSharesSnapshot != null && (
+            <div><span className="text-pot-muted">Total shares snapshot:</span> <span className="text-white">{proposal.totalSharesSnapshot.toLocaleString()}</span></div>
+          )}
+          {Array.isArray(proposal.voters) && (
+            <div><span className="text-pot-muted">Voters so far:</span> <span className="text-white">{proposal.voters.length}</span></div>
+          )}
+        </div>
+      )}
+
       {/* Actions — Yes/No clickable for any voter (member or owner).
          Phase 2 will extend with reason input + proposal categories. */}
       {canVote && proposal.status === 'active' && (
-        <div className="flex gap-3 pt-1">
+        <div className="flex gap-3 pt-1" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => vote.mutate({ potAddress, proposalAddress: proposal.pubkey, approve: true })}
             disabled={vote.isPending}
@@ -189,7 +209,7 @@ function ProposalCard({
         </div>
       )}
       {canExecute && proposal.status === 'passed' && (
-        <div className="pt-1">
+        <div className="pt-1" onClick={(e) => e.stopPropagation()}>
           <SwapExecuteButton proposalPubkey={proposal.pubkey} potAddress={potAddress} />
         </div>
       )}
@@ -198,47 +218,79 @@ function ProposalCard({
 }
 
 /* ── Tamagotchi placeholder (Phase 1: structure & CTA; real NFT mint + duels in Phase 3) ── */
+const TAMA_STAGES = [
+  { lvl: 1, emoji: '🌱', name: 'Seedling',   unlock: 'Starting state for every new pot' },
+  { lvl: 2, emoji: '🌿', name: 'Sprout',     unlock: 'Lower protocol fees · custom emoji' },
+  { lvl: 3, emoji: '🪴', name: 'Bud',        unlock: '⚔️ Duels with other public pots unlocked' },
+  { lvl: 4, emoji: '🌳', name: 'Bloom',      unlock: 'NFT Strategy Shares · season prize eligibility' },
+  { lvl: 5, emoji: '🌲', name: 'Mature Tree', unlock: 'Mainnet-only perks · cross-pot composability' },
+] as const
+
 function TamagotchiTab({ stats }: { stats: ReturnType<typeof calculateTamaStats> }) {
   const level = Math.max(1, Math.min(5, Math.floor(stats.hp / 20) + 1))
   const duelsUnlocked = level >= 3
-  const stages = ['🌱', '🌿', '🪴', '🌳', '🌲']
+
   return (
     <div className="space-y-6 w-full">
-      {/* Evolution strip */}
+
+      {/* ── How it works (PROMINENT — first thing the user reads) ── */}
+      <div className="bg-gradient-to-br from-pot-green/5 to-pot-accent/5 border border-pot-green/20 rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-2xl">🌱</span>
+          <h3 className="font-bold text-white text-lg">How the Tamagotchi works</h3>
+        </div>
+        <ol className="space-y-2.5 text-sm text-pot-muted leading-relaxed list-none">
+          <li className="flex gap-3">
+            <span className="text-pot-green font-bold shrink-0">1.</span>
+            <span>Every new pot starts at <span className="text-white font-semibold">Level 1 — Seedling 🌱</span>.</span>
+          </li>
+          <li className="flex gap-3">
+            <span className="text-pot-green font-bold shrink-0">2.</span>
+            <span>The plant grows from <span className="text-white font-semibold">member activity</span> — deposits, votes, proposals, new members. <span className="text-white font-semibold">Not from trading P&amp;L.</span></span>
+          </li>
+          <li className="flex gap-3">
+            <span className="text-pot-green font-bold shrink-0">3.</span>
+            <span><span className="text-white font-semibold">⚔️ Pot duels</span> with other public pots <span className="text-white font-semibold">unlock at Level 3 (Bud)</span>.</span>
+          </li>
+        </ol>
+      </div>
+
+      {/* Current level + progress */}
       <div className="bg-pot-card border border-pot-border rounded-2xl p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h3 className="font-bold text-white text-lg">Your POT's Tamagotchi</h3>
-            <p className="text-pot-muted text-sm mt-1">Level {level} · HP {stats.hp}/100</p>
+        <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
+          <div className="min-w-0">
+            <h3 className="font-bold text-white text-lg">Your pot&apos;s plant</h3>
+            <p className="text-pot-muted text-sm mt-1">
+              Level {level} · {TAMA_STAGES[level - 1].name} · HP {stats.hp}/100
+            </p>
           </div>
           <button
             disabled
-            className="px-4 py-2 rounded-xl bg-pot-green/20 text-pot-green border border-pot-green/30 text-sm font-bold cursor-not-allowed opacity-60"
-            title="NFT mint ships in Phase 3"
+            className="px-4 py-2 rounded-xl bg-pot-green/20 text-pot-green border border-pot-green/30 text-sm font-bold cursor-not-allowed opacity-60 shrink-0"
+            title="NFT mint ships at Bloom (Level 4)"
           >
-            🪙 Mint NFT (soon)
+            🪙 Mint NFT (Level 4+)
           </button>
         </div>
         <div className="flex items-center justify-between bg-pot-dark rounded-xl p-4">
-          {stages.map((emoji, idx) => (
-            <div key={idx} className="flex flex-col items-center">
+          {TAMA_STAGES.map((s) => (
+            <div key={s.lvl} className="flex flex-col items-center">
               <div
                 className={`text-4xl transition ${
-                  idx + 1 === level ? 'scale-125' : idx + 1 < level ? 'opacity-70' : 'opacity-25 grayscale'
+                  s.lvl === level ? 'scale-125' : s.lvl < level ? 'opacity-70' : 'opacity-25 grayscale'
                 }`}
               >
-                {emoji}
+                {s.emoji}
               </div>
-              <div className={`text-[10px] mt-1 ${idx + 1 === level ? 'text-pot-green font-bold' : 'text-pot-muted'}`}>
-                L{idx + 1}
+              <div className={`text-[10px] mt-1 ${s.lvl === level ? 'text-pot-green font-bold' : 'text-pot-muted'}`}>
+                L{s.lvl}
               </div>
             </div>
           ))}
         </div>
-        {/* Progress to next level */}
         <div className="mt-4">
           <div className="flex items-center justify-between text-xs text-pot-muted mb-1">
-            <span>Progress to Level {Math.min(level + 1, 5)}</span>
+            <span>Progress to Level {Math.min(level + 1, 5)} ({TAMA_STAGES[Math.min(level, 4)].name})</span>
             <span>{stats.hp % 20}/20</span>
           </div>
           <div className="h-2 bg-pot-dark rounded-full overflow-hidden">
@@ -247,31 +299,58 @@ function TamagotchiTab({ stats }: { stats: ReturnType<typeof calculateTamaStats>
         </div>
       </div>
 
-      {/* What influences evolution */}
+      {/* Activity that grows the plant */}
       <div className="bg-pot-card border border-pot-border rounded-2xl p-6">
-        <h3 className="font-bold text-white mb-3">How it grows</h3>
+        <h3 className="font-bold text-white mb-3">What feeds the plant</h3>
         <ul className="space-y-2 text-sm text-pot-muted">
-          <li>📈 <span className="text-white">Trade volume</span> — every successful swap feeds XP.</li>
-          <li>👥 <span className="text-white">Members</span> — more contributors → stronger pet.</li>
-          <li>🎯 <span className="text-white">Win rate</span> — profitable proposals add bonus HP.</li>
-          <li>⏳ <span className="text-white">Age & activity</span> — continuous governance keeps HP up; inactivity decays it.</li>
+          <li>💰 <span className="text-white">Deposits</span> — each new deposit feeds XP.</li>
+          <li>🗳️ <span className="text-white">Votes &amp; proposals</span> — active governance keeps HP high.</li>
+          <li>👥 <span className="text-white">New members</span> — community growth boosts the plant.</li>
+          <li>⏳ <span className="text-white">Continuous activity</span> — long stretches of inactivity decay HP.</li>
         </ul>
+      </div>
+
+      {/* Level unlock table */}
+      <div className="bg-pot-card border border-pot-border rounded-2xl p-6">
+        <h3 className="font-bold text-white mb-3">What each level unlocks</h3>
+        <div className="space-y-2">
+          {TAMA_STAGES.map((s) => {
+            const reached = s.lvl <= level
+            return (
+              <div
+                key={s.lvl}
+                className={`flex items-start gap-3 p-3 rounded-xl border ${
+                  reached ? 'border-pot-green/30 bg-pot-green/5' : 'border-pot-border bg-pot-dark/40'
+                }`}
+              >
+                <span className={`text-2xl shrink-0 ${reached ? '' : 'opacity-40 grayscale'}`}>{s.emoji}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-white">L{s.lvl} · {s.name}</span>
+                    {reached && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-pot-green/20 text-pot-green border border-pot-green/30">unlocked</span>}
+                  </div>
+                  <div className={`text-xs mt-0.5 ${reached ? 'text-pot-muted' : 'text-pot-muted/60'}`}>{s.unlock}</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {/* Duels — gated at L3 */}
       <div className={`bg-pot-card border rounded-2xl p-6 ${duelsUnlocked ? 'border-pot-accent/40' : 'border-pot-border'}`}>
-        <div className="flex items-start justify-between">
-          <div>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="min-w-0">
             <h3 className="font-bold text-white">⚔️ Duels</h3>
             <p className="text-sm text-pot-muted mt-1">
               {duelsUnlocked
-                ? 'Challenge another vault. Winner takes a chunk of loser\'s shares.'
-                : `Unlocks at Level 3 (current: L${level}).`}
+                ? 'Challenge another public pot. Winner takes a slice of the loser&apos;s shares.'
+                : `Unlocks at Level 3 — Bud (your pot is at L${level}).`}
             </p>
           </div>
           <button
             disabled={!duelsUnlocked}
-            className={`px-4 py-2 rounded-xl text-sm font-bold border transition ${
+            className={`px-4 py-2 rounded-xl text-sm font-bold border transition shrink-0 ${
               duelsUnlocked
                 ? 'bg-pot-accent/20 hover:bg-pot-accent/40 text-pot-accent border-pot-accent/40'
                 : 'bg-pot-dark text-pot-muted border-pot-border cursor-not-allowed'
@@ -325,6 +404,7 @@ export default function PotPage() {
 
   // Default landing tab is deposit — first thing user can do.
   const [activeTab, setActiveTab] = useState<Tab>('deposit')
+  const [proposalFilter, setProposalFilter] = useState<'all' | 'active' | 'passed' | 'executed' | 'rejected'>('all')
   const [snsName, setSnsName] = useState<string>('')
   const [isMember, setIsMember] = useState(false)
   const [proposalModalOpen, setProposalModalOpen] = useState(false)
@@ -502,17 +582,6 @@ export default function PotPage() {
               <MetricTile label="🌱 Tama HP"   value={`${tamaStats.hp}/100`} accent="green" />
             </div>
 
-            {/* Solana Blinks — share this pot as a tweet anyone can act on */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-2xl border border-pot-border bg-pot-card/50">
-              <div>
-                <div className="text-sm font-semibold text-white">⚡ Share as Solana Blink</div>
-                <div className="text-xs text-pot-muted mt-0.5">
-                  Post this pot on X — followers can deposit or vote without leaving the tweet.
-                </div>
-              </div>
-              <ShareBlinkButton potPubkey={pubkey} kind="deposit" />
-            </div>
-
             {/* Your position & P&L — shown inline as dashboard summary.
                Full management still lives in /shares and /positions tabs. */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
@@ -559,6 +628,17 @@ export default function PotPage() {
                 </div>
               </div>
             )}
+
+            {/* Solana Blinks — share strip moved to bottom (point 6 — side feature, not main story) */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-2xl border border-pot-border bg-pot-card/50">
+              <div>
+                <div className="text-sm font-semibold text-white">⚡ Share as Solana Blink</div>
+                <div className="text-xs text-pot-muted mt-0.5">
+                  Post this pot on X — followers can deposit or vote without leaving the tweet.
+                </div>
+              </div>
+              <ShareBlinkButton potPubkey={pubkey} kind="deposit" />
+            </div>
           </div>
         )}
 
@@ -629,6 +709,29 @@ export default function PotPage() {
               >{null}</WalletGate>
             )}
 
+            {/* Proposals filter tabs */}
+            {proposals.length > 0 && (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 -mb-1">
+                {(['all','active','passed','executed','rejected'] as const).map((f) => {
+                  const count = f === 'all' ? proposals.length : proposals.filter((x: any) => x.status === f).length
+                  return (
+                    <button
+                      key={f}
+                      onClick={() => setProposalFilter(f)}
+                      className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
+                        proposalFilter === f
+                          ? 'bg-pot-accent/20 text-pot-accent border-pot-accent/30'
+                          : 'bg-pot-card text-pot-muted border-pot-border hover:text-white'
+                      }`}
+                    >
+                      {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
+                      <span className="ml-1.5 text-[10px] opacity-60">{count}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
             {/* Proposals list */}
             {proposals.length === 0 ? (
               <div className="text-center py-16 bg-pot-card border border-pot-border rounded-2xl w-full">
@@ -640,15 +743,17 @@ export default function PotPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {proposals.map((p: any) => (
-                  <ProposalCard
-                    key={p.pubkey}
-                    proposal={p}
-                    potAddress={pubkey}
-                    canVote={canVote}
-                    canExecute={canExecute}
-                  />
-                ))}
+                {proposals
+                  .filter((p: any) => proposalFilter === 'all' || p.status === proposalFilter)
+                  .map((p: any) => (
+                    <ProposalCard
+                      key={p.pubkey}
+                      proposal={p}
+                      potAddress={pubkey}
+                      canVote={canVote}
+                      canExecute={canExecute}
+                    />
+                  ))}
               </div>
             )}
 
@@ -702,27 +807,23 @@ export default function PotPage() {
           <PotAnalyticsWidget potPubkey={pubkey} vaultPubkey={vaultPda || undefined} />
         )}
 
-        {/* ── Strategy ── */}
+        {/* ── Strategy ── proposal builder. Picking the action + token + amount
+             prefills a swap proposal; "Submit as Proposal" opens the standard
+             governance modal where the proposal is finalised and signed. */}
         {activeTab === 'strategy' && (
           <div className="space-y-4">
             <SquadsBanner potPubkey={pubkey} />
-            <div className="flex gap-2 justify-end">
-              <button
-                disabled={!isOwner}
-                title={!isOwner ? 'Creator only' : undefined}
-                className="px-4 py-2 rounded-lg border border-pot-border text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Edit Strategy
-              </button>
-              <button
-                disabled={!isOwner}
-                title={!isOwner ? 'Creator only' : undefined}
-                className="px-4 py-2 rounded-lg border border-pot-border text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Pause
-              </button>
-            </div>
-            <StrategyPanel potPubkey={pubkey} />
+            <StrategyProposalBuilder
+              potName={pot.name}
+              potBalanceSol={pot.balance}
+              onSubmit={() => setProposalModalOpen(true)}
+            />
+            <details className="bg-pot-card border border-pot-border rounded-2xl p-5">
+              <summary className="cursor-pointer font-bold text-white">Legacy strategy panel</summary>
+              <div className="mt-4">
+                <StrategyPanel potPubkey={pubkey} />
+              </div>
+            </details>
           </div>
         )}
 
