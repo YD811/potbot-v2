@@ -112,7 +112,7 @@ PotBot is a thin wrapper over Solana's strongest primitives. Outbound CPI / API 
 | 🤖 AI Agent | open any pot → AI Agent tab; or `npx @potbot/mcp` and connect via Claude |
 | ⚡ Solana Blink | post a proposal; its `/api/actions/.../vote` URL renders as a Blink in any compatible client |
 | 🌿 Tamagotchi | open `/pots/<pubkey>/pet` after a few member actions |
-| 📜 Architecture | [`docs/OVERVIEW.md`](OVERVIEW.md), [`docs/PROGRAM.md`](PROGRAM.md), [`docs/GOVERNANCE.md`](GOVERNANCE.md) |
+| 📜 Architecture | [`docs/architecture/overview.md`](OVERVIEW.md), [`docs/architecture/program.md`](PROGRAM.md), [`docs/architecture/governance.md`](GOVERNANCE.md) |
 
 ---
 

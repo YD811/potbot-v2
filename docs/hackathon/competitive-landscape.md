@@ -61,7 +61,7 @@ PotBot is the first to ship all three, and the `MemberDelegate` PDA + `vote_as_d
 
 | Pattern | Source | PotBot status | Action taken |
 |---|---|---|---|
-| **#1 — Grand Champions ($50K) are infrastructure, not consumer apps** | TapeDrive, Ore, Reflect, Underdog, Unruggable, FluxBot | ⚠️ Was framed as a dApp. **We ship a primitive (`MemberDelegate`) + a developer surface (`@potbot/mcp` on npm).** | Repositioned `HACKATHON_SUBMISSION.md` one-liner around the two infrastructure pieces; dApp = reference client. |
+| **#1 — Grand Champions ($50K) are infrastructure, not consumer apps** | TapeDrive, Ore, Reflect, Underdog, Unruggable, FluxBot | ⚠️ Was framed as a dApp. **We ship a primitive (`MemberDelegate`) + a developer surface (`@potbot/mcp` on npm).** | Repositioned `docs/hackathon/submission.md` one-liner around the two infrastructure pieces; dApp = reference client. |
 | **#2 — Novel primitives beat incremental improvement** | Ephemeral NFTs, hedge stablecoins, PoW on Solana, MCPay | ✅ Personal AI Voters is genuinely novel — no other live product has it | Lead with this in submission + Sendai skill. |
 | **#5 — AI x crypto wins when AI is the user, not the feature** (newest pattern, Cypherpunk + Breakout 2025) | MCPay, Latinum, FluxBot | ✅ Three MCP tools produce real on-chain transactions signed by the AI delegate | Make the on-chain effect the demo's climax. |
 | **#6 — Working demo non-negotiable (judging weight: 30%)** | All winners | ✅ Real devnet txs verifiable on Explorer, scripted 90-sec video | High priority for May 6-8 shoot. |

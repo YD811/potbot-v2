@@ -51,7 +51,7 @@ PotBot is fundamentally a **group trading vault**. Governance decisions culminat
 
 - **Jupiter is PotBot's execution layer.** Every trade the group votes on goes through Jupiter.
 - Limit orders and DCA transform PotBot from "reactive" to "strategic" — the pot can execute a thesis over days/weeks, not just now.
-- The DX integration (see `DX-REPORT.md`) documents our developer experience to help Jupiter improve their APIs.
+- The DX integration (see `docs/integrations/jupiter-dx-report.md`) documents our developer experience to help Jupiter improve their APIs.
 
 ### Technical Implementation
 

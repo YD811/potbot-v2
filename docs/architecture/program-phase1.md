@@ -1,6 +1,6 @@
 # PotBot — Program Phase 1 Spec (post-hackathon)
 
-> Implements the **Phase 1** row of [docs/ARCHITECTURE_ONCHAIN.md](ARCHITECTURE_ONCHAIN.md):
+> Implements the **Phase 1** row of [docs/architecture/architecture-onchain.md](ARCHITECTURE_ONCHAIN.md):
 > hash commitments + auto-pause + kill-switch + health-check + Tier-1 events
 > on Light Protocol Compressed Accounts.
 >

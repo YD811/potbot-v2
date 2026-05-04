@@ -267,7 +267,7 @@ const SERVER_INFO = {
   potbot_api: POTBOT_API,
   network: NETWORK,
   dapp: 'https://potbot.fun',
-  docs: 'https://github.com/YD811/potbot-v2/blob/main/docs/MCP.md',
+  docs: 'https://github.com/YD811/potbot-v2/blob/main/docs/integrations/mcp.md',
 }
 
 // ── HTTP Server ───────────────────────────────────────────────────────────
@@ -421,7 +421,7 @@ server.listen(PORT, () => {
   console.log(`   Port:    ${PORT}`)
   console.log(`   x402:    ${X402_ENABLED ? `enabled (${X402_PRICE_USDC} USDC/paid-call)` : 'disabled'}`)
   console.log(`   Network: ${NETWORK}`)
-  console.log(`   Docs:    https://github.com/YD811/potbot-v2/blob/main/docs/MCP.md`)
+  console.log(`   Docs:    https://github.com/YD811/potbot-v2/blob/main/docs/integrations/mcp.md`)
   if (X402_ENABLED && !USDC_RECEIVER) {
     console.warn('⚠️  X402_RECEIVER_WALLET not set — payments cannot be verified')
   }

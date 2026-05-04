@@ -22,7 +22,7 @@ Built for [Solana Frontier 2026](https://colosseum.com/frontier) · [@PotBot_sol
 |---|---|
 | 🌐 **DApp** | [potbot.fun](https://potbot.fun) |
 | 🔌 **MCP Server** | `apps/potbot-mcp` |
-| 📖 **Full Docs** | [docs/OVERVIEW.md](docs/OVERVIEW.md) |
+| 📖 **Full Docs** | [docs/architecture/overview.md](docs/architecture/overview.md) |
 | 🤖 **Telegram** | separate v1 product |
 | 🌿 **SNS** | potbot.sol |
 
@@ -67,7 +67,7 @@ npm install
 cd apps/web && npx next dev   # → http://localhost:3000
 ```
 
-For full setup (Anchor, devnet deploy, API server): see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+For full setup (Anchor, devnet deploy, API server): see [docs/operations/development.md](docs/operations/development.md)
 
 ---
 
@@ -307,14 +307,14 @@ potbot-v2/
 
 | Doc | Description |
 |-----|-------------|
-| [OVERVIEW.md](docs/OVERVIEW.md) | Full project documentation — start here |
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data flow, key decisions |
-| [DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local setup, commands, troubleshooting |
-| [PROGRAM.md](docs/PROGRAM.md) | Solana program: accounts, instructions, PDAs |
-| [GOVERNANCE.md](docs/GOVERNANCE.md) | Governance levels, voting mechanics |
-| [MOCK_MODE.md](docs/MOCK_MODE.md) | Demo mode architecture |
-| [MCP.md](docs/MCP.md) | MCP server guide for AI agent developers |
-| [DEPLOY.md](docs/DEPLOY.md) | Devnet → mainnet deployment procedure |
+| [OVERVIEW.md](docs/architecture/overview.md) | Full project documentation — start here |
+| [ARCHITECTURE.md](docs/architecture/architecture.md) | System design, data flow, key decisions |
+| [DEVELOPMENT.md](docs/operations/development.md) | Local setup, commands, troubleshooting |
+| [PROGRAM.md](docs/architecture/program.md) | Solana program: accounts, instructions, PDAs |
+| [GOVERNANCE.md](docs/architecture/governance.md) | Governance levels, voting mechanics |
+| [MOCK_MODE.md](docs/operations/mock-mode.md) | Demo mode architecture |
+| [MCP.md](docs/integrations/mcp.md) | MCP server guide for AI agent developers |
+| [DEPLOY.md](docs/operations/deploy.md) | Devnet → mainnet deployment procedure |
 
 ---
 
@@ -330,4 +330,4 @@ potbot-v2/
 
 MIT © 2026 Y-DAO Amsterdam — Built with ❤️ for Solana Frontier
 
-📖 **Full Documentation** → [docs/OVERVIEW.md](docs/OVERVIEW.md)
+📖 **Full Documentation** → [docs/architecture/overview.md](docs/architecture/overview.md)

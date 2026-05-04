@@ -659,7 +659,7 @@ PotBot has two generations of product, and they currently run **independently** 
 | [MOCK_MODE.md](MOCK_MODE.md) | Demo mode architecture |
 | [ETF_TOKEN_SYSTEM.md](ETF_TOKEN_SYSTEM.md) | Strategy Share token economics |
 | [SQUADS_MULTISIG_SETUP.md](SQUADS_MULTISIG_SETUP.md) | Treasury multisig configuration |
-| [HACKATHON_SUBMISSION.md](HACKATHON_SUBMISSION.md) | Solana Frontier 2026 submission draft |
+| [docs/hackathon/submission.md](docs/hackathon/submission.md) | Solana Frontier 2026 submission draft |
 | [SPONSORS.md](SPONSORS.md) | Sponsor track bounty plan |
 
 ---

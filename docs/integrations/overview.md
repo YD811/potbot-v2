@@ -36,7 +36,7 @@ The keeper executes strategy ticks via Jupiter Swap v6 for spot routes, Trigger 
 
 ### Supabase
 
-Supabase is a read mirror; the keeper writes with the `service_role` key, the web app reads with the `anon` key. RLS policies (see `docs/security-audit.md`) restrict private-pot trade logs to verified members.
+Supabase is a read mirror; the keeper writes with the `service_role` key, the web app reads with the `anon` key. RLS policies (see `docs/operations/security-audit.md`) restrict private-pot trade logs to verified members.
 
 ## Privacy model for private POTs
 
@@ -47,7 +47,7 @@ A private POT is a pot whose `members` set is enforced both on-chain and in the 
    3. 3. UI: the `usePotRole()` hook returns `creator | member | viewer` and gates Withdraw, Create Proposal, Edit Strategy, and member management. Viewers never see a working button for actions they cannot perform; instead they see a disabled state with a tooltip explaining why.
       4. 4. RPC: the web app never sends a wallet's private signing material anywhere. Privy embedded wallets sign in-browser; external wallets sign via the wallet adapter. The keeper has its own dedicated signer for tick automation and never has access to user keys.
         
-         5. A full audit checklist is maintained in `docs/security-audit.md`.
+         5. A full audit checklist is maintained in `docs/operations/security-audit.md`.
         
          6. ## Environment variables
         
