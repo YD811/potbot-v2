@@ -26,6 +26,7 @@ import ReferralPanel from '@/components/ReferralPanel'
 import { SquadsBanner } from '@/components/SquadsBanner'
 import { ShareBlinkButton } from '@/components/ShareBlinkButton'
 import { StrategyProposalBuilder } from '@/components/StrategyProposalBuilder'
+import { PotBotAISuggestions } from '@/components/PotBotAISuggestions'
 import { reverseSNS } from '@/lib/sns'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import SwapExecuteButton from '@/components/SwapExecuteButton'
@@ -851,8 +852,33 @@ export default function PotPage() {
           </div>
         )}
 
-        {/* ── AI Agent ── */}
-        {activeTab === 'agent' && <AIAgentPanel potPubkey={pubkey} pot={pot} />}
+        {/* ── AI Agent — two-tier:
+             1. PotBot AI (always-on) decision-support feed,
+             2. User AI delegate (opt-in) with rules & strategy presets. */}
+        {activeTab === 'agent' && (
+          <div className="space-y-4">
+            <PotBotAISuggestions
+              potPubkey={pubkey}
+              potName={pot.name}
+              potBalanceSol={pot.balance}
+              onSubmit={() => setProposalModalOpen(true)}
+            />
+            <div className="bg-pot-card/50 border border-pot-border rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <span className="text-2xl">🪪</span>
+                <h3 className="font-bold text-white text-lg">Your personal AI</h3>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-pot-border text-pot-muted uppercase tracking-wide">
+                  user layer
+                </span>
+              </div>
+              <p className="text-xs text-pot-muted mb-4 break-words">
+                Sits on top of the base layer. Configure rules, presets and a delegate so your AI
+                can vote on or auto-create proposals when the base AI flags an opportunity.
+              </p>
+              <AIAgentPanel potPubkey={pubkey} pot={pot} />
+            </div>
+          </div>
+        )}
 
         {/* ── Members ── */}
         {activeTab === 'members' && (
