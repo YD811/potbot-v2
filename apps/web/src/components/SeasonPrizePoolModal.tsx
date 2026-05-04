@@ -1,23 +1,60 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+
 /**
  * Season 1 Prize Pool — "How it works" modal.
- * Reused from /leaderboard SeasonPrizeCard and the Navbar Season 1 ticker.
+ *
+ * Rendered via React Portal to document.body so position:fixed is always
+ * viewport-relative — any transform/backdrop-filter on an ancestor (Navbar,
+ * tab content, etc.) won't shift the modal off-center.
  */
 export function SeasonPrizePoolModal({ onClose }: { onClose: () => void }) {
-  return (
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    // Lock body scroll while modal is open
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    // Esc closes modal
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+
+    return () => {
+      document.body.style.overflow = prev
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [onClose])
+
+  if (!mounted) return null
+
+  const modal = (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       onClick={onClose}
-      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
+      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="season-modal-title"
     >
       <div
-        className="w-full max-w-md rounded-3xl border border-pot-border bg-pot-card p-6 sm:p-8 shadow-2xl"
+        className="w-full max-w-md rounded-3xl border border-pot-border bg-pot-card p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-white">🏆 Season 1 Prize Pool</h2>
-          <button onClick={onClose} className="text-pot-muted hover:text-white transition text-xl" aria-label="Close">×</button>
+          <h2 id="season-modal-title" className="text-lg font-bold text-white">🏆 Season 1 Prize Pool</h2>
+          <button
+            onClick={onClose}
+            className="text-pot-muted hover:text-white transition text-2xl leading-none w-8 h-8 flex items-center justify-center"
+            aria-label="Close"
+          >
+            ×
+          </button>
         </div>
 
         <div className="space-y-4 text-sm">
@@ -42,7 +79,7 @@ export function SeasonPrizePoolModal({ onClose }: { onClose: () => void }) {
           {/* Ranking formula */}
           <div>
             <h3 className="text-xs font-semibold text-pot-muted uppercase tracking-wide mb-2">Ranking Formula</h3>
-            <div className="p-3 rounded-xl bg-pot-dark border border-pot-border font-mono text-xs text-pot-green">
+            <div className="p-3 rounded-xl bg-pot-dark border border-pot-border font-mono text-xs text-pot-green break-all">
               Season Score = volume × members × pet_health
             </div>
             <p className="text-xs text-pot-muted mt-2 leading-relaxed">
@@ -63,10 +100,15 @@ export function SeasonPrizePoolModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <button onClick={onClose} className="btn-secondary w-full mt-5 text-sm py-2.5">
+        <button
+          onClick={onClose}
+          className="w-full mt-5 text-sm py-2.5 rounded-xl bg-pot-border hover:bg-pot-accent/20 text-white font-semibold transition"
+        >
           Close
         </button>
       </div>
     </div>
   )
+
+  return createPortal(modal, document.body)
 }

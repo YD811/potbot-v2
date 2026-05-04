@@ -72,9 +72,9 @@ function LivePriceTicker() {
 
 const NAV_LINKS = [
   { href: '/',            label: 'Home' },
-  { href: '/leaderboard', label: '🏆 Leaderboard' },
   { href: '/vaults',      label: '⚡ Vaults' },
-  { href: '/roadmap',     label: '🗺️ Roadmap' },
+  { href: '/leaderboard', label: '🏆 Leaderboard' },
+  { href: '/hackathon',   label: '🏆 Hackathon' },
   { href: '/create',      label: '+ Create' },
 ]
 

@@ -50,7 +50,7 @@ function formatRelative(ts: number) {
   return new Date(ts).toLocaleDateString()
 }
 
-export function PotActivityFeed({ pot, proposals, members, cluster = 'devnet', limit = 6 }: Props) {
+export function PotActivityFeed({ pot, proposals, members, cluster = 'devnet', limit = 3 }: Props) {
   const events: Event[] = useMemo(() => {
     const out: Event[] = []
     const explorerSuffix = cluster === 'mainnet-beta' ? '' : '?cluster=devnet'

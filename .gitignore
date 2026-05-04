@@ -47,3 +47,8 @@ secrets/
 *.secret
 *.key
 *.tsbuildinfo
+
+# Local-only strategy memos and deploy bundles
+_local/
+_deploy/
+POTBOT_OPUS/

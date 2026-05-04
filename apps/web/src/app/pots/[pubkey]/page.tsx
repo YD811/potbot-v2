@@ -438,6 +438,15 @@ export default function PotPage() {
 
   return (
     <div className="min-h-screen bg-pot-dark pb-12">
+      {/* Breadcrumb — keeps user oriented */}
+      <div className="max-w-[1400px] mx-auto px-3 sm:px-6 pt-3 pb-1 text-xs text-pot-muted">
+        <Link href="/" className="hover:text-white transition">Home</Link>
+        <span className="mx-1.5">/</span>
+        <Link href="/vaults" className="hover:text-white transition">Vaults</Link>
+        <span className="mx-1.5">/</span>
+        <span className="text-white truncate inline-block max-w-[200px] sm:max-w-xs align-middle">{pot.name}</span>
+      </div>
+
       {/* Sticky hero strip */}
       <PotHeroStrip
         emoji={pot.emoji}
@@ -592,7 +601,7 @@ export default function PotPage() {
               </div>
 
               <div className="space-y-4">
-                <PotActivityFeed pot={pot} proposals={proposals} members={members} cluster={CLUSTER} />
+                <PotActivityFeed pot={pot} proposals={proposals} members={members} cluster={CLUSTER} limit={3} />
 
                 <div className="bg-pot-card border border-pot-border rounded-2xl p-4 space-y-2">
                   <div className="flex items-center gap-2">
@@ -628,34 +637,40 @@ export default function PotPage() {
               </details>
             </section>
 
-            {/* ── Holdings preview ── shares + P&L + portfolio collapsed by default */}
-            <section className="space-y-3">
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-white">📊 Holdings</h2>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="lg:col-span-2"><SharesPanel potPubkey={pubkey} /></div>
-                <div><PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} /></div>
-              </div>
-              {vaultPda && (
-                <details className="bg-pot-card/50 border border-pot-border rounded-2xl p-4">
-                  <summary className="cursor-pointer text-sm text-white font-semibold">
-                    🔎 Vault portfolio (live, Dune SIM)
-                  </summary>
-                  <div className="mt-4">
-                    <VaultPortfolio vaultPda={vaultPda} potName={pot.name} />
-                  </div>
-                </details>
-              )}
-              <details className="bg-pot-card/50 border border-pot-border rounded-2xl p-4">
-                <summary className="cursor-pointer text-sm text-white font-semibold">
-                  🪙 Manage shares (withdraw)
+            {/* ── Holdings & details ── hidden behind toggle to keep Trade tab tight.
+                 Member-only: non-members don't need shares/withdraw UI on the main page. */}
+            {canManage && (
+              <details className="bg-pot-card/40 border border-pot-border rounded-2xl">
+                <summary className="cursor-pointer px-5 py-4 text-sm text-white font-semibold flex items-center justify-between">
+                  <span>📊 Your holdings &amp; portfolio</span>
+                  <span className="text-pot-muted text-xs">expand ▾</span>
                 </summary>
-                <div className="mt-4">
-                  <SharesTab potPubkey={pubkey} canWithdraw={canWithdraw} />
+                <div className="px-5 pb-5 space-y-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="lg:col-span-2"><SharesPanel potPubkey={pubkey} /></div>
+                    <div><PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} /></div>
+                  </div>
+                  {vaultPda && (
+                    <details className="bg-pot-card/50 border border-pot-border rounded-2xl p-4">
+                      <summary className="cursor-pointer text-xs text-white font-semibold">
+                        🔎 Vault portfolio (live, Dune SIM)
+                      </summary>
+                      <div className="mt-4">
+                        <VaultPortfolio vaultPda={vaultPda} potName={pot.name} />
+                      </div>
+                    </details>
+                  )}
+                  <details className="bg-pot-card/50 border border-pot-border rounded-2xl p-4">
+                    <summary className="cursor-pointer text-xs text-white font-semibold">
+                      🪙 Manage shares (withdraw)
+                    </summary>
+                    <div className="mt-4">
+                      <SharesTab potPubkey={pubkey} canWithdraw={canWithdraw} />
+                    </div>
+                  </details>
                 </div>
               </details>
-            </section>
+            )}
 
             <CreateProposalModal
               open={proposalModalOpen}

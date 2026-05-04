@@ -70,6 +70,7 @@ const THEME_BOOTSTRAP = `
 
 const FOOTER_LINKS = [
   { label: 'FAQ',         href: '/faq' },
+  { label: 'Roadmap',     href: '/roadmap' },
   { label: 'Leaderboard', href: '/leaderboard' },
   { label: 'Hackathon',   href: '/hackathon' },
   { label: 'For Agents',  href: '/for-agents' },
