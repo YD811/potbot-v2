@@ -752,38 +752,39 @@ export default function LandingPage() {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-black text-white mb-3">Why PotBot, why now</h2>
           <p className="text-pot-muted max-w-2xl mx-auto">
-            Three questions every judge, investor and early user asks. Straight answers.
+            Three honest questions, three direct answers.
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="card p-6">
             <div className="text-2xl mb-3">🔓</div>
-            <h3 className="font-bold text-white text-lg mb-2">Why crypto (not Postgres)</h3>
+            <h3 className="font-bold text-white text-lg mb-2">Why crypto, not a database</h3>
             <p className="text-pot-muted text-sm leading-relaxed">
-              A group vault needs <strong className="text-white">shared custody with no
-              trusted middleman</strong>. On Solana the vault <em>is</em> the account —
-              deposits, votes, proposals, and fills all live on-chain. Replace the
-              blockchain with a database and you have… Revolut, with new failure modes.
+              Group custody without a trusted middleman. The vault <em>is</em> the on-chain
+              account — every deposit, vote and trade is signed by the program itself.
+              A database can&apos;t enforce that without re-introducing the operator we&apos;re
+              removing.
             </p>
           </div>
           <div className="card p-6">
             <div className="text-2xl mb-3">⏰</div>
             <h3 className="font-bold text-white text-lg mb-2">Why now</h3>
             <p className="text-pot-muted text-sm leading-relaxed">
-              MCP is standardizing how AI agents touch real systems. Solana has the
-              throughput + Jupiter has the routing + Pyth has the prices — the full
-              stack for <strong className="text-white">agent-driven group trading</strong>
-              exists in 2026. Nobody has shipped the coordination layer. We are.
+              MCP standardised how AI agents connect to real systems. Solana ships
+              the throughput, Jupiter the routing, Pyth the prices. The full
+              agent-driven group-trading stack exists in 2026 — and the coordination
+              layer hasn&apos;t shipped. We&apos;re shipping it.
             </p>
           </div>
           <div className="card p-6">
             <div className="text-2xl mb-3">💰</div>
             <h3 className="font-bold text-white text-lg mb-2">How we earn</h3>
             <p className="text-pot-muted text-sm leading-relaxed">
-              <strong className="text-white">0.30% protocol fee</strong> on every swap
-              routed through a pot. <strong className="text-white">10% performance fee</strong>
-              on Strategy Vaults (split with creator). No token, no airdrop farming —
-              if usage goes to zero, revenue goes to zero. Honest unit economics.
+              <strong className="text-white">0.30%</strong> fee on every swap routed
+              through a pot. <strong className="text-white">10% performance fee</strong>
+              on Strategy Vaults, split with the strategy creator. No token, no
+              airdrop farming. If usage is zero, revenue is zero — honest unit
+              economics.
             </p>
           </div>
         </div>
@@ -891,31 +892,6 @@ export default function LandingPage() {
         </p>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="border-t border-pot-border py-8 px-4">
-        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4 text-xs text-pot-muted">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🪴</span>
-            <span className="font-semibold text-white">PotBot v2</span>
-            <span>· Group DeFi Vaults on Solana</span>
-          </div>
-          <div className="flex flex-wrap gap-x-6 gap-y-2">
-            <Link href="/signup" className="hover:text-pot-green transition">Early Access</Link>
-            <Link href="/leaderboard" className="hover:text-white transition">Leaderboard</Link>
-            <Link href="/vaults" className="hover:text-white transition">Vaults</Link>
-            <Link href="/for-agents" className="hover:text-white transition">For Agents</Link>
-            <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noreferrer" className="hover:text-white transition">GitHub</a>
-            <a href="https://x.com/PotBot_sol" target="_blank" rel="noreferrer" className="hover:text-white transition flex items-center gap-1">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              @PotBot_sol
-            </a>
-            <a href="https://t.me/PotBot_v1_bot" target="_blank" rel="noreferrer" className="hover:text-pot-accent transition">
-              PotBot v1 (Telegram)
-            </a>
-          </div>
-          <div>Built for Solana Frontier 2026</div>
-        </div>
-      </footer>
 
     </div>
   )

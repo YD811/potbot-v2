@@ -58,7 +58,7 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         q: 'Where do the fees go?',
-        a: 'Of the 0.5% swap fee: 39% to the protocol treasury, 20% to the referrer of the depositing user, 20% to $POT token buyback-and-burn, 20% to development and operations, and 1% to the Season Trading Competition Treasury.',
+        a: 'Of the 0.5% swap fee: 59% to the protocol treasury, 20% to the referrer of the depositing user, 20% to development and operations, and 1% to the Season Trading Competition Treasury.',
       },
       {
         q: 'How do members earn?',
@@ -71,29 +71,6 @@ const FAQ_DATA: FAQCategory[] = [
       {
         q: 'Are returns guaranteed?',
         a: 'No. PotBot is not a yield product. The vault is a coordination tool — outcomes depend entirely on the swap decisions members vote on, and on the volatile crypto markets those swaps occur in. You can lose part or all of your deposit.',
-      },
-    ],
-  },
-  {
-    id: 'token',
-    label: 'Token',
-    icon: '🪙',
-    items: [
-      {
-        q: 'What is $POT?',
-        a: '$POT is the protocol\'s utility token on Solana. It receives buyback-and-burn from 20% of all protocol swap fees. Holding $POT does not represent ownership in PotBot or guarantee any return.',
-      },
-      {
-        q: 'What is a Pot Token?',
-        a: 'Any pot creator can choose to issue a public token for their pot via our integration with bags.fm. The pot token is a community signal — a way for outsiders to express interest in a pot\'s strategy by buying its token on the open market. Pot tokens are bonded-curve tokens and trade independently of the underlying vault\'s NAV.',
-      },
-      {
-        q: 'What is liquidity providing?',
-        a: "If a pot has issued a token, members can add liquidity to its trading pair on a DEX. Liquidity providers earn a share of trading fees on that pair. This is a separate activity from the pot's internal voting and is subject to standard DEX risks including impermanent loss.",
-      },
-      {
-        q: 'What is buyback and burn?',
-        a: 'Buyback and burn means the protocol uses a portion of fee revenue to purchase $POT on the open market and permanently remove those tokens from circulation. The mechanism is automated and verifiable on-chain.',
       },
     ],
   },
@@ -147,7 +124,7 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         q: 'What are points?',
-        a: 'Points are rewards for taking actions on the platform — creating pots, voting, referring users, completing quests. Points contribute to a future $POT token distribution and unlock immediate quest rewards. Points are recorded off-chain in our database and are not transferable.',
+        a: 'Points are rewards for taking actions on the platform — creating pots, voting, referring users, completing quests. Points unlock immediate quest rewards and may inform future protocol incentives. Points are recorded off-chain in our database and are not transferable.',
       },
       {
         q: 'What are quests?',
