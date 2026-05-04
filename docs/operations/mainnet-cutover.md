@@ -32,7 +32,7 @@ If tests fail — fix before touching mainnet.
 
 ## 2. Squads multisig — pot authority
 
-See `docs/SQUADS_MULTISIG_SETUP.md`. Run the 3-of-5 setup, record the
+See `docs/integrations/squads-multisig-setup.md`. Run the 3-of-5 setup, record the
 Squads vault PDA. You'll use it as pot `authority` going forward.
 
 ## 3. Deploy program to mainnet
@@ -160,7 +160,7 @@ Any failure in this path = NOT READY. Fix before inviting testers.
 
 ## 12. Hackathon submission
 
-After 24-48h of stable mainnet → populate `docs/HACKATHON_SUBMISSION.md`
+After 24-48h of stable mainnet → populate `docs/hackathon/submission.md`
 with real pot links, update demo video (`/marketing-video`), submit to
 Solana Frontier and the SNS Identity track before May 11.
 

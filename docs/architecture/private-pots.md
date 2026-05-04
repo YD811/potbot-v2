@@ -81,5 +81,5 @@ We protect against:
                                          - - Tick errors do not crash the keeper; they are recorded to worker_metrics and the next tick proceeds.
                                            - - The keeper publishes a /health and /metrics endpoint for ops monitoring; if metrics drift (e.g. lastTickAt older than 5 minutes), alert.
                                             
-                                             - See docs/security-audit.md for the per-instruction checklist (created by the security RBAC PR).
+                                             - See docs/operations/security-audit.md for the per-instruction checklist (created by the security RBAC PR).
                                              - 

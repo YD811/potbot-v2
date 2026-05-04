@@ -127,6 +127,6 @@ docker run --rm -p 3002:3002 -e SOLANA_NETWORK=devnet potbot-mcp:latest
 
 ## Links
 
-- [Full MCP Guide](https://github.com/YD811/potbot-v2/blob/main/docs/MCP.md)
+- [Full MCP Guide](https://github.com/YD811/potbot-v2/blob/main/docs/integrations/mcp.md)
 - [PotBot DApp](https://potbot.fun)
 - [GitHub](https://github.com/YD811/potbot-v2)

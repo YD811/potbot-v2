@@ -58,7 +58,7 @@ These are 1-2 day each, low-risk, high judging-criteria value.
 
 ## Post-hackathon (Q2 2026)
 
-Ship Phase 1 from `docs/PROGRAM_PHASE1.md`:
+Ship Phase 1 from `docs/architecture/program-phase1.md`:
 - `kill_switch_admin` separate from authority
 - Auto-pause on drawdown via `update_health` permissionless crank
 - Hash commitments (`rules_uri_hash`, `description_hash`, `strategy_params_hash`)
@@ -86,7 +86,7 @@ Free tier: `update_health` cranked by a public keeper. Premium tier ($5/mo): SMS
 
 ## Q3 2026 — Auditable-Private mode
 
-From `docs/ARCHITECTURE_ONCHAIN.md`:
+From `docs/architecture/architecture-onchain.md`:
 - PrivacyCash integration for shielded deposits
 - Stealth member addresses
 - Merkle membership proofs

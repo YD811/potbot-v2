@@ -1,229 +1,204 @@
 # PotBot v2 — Project Memory
 
-> Этот файл лежит в корне `potbot-v2/CLAUDE.md`.
-> Claude читает его автоматически в каждой сессии.
+> This file lives at the repo root (`potbot-v2/CLAUDE.md`).
+> Claude reads it automatically at the start of every session.
 
-## Проект
-**PotBot v2** — **инфраструктура для группового управления капиталом на Solana**. От клуба друзей с $500 до institutional family office — один протокол, разные параметры governance.
-**GitHub**: YD811/potbot-v2
-**Лендинг**: [potbot.fun](https://potbot.fun)
-**Хакатон**: Solana Frontier 2026
-**Владелец**: Yehor (YD811, eeegordolinskiy@gmail.com)
+## Project
+**PotBot v2** — **infrastructure for group capital management on Solana**. From a friends' club with $500 to an institutional family office — one protocol, different governance parameters.
 
-> Полная документация — [docs/OVERVIEW.md](docs/OVERVIEW.md). Начинать любую новую работу над репо с её чтения.
+- **GitHub**: YD811/potbot-v2
+- **Landing**: [potbot.fun](https://potbot.fun)
+- **Hackathon**: Solana Frontier 2026
+- **Owner**: Yehor (YD811, eeegordolinskiy@gmail.com)
 
-## Стек
+> Full documentation lives in [docs/README.md](docs/README.md). Read it before starting any new work in the repo.
+
+## Stack
 - Solana + Anchor 0.30 (Rust smart contracts — `packages/program/`)
 - Next.js 14 App Router + TypeScript + Tailwind (`apps/web/`)
 - Hono.js + Node.js + PostgreSQL + Redis (`apps/api/`)
-- TanStack Query v5, Zustand (mock mode для UI без кошелька)
+- TanStack Query v5, Zustand (mock mode for UI without a wallet)
 - Jupiter API v6 (swaps), Jupiter Price API v2 (prices)
 - @solana/wallet-adapter · Privy (embedded wallets)
-- MCP server на solana-agent-kit (`apps/potbot-mcp/`)
+- MCP server built on solana-agent-kit (`apps/potbot-mcp/`)
 
-## Ключевые команды
+## Key commands
 ```bash
-npm run dev          # запуск web (apps/web/, порт 3000)
-anchor build         # компиляция контрактов (packages/program/)
-anchor deploy --provider.cluster devnet   # деплой на девнет
-solana airdrop 2 --url devnet             # SOL на девнет
+npm run dev                                  # run web (apps/web/, port 3000)
+anchor build                                 # compile contracts (packages/program/)
+anchor deploy --provider.cluster devnet      # deploy to devnet
+solana airdrop 2 --url devnet                # SOL on devnet
 ```
 
-## Архитектура
+## Architecture
 
-### Фронтенд (`apps/web/`)
-- `src/lib/mock-store.ts` — Zustand стор (demo-режим без кошелька, 6 seed-потов)
-- `src/hooks/usePots.ts` — автопереключение mock ↔ on-chain по наличию задеплоенной программы
-- `src/lib/ai-agent.ts` — rules engine для AI-агента (price/time/balance/pnl triggers)
-- `src/hooks/useAIAgent.ts` — 60-сек cron, оценивает правила, создаёт proposals
-- `src/app/pots/[pubkey]/page.tsx` — главная страница пота (7+ табов: overview, shares, positions, strategy, governance, agent, members)
-- `src/components/AIAgentPanel.tsx` — UI агента (strategy/rules/log)
+### Frontend (`apps/web/`)
+- `src/lib/mock-store.ts` — Zustand store (demo mode without a wallet, 6 seed pots)
+- `src/hooks/usePots.ts` — auto-switch mock ↔ on-chain based on whether the program is deployed
+- `src/lib/ai-agent.ts` — rules engine for the AI agent (price/time/balance/PnL triggers)
+- `src/hooks/useAIAgent.ts` — 60s cron, evaluates rules, creates proposals
+- `src/app/pots/[pubkey]/page.tsx` — main pot page (7+ tabs: overview, shares, positions, strategy, governance, agent, members)
+- `src/components/AIAgentPanel.tsx` — agent UI (strategy/rules/log)
 - `src/components/GovernanceSettings.tsx` — quorum / approval / risk caps
 
-### Бэкенд (`apps/api/`)
+### Backend (`apps/api/`)
 - Hono.js REST — `/price`, `/pots`, `/vaults`, `/analytics`, `/agent`, `/voter`
 - Cron: `agent-cron.ts` (60s), `price-poller.ts` (5s), `crank.ts` (fees, evolution, NFT burns)
 
-### Контракты (`packages/program/`)
-- `programs/pot_vault/` — основная программа (vault, governance, strategy, referral, Money Tree)
-- `programs/pot_duel/` — 1v1 duel vaults (разблокируется на Bloom+)
-- `src/state/pot.rs` — `PotAccount` (включая `health_hp`, `peak_balance`, `is_dead`, `season`)
-- `src/state/proposal.rs` — `ProposalAccount` (с `risk_class` для defensive-only режима)
-- `src/state/voter.rs` — `VoterDelegationAccount` (новое, для Personal AI Voters)
-- `src/instructions/` — все инструкции
+### Contracts (`packages/program/`)
+- `programs/pot_vault/` — main program (vault, governance, strategy, referral, Money Tree)
+- `programs/pot_duel/` — 1v1 duel vaults (unlocks at Bloom+)
+- `src/state/pot.rs` — `PotAccount` (incl. `health_hp`, `peak_balance`, `is_dead`, `season`)
+- `src/state/proposal.rs` — `ProposalAccount` (with `risk_class` for defensive-only mode)
+- `src/state/voter.rs` — `VoterDelegationAccount` (new, for Personal AI Voters)
+- `src/instructions/` — all instructions
 
-## Ключевые концепции — единственный источник правды
+## Core concepts — single source of truth
 
 ### On-chain custody vs off-chain accounting
-**Ваулт всегда on-chain** (PDA на Solana, создаётся в `create_pot`).
-**Только учёт шейров** живёт off-chain на Seedling-стадии — это compromise для экономии SPL-rent и для гибкости при будущем токен-лаунче пота. На Sprout+ шейры мигрируют в on-chain SPL mint через `init_share_mint` инструкцию.
-⚠️ Никогда не формулируй это как "custodial" или "pending on-chain". Custody ВСЕГДА on-chain.
+**The vault is always on-chain** (PDA on Solana, created in `create_pot`).
+**Only share accounting** lives off-chain at the Seedling stage — a compromise to save SPL rent and keep flexibility for a future pot token launch. At Sprout+ shares migrate to an on-chain SPL mint via the `init_share_mint` instruction.
+
+⚠️ Never describe this as "custodial" or "pending on-chain". Custody is ALWAYS on-chain.
 
 ### Money Tree (Season 1: Plants)
-Шесть стадий с порогами AUM/members/trades: Seedling → Sprout → Bud → Bloom → Full Bloom → Mature Tree. У каждого пота есть Health (0–100 HP), вычисляется как `clamp(0, 100, 100 * current_balance / peak_balance)`. На 0 HP пот "умирает" — trading locked, NFT Strategy Shares сгорают, нужен `resurrect_pot` + свежий депозит (стадия сбрасывается в Seedling).
+Six stages with AUM/members/trades thresholds: Seedling → Sprout → Bud → Bloom → Full Bloom → Mature Tree. Every pot has Health (0–100 HP), computed as `clamp(0, 100, 100 * current_balance / peak_balance)`. At 0 HP a pot "dies" — trading is locked, NFT Strategy Shares burn, and a `resurrect_pot` + fresh deposit is required (stage resets to Seedling).
 
 ### Personal AI Voters
-Уникальная фича — каждый член может зарегистрировать AI-агент wallet как своего делегата голосования. Делегация per-pot, revocable on-chain, каждый голос подписывается on-chain с reason string. Правила живут в `rules_uri` (IPFS/Arweave/https); on-chain программа им доверяет, misbehaving AI видно по логам и быстро revoke'ается.
+Unique feature — every member can register an AI agent wallet as their voting delegate. Delegation is per-pot, revocable on-chain; every vote is signed on-chain with a reason string. Rules live in `rules_uri` (IPFS/Arweave/HTTPS); the on-chain program trusts them, misbehaving AIs are visible in logs and quickly revoked.
 
 ### Governance
-L0 Autocracy · L1 Advisory (25% veto) · L2 Majority (>50%) · L3 Supermajority (>66%) · L4 Consensus (100%). Сверху накладываются опциональные риск-капы: `max_swap_pct`, `max_budget_grant_pct`, `require_admin_cosign`, `timelock_seconds`. При низком HP пот автоматически уходит в defensive-only mode на уровне программы.
+L0 Autocracy · L1 Advisory (25% veto) · L2 Majority (>50%) · L3 Supermajority (>66%) · L4 Consensus (100%). Optional risk caps overlay: `max_swap_pct`, `max_budget_grant_pct`, `require_admin_cosign`, `timelock_seconds`. At low HP a pot automatically falls into defensive-only mode at the program level.
 
-## Дизайн
+## Design system
 - Dark background: `#0D1117`, Card: `#111827`, Border: `#1A2332`
 - Solana Green: `#14F195`, Solana Purple: `#9945FF`, Muted: `#6B7280`
-- CSS-классы: `card`, `btn-primary`, `btn-secondary`, `input`, `glow-green`
-- Money Tree emoji: 🌱 🌿 🌳 🌺 🌸 🌴 (стадии 0–5)
+- CSS classes: `card`, `btn-primary`, `btn-secondary`, `input`, `glow-green`
+- Money Tree emoji: 🌱 🌿 🌳 🌺 🌸 🌴 (stages 0–5)
 - Health indicator: 🟢 🟡 🟠 🔴 ☠️
 
-## Как пушить на GitHub (из Cowork sandbox)
-- Прямого `git push` из sandbox нет (нет GitHub credentials)
-- **Правильный способ**: использовать GitHub REST API через fine-grained PAT (`Contents: Read and write` на `YD811/potbot-v2`)
-- Делать один коммит через Git Data API: create blobs → create tree (с `base_tree`) → create commit → PATCH `git/refs/heads/main`
-- Токен передаётся пользователем разово в чат, sandbox не хранит его между сессиями
+## Pushing to GitHub from a Cowork sandbox
+- Direct `git push` from sandbox is not available (no GitHub credentials)
+- **Correct path**: use the GitHub REST API with a fine-grained PAT (`Contents: Read and write` on `YD811/potbot-v2`)
+- One commit through Git Data API: create blobs → create tree (with `base_tree`) → create commit → PATCH `git/refs/heads/main`
+- The token is passed in chat once per session; sandbox does not persist it across sessions
 
 ## PotBot v1 vs v2
-**Это два независимых продукта.**
-- v1 — Telegram-native group trading bot, репо `YD811/potbot_test` (приватный), custodial-style
-- v2 — Solana DApp + MCP server, этот репо, non-custodial on-chain vault
-- Пот в v1 ≠ пот в v2. State не шарят. Миграция данных запланирована на Q4 2026.
-- `apps/bot/` в v2 — это **будущий v2 Telegram-фронтенд**, использующий `@potbot/sdk` (v2 SDK), не v1.
+**These are two independent products.**
+- v1 — Telegram-native group trading bot, repo `YD811/potbot_test` (private), custodial-style
+- v2 — Solana DApp + MCP server, this repo, non-custodial on-chain vault
+- A v1 pot ≠ a v2 pot. State is not shared. Data migration scheduled for Q4 2026.
+- `apps/bot/` in v2 is the **future v2 Telegram frontend** using `@potbot/sdk` (v2 SDK), not v1.
 
 ## Protocol-integration skills (Sendai)
-**Marketplace**: `sendaifun/skills` — AI-native best-practices для 45+ Solana-протоколов.
+**Marketplace**: `sendaifun/skills` — AI-native best practices for 45+ Solana protocols.
 Install via Claude Code: `/plugin marketplace add sendaifun/skills` then
 `/plugin install <name>` per protocol.
 
-Claude должен консультироваться с этими skills при работе с релевантными кодовыми путями — они содержат актуальные SDK/endpoint best practices, которые устаревают в туториалах.
+Claude should consult these skills when working in relevant code paths — they contain current SDK/endpoint best practices that go stale in tutorials.
 
-| Skill | Плагин when editing |
-|------|---------------------|
+| Skill | Apply when editing |
+|---|---|
 | `jupiter` | `apps/web/src/lib/jupiter-*.ts`, `JupiterSwapPanel.tsx`, `execute_swap.rs` |
-| `pyth`    | `apps/web/src/lib/pyth.ts`, oracle keeper, proposal_swap price-feed guard |
+| `pyth` | `apps/web/src/lib/pyth.ts`, oracle keeper, proposal_swap price-feed guard |
 | `meteora` | DLMM/DAMM yield strategies (`yield_strategy`, unwind path) |
-| `kamino`  | Lending-based yield strategies, CPI into Kamino reserves |
-| `helius`  | RPC config, webhook pipelines, priority fees |
-| `squads`  | Pot authority multisig (task #15, Mature Tree / mainnet prereq) |
-| `phantom-connect` | Wallet connection flow в `apps/web` |
-| `metaplex` | NFT Strategy Shares — минт + metadata (Full Bloom+) |
-| `raydium` | Fallback роутинг наряду с Jupiter |
-| `solana-kit` + `solana-kit-migration` | Рефер для web3.js v1 → @solana/kit миграции |
-| `coingecko` | Price data fallback за пределами Jupiter Price API |
-| `orca` | Whirlpools CL — если добавим |
-| `pumpfun` | Только если интегрируем pump.fun лаунчи (не в текущем скопе) |
+| `kamino` | Lending-based yield strategies, CPI into Kamino reserves |
+| `helius` | RPC config, webhook pipelines, priority fees |
+| `squads` | Pot authority multisig (task #15, Mature Tree / mainnet prereq) |
+| `phantom-connect` | Wallet connection flow in `apps/web` |
+| `metaplex` | NFT Strategy Shares — mint + metadata (Full Bloom+) |
+| `raydium` | Fallback routing alongside Jupiter |
+| `solana-kit` + `solana-kit-migration` | Reference for web3.js v1 → @solana/kit migration |
+| `coingecko` | Price data fallback outside Jupiter Price API |
+| `orca` | Whirlpools CL — if added |
+| `pumpfun` | Only if integrating pump.fun launches (not in current scope) |
 
-Локальные копии в `POTBOT_OPUS/.claude/skills/sendai/` — Claude может читать SKILL.md напрямую даже без установленного marketplace.
+Local copies live in `POTBOT_OPUS/.claude/skills/sendai/` — Claude can read SKILL.md directly even without the marketplace installed.
 
 ## solana.new journey skills (superstack)
-Installed via `curl -fsSL https://www.solana.new/setup.sh | bash` → `~/.claude/skills/` и `~/.codex/skills/`. 33 интерактивных skills от idea до launch. Триггер — slash-command в Claude Code.
+Installed via `curl -fsSL https://www.solana.new/setup.sh | bash` → `~/.claude/skills/` and `~/.codex/skills/`. 33 interactive skills from idea to launch. Trigger via slash command in Claude Code.
 
-**Приоритетные для PotBot прямо сейчас (дедлайн хакатона 2026-05-11):**
+**Priority for PotBot right now (hackathon deadline 2026-05-11):**
 
-| Slash | Когда |
+| Slash | When |
 |---|---|
-| `/submit-to-hackathon` | Подготовка заявки Solana Frontier / Colosseum |
-| `/create-pitch-deck` | Investor-grade дек для Superteam NL grant + хакатона |
-| `/deploy-to-mainnet` | Phase-5 mainnet чеклист (audit, Squads, Helius) |
-| `/apply-grant` | Superteam NL grant заявка |
-| `/marketing-video` | Demo video script + shot list (< 3 мин, для судей) |
-| `/video-craft` | Продакшн демо-видео |
-| `/roast-my-product` | Жёсткая критика текущего DApp |
-| `/product-review` | Полный product review — UX, tech, positioning |
+| `/submit-to-hackathon` | Solana Frontier / Colosseum submission prep |
+| `/create-pitch-deck` | Investor-grade deck for Superteam NL grant + hackathon |
+| `/deploy-to-mainnet` | Phase-5 mainnet checklist (audit, Squads, Helius) |
+| `/apply-grant` | Superteam NL grant application |
+| `/marketing-video` | Demo video script + shot list (< 3 min, for judges) |
+| `/video-craft` | Demo video production |
+| `/roast-my-product` | Hard critique of the current DApp |
+| `/product-review` | Full product review — UX, tech, positioning |
 | `/review-and-iterate` | Post-critique iteration loop |
 | `/debug-program` | Anchor program debugging (Phase 5 catches) |
-| `/build-defi-protocol` | Паттерны при добавлении yield strategies |
-| `/frontend-design-guidelines` | UI-полировка перед submission |
-| `/design-taste` | Design-quality check |
-| `/number-formatting` | Форматирование чисел (common judge gripe) |
+| `/build-defi-protocol` | Patterns when adding yield strategies |
+| `/frontend-design-guidelines` | UI polish before submission |
+| `/design-taste` | Design quality check |
+| `/number-formatting` | Number formatting (common judge gripe) |
 | `/page-load-animations` | Perceived-performance polish |
-| `/cso` | Security review перед mainnet |
+| `/cso` | Security review before mainnet |
 
-**Не релевантно сейчас** (idea/scaffold готовы): `/find-next-crypto-idea`, `/validate-idea`, `/scaffold-project`, `/launch-token`, `/build-mobile`, `/build-data-pipeline`.
+**Not relevant right now** (idea/scaffold ready): `/find-next-crypto-idea`, `/validate-idea`, `/scaffold-project`, `/launch-token`, `/build-mobile`, `/build-data-pipeline`.
 
 Full catalog — https://github.com/sendaifun/solana-new.
-Ecosystem data в `~/.claude/skills/data/` (colosseum, defi, ideas, solana-knowledge, specs).
+Ecosystem data in `~/.claude/skills/data/` (colosseum, defi, ideas, solana-knowledge, specs).
 
-## Статус (апрель 2026)
-- ✅ Mock режим полностью работает (6 seed-потов)
-- ✅ Leaderboard `/leaderboard` с live аналитикой
+## Status (April 2026)
+- ✅ Mock mode fully working (6 seed pots)
+- ✅ Leaderboard `/leaderboard` with live analytics
 - ✅ AI Agent rules engine + UI
 - ✅ Governance quorum/approval/risk
 - ✅ Budget Grants 3-step wizard
-- ✅ Jupiter Price API для PnL FOMO
+- ✅ Jupiter Price API for PnL FOMO
 - ✅ MCP server (`apps/potbot-mcp`) — 15+ tools
 - ✅ Backend API (`apps/api`) — price oracle, PnL, agent cron
-- ✅ Devnet deploy (программа жива)
+- ✅ Devnet deploy (program is live)
 - ✅ Pitch deck (11 slides)
-- 🔴 **Blocker**: Jupiter swap CPI нужен executor wallet
-- 🟡 Personal AI Voters — спека готова, имплементация Q3 2026
-- 🟡 Money Tree Health + death mechanics — схема в контракте, UI в работе
+- 🔴 **Blocker**: Jupiter swap CPI needs an executor wallet
+- 🟡 Personal AI Voters — spec ready, implementation Q3 2026
+- 🟡 Money Tree Health + death mechanics — schema in contract, UI in progress
 - 🟡 Off-chain → on-chain share graduation (`init_share_mint`) — Q2 2026
-- - 📅 Demo video — May 6–8
+- 📅 Demo video — May 6–8
 - 📅 Hackathon submission — May 11, 2026
 
-## Изменения CI/CD (апрель 25, 2026)
+## CI/CD changes (April 25, 2026)
 
-- ✅ CI исправлен: заменён `actions-rs/toolchain@v1` → `dtolnay/rust-toolchain@stable`
-- - ✅ Добавлен шаг `solana-keygen new` для создания dummy keypair (фикс Invalid Base58, Issue #17)
-  - - ✅ Добавлен Cargo cache для ускорения anchor build
-    - - ✅ Добавлен `api-typecheck` job (проверка TypeScript в apps/api)
-      - - ✅ Добавлен `security-audit` job (npm audit --audit-level=high)
-        - - ✅ anchor-build: `continue-on-error: true` до стабилизации devnet deploy
-          - - ✅ Node.js downgraded с 24 → 20 LTS для стабильности
-           
-            - ## Ключевые файлы (обновлено апрель 2026)
-           
-            - - `.github/workflows/ci.yml` — исправлен CI пайплайн (5 jobs)
-              - - `docs/MCP.md` — новый полный гайд по MCP серверу + x402
-                - - `README.md` — добавлен раздел "For Judges", статус таблица, tech stack
-                  - - `TASKS.md` — полный трекер задач до May 11
-                   
-                    - ## Следующий приоритет (для Claude в следующей сессии)
-                   
-                    - 1. **Executor wallet** — задеплоить apps/api на Fly.io, добавить EXECUTOR_KEYPAIR в env
-                      2. 2. **E2E devnet тест** — прогнать `scripts/e2e-devnet.ts` после executor deploy
-                         3. 3. **Branch protection** — включить в Settings → Branches (require PR + passing CI)
-                            4. 4. **Merge PR #18, #21, #27** — смёрджить открытые PRы с on-chain execute path
-                               5. 5. **Demo video** — May 6–8, сценарий: create_pot → AI proposal → vote → real swap
-- 🟢 Demo video — May 6–8
-- 📅 Hackathon submission — 2026-05-11
+- ✅ CI fixed: replaced `actions-rs/toolchain@v1` → `dtolnay/rust-toolchain@stable`
+- ✅ Added `solana-keygen new` step to create dummy keypair (fixes Invalid Base58, Issue #17)
+- ✅ Added Cargo cache to speed up anchor build
+- ✅ Added `api-typecheck` job (TypeScript check for apps/api)
+- ✅ Added `security-audit` job (npm audit --audit-level=high)
+- ✅ anchor-build: `continue-on-error: true` until devnet deploy stabilises
+- ✅ Node.js downgraded from 24 → 20 LTS for stability
 
+## Key files (updated April 2026)
 
-## Изменения сессии 2 (апрель 25, 2026)
+- `.github/workflows/ci.yml` — fixed CI pipeline (5 jobs)
+- `docs/integrations/mcp.md` — new full MCP server + x402 guide
+- `README.md` — added "For Judges" section, status table, tech stack
+- `docs/hackathon/submission.md` — current submission writeup
+
+## Session 2 changes (April 25, 2026)
 
 ### CI/CD
-✅ Исправлен синтаксис YAML в ci.yml (ошибка была на строке 4 — неверный отступ)
-✅ Добавлен .github/workflows/publish.yml — автопубликация @potbot/mcp на npm по тегу mcp-v*
+- ✅ Fixed YAML syntax in ci.yml (the bug was on line 4 — wrong indent)
+- ✅ Added `.github/workflows/publish.yml` — auto-publish `@potbot/mcp` to npm on `mcp-v*` tags
 
 ### MCP Server
-✅ Создан apps/potbot-mcp/src/http.ts — HTTP+SSE транспорт (MCP 2025-11-05 spec)
-✅ Реализован x402 micropayment gate (0.001 USDC за аналитический вызов)
-✅ Платные инструменты: get_vault_analytics, get_yield_rates, get_leaderboard
-✅ Бесплатные инструменты: list_vaults, get_token_prices, create_swap_proposal, vote_on_proposal, join_strategy_vault
-✅ Обновлён package.json → v0.2.0 + binaries potbot-mcp-http, npm publish scripts
-✅ Добавлен Issue #15 progress comment с инструкцией как включить x402
+- ✅ Created `apps/potbot-mcp/src/http.ts` — HTTP+SSE transport (MCP 2025-11-05 spec)
+- ✅ Implemented x402 micropayment gate (0.001 USDC per analytics call)
+- ✅ Paid tools: `get_vault_analytics`, `get_yield_rates`, `get_leaderboard`
+- ✅ Free tools: `list_vaults`, `get_token_prices`, `create_swap_proposal`, `vote_on_proposal`, `join_strategy_vault`
+- ✅ Bumped `package.json` → v0.2.0 + binaries `potbot-mcp-http`, npm publish scripts
+- ✅ Added Issue #15 progress comment with x402 enable instructions
 
-### Ключевые файлы (обновлено апрель 25, 2026)
-- .github/workflows/ci.yml — исправлен YAML (был невалиден с сессии 1)
-- .github/workflows/publish.yml — НОВЫЙ: автопубликация @potbot/mcp
-- apps/potbot-mcp/src/http.ts — НОВЫЙ: HTTP+SSE transport + x402
-- apps/potbot-mcp/package.json — v0.2.0, HTTP bin, publish scripts
+## Architecture roadmap (April 25, 2026)
 
-## Следующий приоритет (для Claude в следующей сессии)
-
-1. **Executor wallet** — задеплоить apps/api на Fly.io, EXECUTOR_KEYPAIR в env
-2. **npm publish** — `cd apps/potbot-mcp && npm login && npm run build && npm publish`
-3. **x402 deploy** — `X402_ENABLED=true X402_RECEIVER_WALLET=<wallet> fly deploy --app potbot-mcp-http`
-4. **E2E devnet тест** — прогнать scripts/e2e-devnet.ts после executor deploy
-5. **Branch protection** — Settings → Branches → sudo confirm
-6. **Demo video** — May 6–8, сценарий: create_pot → AI proposal → vote → real swap
-7. **Hackathon submission** — colosseum.com/frontier до May 11, 2026
-
-## Архитектурный roadmap (апрель 25, 2026)
-
-- **`docs/ARCHITECTURE_ONCHAIN.md`** — каноническая reference: Tier 0/1/2/3 модель, три privacy-режима (Public / Auditable-Private / Sealed-Private), threat model, perf plan на Light Protocol ZK Compression, phasing до 2027.
-- **`docs/PROGRAM_PHASE1.md`** — PR-ready spec для post-hackathon работы: kill-switch, auto-pause по drawdown, hash commitments (rules_uri / description / strategy params), `update_health` crank, treasury split. Все additive к текущим accounts (back-compat сохранён).
-- **`docs/RENDER_DEPLOY.md`** — пошаговая инструкция деплоя hosted MCP (Blueprint уже в репо, остался один клик в dashboard).
-- **`HACKATHON_SUBMISSION.md` (root)** — обновлён, real devnet tx hashes (Explorer-verifiable), 18-tool MCP table, Personal AI Voters top-line, 90-сек video shot list.
+- **`docs/architecture/architecture-onchain.md`** — canonical reference: Tier 0/1/2/3 model, three privacy modes (Public / Auditable-Private / Sealed-Private), threat model, performance plan on Light Protocol ZK Compression, phasing to 2027.
+- **`docs/architecture/program-phase1.md`** — PR-ready spec for post-hackathon work: kill-switch, auto-pause on drawdown, hash commitments (rules_uri / description / strategy params), `update_health` crank, treasury split. All additive to current accounts (back-compat preserved).
+- **`docs/operations/deploy-render.md`** — step-by-step hosted MCP deploy (Blueprint already in repo, one click left in dashboard).
+- **`docs/hackathon/submission.md`** — current Frontier 2026 submission writeup, real devnet tx hashes (Explorer-verifiable), 18-tool MCP table, Personal AI Voters top-line, 90s video shot list.
 
 ## Phase 1 (post-hackathon) execution order
-PR-A program changes → PR-B devnet upgrade → PR-C SDK + MCP `@potbot/mcp@0.7.0` → PR-D DApp UI → PR-E Light Protocol compressed events. Каждый PR независим. См. `docs/PROGRAM_PHASE1.md` §8.
+PR-A program changes → PR-B devnet upgrade → PR-C SDK + MCP `@potbot/mcp@0.7.0` → PR-D DApp UI → PR-E Light Protocol compressed events. Each PR is independent. See `docs/architecture/program-phase1.md` §8.

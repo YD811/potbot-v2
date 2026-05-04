@@ -290,7 +290,7 @@ export default function Home() {
             <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">GitHub</a>
             <a href="https://t.me/potbot_sol" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Telegram</a>
             <a href="https://twitter.com/potbot_sol" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Twitter</a>
-            <a href="https://github.com/YD811/potbot-v2/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Docs</a>
+            <a href="https://github.com/YD811/potbot-v2/blob/main/docs/architecture/architecture.md" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Docs</a>
           </div>
           <div className="text-xs text-gray-500">Built with love on Solana</div>
         </div>
