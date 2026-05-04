@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useSolPrice } from '@/lib/prices'
+import { StatusBadge } from './StatusBadge'
 
 /**
  * Strategy tab — turn the opaque "Strategy" panel into a proposal builder.
@@ -223,6 +224,12 @@ export function StrategyProposalBuilder({ potName, potBalanceSol, onSubmit }: Pr
           <span className="font-bold text-white">Advanced</span>
           <span className="text-pot-muted text-sm">{showAdvanced ? '▾' : '▸'}</span>
         </button>
+        {showAdvanced && (
+          <div className="mt-3 mb-2">
+            <StatusBadge tier="phase-2" />
+            <span className="ml-2 text-[11px] text-pot-muted">All advanced strategies ship in Phase 2 (Q3 2026).</span>
+          </div>
+        )}
         {showAdvanced && (
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             {([

@@ -27,6 +27,7 @@ import { SquadsBanner } from '@/components/SquadsBanner'
 import { ShareBlinkButton } from '@/components/ShareBlinkButton'
 import { StrategyProposalBuilder } from '@/components/StrategyProposalBuilder'
 import { PotBotAISuggestions } from '@/components/PotBotAISuggestions'
+import { StatusBadge } from '@/components/StatusBadge'
 import { reverseSNS } from '@/lib/sns'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import SwapExecuteButton from '@/components/SwapExecuteButton'
@@ -265,13 +266,16 @@ function TamagotchiTab({ stats }: { stats: ReturnType<typeof calculateTamaStats>
               Level {level} · {TAMA_STAGES[level - 1].name} · HP {stats.hp}/100
             </p>
           </div>
-          <button
-            disabled
-            className="px-4 py-2 rounded-xl bg-pot-green/20 text-pot-green border border-pot-green/30 text-sm font-bold cursor-not-allowed opacity-60 shrink-0"
-            title="NFT mint ships at Bloom (Level 4)"
-          >
-            🪙 Mint NFT (Level 4+)
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <StatusBadge tier="phase-3" compact />
+            <button
+              disabled
+              className="px-4 py-2 rounded-xl bg-pot-green/20 text-pot-green border border-pot-green/30 text-sm font-bold cursor-not-allowed opacity-60"
+              title="NFT mint ships at Bloom (Level 4) in Phase 3"
+            >
+              🪙 Mint NFT (Level 4+)
+            </button>
+          </div>
         </div>
         <div className="flex items-center justify-between bg-pot-dark rounded-xl p-4">
           {TAMA_STAGES.map((s) => (
@@ -342,7 +346,10 @@ function TamagotchiTab({ stats }: { stats: ReturnType<typeof calculateTamaStats>
       <div className={`bg-pot-card border rounded-2xl p-6 ${duelsUnlocked ? 'border-pot-accent/40' : 'border-pot-border'}`}>
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0">
-            <h3 className="font-bold text-white">⚔️ Duels</h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-bold text-white">⚔️ Duels</h3>
+              <StatusBadge tier="phase-3" compact />
+            </div>
             <p className="text-sm text-pot-muted mt-1">
               {duelsUnlocked
                 ? 'Challenge another public pot. Winner takes a slice of the loser&apos;s shares.'
@@ -870,6 +877,7 @@ export default function PotPage() {
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-pot-border text-pot-muted uppercase tracking-wide">
                   user layer
                 </span>
+                <StatusBadge tier="devnet" compact />
               </div>
               <p className="text-xs text-pot-muted mb-4 break-words">
                 Sits on top of the base layer. Configure rules, presets and a delegate so your AI

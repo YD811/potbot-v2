@@ -30,10 +30,24 @@ Built for [Solana Frontier 2026](https://colosseum.com/frontier) · [@PotBot_sol
 
 ## 🧑‍⚖️ For Judges — Try It in 60 Seconds
 
-**No wallet needed** — the DApp runs in demo mode with seeded vaults, proposals, and AI agent activity.
+**No wallet needed** — `potbot.fun` shows a live flagship pot in read-only mode at the top of `/vaults`.
+
+> Lifecycle legend used everywhere on this repo and the site:
+> 🟢 Live (mainnet) · 🟡 Devnet · 🔵 Phase 2 Q3 2026 · 🟣 Phase 3 Q4 2026 · ⚪ Vision
+
+### Live now (mainnet · Explorer-verifiable) 🟢
+
+- `pot_vault` Anchor program with 30+ instructions: deposit, propose, vote, `execute_swap` via Jupiter v6 CPI, withdraw.
+- Solana Blinks endpoints — `/api/actions/<potPubkey>/{deposit,vote}` — render as cards in Phantom / Backpack / X.
+- MCP server `@potbot/mcp@0.2.0` on npm — 18 tools, HTTP+SSE+stdio transports.
+- Squads v4 multisig path for the creator role on high-value pots.
+- Helius RPC + webhooks for realtime pot events.
+- PWA manifest installable on iOS / Android.
+
+### Try it
 
 ```bash
-# 1. Open the live DApp (demo mode, no wallet)
+# 1. Open the live DApp
 open https://potbot.fun
 
 # 2. Connect to MCP server (Claude / any AI agent)
@@ -41,20 +55,19 @@ npx @potbot/mcp
 
 # 3. Clone and run locally
 git clone https://github.com/YD811/potbot-v2.git
-cd potbot-v2
-npm install
-cd apps/web && npx next dev
-# → http://localhost:3000
+cd potbot-v2 && npm install
+cd apps/web && npx next dev    # → http://localhost:3000
 ```
 
-**On-chain (devnet):**
-- Program ID: `GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK`
-- Connect Phantom → switch to devnet → interact live
-- **Test MCP with Claude:**
+### Test MCP with Claude
 
 ```
 list_vaults → get_vault_analytics → create_swap_proposal → vote_on_proposal
 ```
+
+### Full roadmap with explicit status per feature
+
+→ [potbot.fun/roadmap](https://potbot.fun/roadmap) — every Live, Devnet, Phase 2, Phase 3, and Vision item, with chips.
 
 ---
 
