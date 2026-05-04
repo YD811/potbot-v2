@@ -81,7 +81,7 @@ jobs:
             ${{ runner.os }}-cargo-
       - name: Install Solana CLI
         run: |
-          sh -c "$(curl -sSfL https://release.anza.xyz/v1.18.26/install)"
+          sh -c "$(curl -sSfL https://release.anza.xyz/v2.2.0/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Create dummy keypair for Anchor
         run: |
@@ -94,6 +94,7 @@ jobs:
       - name: anchor build
         env:
           CARGO_BUILD_LOCKED: "true"
+          RUSTUP_TOOLCHAIN: "1.85.0"
         run: cd packages/program && anchor build
       - name: Upload IDL artifact
         uses: actions/upload-artifact@v4
