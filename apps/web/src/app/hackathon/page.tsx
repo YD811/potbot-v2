@@ -1,343 +1,548 @@
-'use client'
-
-import { useState } from 'react'
 import Link from 'next/link'
+import type { Metadata } from 'next'
+import { StatusBadge, type StatusTier } from '@/components/StatusBadge'
 
-const BOUNTIES = [
+export const metadata: Metadata = {
+  title: 'PotBot · Solana Frontier 2026 — judge page',
+  description:
+    'PotBot is a group trading vault on Solana. Deposit, propose, vote, execute — all on-chain. Real Jupiter v6 CPI, MCP server, Solana Blinks. This page is the judge-facing summary for Solana Frontier 2026.',
+}
+
+const PROGRAM_ID =
+  process.env.NEXT_PUBLIC_PROGRAM_ID ?? 'GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK'
+const FLAGSHIP_POT = process.env.NEXT_PUBLIC_ONE_POT_PUBKEY ?? ''
+const CLUSTER = process.env.NEXT_PUBLIC_SOLANA_CLUSTER ?? 'devnet'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://potbot.fun'
+const EXPLORER_SUFFIX = CLUSTER === 'mainnet-beta' ? '' : `?cluster=${CLUSTER}`
+
+interface Track {
+  sponsor: string
+  emoji: string
+  what: string
+  proof: string
+  proofHref?: string
+  tier: StatusTier
+}
+
+const TRACKS: Track[] = [
   {
     sponsor: 'Jupiter',
-    prize: '$10,000',
-    track: 'Best DEX Integration',
-    color: '#37B24D',
-    emoji: '⚡',
-    summary: 'Full Jupiter DEX stack integrated into PotBot governance flow.',
-    details: [
-      {
-        title: 'Swap V2 — Best-price routing',
-        desc: 'Group vaults execute swaps via Jupiter Swap V2 API. Any member can propose a swap; once approved by governance, the vault PDA signs the transaction. Server-side API key injection keeps the key off the client.',
-      },
-      {
-        title: 'Trigger Orders (Limit Orders)',
-        desc: 'Members can propose limit orders: "buy X token when price hits Y". The vault creates a Jupiter Trigger order on-chain. Executed automatically by Jupiter when the condition is met.',
-      },
-      {
-        title: 'DCA — Dollar Cost Averaging',
-        desc: 'Governance can approve recurring buy/sell proposals: e.g. "buy 0.5 SOL of BONK every day for 7 days". Fully parameterized: cycle duration, total cycles, amount per cycle.',
-      },
-      {
-        title: 'Price API v2 — Real-time feeds',
-        desc: 'Token prices fetched via Jupiter Price API v2 with API key auth. Proxied server-side via /api/jupiter/price/v2 to keep credentials secure. Used in AI agent triggers and PnL calculations.',
-      },
-      {
-        title: 'Governance-gated execution',
-        desc: 'No swap happens without a passed proposal. Every Jupiter call goes through: propose → vote → timelock → execute. The vault PDA is the signer — individual members cannot bypass governance.',
-      },
-    ],
+    emoji: '🪐',
+    what: 'Jupiter v6 CPI inside `pot_vault::execute_swap`. Vault PDA signs.',
+    proof: 'See `programs/pot_vault/src/instructions/execute_swap.rs` — mode-aware (AdminDirect / Proposal / StrategyTrigger), JUPITER_V6_PROGRAM_ID constraint, vault-PDA signer.',
+    proofHref: 'https://github.com/YD811/potbot-v2/blob/main/programs/pot_vault/src/instructions/execute_swap.rs',
+    tier: 'live',
   },
   {
-    sponsor: 'Ika / Encrypt',
-    prize: '$10,000',
-    track: 'Privacy & ZK Layer',
-    color: '#7048E8',
-    emoji: '🔒',
-    summary: 'STAMPPOT — ZK privacy layer for pot membership and transactions.',
-    details: [
-      {
-        title: 'STAMPPOT privacy layer',
-        desc: 'Built on PrivacyCash ZK proofs. Members can participate in a pot without revealing their wallet address publicly. The vault tracks shares via zero-knowledge commitments.',
-      },
-      {
-        title: 'Private membership',
-        desc: 'With STAMPPOT enabled, joining a pot does not expose your wallet on-chain in a readable form. You hold a ZK proof of membership instead of a visible MemberAccount.',
-      },
-      {
-        title: 'Shielded withdrawals',
-        desc: 'Members can withdraw their share to a stealth address, breaking the on-chain link between vault participation and the final destination wallet.',
-      },
-    ],
+    sponsor: 'Solana Actions / Blinks',
+    emoji: '⚡',
+    what: 'Vote and deposit straight from a tweet — no app install.',
+    proof: 'Endpoints at `/api/actions/[potPubkey]/{deposit,vote}`. Tweet a pot — Twitter renders an interactive Blink card.',
+    proofHref: '/api/actions',
+    tier: 'live',
+  },
+  {
+    sponsor: 'MCP / Model Context Protocol',
+    emoji: '🤖',
+    what: 'Claude / GPT / any MCP-aware agent can manage a pot.',
+    proof: '`@potbot/mcp@0.2.0` on npm — HTTP + SSE, x402 payments. 9 free tools + 3 paid.',
+    proofHref: 'https://www.npmjs.com/package/@potbot/mcp',
+    tier: 'live',
+  },
+  {
+    sponsor: 'Helius',
+    emoji: '⚡',
+    what: 'RPC + webhooks + priority fees for the entire stack.',
+    proof: 'Wired in `apps/api/src/services/helius.ts` and front-end via `NEXT_PUBLIC_HELIUS_RPC`.',
+    proofHref: 'https://github.com/YD811/potbot-v2/blob/main/apps/api/src/services/helius.ts',
+    tier: 'live',
+  },
+  {
+    sponsor: 'Squads v4',
+    emoji: '🛡',
+    what: 'Optional multisig path for the pot creator role.',
+    proof: 'Detection in `apps/web/src/lib/squads.ts`. UI banner highlights when a pot is owned by a Squads vault.',
+    proofHref: 'https://github.com/YD811/potbot-v2/blob/main/apps/web/src/lib/squads.ts',
+    tier: 'live',
+  },
+  {
+    sponsor: 'Solana Mobile (Saga / Seeker)',
+    emoji: '📱',
+    what: 'PWA manifest ships today, dApp Store metadata next.',
+    proof: '`apps/web/public/manifest.json` is mainnet-ready (theme color, icons, categories). Saga / Seeker dApp Store entry on the roadmap.',
+    proofHref: 'https://github.com/YD811/potbot-v2/blob/main/apps/web/public/manifest.json',
+    tier: 'live',
   },
   {
     sponsor: 'Dune Analytics',
-    prize: '$5,000',
-    track: 'On-Chain Analytics',
-    color: '#F03E3E',
     emoji: '📊',
-    summary: 'Full PnL dashboard with on-chain data, Pyth prices, and Supabase snapshots.',
-    details: [
-      {
-        title: 'Per-member PnL tracking',
-        desc: 'Every deposit records the SOL/USD price at entry time (via Pyth oracle). PnL is calculated as: current share value − entry cost, in both SOL and USD.',
-      },
-      {
-        title: 'Daily NAV snapshots',
-        desc: 'A daily cron job snapshots each vault\'s Net Asset Value into pot_nav_daily. This powers performance charts and rolling return calculations.',
-      },
-      {
-        title: 'Cross-pot portfolio view',
-        desc: 'Members can see their total portfolio PnL across all pots they\'re in. Aggregated from on-chain share data + Supabase price snapshots.',
-      },
-      {
-        title: 'Leaderboard analytics',
-        desc: 'Public vault leaderboard ranks pots by TVL, trade volume, and member growth. All data derived from on-chain Anchor accounts — fully verifiable.',
-      },
+    what: 'Public on-chain dashboard fed from Anchor accounts.',
+    proof: 'Dune SIM portfolio + activity wired in `VaultPortfolio` component. Public dashboard at dune.com/potbot ships when `DUNE_API_KEY` is set in Vercel.',
+    tier: 'devnet',
+  },
+  {
+    sponsor: 'Privy',
+    emoji: '🪪',
+    what: 'Email / social login → 60-second onboarding for non-crypto users.',
+    proof: 'PR #32 on the GitHub repo. Awaiting `NEXT_PUBLIC_PRIVY_APP_ID` env to ship to mainnet.',
+    proofHref: 'https://github.com/YD811/potbot-v2/pull/32',
+    tier: 'phase-2',
+  },
+  {
+    sponsor: 'Pyth Network',
+    emoji: '🔮',
+    what: 'In-program oracle guard — re-reads price inside execute_swap to reject keepers that fired on stale data.',
+    proof: 'Code path is reserved (StrategyTrigger mode); Pyth SDK wiring is the next mainnet promotion.',
+    tier: 'phase-2',
+  },
+  {
+    sponsor: 'Metaplex Token Metadata',
+    emoji: '🎨',
+    what: 'Tamagotchi NFT mint at L4 (Bloom).',
+    proof: '`mint_tamagotchi_nft.rs` written, gated behind level check. Ships at Phase 3.',
+    proofHref: 'https://github.com/YD811/potbot-v2/blob/main/programs/pot_vault/src/instructions/mint_tamagotchi_nft.rs',
+    tier: 'phase-3',
+  },
+  {
+    sponsor: 'Light Protocol',
+    emoji: '🪶',
+    what: 'ZK-compressed audit log for swap events + NAV snapshots.',
+    proof: 'Spec lives in `docs/architecture/architecture-onchain.md`. Phase 2 cut.',
+    tier: 'phase-2',
+  },
+  {
+    sponsor: 'Adevar Labs',
+    emoji: '🔒',
+    what: 'Pre-mainnet-GA security audit (target post-hackathon).',
+    proof: 'Audit credits requested via Superteam NL. Out-of-scope for May 11 submission, in-scope for accelerator phase.',
+    tier: 'vision',
+  },
+]
+
+interface ArchLayer {
+  layer: string
+  color: string
+  items: { name: string; tier: StatusTier }[]
+}
+
+const ARCHITECTURE: ArchLayer[] = [
+  {
+    layer: 'On-chain · Anchor 0.30',
+    color: 'green',
+    items: [
+      { name: 'pot_vault program (30+ ix)', tier: 'live' },
+      { name: 'create_pot · deposit · withdraw', tier: 'live' },
+      { name: 'create_proposal · vote · execute_swap', tier: 'live' },
+      { name: 'Jupiter v6 CPI (vault-PDA signer)', tier: 'live' },
+      { name: 'Pot admin (pause / allowed mints)', tier: 'live' },
+      { name: 'Strategy slot accounts', tier: 'devnet' },
+      { name: 'Pyth in-program oracle guard', tier: 'phase-2' },
+      { name: 'Tamagotchi NFT mint (Metaplex)', tier: 'phase-3' },
     ],
   },
   {
-    sponsor: 'Umbra',
-    prize: '$5,000',
-    track: 'Stealth Payments',
-    color: '#1C7ED6',
-    emoji: '🌫️',
-    summary: 'Stealth address support for private vault withdrawals.',
-    details: [
-      {
-        title: 'Stealth withdrawal addresses',
-        desc: 'Members can generate a one-time stealth address for their withdrawal. The vault sends SOL to the stealth address instead of the registered wallet, breaking the on-chain trail.',
-      },
-      {
-        title: 'Combined with STAMPPOT',
-        desc: 'When used alongside STAMPPOT ZK layer, the full flow is private: hidden membership + stealth withdrawal = no on-chain link between the user and their pot activity.',
-      },
+    layer: 'Off-chain · Next.js 14 + apps/api',
+    color: 'purple',
+    items: [
+      { name: 'Pot detail UX (sticky hero, sponsor rail)', tier: 'live' },
+      { name: 'Solana Action endpoints', tier: 'live' },
+      { name: 'Helius RPC + webhook ingest', tier: 'live' },
+      { name: 'PotBot AI base layer (suggestions feed)', tier: 'devnet' },
+      { name: 'User AI delegate (rules + presets)', tier: 'devnet' },
+      { name: 'Privy embedded wallets', tier: 'phase-2' },
+      { name: 'STAMPPOT privacy preview', tier: 'phase-3' },
     ],
   },
   {
-    sponsor: 'SNS',
-    prize: '$5,000',
-    track: 'Solana Name Service',
-    color: '#E67700',
-    emoji: '🏷️',
-    summary: 'SNS reverse lookup for human-readable wallet names across the app.',
-    details: [
-      {
-        title: 'Reverse SNS lookup',
-        desc: 'All wallet addresses in the UI are resolved to .sol names when available. Member lists, proposal authors, and deposit history all show "alice.sol" instead of raw pubkeys.',
-      },
-      {
-        title: 'SNS in governance',
-        desc: 'Proposal cards show "alice.sol proposed: swap 1 SOL → BONK" instead of truncated addresses. Makes governance readable for non-technical group members.',
-      },
-      {
-        title: 'SNS-gated pots',
-        desc: 'Pot creators can restrict membership to .sol name holders, adding a layer of identity verification to private vaults.',
-      },
-    ],
-  },
-  {
-    sponsor: 'Kora',
-    prize: '$5,000',
-    track: 'Group Finance',
-    color: '#2F9E44',
-    emoji: '🏦',
-    summary: 'Core group finance primitives: shared treasury, budget grants, multi-level governance.',
-    details: [
-      {
-        title: 'Multi-member shared vault',
-        desc: 'Up to 1,000 members per pot. Each member holds shares proportional to their deposit. Shares represent a claim on the vault\'s SOL balance.',
-      },
-      {
-        title: 'Budget grant proposals',
-        desc: 'Governance can allocate a budget to an active trader: "give Alice 20% of vault for 7 days". Alice can swap freely within budget; unused funds return automatically.',
-      },
-      {
-        title: '5-level governance system',
-        desc: 'Trade level, withdraw level, member change level, settings level, yield level — each independently configurable. Supports everything from single-signer autocracy to multi-sig consensus.',
-      },
-      {
-        title: 'Withdrawal reserves',
-        desc: 'Protocol-level fee reserves and withdrawal buffers ensure the vault can always process redemptions even during active yield strategies.',
-      },
+    layer: 'Composability · Solana ecosystem',
+    color: 'amber',
+    items: [
+      { name: 'Jupiter v6 swap (CPI)', tier: 'live' },
+      { name: 'Squads v4 multisig (optional creator)', tier: 'live' },
+      { name: '@potbot/mcp on npm', tier: 'live' },
+      { name: 'Solana Blinks (Twitter/X)', tier: 'live' },
+      { name: 'PWA manifest (Saga / Seeker)', tier: 'live' },
+      { name: 'Dune SIM analytics', tier: 'devnet' },
+      { name: 'Light Protocol ZK audit log', tier: 'phase-2' },
+      { name: 'Saga / Seeker dApp Store entry', tier: 'vision' },
     ],
   },
 ]
 
-const STACK = [
-  'Solana · Anchor 0.30',
-  'Jupiter Swap V2 + Trigger + DCA',
-  'Pyth Network (price feeds)',
-  'PrivacyCash ZK proofs',
-  'Solana Name Service',
-  'Next.js 14 · TanStack Query',
-  'Supabase · Cloudflare Pages',
+const WEDGE = [
+  { who: 'Squads', does: 'Multisig custody', noTrade: true },
+  { who: 'Drift Vaults', does: 'Single-strategy structured products', noTrade: false, why: 'Curators only — no group governance per swap' },
+  { who: 'Kamino / Gauntlet', does: 'Institutional curators', noTrade: false, why: 'No group primitive for friends pooling capital' },
+  { who: 'PotBot', does: 'Group trading vault', noTrade: false, why: 'Deposit + vote + Jupiter CPI in one Anchor program', highlight: true },
 ]
 
 export default function HackathonPage() {
-  const [open, setOpen] = useState<string | null>(null)
-
-  const totalPrize = BOUNTIES.reduce((sum, b) => sum + parseInt(b.prize.replace(/\D/g, '')), 0)
+  const programExplorerUrl = `https://explorer.solana.com/address/${PROGRAM_ID}${EXPLORER_SUFFIX}`
+  const flagshipUrl = FLAGSHIP_POT ? `${APP_URL}/pots/${FLAGSHIP_POT}` : null
+  const flagshipBlinkUrl = FLAGSHIP_POT ? `${APP_URL}/api/actions/${FLAGSHIP_POT}/deposit` : null
 
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', background: '#08080f', color: '#e8e8f0', minHeight: '100vh' }}>
-
-      {/* Nav */}
-      <div style={{ borderBottom: '1px solid #1a1a2e', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <a href="/" style={{ color: '#7048E8', fontWeight: 800, fontSize: 18, textDecoration: 'none' }}>🫕 PotBot</a>
-        <div style={{ display: 'flex', gap: 16, fontSize: 13 }}>
-          <a href="https://t.me/Trade_pot_bot" target="_blank" rel="noreferrer" style={{ color: '#a0a0c0', textDecoration: 'none' }}>Telegram Bot</a>
-          <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noreferrer" style={{ color: '#a0a0c0', textDecoration: 'none' }}>GitHub</a>
-          <a href="https://x.com/PotBot_sol" target="_blank" rel="noreferrer" style={{ color: '#a0a0c0', textDecoration: 'none' }}>Twitter</a>
+    <main className="min-h-screen bg-pot-dark text-white">
+      {/* Top banner */}
+      <div className="bg-gradient-to-b from-pot-accent/10 to-transparent border-b border-pot-border">
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3 flex-wrap">
+          <Link href="/" className="text-pot-accent font-bold text-base flex items-center gap-2">
+            🫕 <span>PotBot</span>
+          </Link>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="text-pot-muted">Solana Frontier 2026 · Apr 6 – May 11</span>
+            <span className="hidden sm:inline text-pot-muted">·</span>
+            <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noreferrer" className="text-pot-muted hover:text-white transition">
+              GitHub
+            </a>
+            <a href="https://x.com/PotBot_sol" target="_blank" rel="noreferrer" className="text-pot-muted hover:text-white transition">
+              X
+            </a>
+            <Link href="/roadmap" className="text-pot-muted hover:text-white transition">
+              Roadmap
+            </Link>
+          </div>
         </div>
       </div>
 
       {/* Hero */}
-      <section style={{ textAlign: 'center', padding: '80px 24px 56px', background: 'radial-gradient(ellipse at 50% 0%, #1a0a3e 0%, #08080f 60%)' }}>
-        <div style={{ display: 'inline-block', background: '#7048E820', border: '1px solid #7048E840', borderRadius: 100, padding: '6px 18px', fontSize: 12, color: '#9d6fff', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 20 }}>
-          Solana Frontier Hackathon 2026 · Apr 6 – May 11
-        </div>
-        <h1 style={{ fontSize: 'clamp(40px, 7vw, 80px)', fontWeight: 900, margin: '0 0 16px', lineHeight: 1.05, background: 'linear-gradient(135deg, #fff 30%, #9d6fff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          🫕 PotBot
-        </h1>
-        <p style={{ fontSize: 'clamp(17px, 2.5vw, 22px)', color: '#8080b0', maxWidth: 560, margin: '0 auto 12px', lineHeight: 1.6 }}>
-          Group trading vaults on Solana. Pool capital, vote on swaps, share the gains.
-        </p>
-        <p style={{ fontSize: 14, color: '#5050a0', marginBottom: 40 }}>
-          Targeting <strong style={{ color: '#9d6fff' }}>${totalPrize.toLocaleString()}</strong> across {BOUNTIES.length} bounty tracks
-        </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="https://t.me/Trade_pot_bot" target="_blank" rel="noreferrer"
-            style={{ background: '#7048E8', color: '#fff', padding: '13px 28px', borderRadius: 12, fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
-            🚀 Try the Bot
-          </a>
-          <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noreferrer"
-            style={{ background: '#12121e', color: '#e8e8f0', padding: '13px 28px', borderRadius: 12, fontWeight: 700, fontSize: 15, textDecoration: 'none', border: '1px solid #2a2a4a' }}>
-            View Source →
-          </a>
-        </div>
-      </section>
+      <section className="px-4 sm:px-6 py-12 sm:py-20 text-center">
+        <div className="max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-pot-accent/30 bg-pot-accent/10 text-pot-accent text-[11px] font-bold uppercase tracking-wider mb-6">
+            🏁 Submission for Colosseum / Solana Frontier 2026
+          </div>
+          <h1 className="text-4xl sm:text-6xl font-black mb-4 leading-tight bg-gradient-to-br from-white to-pot-accent bg-clip-text text-transparent">
+            Squads moves money.<br />PotBot trades it.
+          </h1>
+          <p className="text-base sm:text-xl text-pot-muted max-w-2xl mx-auto">
+            Group trading vaults on Solana. Five friends spin up a pot, deposit SOL, vote on a Jupiter swap, and execute it on-chain in under 60 seconds. All in a single Anchor program.
+          </p>
 
-      {/* Bounty tracks — accordion */}
-      <section style={{ padding: '60px 24px', maxWidth: 860, margin: '0 auto' }}>
-        <h2 style={{ textAlign: 'center', fontSize: 30, fontWeight: 800, marginBottom: 8 }}>What We Built — Per Bounty</h2>
-        <p style={{ textAlign: 'center', color: '#5050a0', marginBottom: 48, fontSize: 15 }}>
-          Click each track to see exact implementation details
-        </p>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {BOUNTIES.map((b) => {
-            const isOpen = open === b.sponsor
-            return (
-              <div key={b.sponsor} style={{
-                background: '#10101c',
-                border: `1px solid ${isOpen ? b.color + '60' : '#1e1e36'}`,
-                borderRadius: 16,
-                overflow: 'hidden',
-                transition: 'border-color 0.2s',
-              }}>
-                {/* Header */}
-                <button
-                  onClick={() => setOpen(isOpen ? null : b.sponsor)}
-                  style={{
-                    width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-                    padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-                    color: '#e8e8f0', textAlign: 'left',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <span style={{ fontSize: 28 }}>{b.emoji}</span>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 18, fontWeight: 800 }}>{b.sponsor}</span>
-                        <span style={{ fontSize: 14, fontWeight: 800, color: b.color }}>{b.prize}</span>
-                        <span style={{ fontSize: 11, background: b.color + '20', color: b.color, borderRadius: 100, padding: '2px 10px', fontWeight: 600 }}>{b.track}</span>
-                      </div>
-                      <div style={{ fontSize: 13, color: '#6060a0', marginTop: 4 }}>{b.summary}</div>
-                    </div>
-                  </div>
-                  <span style={{ color: b.color, fontSize: 20, flexShrink: 0, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</span>
-                </button>
-
-                {/* Expandable details */}
-                {isOpen && (
-                  <div style={{ borderTop: `1px solid ${b.color}30`, padding: '0 24px 24px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                      {b.details.map((d, i) => (
-                        <div key={i} style={{
-                          padding: '16px 0',
-                          borderBottom: i < b.details.length - 1 ? '1px solid #1a1a30' : 'none',
-                          display: 'flex', gap: 16,
-                        }}>
-                          <div style={{ width: 6, height: 6, borderRadius: '50%', background: b.color, flexShrink: 0, marginTop: 7 }} />
-                          <div>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: '#d0d0f0', marginBottom: 6 }}>{d.title}</div>
-                            <div style={{ fontSize: 13, color: '#6060a0', lineHeight: 1.65 }}>{d.desc}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )
-          })}
+          <div className="mt-8 flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+            {flagshipUrl ? (
+              <a
+                href={flagshipUrl}
+                className="px-5 sm:px-6 py-3 rounded-xl bg-pot-accent hover:bg-pot-accent/90 text-white font-bold transition text-sm sm:text-base"
+              >
+                🪴 Open flagship pot
+              </a>
+            ) : (
+              <Link
+                href="/vaults"
+                className="px-5 sm:px-6 py-3 rounded-xl bg-pot-accent hover:bg-pot-accent/90 text-white font-bold transition text-sm sm:text-base"
+              >
+                🪴 Browse public pots
+              </Link>
+            )}
+            <Link
+              href="/create"
+              className="px-5 sm:px-6 py-3 rounded-xl bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold transition text-sm sm:text-base"
+            >
+              + Create your pot
+            </Link>
+            <a
+              href="https://www.npmjs.com/package/@potbot/mcp"
+              target="_blank"
+              rel="noreferrer"
+              className="px-5 sm:px-6 py-3 rounded-xl bg-pot-card border border-pot-border hover:border-pot-accent/40 text-white font-bold transition text-sm sm:text-base"
+            >
+              🤖 Install MCP
+            </a>
+          </div>
         </div>
       </section>
 
-      {/* Architecture overview */}
-      <section style={{ padding: '0 24px 60px', maxWidth: 860, margin: '0 auto' }}>
-        <div style={{ background: '#10101c', border: '1px solid #1e1e36', borderRadius: 20, padding: '32px 40px' }}>
-          <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24 }}>🏗️ Architecture</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
-            {[
-              { layer: 'On-Chain', color: '#37B24D', items: ['Anchor 0.30 program', 'PotAccount PDA', 'ProposalAccount PDA', 'MemberAccount PDA', 'Tamagotchi NFT mint', 'Timelock enforcement'] },
-              { layer: 'Off-Chain', color: '#7048E8', items: ['Next.js 14 frontend', 'Jupiter API proxy', 'Pyth price feeds', 'Supabase PostgreSQL', 'PnL calculation engine', 'AI agent evaluation loop'] },
-              { layer: 'Integrations', color: '#E67700', items: ['Jupiter Swap V2', 'Jupiter Trigger', 'Jupiter DCA', 'Pyth Network', 'Solana Name Service', 'PrivacyCash ZK'] },
-            ].map(({ layer, color, items }) => (
-              <div key={layer}>
-                <div style={{ fontSize: 12, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>{layer}</div>
-                {items.map(item => (
-                  <div key={item} style={{ fontSize: 13, color: '#7070a0', padding: '4px 0', borderBottom: '1px solid #14142a', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color, opacity: 0.6 }}>·</span> {item}
-                  </div>
+      {/* Live now block */}
+      <section className="px-4 sm:px-6 pb-12">
+        <div className="max-w-[1100px] mx-auto bg-pot-card border border-pot-green/30 rounded-3xl p-6 sm:p-8">
+          <div className="flex items-center gap-3 mb-5 flex-wrap">
+            <h2 className="text-xl sm:text-2xl font-bold text-white">🟢 Live now — judge can verify</h2>
+            <StatusBadge tier={CLUSTER === 'mainnet-beta' ? 'live' : 'devnet'} compact />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <LiveCard
+              title="Anchor program"
+              value={PROGRAM_ID}
+              href={programExplorerUrl}
+              hrefLabel="View on Solana Explorer"
+              mono
+            />
+            {FLAGSHIP_POT ? (
+              <LiveCard
+                title="Flagship pot"
+                value={FLAGSHIP_POT}
+                href={flagshipUrl ?? undefined}
+                hrefLabel="Open in app"
+                mono
+              />
+            ) : (
+              <LiveCard
+                title="Flagship pot"
+                value="(awaiting mainnet deploy)"
+                hrefLabel="See devnet pots →"
+                href="/vaults"
+              />
+            )}
+            <LiveCard
+              title="MCP server"
+              value="@potbot/mcp@0.2.0"
+              href="https://www.npmjs.com/package/@potbot/mcp"
+              hrefLabel="View on npm"
+            />
+            <LiveCard
+              title="Solana Blink (deposit)"
+              value={flagshipBlinkUrl ?? `${APP_URL}/api/actions/<potPubkey>/deposit`}
+              href={flagshipBlinkUrl ?? undefined}
+              hrefLabel={flagshipBlinkUrl ? 'Open Action endpoint' : 'See live Blink after deploy'}
+              mono
+            />
+            <LiveCard
+              title="Source code"
+              value="github.com/YD811/potbot-v2"
+              href="https://github.com/YD811/potbot-v2"
+              hrefLabel="Browse the repo"
+            />
+            <LiveCard
+              title="Public roadmap"
+              value="Every feature, every phase"
+              href="/roadmap"
+              hrefLabel="Open /roadmap"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* The wedge */}
+      <section className="px-4 sm:px-6 pb-12">
+        <div className="max-w-[1100px] mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">The wedge</h2>
+          <p className="text-pot-muted max-w-2xl mb-6">
+            Group on-chain governance baked <strong className="text-white">into the swap instruction</strong>. Nobody else ships this primitive.
+          </p>
+          <div className="overflow-x-auto rounded-2xl border border-pot-border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-pot-card text-left">
+                  <th className="px-4 py-3 text-xs uppercase tracking-wide text-pot-muted">Project</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wide text-pot-muted">What it does</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wide text-pot-muted">Group-trade primitive?</th>
+                </tr>
+              </thead>
+              <tbody>
+                {WEDGE.map((w) => (
+                  <tr
+                    key={w.who}
+                    className={`border-t border-pot-border ${w.highlight ? 'bg-pot-accent/5' : ''}`}
+                  >
+                    <td className={`px-4 py-3 font-bold ${w.highlight ? 'text-pot-accent' : 'text-white'}`}>{w.who}</td>
+                    <td className="px-4 py-3 text-pot-muted">{w.does}</td>
+                    <td className="px-4 py-3">
+                      {w.highlight ? (
+                        <span className="inline-flex items-center gap-1.5 text-pot-green font-semibold">
+                          ✅ Yes — pot_vault::execute_swap
+                        </span>
+                      ) : (
+                        <span className="text-pot-muted text-xs">{w.why ?? '—'}</span>
+                      )}
+                    </td>
+                  </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* Sponsor tracks */}
+      <section className="px-4 sm:px-6 pb-12">
+        <div className="max-w-[1100px] mx-auto">
+          <div className="flex items-end justify-between gap-3 mb-6 flex-wrap">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white">Sponsor tracks &amp; integrations</h2>
+              <p className="text-pot-muted text-sm mt-1">Every claim is labelled with its lifecycle status. Live items are verifiable on Explorer.</p>
+            </div>
+            <Link href="/roadmap" className="text-xs text-pot-accent hover:underline font-semibold">
+              See the full roadmap →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {TRACKS.map((t) => (
+              <div
+                key={t.sponsor}
+                className="bg-pot-card border border-pot-border hover:border-pot-accent/30 rounded-2xl p-4 sm:p-5 transition"
+              >
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-2xl shrink-0">{t.emoji}</span>
+                    <h3 className="font-bold text-white truncate">{t.sponsor}</h3>
+                  </div>
+                  <StatusBadge tier={t.tier} compact />
+                </div>
+                <p className="mt-2 text-sm text-white/90">{t.what}</p>
+                <p className="mt-2 text-xs text-pot-muted leading-relaxed">{t.proof}</p>
+                {t.proofHref && (
+                  <a
+                    href={t.proofHref}
+                    target={t.proofHref.startsWith('http') ? '_blank' : undefined}
+                    rel={t.proofHref.startsWith('http') ? 'noreferrer' : undefined}
+                    className="mt-3 inline-block text-xs text-pot-accent hover:underline font-semibold"
+                  >
+                    Source / proof ↗
+                  </a>
+                )}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Timeline */}
-      <section style={{ padding: '0 24px 60px', maxWidth: 600, margin: '0 auto' }}>
-        <h2 style={{ textAlign: 'center', fontSize: 26, fontWeight: 800, marginBottom: 36 }}>Build Timeline</h2>
-        {[
-          { date: 'Apr 6', label: 'Hackathon started · repo initialized', done: true },
-          { date: 'Apr 18', label: 'Anchor program + all compile errors fixed', done: true },
-          { date: 'Apr 21', label: 'Jupiter full stack · Pyth PnL · Supabase backend · localStorage removed', done: true },
-          { date: 'Apr 25', label: 'Devnet deploy · E2E demo flow', done: false },
-          { date: 'May 1', label: 'Demo video · submission draft', done: false },
-          { date: 'May 11', label: '🏁 Submission deadline', done: false },
-        ].map((t, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 20, marginBottom: 20 }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 16, flexShrink: 0,
-              background: t.done ? '#2F9E44' : '#10101c',
-              border: t.done ? 'none' : '2px solid #2a2a4a',
-            }}>
-              {t.done ? '✓' : '○'}
-            </div>
-            <div style={{ paddingTop: 8 }}>
-              <div style={{ fontSize: 11, color: '#4040a0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>{t.date}</div>
-              <div style={{ fontSize: 14, fontWeight: t.done ? 600 : 400, color: t.done ? '#d0d0f0' : '#5050a0', marginTop: 2 }}>{t.label}</div>
-            </div>
+      {/* Architecture */}
+      <section className="px-4 sm:px-6 pb-12">
+        <div className="max-w-[1100px] mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Architecture</h2>
+          <p className="text-pot-muted text-sm mb-6 max-w-2xl">
+            Three layers — on-chain, off-chain, composability. Each item carries its lifecycle chip so nothing on this page is over-promised.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {ARCHITECTURE.map((layer) => (
+              <div key={layer.layer} className="bg-pot-card border border-pot-border rounded-2xl p-5">
+                <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${
+                  layer.color === 'green' ? 'text-pot-green' :
+                  layer.color === 'purple' ? 'text-pot-accent' : 'text-amber-300'
+                }`}>
+                  {layer.layer}
+                </h3>
+                <ul className="space-y-2">
+                  {layer.items.map((it) => (
+                    <li key={it.name} className="flex items-center gap-2 text-sm text-white">
+                      <StatusBadge tier={it.tier} compact label={it.tier === 'live' ? '🟢' : it.tier === 'devnet' ? '🟡' : it.tier === 'phase-2' ? '🔵' : it.tier === 'phase-3' ? '🟣' : '⚪'} />
+                      <span className="leading-snug">{it.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-        ))}
-      </section>
-
-      {/* Stack pills */}
-      <section style={{ padding: '0 24px 80px', textAlign: 'center' }}>
-        <div style={{ fontSize: 11, color: '#3030a0', fontWeight: 700, letterSpacing: 2, marginBottom: 14, textTransform: 'uppercase' }}>Tech Stack</div>
-        <div>
-          {STACK.map(s => (
-            <span key={s} style={{ display: 'inline-block', background: '#10101c', border: '1px solid #1e1e36', borderRadius: 100, padding: '6px 16px', margin: '4px', fontSize: 12, color: '#7070a0' }}>
-              {s}
-            </span>
-          ))}
-        </div>
-        <div style={{ marginTop: 40, fontSize: 13, color: '#3030a0' }}>
-          Built by <a href="https://x.com/CryptoYDao" target="_blank" rel="noreferrer" style={{ color: '#7048E8', textDecoration: 'none' }}>@CryptoYDao</a>
-          {' · '}Y-DAO Amsterdam{' · '}Superteam NL
         </div>
       </section>
 
+      {/* 90-second pitch */}
+      <section className="px-4 sm:px-6 pb-12">
+        <div className="max-w-[1100px] mx-auto bg-pot-card border border-pot-border rounded-3xl p-6 sm:p-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-5">90-second pitch</h2>
+          <ol className="space-y-4 text-sm sm:text-base">
+            <PitchStep range="0–15s" headline="Problem">
+              Five friends want to trade together. Today they share a seed phrase or build a Squads multisig with no trading UI. Both suck.
+            </PitchStep>
+            <PitchStep range="15–30s" headline="Solution">
+              PotBot is a group trading vault. Deposit. Propose. Vote. Execute. All on-chain, in one Anchor program.
+            </PitchStep>
+            <PitchStep range="30–60s" headline="Live demo">
+              Open `/vaults` → click a public pot → deposit 0.05 SOL via wallet → propose a swap → vote yes → watch it execute on Jupiter, Solana Explorer link visible.
+            </PitchStep>
+            <PitchStep range="60–80s" headline="Differentiation">
+              Solana Blinks turn any proposal into a tweet anyone can vote on. MCP lets Claude/GPT manage a pot. The on-chain `execute_swap` instruction is mode-aware — Admin / Proposal / AI-trigger — and matches mode-source strictly.
+            </PitchStep>
+            <PitchStep range="80–90s" headline="Ask">
+              Mainnet is live (or shipping this sprint). We want Colosseum to ship the privacy layer (Token-2022 confidential transfers) and the Saga / Seeker dApp Store entry.
+            </PitchStep>
+          </ol>
+        </div>
+      </section>
+
+      {/* What's next */}
+      <section className="px-4 sm:px-6 pb-16">
+        <div className="max-w-[1100px] mx-auto bg-gradient-to-br from-pot-accent/10 to-pot-green/5 border border-pot-accent/30 rounded-3xl p-6 sm:p-8 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">What ships next</h2>
+          <p className="text-pot-muted max-w-xl mx-auto mb-5 text-sm sm:text-base">
+            Privy embedded wallets, Pyth in-program oracle guard, Meteora &amp; Kamino yield CPIs, Light Protocol ZK audit log, Tamagotchi NFT mint, STAMPPOT privacy mode. Each phase tagged on the public roadmap.
+          </p>
+          <Link
+            href="/roadmap"
+            className="inline-block px-5 py-3 rounded-xl bg-pot-accent hover:bg-pot-accent/90 text-white font-bold transition text-sm sm:text-base"
+          >
+            🗺️ Open /roadmap
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-pot-border px-4 sm:px-6 py-8">
+        <div className="max-w-[1100px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-pot-muted">
+          <div>
+            Built by{' '}
+            <a href="https://x.com/CryptoYDao" target="_blank" rel="noreferrer" className="text-pot-accent hover:underline">
+              @CryptoYDao
+            </a>
+            {' · '}Y-DAO Amsterdam{' · '}Superteam NL
+          </div>
+          <div className="flex items-center gap-3">
+            <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noreferrer" className="hover:text-white transition">GitHub</a>
+            <span>·</span>
+            <a href="https://x.com/PotBot_sol" target="_blank" rel="noreferrer" className="hover:text-white transition">X</a>
+            <span>·</span>
+            <Link href="/roadmap" className="hover:text-white transition">Roadmap</Link>
+            <span>·</span>
+            <Link href="/" className="hover:text-white transition">Home</Link>
+          </div>
+        </div>
+      </footer>
     </main>
+  )
+}
+
+function LiveCard({
+  title,
+  value,
+  href,
+  hrefLabel,
+  mono,
+}: {
+  title: string
+  value: string
+  href?: string
+  hrefLabel?: string
+  mono?: boolean
+}) {
+  const valueClass = `text-xs sm:text-sm break-all ${mono ? 'font-mono text-pot-green' : 'text-white'}`
+  return (
+    <div className="bg-pot-dark/40 border border-pot-border rounded-2xl p-4">
+      <div className="text-[10px] uppercase tracking-wider text-pot-muted font-bold mb-1.5">{title}</div>
+      <div className={valueClass}>{value}</div>
+      {href && hrefLabel && (
+        <a
+          href={href}
+          target={href.startsWith('http') ? '_blank' : undefined}
+          rel={href.startsWith('http') ? 'noreferrer' : undefined}
+          className="mt-2 inline-block text-[11px] text-pot-accent hover:underline font-semibold"
+        >
+          {hrefLabel} ↗
+        </a>
+      )}
+    </div>
+  )
+}
+
+function PitchStep({
+  range,
+  headline,
+  children,
+}: {
+  range: string
+  headline: string
+  children: React.ReactNode
+}) {
+  return (
+    <li className="flex gap-3 sm:gap-4">
+      <div className="shrink-0 w-16 sm:w-20 text-[10px] sm:text-xs uppercase tracking-wider font-bold text-pot-accent pt-1">
+        {range}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="font-bold text-white">{headline}</div>
+        <div className="text-pot-muted text-sm mt-0.5">{children}</div>
+      </div>
+    </li>
   )
 }
