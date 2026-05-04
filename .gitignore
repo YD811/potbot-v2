@@ -46,3 +46,4 @@ packages/program/.anchor/
 secrets/
 *.secret
 *.key
+*.tsbuildinfo

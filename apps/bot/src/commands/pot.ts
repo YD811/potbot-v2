@@ -1,1 +1,79 @@
-aW1wb3J0IHR5cGUgeyBDb250ZXh0IH0gZnJvbSAnZ3JhbW15JwppbXBvcnQgeyBJbmxpbmVLZXlib2FyZCB9IGZyb20gJ2dyYW1teScKaW1wb3J0IHsgZmV0Y2hQb3RzRm9yV2FsbGV0LCBjcmVhdGVQb3RMaW5rLCBwb3REZXRhaWxMaW5rLCBkZXBvc2l0TGluayB9IGZyb20gJy4uL2xpYi9ycGMuanMnCgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gcG90Q29tbWFuZChjdHg6IENvbnRleHQpIHsKICBjb25zdCB1c2VySWQgPSBjdHguZnJvbT8uaWQKICBjb25zdCB1c2VybmFtZSA9IGN0eC5mcm9tPy51c2VybmFtZSA/PyAnYW5vbicKCiAgLy8gV2UgbmVlZCBhIGxpbmtlZCB3YWxsZXQgYWRkcmVzcyDigJQgc3RvcmVkIGluIHNlc3Npb24gb3IgdXNlciBEQgogIC8vIEZvciBub3cgd2UgdXNlIHRoZSBhZGRyZXNzIGZyb20gL3N0YXJ0IGlmIHByb3ZpZGVkLCBlbHNlIHByb21wdAogIGNvbnN0IGxpbmtlZFdhbGxldDogc3RyaW5nIHwgbnVsbCA9IChjdHggYXMgYW55KS5zZXNzaW9uPy53YWxsZXRBZGRyZXNzID8/IG51bGwKCiAgaWYgKCFsaW5rZWRXYWxsZXQpIHsKICAgIGNvbnN0IGtleWJvYXJkID0gbmV3IElubGluZUtleWJvYXJkKCkKICAgICAgLnVybCgn8J+UlyBDb25uZWN0IFdhbGxldCcsIGNyZWF0ZVBvdExpbmsoKSkKCiAgICByZXR1cm4gY3R4LnJlcGx5KAogICAgICBg8J+qtCAqUG90Qm90KlxuXG5gICsKICAgICAgYENvbm5lY3QgeW91ciBTb2xhbmEgd2FsbGV0IHRvIG1hbmFnZSB5b3VyIFBPVHMuXG5cbmAgKwogICAgICBgVGFwIGJlbG93IHRvIG9wZW4gdGhlIGFwcCBhbmQgbGluayB5b3VyIHdhbGxldDpgLAogICAgICB7IHBhcnNlX21vZGU6ICdNYXJrZG93bicsIHJlcGx5X21hcmt1cDoga2V5Ym9hcmQgfQogICAgKQogIH0KCiAgLy8gRmV0Y2ggcmVhbCBQT1RzIGZyb20gY2hhaW4KICBjb25zdCBzdGF0dXMgPSBhd2FpdCBjdHgucmVwbHkoJ+KPsyBGZXRjaGluZyB5b3VyIFBPVHPigKYnKQogIGNvbnN0IHBvdHMgPSBhd2FpdCBmZXRjaFBvdHNGb3JXYWxsZXQobGlua2VkV2FsbGV0KQoKICBhd2FpdCBjdHguYXBpLmRlbGV0ZU1lc3NhZ2UoY3R4LmNoYXQhLmlkLCBzdGF0dXMubWVzc2FnZV9pZCkuY2F0Y2goKCkgPT4ge30pCgogIGlmIChwb3RzLmxlbmd0aCA9PT0gMCkgewogICAgY29uc3Qga2V5Ym9hcmQgPSBuZXcgSW5saW5lS2V5Ym9hcmQoKQogICAgICAudXJsKCfinpUgQ3JlYXRlIHlvdXIgZmlyc3QgUE9UJywgY3JlYXRlUG90TGluaygpKQoKICAgIHJldHVybiBjdHgucmVwbHkoCiAgICAgIGDwn6q0ICpZb3VyIFBPVHMqXG5cbmAgKwogICAgICBgWW91IGRvbid0IGhhdmUgYW55IFBPVHMgeWV0LlxuYCArCiAgICAgIGBDcmVhdGUgb25lIGFuZCBpbnZpdGUgeW91ciBjcmV3IWAsCiAgICAgIHsgcGFyc2VfbW9kZTogJ01hcmtkb3duJywgcmVwbHlfbWFya3VwOiBrZXlib2FyZCB9CiAgICApCiAgfQoKICAvLyBTaG93IFBPVCBsaXN0CiAgY29uc3Qga2V5Ym9hcmQgPSBuZXcgSW5saW5lS2V5Ym9hcmQoKQogIHBvdHMuc2xpY2UoMCwgNSkuZm9yRWFjaCgocCkgPT4gewogICAga2V5Ym9hcmQudXJsKGDwn6q0ICR7cC5uYW1lIHx8IHAucHVia2V5LnNsaWNlKDAsIDgpICsgJ+KApid9YCwgcG90RGV0YWlsTGluayhwLnB1YmtleSkpLnJvdygpCiAgfSkKICBrZXlib2FyZAogICAgLnVybCgn4p6VIENyZWF0ZSBQT1QnLCBjcmVhdGVQb3RMaW5rKCkpCiAgICAudXJsKCfwn4yQIE9wZW4gQXBwJywgJ2h0dHBzOi8vYXBwLnBvdGJvdC5mdW4vZGFzaGJvYXJkJykKCiAgY29uc3QgbGluZXMgPSBwb3RzLnNsaWNlKDAsIDUpLm1hcCgocCwgaSkgPT4KICAgIGAke2kgKyAxfS4gKiR7cC5uYW1lIHx8IHAucHVia2V5LnNsaWNlKDAsIDgpICsgJ+KApid9KiAgKCR7cC5tZW1iZXJDb3VudH0gbWVtYmVycylgCiAgKQoKICBhd2FpdCBjdHgucmVwbHkoCiAgICBg8J+qtCAqWW91ciBQT1RzKiAoJHtwb3RzLmxlbmd0aH0gdG90YWwpXG5cbmAgKwogICAgbGluZXMuam9pbignXG4nKSArCiAgICBgXG5cblRhcCBhIFBPVCB0byBtYW5hZ2UgaXQ6YCwKICAgIHsgcGFyc2VfbW9kZTogJ01hcmtkb3duJywgcmVwbHlfbWFya3VwOiBrZXlib2FyZCB9CiAgKQp9CgovLyDilIDilIAgQ2FsbGJhY2sgaGFuZGxlcnMg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gaGFuZGxlUG90Q2FsbGJhY2soY3R4OiBDb250ZXh0KSB7CiAgY29uc3QgZGF0YSA9IChjdHguY2FsbGJhY2tRdWVyeSBhcyBhbnkpPy5kYXRhIGFzIHN0cmluZwogIGF3YWl0IGN0eC5hbnN3ZXJDYWxsYmFja1F1ZXJ5KCkKCiAgaWYgKGRhdGEgPT09ICdwb3RfY3JlYXRlJykgewogICAgcmV0dXJuIGN0eC5yZXBseSgKICAgICAgYOKelSAqQ3JlYXRlIGEgUE9UKlxuXG5PcGVuIHRoZSBhcHAgdG8gc2V0IHVwIHlvdXIgY29sbGVjdGl2ZSB2YXVsdDpgLAogICAgICB7CiAgICAgICAgcGFyc2VfbW9kZTogJ01hcmtkb3duJywKICAgICAgICByZXBseV9tYXJrdXA6IG5ldyBJbmxpbmVLZXlib2FyZCgpLnVybCgnT3BlbiBBcHAnLCBjcmVhdGVQb3RMaW5rKCkpLAogICAgICB9CiAgICApCiAgfQp9Cg==
+import type { Context } from 'grammy'
+import { InlineKeyboard } from 'grammy'
+import { fetchPotsForWallet, createPotLink, potDetailLink, depositLink } from '../lib/rpc.js'
+
+export async function potCommand(ctx: Context) {
+  const userId = ctx.from?.id
+  const username = ctx.from?.username ?? 'anon'
+
+  // We need a linked wallet address — stored in session or user DB
+  // For now we use the address from /start if provided, else prompt
+  const linkedWallet: string | null = (ctx as any).session?.walletAddress ?? null
+
+  if (!linkedWallet) {
+    const keyboard = new InlineKeyboard()
+      .url('🔗 Connect Wallet', createPotLink())
+
+    return ctx.reply(
+      `🪴 *PotBot*\n\n` +
+      `Connect your Solana wallet to manage your POTs.\n\n` +
+      `Tap below to open the app and link your wallet:`,
+      { parse_mode: 'Markdown', reply_markup: keyboard }
+    )
+  }
+
+  // Fetch real POTs from chain
+  const status = await ctx.reply('⏳ Fetching your POTs…')
+  const pots = await fetchPotsForWallet(linkedWallet)
+
+  await ctx.api.deleteMessage(ctx.chat!.id, status.message_id).catch(() => {})
+
+  if (pots.length === 0) {
+    const keyboard = new InlineKeyboard()
+      .url('➕ Create your first POT', createPotLink())
+
+    return ctx.reply(
+      `🪴 *Your POTs*\n\n` +
+      `You don't have any POTs yet.\n` +
+      `Create one and invite your crew!`,
+      { parse_mode: 'Markdown', reply_markup: keyboard }
+    )
+  }
+
+  // Show POT list
+  const keyboard = new InlineKeyboard()
+  pots.slice(0, 5).forEach((p) => {
+    keyboard.url(`🪴 ${p.name || p.pubkey.slice(0, 8) + '…'}`, potDetailLink(p.pubkey)).row()
+  })
+  keyboard
+    .url('➕ Create POT', createPotLink())
+    .url('🌐 Open App', 'https://app.potbot.fun/dashboard')
+
+  const lines = pots.slice(0, 5).map((p, i) =>
+    `${i + 1}. *${p.name || p.pubkey.slice(0, 8) + '…'}*  (${p.memberCount} members)`
+  )
+
+  await ctx.reply(
+    `🪴 *Your POTs* (${pots.length} total)\n\n` +
+    lines.join('\n') +
+    `\n\nTap a POT to manage it:`,
+    { parse_mode: 'Markdown', reply_markup: keyboard }
+  )
+}
+
+// ── Callback handlers ─────────────────────────────────────────────────────
+
+export async function handlePotCallback(ctx: Context) {
+  const data = (ctx.callbackQuery as any)?.data as string
+  await ctx.answerCallbackQuery()
+
+  if (data === 'pot_create') {
+    return ctx.reply(
+      `➕ *Create a POT*\n\nOpen the app to set up your collective vault:`,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: new InlineKeyboard().url('Open App', createPotLink()),
+      }
+    )
+  }
+}

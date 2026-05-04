@@ -1,1 +1,14 @@
-aW1wb3J0IHR5cGUgeyBDb250ZXh0IH0gZnJvbSAnZ3JhbW15JwppbXBvcnQgeyBJbmxpbmVLZXlib2FyZCB9IGZyb20gJ2dyYW1teSIKCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBkdWVsQ29tbWFuZChjdHg6IENvbnRleHQpIHsKICBjb25zdCBjb21tYW5kQXJncyA9IGN0eC5tZXNzYWdlPy50ZXh0Py5zcGxpdCgnICcpLnNsaWNlKDEpIHx8IFtdCiAgY29uc3Qgb3Bwb25lbnQgPSBjb21tYW5kQXJnc1swXQogIAogIGlmICghb3Bwb25lbnQpIHsKICAgIGF3YWl0IGN0eC5yZXBseSgnUGxlYXNlIHByb3ZpZGUgYSBwbGF5ZXIgdG8gY2hhbGxlbmdlIScpCiAgICByZXR1cm4KICB9CiAgCiAgYXdhaXQgY3R4LnJlcGx5KGDimb0gQ2hhbGxlbmdlIHNlbnQgdG8gJHtvcHBvbmVudH0hYCkKfQo=
+import type { Context } from 'grammy'
+import { InlineKeyboard } from 'grammy"
+
+export async function duelCommand(ctx: Context) {
+  const commandArgs = ctx.message?.text?.split(' ').slice(1) || []
+  const opponent = commandArgs[0]
+  
+  if (!opponent) {
+    await ctx.reply('Please provide a player to challenge!')
+    return
+  }
+  
+  await ctx.reply(`♽ Challenge sent to ${opponent}!`)
+}
