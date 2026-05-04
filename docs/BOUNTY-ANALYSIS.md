@@ -1,3 +1,7 @@
+> **⚠️ ARCHIVED 2026-05-04** — Frontier Hackathon 2026 removed all main-stage tracks/bounties before submission close. The 51 sub-tracks listed below moved to **Superteam Earn** (https://superteam.fun/earn/hackathon/frontier/) as separate, independently-judged side submissions. Main hackathon judging is now: 1 Grand Champion ($30k) + 20 startup picks ($10k each) + university/public-goods bonuses. Treat content below as historical reference, not as live opportunity list.
+
+---
+
 # PotBot v2 — Bounty Analysis: Contra + Kora
 ### Solana Frontier 2026 Hackathon
 
