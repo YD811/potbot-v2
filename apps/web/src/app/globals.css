@@ -227,3 +227,13 @@ html, body, nav, section, footer, .card, .btn-primary, .btn-secondary, .input,
 .text-white, .text-pot-muted {
   transition: background-color .2s ease, color .2s ease, border-color .2s ease;
 }
+
+/* ── Mobile safety net (PR-D) ── */
+html, body { overflow-x: hidden; }
+body { padding-bottom: env(safe-area-inset-bottom); }
+@media (max-width: 640px) {
+  /* Smaller default text wherever we use text-xs to avoid clipping */
+  .text-2xl { font-size: 1.25rem; line-height: 1.65rem; }
+  /* Modal full-screen on small screens for better thumb reach */
+  .fixed.inset-0 > div[class*="rounded-3xl"] { border-radius: 1.25rem; }
+}

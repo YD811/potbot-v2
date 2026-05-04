@@ -129,7 +129,7 @@ export default function VaultsPage() {
       {/* Page header — NOT sticky (global <Navbar/> in layout.tsx already is;
           two sticky headers at top:0 caused z-fighting and the global nav
           disappearing on scroll). */}
-      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <Link href="/" style={{ color: 'var(--c-muted)', textDecoration: 'none', fontSize: '14px' }}>← Back</Link>
           <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>⚡ PotBot Vaults</h1>
@@ -160,7 +160,7 @@ export default function VaultsPage() {
       )}
 
       {/* Stats strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', padding: '24px', borderBottom: '1px solid var(--c-border)', maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px', padding: '24px', borderBottom: '1px solid var(--c-border)', maxWidth: '1400px', margin: '0 auto' }}>
         <StatCard label="Total AUM" value={totalAum >= 1_000_000 ? `$${(totalAum/1_000_000).toFixed(1)}M` : `$${(totalAum/1000).toFixed(0)}K`} loading={potsLoading} />
         <StatCard label="Active Vaults" value={String(allVaults.length)} loading={potsLoading} />
         <StatCard label="Total Members" value={totalMembers.toLocaleString()} loading={potsLoading} />
@@ -297,7 +297,7 @@ function VaultCard({ vault, analyticsLoading }: { vault: any; analyticsLoading: 
         </div>
 
         {/* Stats grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', fontSize: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '8px', fontSize: '12px' }}>
           <div>
             <div style={{ color: 'var(--c-muted)', marginBottom: '4px' }}>Members</div>
             <div style={{ fontWeight: '600', color: 'var(--c-text)' }}>{vault.memberCount}</div>
