@@ -537,12 +537,12 @@ export default function PotPage() {
 
       {/* Tabs row */}
       <div className="border-b border-pot-border bg-pot-dark sticky top-0 z-30">
-        <div className="max-w-[1400px] mx-auto px-6 flex gap-1 overflow-x-auto items-center">
+        <div className="max-w-[1400px] mx-auto px-3 sm:px-6 flex gap-1 overflow-x-auto items-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition ${
+              className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium whitespace-nowrap transition shrink-0 ${
                 activeTab === tab
                   ? 'text-pot-accent border-b-2 border-pot-accent'
                   : 'text-pot-muted hover:text-white border-b-2 border-transparent'

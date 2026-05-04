@@ -1,0 +1,18 @@
+{
+  "name": "PotBot — Group Trading Vaults on Solana",
+  "short_name": "PotBot",
+  "description": "Pool funds, vote on swaps, withdraw any time. Trustless group treasury management on Solana.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D1117",
+  "theme_color": "#14F195",
+  "categories": ["finance", "social", "productivity"],
+  "icons": [
+    { "src": "/og-image.png", "sizes": "1200x630", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon.ico", "sizes": "any", "type": "image/x-icon" }
+  ],
+  "screenshots": [
+    { "src": "/og-image.png", "sizes": "1200x630", "type": "image/png", "form_factor": "wide", "label": "PotBot home" }
+  ]
+}

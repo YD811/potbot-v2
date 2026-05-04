@@ -37,6 +37,20 @@ export const metadata: Metadata = {
     width: 'device-width',
     initialScale: 1,
     maximumScale: 1,
+    viewportFit: 'cover',
+  },
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)',  color: '#0D1117' },
+    { media: '(prefers-color-scheme: light)', color: '#f5f7fa' },
+  ],
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'PotBot',
+  },
+  icons: {
+    apple: '/og-image.png',
   },
 }
 
@@ -76,7 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* ── First-time onboarding tutorial ── */}
           <OnboardingTutorial />
 
-          <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+          <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 py-6 sm:py-8" style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))' }}>
             {children}
           </main>
 
