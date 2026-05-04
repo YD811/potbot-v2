@@ -1,9 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useConnection, useWallet } from '@solana/wallet-adapter-react'
+import { PublicKey, TransactionInstruction } from '@solana/web3.js'
 import { SEED_POSITIONS, DEFAULT_STRATEGY } from '@/lib/positions'
 import type { PositionStrategy } from '@/lib/positions'
 import { txSuccess } from '@/components/TxToast'
+import toast from 'react-hot-toast'
+import { buildSquadsTransactionUrl, getMultisigForCreator, isSquadsVault, proposeViaSquads } from '@/lib/squads'
 
 const DEFI_OPTIONS = [
   {
@@ -41,6 +45,8 @@ interface Props {
 }
 
 export function StrategyPanel({ potPubkey }: Props) {
+  const { connection } = useConnection()
+  const wallet = useWallet()
   const positions = SEED_POSITIONS.filter((p) => p.potPubkey === potPubkey && p.isOpen)
 
   const [selectedPos, setSelectedPos] = useState<string>(positions[0]?.id ?? '')
@@ -58,9 +64,45 @@ export function StrategyPanel({ potPubkey }: Props) {
     }))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // In production: create governance proposal of type SET_STRATEGY
-    txSuccess(`Strategy saved for ${pos?.tokenSymbol}! Proposal created for governance vote.`)
+    if (!wallet.publicKey || !wallet.signTransaction) {
+      txSuccess(`Strategy saved for ${pos?.tokenSymbol}! Proposal created for governance vote.`)
+      return
+    }
+
+    if (!(await isSquadsVault(wallet.publicKey, connection))) {
+      txSuccess(`Strategy saved for ${pos?.tokenSymbol}! Proposal created for governance vote.`)
+      return
+    }
+
+    const multisigPda = await getMultisigForCreator(wallet.publicKey, connection)
+    if (!multisigPda) {
+      txSuccess(`Strategy saved for ${pos?.tokenSymbol}! Proposal created for governance vote.`)
+      return
+    }
+
+    const memoInstruction = new TransactionInstruction({
+      programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
+      keys: [],
+      data: Buffer.from(`potbot:strategy-update:${potPubkey}:${pos?.tokenSymbol ?? 'unknown'}`, 'utf8'),
+    })
+
+    const queued = await proposeViaSquads({
+      multisig: multisigPda,
+      instruction: memoInstruction,
+      signer: { publicKey: wallet.publicKey, signTransaction: wallet.signTransaction },
+      connection,
+    })
+
+    toast.success(
+      <div className="flex flex-col gap-1">
+        <span>Queued in Squads multisig (tx #{queued.txIndex}). Awaiting threshold approvals.</span>
+        <a href={buildSquadsTransactionUrl(multisigPda, queued.txIndex)} target="_blank" rel="noreferrer" className="text-xs underline">
+          Open in Squads ↗
+        </a>
+      </div>
+    )
   }
 
   if (positions.length === 0) {
@@ -337,7 +379,7 @@ export function StrategyPanel({ potPubkey }: Props) {
                   </div>
                 </div>
                 <button
-                  onClick={handleSave}
+                  onClick={() => { void handleSave() }}
                   className="btn-primary text-sm px-6 py-2.5"
                 >
                   Propose Strategy →
