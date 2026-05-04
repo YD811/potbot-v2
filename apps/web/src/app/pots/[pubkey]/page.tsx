@@ -24,6 +24,7 @@ import DepositPanel from '@/components/DepositPanel'
 import SharesTab from '@/components/SharesTab'
 import ReferralPanel from '@/components/ReferralPanel'
 import { SquadsBanner } from '@/components/SquadsBanner'
+import { ShareBlinkButton } from '@/components/ShareBlinkButton'
 import { reverseSNS } from '@/lib/sns'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import SwapExecuteButton from '@/components/SwapExecuteButton'
@@ -499,6 +500,17 @@ export default function PotPage() {
               <MetricTile label="Trades"       value={String(pot.tradeCount ?? 0)} />
               <MetricTile label="Total Shares" value={(pot.totalShares ?? 0).toLocaleString()} />
               <MetricTile label="🌱 Tama HP"   value={`${tamaStats.hp}/100`} accent="green" />
+            </div>
+
+            {/* Solana Blinks — share this pot as a tweet anyone can act on */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-2xl border border-pot-border bg-pot-card/50">
+              <div>
+                <div className="text-sm font-semibold text-white">⚡ Share as Solana Blink</div>
+                <div className="text-xs text-pot-muted mt-0.5">
+                  Post this pot on X — followers can deposit or vote without leaving the tweet.
+                </div>
+              </div>
+              <ShareBlinkButton potPubkey={pubkey} kind="deposit" />
             </div>
 
             {/* Your position & P&L — shown inline as dashboard summary.

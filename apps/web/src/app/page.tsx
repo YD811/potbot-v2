@@ -81,10 +81,25 @@ export default function DashboardPage() {
   const totalMembers = pots?.reduce((sum, p) => sum + p.memberCount, 0) ?? 0
   const totalTrades  = pots?.reduce((sum, p) => sum + p.tradeCount, 0) ?? 0
 
-  /* ── Landing (not connected) ── */
+  /* ── Landing (not connected) ──
+     P0.4: show flagship ONE POT read-only at the top BEFORE marketing content,
+     so judges and unconnected visitors immediately see a live pot, not a "Demo Mode" banner. */
   if (!connected) {
     return (
       <>
+        {/* Flagship pot — read-only view, no wallet required */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+          <OnePotBanner />
+          <div className="flex items-center justify-center gap-3 mb-8 -mt-4">
+            <WalletMultiButton />
+            <Link
+              href="/leaderboard"
+              className="text-sm text-pot-muted hover:text-white transition underline-offset-4 hover:underline"
+            >
+              Or browse public pots →
+            </Link>
+          </div>
+        </div>
         <LandingPage />
         <HackathonButton />
       </>
