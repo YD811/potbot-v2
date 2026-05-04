@@ -1,5 +1,7 @@
 'use client';
 
+import { StatusBadge } from './StatusBadge';
+
 import { useState } from 'react';
 import { TokenizeSharesModal } from './TokenizeSharesModal';
 import { SnsModal } from './SnsModal';
@@ -66,7 +68,10 @@ export function PremiumFeatures({
     <>
       <div className="bg-pot-card p-6 rounded-xl border border-pot-border">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white">Premium Features</h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-lg font-semibold text-white">Premium Features</h3>
+            <StatusBadge tier="phase-3" compact />
+          </div>
           <span className="text-xs px-2 py-1 bg-pot-accent/20 text-pot-accent rounded-full">
             Optional
           </span>

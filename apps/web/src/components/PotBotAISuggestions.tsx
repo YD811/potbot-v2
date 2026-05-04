@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useSolPrice } from '@/lib/prices'
+import { StatusBadge } from './StatusBadge'
 
 /**
  * Base PotBot AI — decision-support feed.
@@ -133,6 +134,7 @@ export function PotBotAISuggestions({ potPubkey, potName, potBalanceSol, onSubmi
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-pot-accent/20 text-pot-accent border border-pot-accent/30 uppercase tracking-wide">
               base layer
             </span>
+            <StatusBadge tier="devnet" compact label="Devnet · mock" />
           </div>
           <p className="text-xs text-pot-muted mt-1 break-words">
             Decision-support feed for <span className="text-white">{potName}</span>. Reviews vault

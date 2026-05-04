@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import dynamic from 'next/dynamic'
@@ -15,11 +15,9 @@ import { usePotRole } from '@/hooks/usePotRole'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 import { PnLDashboard } from '@/components/PnLDashboard'
 import { SharesPanel } from '@/components/SharesPanel'
-import { VaultAnalyticsStrip } from '@/components/VaultAnalyticsStrip'
 import { StrategyPanel } from '@/components/StrategyPanel'
 import { AIAgentPanel } from '@/components/AIAgentPanel'
 import { GovernanceSettings } from '@/components/GovernanceSettings'
-import { VaultTab } from '@/components/VaultTab'
 import DepositPanel from '@/components/DepositPanel'
 import SharesTab from '@/components/SharesTab'
 import ReferralPanel from '@/components/ReferralPanel'
@@ -27,47 +25,44 @@ import { SquadsBanner } from '@/components/SquadsBanner'
 import { ShareBlinkButton } from '@/components/ShareBlinkButton'
 import { StrategyProposalBuilder } from '@/components/StrategyProposalBuilder'
 import { PotBotAISuggestions } from '@/components/PotBotAISuggestions'
+import { StatusBadge } from '@/components/StatusBadge'
+import { PotHeroStrip } from '@/components/PotHeroStrip'
+import { SponsorRail } from '@/components/SponsorRail'
+import { PotActivityFeed } from '@/components/PotActivityFeed'
+import { MembersList } from '@/components/MembersList'
+import { PremiumFeatures } from '@/components/PremiumFeatures'
 import { reverseSNS } from '@/lib/sns'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import SwapExecuteButton from '@/components/SwapExecuteButton'
 import CreateProposalModal from '@/components/pot/CreateProposalModal'
 import { PublicKey } from '@solana/web3.js'
 import VaultPortfolio from '@/components/VaultPortfolio'
-import PotNotificationFeed from '@/components/PotNotificationFeed'
-import PotAnalyticsWidget from '@/components/PotAnalyticsWidget'
 
-
-// SSR-safe wallet button (same pattern as Navbar)
+// SSR-safe wallet button
 const WalletMultiButtonDynamic = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
   { ssr: false },
 )
 
-/* ── Tab order (Phase 1) ──
-   Primary journey: Deposit → Overview → Vault → Proposals → Tamagotchi → Shares
-   Docs is a link, not a tab (leads to /docs).
-   Secondary tabs keep existing power-user views (positions, strategy, governance, agent, members, referral). */
-const TABS = [
-  'deposit', 'overview', 'vault', 'proposals', 'tamagotchi', 'shares',
-  'positions', 'analytics', 'strategy', 'governance', 'agent', 'members', 'referral',
-] as const
+/* ── Tab order (PR-F vision-mode collapse) ──
+   Old layout had 13 tabs. New layout has 4, mapped to user mental model:
+   - Trade   → first action: deposit, propose, vote, recent activity
+   - Community → who's in this pot, governance, referrals
+   - AI      → PotBot AI base layer + your AI delegate
+   - Features → roadmap stuff: tamagotchi, premium, privacy preview */
+const TABS = ['trade', 'community', 'ai', 'features'] as const
 type Tab = (typeof TABS)[number]
 
 const TAB_LABELS: Record<Tab, string> = {
-  deposit:    '💰 Deposit',
-  overview:   'Overview',
-  vault:      '🏠 Vault',
-  proposals:  '🗳️ Proposals',
-  tamagotchi: '🌱 Tamagotchi',
-  shares:     '🪙 Shares',
-  positions:  '📊 P&L',
-  analytics:  '🔎 Analytics',
-  strategy:   '⚙️ Strategy',
-  governance: '🏛️ Gov',
-  agent:      '🤖 AI',
-  members:    'Members',
-  referral:   '🔗 Referral',
+  trade:     '🔄 Trade',
+  community: '👥 Community',
+  ai:        '🤖 AI',
+  features:  '🌟 Features',
 }
+
+/* Cluster — use NEXT_PUBLIC_SOLANA_CLUSTER if present, else default to devnet */
+const CLUSTER: 'mainnet-beta' | 'devnet' =
+  (process.env.NEXT_PUBLIC_SOLANA_CLUSTER as 'mainnet-beta' | 'devnet') ?? 'devnet'
 
 /* ── Proposal status helpers ── */
 const STATUS_COLORS: Record<string, string> = {
@@ -85,8 +80,7 @@ const STATUS_LABELS: Record<string, string> = {
   pending:  '🕐 Pending',
 }
 
-/* Inline wallet gate: any block that needs a connected wallet wraps its
-   content in <WalletGate>. If wallet is not connected, show CTA inline. */
+/* Inline wallet gate */
 function WalletGate({
   connected,
   title,
@@ -105,19 +99,6 @@ function WalletGate({
       {title && <p className="text-white font-semibold">{title}</p>}
       {subtitle && <p className="text-pot-muted text-sm max-w-md">{subtitle}</p>}
       <div className="mt-2"><WalletMultiButtonDynamic /></div>
-    </div>
-  )
-}
-
-/* Metric tile — min-width sized for 8-character values (e.g. "9,999.99"),
-   tabular-nums so digits don't jitter. */
-function MetricTile({ label, value, accent }: { label: string; value: string; accent?: 'green' | 'accent' }) {
-  const valueClass =
-    accent === 'green' ? 'text-pot-green' : accent === 'accent' ? 'text-pot-accent' : 'text-white'
-  return (
-    <div className="bg-pot-card border border-pot-border rounded-2xl p-4 min-w-[132px]">
-      <div className="text-xs text-pot-muted mb-1 whitespace-nowrap">{label}</div>
-      <div className={`text-2xl font-bold tabular-nums ${valueClass}`}>{value}</div>
     </div>
   )
 }
@@ -145,7 +126,6 @@ function ProposalCard({
       role="button"
       aria-expanded={expanded}
     >
-      {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <p className="text-white font-semibold text-sm leading-snug break-words">{proposal.description}</p>
@@ -158,7 +138,6 @@ function ProposalCard({
         </span>
       </div>
 
-      {/* Vote bars */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <span className="text-xs text-pot-muted w-8">YES</span>
@@ -176,7 +155,6 @@ function ProposalCard({
         </div>
       </div>
 
-      {/* Expanded details — full description + voter count */}
       {expanded && (
         <div className="border-t border-pot-border/50 pt-3 text-xs text-pot-muted space-y-1">
           <div><span className="text-pot-muted">Pubkey:</span> <span className="font-mono text-pot-green break-all">{proposal.pubkey}</span></div>
@@ -189,8 +167,6 @@ function ProposalCard({
         </div>
       )}
 
-      {/* Actions — Yes/No clickable for any voter (member or owner).
-         Phase 2 will extend with reason input + proposal categories. */}
       {canVote && proposal.status === 'active' && (
         <div className="flex gap-3 pt-1" onClick={(e) => e.stopPropagation()}>
           <button
@@ -218,7 +194,7 @@ function ProposalCard({
   )
 }
 
-/* ── Tamagotchi placeholder (Phase 1: structure & CTA; real NFT mint + duels in Phase 3) ── */
+/* ── Tamagotchi block (used inside Features tab) ── */
 const TAMA_STAGES = [
   { lvl: 1, emoji: '🌱', name: 'Seedling',   unlock: 'Starting state for every new pot' },
   { lvl: 2, emoji: '🌿', name: 'Sprout',     unlock: 'Lower protocol fees · custom emoji' },
@@ -227,131 +203,98 @@ const TAMA_STAGES = [
   { lvl: 5, emoji: '🌲', name: 'Mature Tree', unlock: 'Mainnet-only perks · cross-pot composability' },
 ] as const
 
-function TamagotchiTab({ stats }: { stats: ReturnType<typeof calculateTamaStats> }) {
+function TamagotchiBlock({ stats }: { stats: ReturnType<typeof calculateTamaStats> }) {
   const level = Math.max(1, Math.min(5, Math.floor(stats.hp / 20) + 1))
   const duelsUnlocked = level >= 3
 
   return (
-    <div className="space-y-6 w-full">
-
-      {/* ── How it works (PROMINENT — first thing the user reads) ── */}
-      <div className="bg-gradient-to-br from-pot-green/5 to-pot-accent/5 border border-pot-green/20 rounded-2xl p-6">
-        <div className="flex items-center gap-2 mb-3">
+    <section className="bg-pot-card border border-pot-border rounded-2xl p-5 sm:p-6 space-y-5">
+      <header className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
           <span className="text-2xl">🌱</span>
-          <h3 className="font-bold text-white text-lg">How the Tamagotchi works</h3>
+          <h3 className="font-bold text-white text-lg">Tamagotchi</h3>
+          <StatusBadge tier="phase-3" compact />
         </div>
-        <ol className="space-y-2.5 text-sm text-pot-muted leading-relaxed list-none">
-          <li className="flex gap-3">
-            <span className="text-pot-green font-bold shrink-0">1.</span>
-            <span>Every new pot starts at <span className="text-white font-semibold">Level 1 — Seedling 🌱</span>.</span>
-          </li>
-          <li className="flex gap-3">
-            <span className="text-pot-green font-bold shrink-0">2.</span>
-            <span>The plant grows from <span className="text-white font-semibold">member activity</span> — deposits, votes, proposals, new members. <span className="text-white font-semibold">Not from trading P&amp;L.</span></span>
-          </li>
-          <li className="flex gap-3">
-            <span className="text-pot-green font-bold shrink-0">3.</span>
-            <span><span className="text-white font-semibold">⚔️ Pot duels</span> with other public pots <span className="text-white font-semibold">unlock at Level 3 (Bud)</span>.</span>
-          </li>
-        </ol>
+        <button
+          disabled
+          className="px-3 py-1.5 rounded-xl bg-pot-green/20 text-pot-green border border-pot-green/30 text-xs font-bold cursor-not-allowed opacity-60"
+          title="NFT mint ships at Bloom (Level 4) in Phase 3"
+        >
+          🪙 Mint NFT (Level 4+)
+        </button>
+      </header>
+      <p className="text-sm text-pot-muted">
+        The plant grows from <span className="text-white font-semibold">member activity</span> —
+        deposits, votes, proposals, new members. Not from trading P&amp;L. Pot duels unlock at Level 3.
+      </p>
+
+      <div className="flex items-center justify-between bg-pot-dark rounded-xl p-3">
+        {TAMA_STAGES.map((s) => (
+          <div key={s.lvl} className="flex flex-col items-center">
+            <div
+              className={`text-3xl transition ${
+                s.lvl === level ? 'scale-125' : s.lvl < level ? 'opacity-70' : 'opacity-25 grayscale'
+              }`}
+            >
+              {s.emoji}
+            </div>
+            <div className={`text-[10px] mt-1 ${s.lvl === level ? 'text-pot-green font-bold' : 'text-pot-muted'}`}>
+              L{s.lvl}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Current level + progress */}
-      <div className="bg-pot-card border border-pot-border rounded-2xl p-6">
-        <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
-          <div className="min-w-0">
-            <h3 className="font-bold text-white text-lg">Your pot&apos;s plant</h3>
-            <p className="text-pot-muted text-sm mt-1">
-              Level {level} · {TAMA_STAGES[level - 1].name} · HP {stats.hp}/100
-            </p>
-          </div>
-          <button
-            disabled
-            className="px-4 py-2 rounded-xl bg-pot-green/20 text-pot-green border border-pot-green/30 text-sm font-bold cursor-not-allowed opacity-60 shrink-0"
-            title="NFT mint ships at Bloom (Level 4)"
-          >
-            🪙 Mint NFT (Level 4+)
-          </button>
+      <div>
+        <div className="flex items-center justify-between text-xs text-pot-muted mb-1">
+          <span>Level {level} — {TAMA_STAGES[level - 1].name} · HP {stats.hp}/100</span>
+          <span>{stats.hp % 20}/20 to L{Math.min(level + 1, 5)}</span>
         </div>
-        <div className="flex items-center justify-between bg-pot-dark rounded-xl p-4">
-          {TAMA_STAGES.map((s) => (
-            <div key={s.lvl} className="flex flex-col items-center">
-              <div
-                className={`text-4xl transition ${
-                  s.lvl === level ? 'scale-125' : s.lvl < level ? 'opacity-70' : 'opacity-25 grayscale'
-                }`}
-              >
-                {s.emoji}
-              </div>
-              <div className={`text-[10px] mt-1 ${s.lvl === level ? 'text-pot-green font-bold' : 'text-pot-muted'}`}>
-                L{s.lvl}
+        <div className="h-2 bg-pot-dark rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-pot-green to-pot-accent" style={{ width: `${((stats.hp % 20) / 20) * 100}%` }} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {TAMA_STAGES.map((s) => {
+          const reached = s.lvl <= level
+          return (
+            <div
+              key={s.lvl}
+              className={`flex items-start gap-2 p-2.5 rounded-xl border ${
+                reached ? 'border-pot-green/30 bg-pot-green/5' : 'border-pot-border bg-pot-dark/40'
+              }`}
+            >
+              <span className={`text-lg shrink-0 ${reached ? '' : 'opacity-40 grayscale'}`}>{s.emoji}</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-white text-xs">L{s.lvl} · {s.name}</span>
+                  {reached && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-pot-green/20 text-pot-green border border-pot-green/30">
+                      unlocked
+                    </span>
+                  )}
+                </div>
+                <div className={`text-[11px] mt-0.5 ${reached ? 'text-pot-muted' : 'text-pot-muted/60'}`}>{s.unlock}</div>
               </div>
             </div>
-          ))}
-        </div>
-        <div className="mt-4">
-          <div className="flex items-center justify-between text-xs text-pot-muted mb-1">
-            <span>Progress to Level {Math.min(level + 1, 5)} ({TAMA_STAGES[Math.min(level, 4)].name})</span>
-            <span>{stats.hp % 20}/20</span>
-          </div>
-          <div className="h-2 bg-pot-dark rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-pot-green to-pot-accent" style={{ width: `${((stats.hp % 20) / 20) * 100}%` }} />
-          </div>
-        </div>
+          )
+        })}
       </div>
 
-      {/* Activity that grows the plant */}
-      <div className="bg-pot-card border border-pot-border rounded-2xl p-6">
-        <h3 className="font-bold text-white mb-3">What feeds the plant</h3>
-        <ul className="space-y-2 text-sm text-pot-muted">
-          <li>💰 <span className="text-white">Deposits</span> — each new deposit feeds XP.</li>
-          <li>🗳️ <span className="text-white">Votes &amp; proposals</span> — active governance keeps HP high.</li>
-          <li>👥 <span className="text-white">New members</span> — community growth boosts the plant.</li>
-          <li>⏳ <span className="text-white">Continuous activity</span> — long stretches of inactivity decay HP.</li>
-        </ul>
-      </div>
-
-      {/* Level unlock table */}
-      <div className="bg-pot-card border border-pot-border rounded-2xl p-6">
-        <h3 className="font-bold text-white mb-3">What each level unlocks</h3>
-        <div className="space-y-2">
-          {TAMA_STAGES.map((s) => {
-            const reached = s.lvl <= level
-            return (
-              <div
-                key={s.lvl}
-                className={`flex items-start gap-3 p-3 rounded-xl border ${
-                  reached ? 'border-pot-green/30 bg-pot-green/5' : 'border-pot-border bg-pot-dark/40'
-                }`}
-              >
-                <span className={`text-2xl shrink-0 ${reached ? '' : 'opacity-40 grayscale'}`}>{s.emoji}</span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-white">L{s.lvl} · {s.name}</span>
-                    {reached && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-pot-green/20 text-pot-green border border-pot-green/30">unlocked</span>}
-                  </div>
-                  <div className={`text-xs mt-0.5 ${reached ? 'text-pot-muted' : 'text-pot-muted/60'}`}>{s.unlock}</div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Duels — gated at L3 */}
-      <div className={`bg-pot-card border rounded-2xl p-6 ${duelsUnlocked ? 'border-pot-accent/40' : 'border-pot-border'}`}>
-        <div className="flex items-start justify-between gap-3 flex-wrap">
+      <div className={`bg-pot-dark/40 border rounded-xl p-3 ${duelsUnlocked ? 'border-pot-accent/40' : 'border-pot-border'}`}>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="min-w-0">
-            <h3 className="font-bold text-white">⚔️ Duels</h3>
-            <p className="text-sm text-pot-muted mt-1">
+            <p className="font-bold text-white text-sm">⚔️ Duels</p>
+            <p className="text-xs text-pot-muted">
               {duelsUnlocked
-                ? 'Challenge another public pot. Winner takes a slice of the loser&apos;s shares.'
-                : `Unlocks at Level 3 — Bud (your pot is at L${level}).`}
+                ? 'Challenge another public pot. Winner takes a slice of the loser’s shares.'
+                : `Unlocks at Level 3 — Bud (you’re at L${level}).`}
             </p>
           </div>
           <button
             disabled={!duelsUnlocked}
-            className={`px-4 py-2 rounded-xl text-sm font-bold border transition shrink-0 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition shrink-0 ${
               duelsUnlocked
                 ? 'bg-pot-accent/20 hover:bg-pot-accent/40 text-pot-accent border-pot-accent/40'
                 : 'bg-pot-dark text-pot-muted border-pot-border cursor-not-allowed'
@@ -361,7 +304,7 @@ function TamagotchiTab({ stats }: { stats: ReturnType<typeof calculateTamaStats>
           </button>
         </div>
       </div>
-    </div>
+    </section>
   )
 }
 
@@ -388,7 +331,7 @@ export default function PotPage() {
     }
   }, [pubkey])
 
-  // Track referral in Supabase (replaces localStorage)
+  // Track referral in Supabase
   useEffect(() => {
     const ref = searchParams.get('ref')
     if (!ref || !pubkey || !isSupabaseConfigured) return
@@ -403,8 +346,7 @@ export default function PotPage() {
   const { data: proposals = [] } = useProposals(pubkey)
   const { role } = usePotRole(pubkey)
 
-  // Default landing tab is deposit — first thing user can do.
-  const [activeTab, setActiveTab] = useState<Tab>('deposit')
+  const [activeTab, setActiveTab] = useState<Tab>('trade')
   const [proposalFilter, setProposalFilter] = useState<'all' | 'active' | 'passed' | 'executed' | 'rejected'>('all')
   const [snsName, setSnsName] = useState<string>('')
   const [isMember, setIsMember] = useState(false)
@@ -441,7 +383,7 @@ export default function PotPage() {
         <div className="text-center max-w-md">
           <div className="text-5xl mb-4">❌</div>
           <h1 className="text-2xl font-bold text-white mb-2">Vault not found</h1>
-          <p className="text-pot-muted mb-4">This vault doesn't exist or has been closed.</p>
+          <p className="text-pot-muted mb-4">This vault doesn&apos;t exist or has been closed.</p>
           <Link href="/" className="inline-block px-4 py-2 bg-pot-accent hover:bg-pot-accent/90 text-white rounded-lg font-semibold transition">
             Back to Home
           </Link>
@@ -457,6 +399,7 @@ export default function PotPage() {
   const canVote = canManage
   const canExecute = isOwner
   const canWithdraw = canManage
+  const isLive = CLUSTER === 'mainnet-beta'
 
   const tamaStats = calculateTamaStats({
     tradeVolume: potAny.totalVolume ?? 0,
@@ -469,80 +412,68 @@ export default function PotPage() {
   const nextProposalId = (potAny.nextProposalId ?? proposals.length) as number
   const activeProposalsCount = proposals.filter((p: any) => p.status === 'active').length
 
+  const yourMember = userPubkey
+    ? members.find((m: any) => (m.wallet ?? m.pubkey) === userPubkey.toString())
+    : null
+  const yourSharePct = yourMember && potAny.totalShares > 0
+    ? (yourMember.shares / potAny.totalShares) * 100
+    : undefined
+
+  const lastSwapTx = potAny.lastSwapTx ?? potAny.lastSwapSignature
+  const squadsManaged = potAny.isSquadsVault === true
+
+  const goToDeposit = () => {
+    setActiveTab('trade')
+    requestAnimationFrame(() => {
+      document.getElementById('deposit-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+
+  const goToPropose = () => {
+    setActiveTab('trade')
+    requestAnimationFrame(() => {
+      document.getElementById('propose-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+
   return (
     <div className="min-h-screen bg-pot-dark pb-12">
-      {/* Header — in-flow (no internal sticky; global navbar handles sticking) */}
-      <div className="bg-gradient-to-b from-pot-card to-pot-dark border-b border-pot-border px-6 py-6">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="flex items-start justify-between mb-4 gap-4 flex-wrap">
-            <div className="flex items-center gap-4 min-w-0">
-              <div className="text-6xl shrink-0">{pot.emoji}</div>
-              <div className="min-w-0">
-                <h1 className="text-3xl font-bold text-white mb-1 break-words">{pot.name}</h1>
-                {snsName && <p className="text-sm font-mono text-pot-green">{snsName}</p>}
-                <p className="text-xs text-pot-muted font-mono mt-1 break-all">{pubkey}</p>
-                <div className="mt-2">
-                  <span className="px-3 py-1 bg-pot-card border border-pot-border text-xs rounded-full text-pot-muted">
-                    You: {role === 'creator' ? 'Creator' : role === 'member' ? 'Member' : 'Viewer'}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-2 shrink-0">
-              {userPubkey && (
-                <div className="flex gap-2 flex-wrap justify-end">
-                  {isOwner && (
-                    <Link
-                      href={`/pots/${pubkey}/settings`}
-                      className="px-3 py-2 text-xs bg-pot-border hover:bg-pot-accent/20 text-white rounded-lg transition"
-                    >
-                      ⚙️ Settings
-                    </Link>
-                  )}
-                  {isMember && !isOwner && (
-                    <button className="px-3 py-2 text-xs bg-pot-border hover:bg-red-500/20 text-pot-muted hover:text-red-400 rounded-lg transition">
-                      👋 Leave
-                    </button>
-                  )}
-                  {!isMember && !isOwner && (
-                    <button
-                      onClick={() => setActiveTab('deposit')}
-                      className="px-3 py-2 text-xs bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold rounded-lg transition"
-                    >
-                      + Join Vault
-                    </button>
-                  )}
-                </div>
-              )}
-              <div className="text-right">
-                <div className="text-xs text-pot-muted">Owner</div>
-                <p className="text-xs font-mono text-pot-green break-all max-w-xs text-right">{ownerAddress}</p>
-              </div>
-            </div>
-          </div>
+      {/* Sticky hero strip */}
+      <PotHeroStrip
+        emoji={pot.emoji}
+        name={pot.name}
+        snsName={snsName}
+        pubkey={pubkey}
+        ownerLabel={role === 'creator' ? 'Creator' : role === 'member' ? 'Member' : 'Viewer'}
+        isPublic={!!potAny.isPublic}
+        isLive={isLive}
+        squadsManaged={squadsManaged}
+        tvlSol={pot.balance}
+        members={pot.memberCount ?? members.length ?? 0}
+        yourSharePct={yourSharePct}
+        activeProposals={activeProposalsCount}
+        tamaHp={tamaStats.hp}
+        onDepositClick={goToDeposit}
+        onProposeClick={goToPropose}
+        canPropose={canManage}
+      />
 
-          {/* Status badges */}
-          <div className="flex gap-2 flex-wrap">
-            {potAny.isPublic && <span className="px-3 py-1 bg-pot-accent/20 text-pot-accent text-xs rounded-full font-semibold">🌍 Public</span>}
-            {potAny.isActive && <span className="px-3 py-1 bg-pot-green/20 text-pot-green text-xs rounded-full font-semibold">✓ Active</span>}
-            {isMember && <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full font-semibold">🙋 Member</span>}
-            {isOwner && <span className="px-3 py-1 bg-pot-accent/30 text-pot-accent text-xs rounded-full font-semibold">👑 Owner</span>}
-            {tamaStats.hp < 30 && <span className="px-3 py-1 bg-red-500/20 text-red-400 text-xs rounded-full font-semibold">🔥 Low HP!</span>}
-          </div>
-        </div>
-      </div>
-
-      {/* Analytics strip — members only */}
-      {canManage && <VaultAnalyticsStrip pubkey={pubkey} />}
+      {/* Sponsor rail */}
+      <SponsorRail
+        potPubkey={pubkey}
+        lastSwapTx={lastSwapTx}
+        squadsManaged={squadsManaged}
+        cluster={CLUSTER}
+      />
 
       {/* Tabs row */}
-      <div className="border-b border-pot-border bg-pot-dark sticky top-0 z-30">
+      <div className="border-b border-pot-border bg-pot-dark">
         <div className="max-w-[1400px] mx-auto px-3 sm:px-6 flex gap-1 overflow-x-auto items-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium whitespace-nowrap transition shrink-0 ${
+              className={`px-3 sm:px-5 py-3 text-xs sm:text-sm font-semibold whitespace-nowrap transition shrink-0 ${
                 activeTab === tab
                   ? 'text-pot-accent border-b-2 border-pot-accent'
                   : 'text-pot-muted hover:text-white border-b-2 border-transparent'
@@ -554,211 +485,178 @@ export default function PotPage() {
         </div>
       </div>
 
-      {/* Content — full-width container */}
-      <div className="max-w-[1400px] mx-auto px-6 py-8 w-full">
+      <div className="max-w-[1400px] mx-auto px-3 sm:px-6 py-6 sm:py-8 w-full">
 
-        {/* ── Deposit ── first action. Wallet-gated inline. */}
-        {activeTab === 'deposit' && (
-          <WalletGate
-            connected={!!userPubkey}
-            title="Connect your wallet to deposit"
-            subtitle="Deposit SOL and receive vault shares. You can withdraw per this vault's policy."
-          >
-            <DepositPanel potPubkey={pubkey} potName={pot.name} vaultBalance={pot.balance} />
-          </WalletGate>
-        )}
+        {/* ════════════════════ TRADE TAB ════════════════════
+            The killer demo flow. Everything a judge needs to see in 60s:
+            deposit → propose → vote → activity. */}
+        {activeTab === 'trade' && (
+          <div className="space-y-8 w-full">
 
-        {/* ── Overview ── key metrics + user's shares + P&L + active proposals.
-             NO tab-link duplication — the top tab bar already handles nav. */}
-        {activeTab === 'overview' && (
-          <div className="space-y-6 w-full">
-            {/* Metric tiles — min-w-[132px] sized for 8-char values, tabular-nums */}
-            <div className="flex gap-4 flex-wrap">
-              <MetricTile label="TVL (SOL)"    value={pot.balance.toFixed(2)} />
-              <MetricTile label="Members"      value={String(pot.memberCount ?? 0)} />
-              <MetricTile label="Proposals"    value={String(proposals.length)} accent={activeProposalsCount ? 'accent' : undefined} />
-              <MetricTile label="Active"       value={String(activeProposalsCount)} accent="accent" />
-              <MetricTile label="Trades"       value={String(pot.tradeCount ?? 0)} />
-              <MetricTile label="Total Shares" value={(pot.totalShares ?? 0).toLocaleString()} />
-              <MetricTile label="🌱 Tama HP"   value={`${tamaStats.hp}/100`} accent="green" />
-            </div>
+            {/* Squads banner if pot is multisig-managed */}
+            <SquadsBanner potPubkey={pubkey} />
 
-            {/* Your position & P&L — shown inline as dashboard summary.
-               Full management still lives in /shares and /positions tabs. */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
-              <div className="lg:col-span-2 w-full">
-                <SharesPanel potPubkey={pubkey} />
+            {/* ── Deposit / Withdraw ── primary action */}
+            <section id="deposit-section" className="space-y-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white">💰 Deposit / Withdraw</h2>
+                <StatusBadge tier="live" compact />
               </div>
-              <div className="w-full space-y-6">
-                <PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} />
-                <PotNotificationFeed potPubkey={pubkey} />
-              </div>
-            </div>
-
-            {/* Active proposals callout */}
-            {activeProposalsCount > 0 && (
-              <div className="bg-pot-accent/10 border border-pot-accent/30 rounded-2xl p-5 flex items-center justify-between gap-4 flex-wrap w-full">
-                <div>
-                  <p className="text-pot-accent font-bold">🗳️ {activeProposalsCount} active proposal{activeProposalsCount > 1 ? 's' : ''} need your vote</p>
-                  <p className="text-sm text-pot-muted mt-1">Participate in governance to shape this vault's strategy.</p>
-                </div>
-                <button
-                  onClick={() => setActiveTab('proposals')}
-                  className="px-4 py-2 bg-pot-accent hover:bg-pot-accent/90 text-white rounded-lg text-sm font-semibold transition shrink-0"
-                >
-                  Vote Now →
-                </button>
-              </div>
-            )}
-
-            {/* Strategy callout (if configured) */}
-            {potAny.yieldStrategy && (
-              <div className="bg-pot-card border border-pot-border/50 rounded-2xl p-6 w-full">
-                <div className="flex items-start gap-4">
-                  <div className="text-3xl">⚙️</div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-white mb-2">Active Strategy</h3>
-                    <p className="text-sm text-pot-muted mb-4">This vault runs an automated {potAny.yieldStrategy} strategy.</p>
-                    <button
-                      onClick={() => setActiveTab('strategy')}
-                      className="px-4 py-2 bg-pot-accent hover:bg-pot-accent/90 text-white rounded-lg text-sm font-semibold transition"
-                    >
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Solana Blinks — share strip moved to bottom (point 6 — side feature, not main story) */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-2xl border border-pot-border bg-pot-card/50">
-              <div>
-                <div className="text-sm font-semibold text-white">⚡ Share as Solana Blink</div>
-                <div className="text-xs text-pot-muted mt-0.5">
-                  Post this pot on X — followers can deposit or vote without leaving the tweet.
-                </div>
-              </div>
-              <ShareBlinkButton potPubkey={pubkey} kind="deposit" />
-            </div>
-          </div>
-        )}
-
-        {/* ── Vault ── members / owner only */}
-        {activeTab === 'vault' && (
-          canManage ? (
-            <VaultTab potPubkey={pubkey} isCreator={isOwner} />
-          ) : (
-            <WalletGate
-              connected={!!userPubkey}
-              title="Connect wallet to check membership"
-              subtitle="Vault settings are visible to members and the owner."
-            >
-              <div className="bg-pot-card border border-pot-border rounded-2xl p-8 text-center">
-                <div className="text-4xl mb-4">🔒</div>
-                <p className="text-white font-semibold mb-2">Members only</p>
-                <p className="text-pot-muted text-sm mb-4">Join this vault to access vault settings.</p>
-                <button
-                  onClick={() => setActiveTab('deposit')}
-                  className="px-4 py-2 bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold rounded-lg transition"
-                >
-                  Deposit to Join
-                </button>
-              </div>
-            </WalletGate>
-          )
-        )}
-
-        {/* ── Proposals ── single "+ Create Proposal" opens categorized modal (Phase 2).
-             Modal maps each category to the right on-chain ProposalType. */}
-        {activeTab === 'proposals' && (
-          <div className="space-y-6 w-full">
-            {/* Header row with single CTA */}
-            {canManage && (
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="min-w-0">
-                  <h2 className="text-lg font-bold text-white">Proposals</h2>
-                  <p className="text-sm text-pot-muted">
-                    Propose a change, everyone with shares votes Yes/No.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setProposalModalOpen(true)}
-                  className="px-5 py-2.5 bg-pot-accent hover:bg-pot-accent/90 text-white rounded-xl text-sm font-bold transition shrink-0"
-                >
-                  + Create Proposal
-                </button>
-              </div>
-            )}
-
-            {!canManage && userPubkey && (
-              <div className="bg-pot-card border border-pot-border rounded-2xl p-5 flex items-center justify-between gap-4 flex-wrap">
-                <p className="text-pot-muted text-sm">Only members can create or vote on proposals.</p>
-                <button
-                  onClick={() => setActiveTab('deposit')}
-                  className="px-4 py-2 bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold rounded-lg text-sm transition"
-                >
-                  Deposit to Join
-                </button>
-              </div>
-            )}
-
-            {!userPubkey && (
               <WalletGate
-                connected={false}
-                title="Connect wallet to vote"
-                subtitle="Voting and proposal creation require a connected member wallet."
-              >{null}</WalletGate>
-            )}
+                connected={!!userPubkey}
+                title="Connect your wallet to deposit"
+                subtitle="Deposit SOL and receive vault shares. Withdraw anytime per this vault’s policy."
+              >
+                <DepositPanel potPubkey={pubkey} potName={pot.name} vaultBalance={pot.balance} />
+              </WalletGate>
+            </section>
 
-            {/* Proposals filter tabs */}
-            {proposals.length > 0 && (
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 -mb-1">
-                {(['all','active','passed','executed','rejected'] as const).map((f) => {
-                  const count = f === 'all' ? proposals.length : proposals.filter((x: any) => x.status === f).length
-                  return (
+            {/* ── Active proposals ── 2-col layout: list + activity feed */}
+            <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-3">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-white">🗳️ Proposals</h2>
+                    {activeProposalsCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-full bg-pot-accent/20 text-pot-accent text-[11px] font-bold animate-pulse">
+                        {activeProposalsCount} active
+                      </span>
+                    )}
+                  </div>
+                  {canManage && (
                     <button
-                      key={f}
-                      onClick={() => setProposalFilter(f)}
-                      className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
-                        proposalFilter === f
-                          ? 'bg-pot-accent/20 text-pot-accent border-pot-accent/30'
-                          : 'bg-pot-card text-pot-muted border-pot-border hover:text-white'
-                      }`}
+                      onClick={() => setProposalModalOpen(true)}
+                      className="px-4 py-2 bg-pot-accent hover:bg-pot-accent/90 text-white rounded-xl text-xs sm:text-sm font-bold transition"
                     >
-                      {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
-                      <span className="ml-1.5 text-[10px] opacity-60">{count}</span>
+                      + Create Proposal
                     </button>
-                  )
-                })}
-              </div>
-            )}
+                  )}
+                </div>
 
-            {/* Proposals list */}
-            {proposals.length === 0 ? (
-              <div className="text-center py-16 bg-pot-card border border-pot-border rounded-2xl w-full">
-                <div className="text-5xl mb-4">🗳️</div>
-                <p className="text-white font-semibold mb-1">No proposals yet</p>
-                <p className="text-pot-muted text-sm">
-                  {canManage ? 'Click "+ Create Proposal" to submit the first one.' : 'Join the vault to create proposals.'}
-                </p>
+                {!canManage && userPubkey && (
+                  <div className="bg-pot-card border border-pot-border rounded-2xl p-4 flex items-center justify-between gap-3 flex-wrap">
+                    <p className="text-pot-muted text-xs">Only members can vote or propose. Deposit to join.</p>
+                  </div>
+                )}
+
+                {proposals.length > 0 && (
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 -mb-1">
+                    {(['all','active','passed','executed','rejected'] as const).map((f) => {
+                      const count = f === 'all'
+                        ? proposals.length
+                        : proposals.filter((x: any) => x.status === f).length
+                      return (
+                        <button
+                          key={f}
+                          onClick={() => setProposalFilter(f)}
+                          className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
+                            proposalFilter === f
+                              ? 'bg-pot-accent/20 text-pot-accent border-pot-accent/30'
+                              : 'bg-pot-card text-pot-muted border-pot-border hover:text-white'
+                          }`}
+                        >
+                          {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
+                          <span className="ml-1.5 text-[10px] opacity-60">{count}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {proposals.length === 0 ? (
+                  <div className="text-center py-12 bg-pot-card border border-pot-border rounded-2xl">
+                    <div className="text-4xl mb-3">🗳️</div>
+                    <p className="text-white font-semibold mb-1">No proposals yet</p>
+                    <p className="text-pot-muted text-xs">
+                      {canManage
+                        ? 'Use the proposal builder below to draft your first swap.'
+                        : 'Join the vault to create proposals.'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {proposals
+                      .filter((p: any) => proposalFilter === 'all' || p.status === proposalFilter)
+                      .slice(0, 6)
+                      .map((p: any) => (
+                        <ProposalCard
+                          key={p.pubkey}
+                          proposal={p}
+                          potAddress={pubkey}
+                          canVote={canVote}
+                          canExecute={canExecute}
+                        />
+                      ))}
+                  </div>
+                )}
               </div>
-            ) : (
+
               <div className="space-y-4">
-                {proposals
-                  .filter((p: any) => proposalFilter === 'all' || p.status === proposalFilter)
-                  .map((p: any) => (
-                    <ProposalCard
-                      key={p.pubkey}
-                      proposal={p}
-                      potAddress={pubkey}
-                      canVote={canVote}
-                      canExecute={canExecute}
-                    />
-                  ))}
-              </div>
-            )}
+                <PotActivityFeed pot={pot} proposals={proposals} members={members} cluster={CLUSTER} />
 
-            {/* Modal */}
+                <div className="bg-pot-card border border-pot-border rounded-2xl p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">⚡</span>
+                    <h4 className="font-bold text-white text-sm">Share as Solana Blink</h4>
+                  </div>
+                  <p className="text-[11px] text-pot-muted">
+                    Post this pot on X. Followers can deposit or vote without leaving the tweet.
+                  </p>
+                  <ShareBlinkButton potPubkey={pubkey} kind="deposit" />
+                </div>
+              </div>
+            </section>
+
+            {/* ── Propose Swap (StrategyProposalBuilder) ── */}
+            <section id="propose-section" className="space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg font-bold text-white">🛠️ Propose a swap</h2>
+                <StatusBadge tier="live" compact label="Live · Jupiter v6 CPI" />
+              </div>
+              <StrategyProposalBuilder
+                potName={pot.name}
+                potBalanceSol={pot.balance}
+                onSubmit={() => setProposalModalOpen(true)}
+              />
+              <details className="bg-pot-card/50 border border-pot-border rounded-2xl p-4">
+                <summary className="cursor-pointer text-xs text-pot-muted hover:text-white">
+                  Legacy strategy panel (debug)
+                </summary>
+                <div className="mt-3">
+                  <StrategyPanel potPubkey={pubkey} />
+                </div>
+              </details>
+            </section>
+
+            {/* ── Holdings preview ── shares + P&L + portfolio collapsed by default */}
+            <section className="space-y-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white">📊 Holdings</h2>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2"><SharesPanel potPubkey={pubkey} /></div>
+                <div><PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} /></div>
+              </div>
+              {vaultPda && (
+                <details className="bg-pot-card/50 border border-pot-border rounded-2xl p-4">
+                  <summary className="cursor-pointer text-sm text-white font-semibold">
+                    🔎 Vault portfolio (live, Dune SIM)
+                  </summary>
+                  <div className="mt-4">
+                    <VaultPortfolio vaultPda={vaultPda} potName={pot.name} />
+                  </div>
+                </details>
+              )}
+              <details className="bg-pot-card/50 border border-pot-border rounded-2xl p-4">
+                <summary className="cursor-pointer text-sm text-white font-semibold">
+                  🪙 Manage shares (withdraw)
+                </summary>
+                <div className="mt-4">
+                  <SharesTab potPubkey={pubkey} canWithdraw={canWithdraw} />
+                </div>
+              </details>
+            </section>
+
             <CreateProposalModal
               open={proposalModalOpen}
               onClose={() => setProposalModalOpen(false)}
@@ -771,92 +669,49 @@ export default function PotPage() {
           </div>
         )}
 
-        {/* ── Tamagotchi ── Phase 1 placeholder with evolution + mechanics + L3-gated duels */}
-        {activeTab === 'tamagotchi' && <TamagotchiTab stats={tamaStats} />}
-
-        {/* ── Shares ── */}
-        {activeTab === 'shares' && (
-          <div className="space-y-4">
-            <div className="flex justify-end">
-              <button
-                disabled={!canWithdraw}
-                title={!canWithdraw ? 'Members only' : undefined}
-                className="px-4 py-2 rounded-lg border border-pot-border text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Withdraw
-              </button>
-            </div>
-            <SharesTab potPubkey={pubkey} canWithdraw={canWithdraw} />
-          </div>
-        )}
-
-        {/* ── Positions / P&L — powered by Dune SIM ── */}
-        {activeTab === 'positions' && (
-          <div className="space-y-6 w-full">
-            {/* Real-time vault portfolio: token balances + USD values + activity feed */}
-            {vaultPda && (
-              <VaultPortfolio vaultPda={vaultPda} potName={pot.name} />
-            )}
-            {/* PnL dashboard (mock-mode / on-chain) */}
-            <PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} />
-          </div>
-        )}
-
-
-        {/* ── Analytics ── */}
-        {activeTab === 'analytics' && (
-          <PotAnalyticsWidget potPubkey={pubkey} vaultPubkey={vaultPda || undefined} />
-        )}
-
-        {/* ── Strategy ── proposal builder. Picking the action + token + amount
-             prefills a swap proposal; "Submit as Proposal" opens the standard
-             governance modal where the proposal is finalised and signed. */}
-        {activeTab === 'strategy' && (
-          <div className="space-y-4">
-            <SquadsBanner potPubkey={pubkey} />
-            <StrategyProposalBuilder
-              potName={pot.name}
-              potBalanceSol={pot.balance}
-              onSubmit={() => setProposalModalOpen(true)}
-            />
-            <details className="bg-pot-card border border-pot-border rounded-2xl p-5">
-              <summary className="cursor-pointer font-bold text-white">Legacy strategy panel</summary>
-              <div className="mt-4">
-                <StrategyPanel potPubkey={pubkey} />
+        {/* ════════════════════ COMMUNITY TAB ════════════════════ */}
+        {activeTab === 'community' && (
+          <div className="space-y-8 w-full">
+            <section className="space-y-3">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-white">👥 Members</h2>
+                  <span className="text-xs text-pot-muted">
+                    {members.length} member{members.length === 1 ? '' : 's'}
+                  </span>
+                </div>
+                <ShareBlinkButton potPubkey={pubkey} kind="deposit" />
               </div>
-            </details>
+              <MembersList
+                members={members}
+                totalShares={pot.totalShares ?? 0}
+                ownerAddress={ownerAddress}
+                cluster={CLUSTER}
+              />
+            </section>
+
+            <section className="space-y-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white">🏛️ Governance</h2>
+                <StatusBadge tier={isLive ? 'live' : 'devnet'} compact />
+              </div>
+              <SquadsBanner potPubkey={pubkey} />
+              <GovernanceSettings isAdmin={isOwner} potPubkey={pubkey} />
+            </section>
+
+            <section className="space-y-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white">🔗 Referral</h2>
+                <StatusBadge tier="live" compact />
+              </div>
+              <ReferralPanel potPubkey={pubkey} potName={pot.name} />
+            </section>
           </div>
         )}
 
-        {/* ── Governance Settings ── */}
-        {activeTab === 'governance' && (
-          <div className="space-y-4">
-            <SquadsBanner potPubkey={pubkey} />
-            <div className="flex gap-2 justify-end">
-              <button
-                disabled={!isOwner}
-                title={!isOwner ? 'Creator only' : undefined}
-                className="px-4 py-2 rounded-lg border border-pot-border text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Add Member
-              </button>
-              <button
-                disabled={!isOwner}
-                title={!isOwner ? 'Creator only' : undefined}
-                className="px-4 py-2 rounded-lg border border-pot-border text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Remove Member
-              </button>
-            </div>
-            <GovernanceSettings isAdmin={isOwner} potPubkey={pubkey} />
-          </div>
-        )}
-
-        {/* ── AI Agent — two-tier:
-             1. PotBot AI (always-on) decision-support feed,
-             2. User AI delegate (opt-in) with rules & strategy presets. */}
-        {activeTab === 'agent' && (
-          <div className="space-y-4">
+        {/* ════════════════════ AI TAB ════════════════════ */}
+        {activeTab === 'ai' && (
+          <div className="space-y-6 w-full">
             <PotBotAISuggestions
               potPubkey={pubkey}
               potName={pot.name}
@@ -870,6 +725,7 @@ export default function PotPage() {
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-pot-border text-pot-muted uppercase tracking-wide">
                   user layer
                 </span>
+                <StatusBadge tier="devnet" compact />
               </div>
               <p className="text-xs text-pot-muted mb-4 break-words">
                 Sits on top of the base layer. Configure rules, presets and a delegate so your AI
@@ -880,51 +736,59 @@ export default function PotPage() {
           </div>
         )}
 
-        {/* ── Members ── */}
-        {activeTab === 'members' && (
-          <div className="space-y-4 w-full">
-            <div className="flex justify-end">
-              <button
-                disabled={!isOwner}
-                title={!isOwner ? 'Creator only' : undefined}
-                className="px-4 py-2 rounded-lg border border-pot-border text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        {/* ════════════════════ FEATURES TAB ════════════════════
+            Roadmap surface: Tamagotchi · Premium · Privacy preview.
+            Each block carries its phase chip; nothing is hidden, nothing is
+            over-promised. Links to /roadmap for the full inventory. */}
+        {activeTab === 'features' && (
+          <div className="space-y-6 w-full">
+            <div className="bg-pot-card/50 border border-pot-border rounded-2xl p-5 flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <p className="text-white font-semibold">🗺️ Want the full picture?</p>
+                <p className="text-xs text-pot-muted mt-0.5">
+                  See every PotBot feature and its phase on the public roadmap.
+                </p>
+              </div>
+              <Link
+                href="/roadmap"
+                className="px-4 py-2 bg-pot-accent hover:bg-pot-accent/90 text-white rounded-xl text-xs font-bold transition shrink-0"
               >
-                Manage
-              </button>
+                Open /roadmap →
+              </Link>
             </div>
-            {members.length === 0 ? (
-              <div className="text-center py-12 bg-pot-card border border-pot-border rounded-2xl">
-                <p className="text-pot-muted">No members yet</p>
+
+            <TamagotchiBlock stats={tamaStats} />
+
+            <PremiumFeatures
+              potPubkey={new PublicKey(pubkey)}
+              potName={pot.name}
+              tamagotchiLevel={Math.max(1, Math.min(5, Math.floor(tamaStats.hp / 20) + 1))}
+              isTokenized={!!potAny.isTokenized}
+              hasSnsdomain={!!snsName}
+              hasTamagotchiNft={!!potAny.hasTamagotchiNft}
+              snsAddress={snsName || undefined}
+            />
+
+            <section className="bg-pot-card border border-pot-border rounded-2xl p-5 sm:p-6 space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-2xl">🔒</span>
+                <h3 className="font-bold text-white text-lg">STAMPPOT — privacy preview</h3>
+                <StatusBadge tier="phase-3" compact />
               </div>
-            ) : (
-              <div className="space-y-2">
-                {members.map((m: any, i: number) => {
-                  const addr = m.wallet ?? m.pubkey ?? 'unknown'
-                  const sharesPct = pot.totalShares > 0
-                    ? ((m.shares / pot.totalShares) * 100).toFixed(1)
-                    : '0.0'
-                  return (
-                    <div key={addr + i} className="flex items-center justify-between bg-pot-card border border-pot-border rounded-xl p-4">
-                      <div className="min-w-0 flex-1 mr-4">
-                        <p className="text-white font-mono text-sm break-all">{addr}</p>
-                        {m.joinedAt && (
-                          <p className="text-xs text-pot-muted mt-0.5">Joined {new Date(m.joinedAt).toLocaleDateString()}</p>
-                        )}
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-white font-bold tabular-nums">{m.shares?.toLocaleString() ?? 0} shares</p>
-                        <p className="text-xs text-pot-muted tabular-nums">{sharesPct}%</p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+              <p className="text-sm text-pot-muted">
+                Auditable-Private mode adds a privacy layer to deposits and votes via
+                PrivacyCash Merkle membership proofs and stealth addresses. Same Anchor
+                program, same governance, just with shielded balances. Ships in Phase 3.
+              </p>
+              <Link
+                href="/roadmap#phase-3"
+                className="inline-block text-xs text-pot-accent hover:underline"
+              >
+                Read the architecture spec →
+              </Link>
+            </section>
           </div>
         )}
-
-        {/* ── Referral ── */}
-        {activeTab === 'referral' && <ReferralPanel potPubkey={pubkey} potName={pot.name} />}
       </div>
     </div>
   )

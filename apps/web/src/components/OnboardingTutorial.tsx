@@ -40,7 +40,7 @@ const STEPS: Step[] = [
     emoji: '🌱',
     title: 'Grow Your Plant',
     body: 'Your pot\'s plant grows with community activity — deposits, votes, proposals, and new members all boost plant health. Top 3 plants on the Season 1 leaderboard win prize pool rewards.',
-    highlight: 'Plant health is activity-based. Not tied to trading P&L.',
+    highlight: 'Plant health is activity-based. NFT mint + duels ship in later phases.',
   },
 ]
 

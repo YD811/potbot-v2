@@ -6,6 +6,8 @@ import { PotSDK } from '@potbot/sdk';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
+import { StatusBadge } from '@/components/StatusBadge'
+
 interface CreatePrivatePotFormProps {
   onSuccess?: () => void;
 }
@@ -91,7 +93,7 @@ export function CreatePrivatePotForm({ onSuccess }: CreatePrivatePotFormProps) {
         <div className="flex items-center space-x-3 mb-6">
           <span className="text-3xl">🔐</span>
           <div>
-            <h2 className="text-xl font-semibold text-white">Create Private Pot</h2>
+            <h2 className="text-xl font-semibold text-white">Create Private Pot</h2> <StatusBadge tier="phase-3" compact />
             <p className="text-pot-muted">Invite-only trading vault</p>
           </div>
         </div>
