@@ -25,23 +25,6 @@ const YIELD_LABELS: Record<number, string> = {
   6: 'JLP Hedge 🛡️',
 }
 
-const HackathonButton = () => (
-  <a
-    href="/hackathon"
-    style={{
-      position: 'fixed', bottom: 24, right: 24, zIndex: 50,
-      background: 'linear-gradient(135deg, #7048E8, #5a3acf)',
-      color: '#fff', fontWeight: 700, fontSize: 13,
-      padding: '10px 18px', borderRadius: 100,
-      textDecoration: 'none', boxShadow: '0 4px 24px #7048E840',
-      display: 'flex', alignItems: 'center', gap: 8,
-      border: '1px solid #9d6fff40',
-    }}
-  >
-    🏆 Hackathon
-  </a>
-)
-
 export default function DashboardPage() {
   const { publicKey, connected } = useWallet()
   const { data: pots, isLoading } = usePots()
@@ -83,19 +66,12 @@ export default function DashboardPage() {
      P0.4: show flagship ONE POT read-only at the top BEFORE marketing content,
      so judges and unconnected visitors immediately see a live pot, not a "Demo Mode" banner. */
   if (!connected) {
-    return (
-      <>
-        <LandingPage />
-        <HackathonButton />
-      </>
-    )
+    return <LandingPage />
   }
 
   /* ── Dashboard (connected) ── */
   return (
     <div>
-      <HackathonButton />
-
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         <div className="card p-4 text-center glow-green">
