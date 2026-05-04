@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePots } from '@/hooks/usePots';
 import { useSolPrice } from '@/lib/prices';
 import { useVaultAnalyticsBatch } from '@/hooks/useAnalytics';
+import { OnePotBanner } from '@/components/OnePotBanner';
 
 // ─────────────────────────────────────────────────────────────────
 // Demo data — shown when the on-chain program isn't deployed yet
@@ -139,6 +140,11 @@ export default function VaultsPage() {
           </div>
         </div>
         <Link href="/create" style={{ backgroundColor: '#14F195', color: '#0D1117', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: '600', fontSize: '14px', textDecoration: 'none' }}>+ Create Vault</Link>
+      </div>
+
+      {/* ── ONE POT featured banner — first concrete example for new visitors ── */}
+      <div style={{ maxWidth: '1400px', margin: '24px auto 0', padding: '0 24px' }}>
+        <OnePotBanner />
       </div>
 
       {/* Devnet-preview banner — honest framing until mainnet cut. */}

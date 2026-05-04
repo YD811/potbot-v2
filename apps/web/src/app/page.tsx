@@ -9,8 +9,6 @@ import { useMockStore } from '@/lib/mock-store'
 import { useSolPrice } from '@/lib/prices'
 import LandingPage from '@/components/LandingPage'
 import { TrustBadge } from '@/components/TrustBadge'
-import { OnePotBanner } from '@/components/OnePotBanner'
-import { PotTokenCard } from '@/components/PotTokenCard'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -87,19 +85,6 @@ export default function DashboardPage() {
   if (!connected) {
     return (
       <>
-        {/* Flagship pot — read-only view, no wallet required */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-          <OnePotBanner />
-          <div className="flex items-center justify-center gap-3 mb-8 -mt-4">
-            <WalletMultiButton />
-            <Link
-              href="/leaderboard"
-              className="text-sm text-pot-muted hover:text-white transition underline-offset-4 hover:underline"
-            >
-              Or browse public pots →
-            </Link>
-          </div>
-        </div>
         <LandingPage />
         <HackathonButton />
       </>
@@ -110,9 +95,6 @@ export default function DashboardPage() {
   return (
     <div>
       <HackathonButton />
-
-      {/* ── ONE POT Featured Banner ── */}
-      <OnePotBanner />
 
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
@@ -175,9 +157,6 @@ export default function DashboardPage() {
           <span className="text-pot-muted text-sm group-hover:text-white transition">Open →</span>
         </Link>
       </div>
-
-      {/* ── $POT Token Buyback Card ── */}
-      <PotTokenCard />
 
       {/* Header + Search + Tabs */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">

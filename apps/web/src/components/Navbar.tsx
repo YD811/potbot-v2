@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useSolPrice } from '@/lib/prices'
 import { healthApi } from '@/lib/api-client'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { SeasonPrizePoolModal } from '@/components/SeasonPrizePoolModal'
 
 const WalletMultiButtonDynamic = dynamic(
   async () =>
@@ -18,6 +19,7 @@ const WalletMultiButtonDynamic = dynamic(
 
 function LivePriceTicker() {
   const { price: solPrice } = useSolPrice()
+  const [showSeasonModal, setShowSeasonModal] = useState(false)
 
   const { data: health, isError: apiDown } = useQuery({
     queryKey: ['api-health'],
@@ -46,10 +48,16 @@ function LivePriceTicker() {
             {apiDown ? 'Demo Mode' : 'Live'}
           </span>
         </div>
-        {/* Season 1 ticker */}
+        {/* Season 1 ticker — clickable, opens prize-pool modal */}
         <div className="hidden sm:flex items-center gap-1.5 text-[11px]">
           <span className="text-pot-muted">|</span>
-          <span className="text-pot-accent">🌱 Season 1: The Garden</span>
+          <button
+            onClick={() => setShowSeasonModal(true)}
+            className="text-pot-accent hover:text-white hover:underline underline-offset-2 transition cursor-pointer"
+            aria-label="Open Season 1 prize pool details"
+          >
+            🌱 Season 1: The Garden
+          </button>
         </div>
         <div className="ml-auto flex items-center gap-3 text-[11px] text-pot-muted">
           <Link href="/for-agents" className="hover:text-pot-green transition hidden sm:block">
@@ -57,6 +65,7 @@ function LivePriceTicker() {
           </Link>
         </div>
       </div>
+      {showSeasonModal && <SeasonPrizePoolModal onClose={() => setShowSeasonModal(false)} />}
     </div>
   )
 }

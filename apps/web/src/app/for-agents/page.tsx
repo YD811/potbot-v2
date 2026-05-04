@@ -93,7 +93,7 @@ const CLAUDE_CONFIG = `{
 
 export default function ForAgentsPage() {
   return (
-    <div className="min-h-screen" style={{ background: '#0D1117' }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: '#0D1117' }}>
       {/* Hero */}
       <div className="border-b" style={{ borderColor: '#1A2332' }}>
         <div className="max-w-5xl mx-auto px-6 py-16">
@@ -109,7 +109,7 @@ export default function ForAgentsPage() {
           <h1 className="text-4xl font-bold text-white mb-4">
             PotBot for AI Agents
           </h1>
-          <p className="text-xl mb-8" style={{ color: '#9CA3AF' }}>
+          <p className="text-xl mb-8 break-words" style={{ color: '#9CA3AF' }}>
             PotBot exposes its entire vault infrastructure as an MCP server.
             Any AI agent — Claude, GPT, custom — can list vaults, analyze performance,
             create governance proposals, and configure automation + delegated voting rules.
@@ -134,7 +134,7 @@ export default function ForAgentsPage() {
       <div className="max-w-5xl mx-auto px-6 pt-8">
         <div className="card" style={{ borderColor: '#14F19544' }}>
           <p className="text-sm font-mono mb-2" style={{ color: '#14F195' }}>Release Update</p>
-          <p className="text-sm mb-3" style={{ color: '#E5E7EB' }}>
+          <p className="text-sm mb-3 break-words" style={{ color: '#E5E7EB' }}>
             @potbot/mcp@0.2.0 is now live on npm with HTTP+SSE+x402 transport support, including
             two binaries: <code>potbot-mcp</code> (stdio) and <code>potbot-mcp-http</code> (HTTP).
           </p>
@@ -159,13 +159,13 @@ export default function ForAgentsPage() {
           <div className="space-y-4">
             <div className="card">
               <p className="text-sm font-mono mb-2" style={{ color: '#14F195' }}>1. Install the MCP server</p>
-              <pre className="text-sm overflow-x-auto" style={{ color: '#E5E7EB' }}>
+              <pre className="text-sm overflow-x-auto max-w-full whitespace-pre p-3 rounded bg-pot-dark border border-pot-border" style={{ color: '#E5E7EB' }}>
                 {'npm install -g @potbot/mcp'}
               </pre>
             </div>
             <div className="card">
               <p className="text-sm font-mono mb-2" style={{ color: '#14F195' }}>2. Add to claude_desktop_config.json</p>
-              <pre className="text-sm overflow-x-auto" style={{ color: '#E5E7EB' }}>{CLAUDE_CONFIG}</pre>
+              <pre className="text-sm overflow-x-auto max-w-full whitespace-pre p-3 rounded bg-pot-dark border border-pot-border" style={{ color: '#E5E7EB' }}>{CLAUDE_CONFIG}</pre>
             </div>
             <div className="card">
               <p className="text-sm font-mono mb-2" style={{ color: '#14F195' }}>3. Ask Claude to interact with vaults</p>
@@ -198,9 +198,9 @@ export default function ForAgentsPage() {
           <div className="space-y-3">
             {TOOLS.map(tool => (
               <div key={tool.name} className="card">
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 flex-wrap sm:flex-nowrap">
                   <code
-                    className="text-sm font-mono shrink-0"
+                    className="text-sm font-mono sm:shrink-0 break-all"
                     style={{ color: '#9945FF' }}
                   >
                     {tool.name}
@@ -227,7 +227,7 @@ export default function ForAgentsPage() {
           </p>
           <div className="card">
             <p className="text-sm font-mono mb-3" style={{ color: '#14F195' }}>Example: Buy SOL when price drops</p>
-            <pre className="text-sm overflow-x-auto" style={{ color: '#E5E7EB' }}>{EXAMPLE_RULE}</pre>
+            <pre className="text-sm overflow-x-auto max-w-full whitespace-pre p-3 rounded bg-pot-dark border border-pot-border" style={{ color: '#E5E7EB' }}>{EXAMPLE_RULE}</pre>
           </div>
           <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
             {[
@@ -235,7 +235,7 @@ export default function ForAgentsPage() {
               { trigger: 'time_interval', label: 'DCA Timer', desc: 'Buy on a fixed schedule (hourly, daily, weekly)' },
               { trigger: 'pnl_above', label: 'Take Profit', desc: 'Propose sell when vault PnL reaches target' },
             ].map(item => (
-              <div key={item.trigger} className="card" style={{ borderColor: '#9945FF44' }}>
+              <div key={item.trigger} className="card min-w-0" style={{ borderColor: '#9945FF44' }}>
                 <p className="text-sm font-bold text-white mb-1">{item.label}</p>
                 <p className="text-xs" style={{ color: '#6B7280' }}>{item.desc}</p>
                 <code className="text-xs mt-2 block" style={{ color: '#9945FF' }}>{item.trigger}</code>

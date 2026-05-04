@@ -97,8 +97,9 @@
 html[data-theme="light"] {
   color-scheme: light;
   --pot-ink: #0d1117;
-  --pot-ink-muted: #57606a;
-  --pot-ink-subtle: #8b949e;
+  /* point 8: bumped grey → near-black for WCAG-AA readability against white card bg */
+  --pot-ink-muted: #1f2937;
+  --pot-ink-subtle: #374151;
   --pot-bg: #f5f7fa;
   --pot-bg-2: #ffffff;
   --pot-border: #e5e7eb;
@@ -110,7 +111,7 @@ html[data-theme="light"] {
   --c-border: #e5e7eb;
   --c-border-2: #d1d5db;
   --c-text: #0d1117;
-  --c-muted: #57606a;
+  --c-muted: #1f2937;
 }
 
 /* ── Body & scrollbar ── */
@@ -146,8 +147,8 @@ html[data-theme="light"] .border-pot-border\/50 {
 /* ── Text tokens ── */
 html[data-theme="light"] .text-white { color: var(--pot-ink) !important; }
 html[data-theme="light"] .text-pot-muted { color: var(--pot-ink-muted) !important; }
-html[data-theme="light"] .text-pot-muted\/70 { color: rgba(55, 65, 81, 0.85) !important; }
-html[data-theme="light"] .text-pot-muted\/50 { color: rgba(55, 65, 81, 0.7) !important; }
+html[data-theme="light"] .text-pot-muted\/70 { color: rgba(31, 41, 55, 0.95) !important; }
+html[data-theme="light"] .text-pot-muted\/50 { color: rgba(31, 41, 55, 0.8) !important; }
 html[data-theme="light"] .text-gray-400 { color: var(--pot-ink-muted) !important; }
 html[data-theme="light"] .text-gray-500 { color: var(--pot-ink-muted) !important; }
 html[data-theme="light"] .text-gray-300 { color: var(--pot-ink) !important; }

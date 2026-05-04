@@ -120,7 +120,7 @@ PotBot is a thin wrapper over Solana's strongest primitives. Outbound CPI / API 
 
 - **May 5–8** — mainnet cut, flagship pot funded
 - **May 11** — submit
-- **Post-hackathon Q2** — STAMPPOT confidential pots (Token-2022 confidential transfers), Saga / Seeker dApp Store entry, $POT mainnet token (governance + buyback)
+- **Post-hackathon Q2** — STAMPPOT confidential pots (Token-2022 confidential transfers), Saga / Seeker dApp Store entry
 - **Q3** — Adevar Labs audit, public mainnet launch, fee-revenue pot for keeper sustainability
 
 ---
