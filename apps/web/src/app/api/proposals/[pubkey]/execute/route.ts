@@ -78,13 +78,17 @@ export async function POST(
 
     const swapData = await swapRes.json()
 
-    // 4. Mark proposal as executed in DB
+    // 4. Mark proposal as pending_execution in DB.
+    // We do NOT mark as 'executed' here — the client hasn't signed yet.
+    // A Helius webhook (or /api/proposals/[pubkey]/confirm) should update
+    // status to 'executed' once the tx lands on-chain.
     if (isSupabaseConfigured) {
       const db = createServerSupabase()
       await db
         .from('proposals')
-        .update({ status: 'executed', executed_at: new Date().toISOString() })
+        .update({ status: 'pending_execution' })
         .eq('pubkey', params.pubkey)
+        .eq('status', 'passed') // idempotent: only move forward if still passed
     }
 
     // Extract route description

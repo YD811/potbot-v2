@@ -16,12 +16,14 @@ import { createServerSupabase } from '@/lib/supabase'
  */
 export async function POST(req: NextRequest) {
   try {
-    const { pubkey, trustLevel, verifiedBy, auditUrl, trustNote, adminSecret } = await req.json()
-
-    // Auth check
-    if (adminSecret !== process.env.ADMIN_SECRET) {
+    // Auth: read secret from Authorization header (not body — body may be logged)
+    const authHeader = req.headers.get('authorization') ?? ''
+    const adminSecret = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+    if (!adminSecret || adminSecret !== process.env.ADMIN_SECRET) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const { pubkey, trustLevel, verifiedBy, auditUrl, trustNote } = await req.json()
 
     if (!pubkey || !trustLevel) {
       return NextResponse.json({ error: 'pubkey and trustLevel required' }, { status: 400 })

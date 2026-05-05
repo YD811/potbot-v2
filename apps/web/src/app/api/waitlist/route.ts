@@ -12,6 +12,9 @@ interface DevEntry {
   created_at: string
 }
 const devWaitlist = new Map<string, DevEntry>()
+// In-memory rate limiter: works per-process only.
+// On Vercel (serverless), each cold start gets a fresh Map — so this is a
+// best-effort local guard. The Supabase path below is the durable fallback.
 const waitlistWindows = new Map<string, { count: number; windowStart: number }>()
 
 // Source values we expect from the front-end. Anything else is coerced to 'other'.
@@ -50,6 +53,9 @@ function getClientIp(req: NextRequest): string {
   )
 }
 
+// isRateLimited is best-effort: the in-memory Map resets on cold starts.
+// For durable rate-limiting, use Upstash Redis or a Supabase edge function.
+// This catches burst abuse within a single warm process.
 function isRateLimited(req: NextRequest, maxPerMinute = 8): boolean {
   const ip = getClientIp(req)
   const key = `wl:${ip}`

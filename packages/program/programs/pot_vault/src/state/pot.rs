@@ -132,20 +132,23 @@ impl PotAccount {
         }
         (vault_lamports as u128)
             .checked_mul(1_000_000_000)
-            .unwrap()
+            .ok_or(error!(PotError::ArithmeticOverflow))?
             .checked_div(self.total_shares as u128)
-            .unwrap() as u64
+            .ok_or(error!(PotError::ArithmeticOverflow))? as u64
     }
 
     pub fn lamports_to_shares(&self, lamports: u64, vault_lamports: u64) -> u64 {
         if self.total_shares == 0 {
             return lamports;
         }
+        if vault_lamports == 0 {
+            return 0;
+        }
         (lamports as u128)
             .checked_mul(self.total_shares as u128)
-            .unwrap()
+            .ok_or(error!(PotError::ArithmeticOverflow))?
             .checked_div(vault_lamports as u128)
-            .unwrap() as u64
+            .ok_or(error!(PotError::ArithmeticOverflow))? as u64
     }
 
     pub fn shares_to_lamports(&self, shares: u64, vault_lamports: u64) -> u64 {
@@ -154,9 +157,9 @@ impl PotAccount {
         }
         (shares as u128)
             .checked_mul(vault_lamports as u128)
-            .unwrap()
+            .ok_or(error!(PotError::ArithmeticOverflow))?
             .checked_div(self.total_shares as u128)
-            .unwrap() as u64
+            .ok_or(error!(PotError::ArithmeticOverflow))? as u64
     }
 
     pub fn is_autocracy(&self, level: u8) -> bool {
@@ -234,6 +237,12 @@ impl PotAccount {
         // For a real per-vault-balance cap, the caller should pass vault_lamports
         // and this helper can be extended. For Phase 1, fee_reserve doubles as
         // the reference. If fee_reserve is 0 (not yet funded), skip the cap.
+        // NOTE: cap is computed against fee_reserve as a vault-balance proxy.
+        // If fee_reserve is zero AND a cap is configured, we deny (fail-closed).
+        // Use set_spending_policy to fund fee_reserve before enabling the cap.
+        if self.fee_reserve == 0 && self.single_swap_cap_bps > 0 {
+            return err!(PotError::SpendingLimitExceeded);
+        }
         if self.fee_reserve == 0 {
             return Ok(());
         }

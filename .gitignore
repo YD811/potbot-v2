@@ -52,3 +52,4 @@ secrets/
 _local/
 _deploy/
 POTBOT_OPUS/
+.claude/worktrees/

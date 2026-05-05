@@ -58,9 +58,9 @@ pub fn handler(ctx: Context<CreateProposal>, params: CreateProposalParams) -> Re
         if pot.config.max_trade_size_bps > 0 {
             let max_trade = (vault_lamports as u128)
                 .checked_mul(pot.config.max_trade_size_bps as u128)
-                .unwrap()
+                .ok_or(error!(PotError::ArithmeticOverflow))?
                 .checked_div(10000)
-                .unwrap() as u64;
+                .ok_or(error!(PotError::ArithmeticOverflow))? as u64;
             require!(*amount_in <= max_trade, PotError::TradeSizeExceeded);
         }
 
@@ -74,9 +74,9 @@ pub fn handler(ctx: Context<CreateProposal>, params: CreateProposalParams) -> Re
                 if pot.agent_max_trade_bps > 0 {
                     let agent_max = (vault_lamports as u128)
                         .checked_mul(pot.agent_max_trade_bps as u128)
-                        .unwrap()
+                        .ok_or(error!(PotError::ArithmeticOverflow))?
                         .checked_div(10000)
-                        .unwrap() as u64;
+                        .ok_or(error!(PotError::ArithmeticOverflow))? as u64;
                     require!(*amount_in <= agent_max, PotError::TradeSizeExceeded);
                 }
                 pot.agent_last_proposal_at = clock.unix_timestamp;
