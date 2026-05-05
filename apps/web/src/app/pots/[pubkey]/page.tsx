@@ -308,6 +308,73 @@ function TamagotchiBlock({ stats }: { stats: ReturnType<typeof calculateTamaStat
   )
 }
 
+
+/* ── Demo info banner ── shown on devnet so judges have instant context ── */
+const YIELD_LABEL: Record<number, string> = {
+  0: 'No yield', 1: 'Conservative ~6% APY', 2: 'Balanced ~15% APY',
+  3: 'Aggressive ~30% APY', 4: 'JLP Hedged ~40% APY',
+  5: 'Exponent PT ~22% APY', 6: 'JLP Delta-Neutral ~35% APY',
+}
+
+function DemoInfoBanner({ cluster }: { cluster: string }) {
+  const [dismissed, setDismissed] = useState(false)
+  if (cluster === 'mainnet-beta' || dismissed) return null
+  return (
+    <div className="max-w-[1400px] mx-auto px-3 sm:px-6 pt-3">
+      <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-pot-accent/10 border border-pot-accent/25 text-xs">
+        <div className="flex items-center gap-2 min-w-0 flex-wrap">
+          <span className="text-pot-accent font-bold shrink-0">🧪 Devnet demo</span>
+          <span className="text-pot-muted">Deposit, vote, and propose real Jupiter swaps on Solana devnet. No real funds — just live on-chain governance.</span>
+        </div>
+        <button onClick={() => setDismissed(true)} className="text-pot-muted hover:text-white shrink-0 text-base leading-none">×</button>
+      </div>
+    </div>
+  )
+}
+
+function PotContextCard({ pot, yieldStrategy }: { pot: any; yieldStrategy: number }) {
+  const totalValue = (pot.balance ?? 0) + (pot.meteoraLpBalance ?? 0)
+  const yieldEarned = pot.totalYieldEarned ?? 0
+  const navBps = pot.navPerShareBps ?? 10000
+  const navDisplay = ((navBps - 10000) / 100).toFixed(2)
+  const isPositive = navBps >= 10000
+  const stratLabel = YIELD_LABEL[yieldStrategy] ?? 'Custom strategy'
+
+  return (
+    <div className="bg-pot-card/60 border border-pot-border rounded-2xl p-4 sm:p-5">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="space-y-1 min-w-0">
+          <div className="text-[10px] uppercase tracking-wider text-pot-muted font-bold">Strategy</div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-white font-semibold">⚙️ {stratLabel}</span>
+          </div>
+          <p className="text-xs text-pot-muted">
+            Deposit SOL → members propose Jupiter swaps → majority vote executes on-chain. All governance parameters are transparent.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0 flex-wrap">
+          <div className="text-center">
+            <div className="text-[9px] uppercase tracking-wide text-pot-muted">Total value</div>
+            <div className="text-base font-bold text-pot-green tabular-nums">{totalValue.toFixed(2)} ◎</div>
+          </div>
+          {yieldEarned > 0 && (
+            <div className="text-center">
+              <div className="text-[9px] uppercase tracking-wide text-pot-muted">Yield earned</div>
+              <div className="text-base font-bold text-pot-green tabular-nums">+{yieldEarned.toFixed(3)} ◎</div>
+            </div>
+          )}
+          <div className="text-center">
+            <div className="text-[9px] uppercase tracking-wide text-pot-muted">NAV/share</div>
+            <div className={`text-base font-bold tabular-nums ${isPositive ? 'text-pot-green' : 'text-red-400'}`}>
+              {isPositive ? '+' : ''}{navDisplay}%
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function PotPage() {
   const params = useParams()
   const searchParams = useSearchParams()
@@ -447,6 +514,9 @@ export default function PotPage() {
         <span className="text-white truncate inline-block max-w-[200px] sm:max-w-xs align-middle">{pot.name}</span>
       </div>
 
+      {/* Demo context banner — devnet only, dismissible */}
+      <DemoInfoBanner cluster={CLUSTER} />
+
       {/* Sticky hero strip */}
       <PotHeroStrip
         emoji={pot.emoji}
@@ -504,6 +574,9 @@ export default function PotPage() {
 
             {/* Squads banner if pot is multisig-managed */}
             <SquadsBanner potPubkey={pubkey} />
+
+            {/* ── Pot context card ── strategy + yield overview for judges ── */}
+            <PotContextCard pot={potAny} yieldStrategy={potAny.yieldStrategy ?? 0} />
 
             {/* ── Deposit / Withdraw ── primary action */}
             <section id="deposit-section" className="space-y-3">
@@ -627,14 +700,7 @@ export default function PotPage() {
                 potBalanceSol={pot.balance}
                 onSubmit={() => setProposalModalOpen(true)}
               />
-              <details className="bg-pot-card/50 border border-pot-border rounded-2xl p-4">
-                <summary className="cursor-pointer text-xs text-pot-muted hover:text-white">
-                  Legacy strategy panel (debug)
-                </summary>
-                <div className="mt-3">
-                  <StrategyPanel potPubkey={pubkey} />
-                </div>
-              </details>
+
             </section>
 
             {/* ── Holdings & details ── hidden behind toggle to keep Trade tab tight.

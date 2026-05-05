@@ -15,6 +15,7 @@ import {
   IDL,
 } from '@potbot/sdk'
 import { useMockStore } from '@/lib/mock-store'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 
 const TAMA_EMOJIS = ['🦚','🐓','🐔','🦅','🐉','👑']
@@ -111,8 +112,57 @@ export function usePots() {
         }
       }
 
-      // Mock fallback — use .getState() to always get fresh data
-      return useMockStore.getState().pots.map((p) => {
+      // Mock fallback — seed pots + Supabase demo_pots merged
+      const seedPots = useMockStore.getState().pots
+      const seedPubkeys = new Set(seedPots.map((p) => p.pubkey))
+
+      // Fetch user-created pots from Supabase (those not in seed list)
+      let extraPots: any[] = []
+      if (isSupabaseConfigured) {
+        try {
+          const { data } = await supabase
+            .from('demo_pots')
+            .select('pubkey,name,emoji,balance,member_count,trade_count,total_volume,is_public,yield_strategy,authority,created_at')
+            .not('pubkey', 'in', `(${[...seedPubkeys].join(',')})`)
+            .order('created_at', { ascending: false })
+            .limit(50)
+          if (data) {
+            extraPots = data.map((r: any) => ({
+              pubkey: r.pubkey,
+              name: r.name,
+              emoji: r.emoji,
+              balance: Number(r.balance),
+              totalShares: Math.round(Number(r.balance) * 1000),
+              memberCount: r.member_count,
+              tradeCount: r.trade_count,
+              totalVolume: Number(r.total_volume),
+              isPublic: r.is_public,
+              yieldStrategy: r.yield_strategy,
+              authority: r.authority,
+              createdAt: new Date(r.created_at).getTime(),
+              nextProposalId: 0,
+              meteoraLpBalance: 0,
+              totalYieldEarned: 0,
+              lastYieldAccrualAt: Date.now(),
+              mode: 'virtual',
+              tokenTicker: '',
+              navPerShareBps: 10000,
+            }))
+            // Inject into mock store so usePot(pubkey) can find them
+            const store = useMockStore.getState()
+            for (const ep of extraPots) {
+              if (!store.pots.find((p) => p.pubkey === ep.pubkey)) {
+                useMockStore.setState((s) => ({ pots: [...s.pots, ep] }))
+              }
+            }
+          }
+        } catch {
+          // Supabase unreachable — continue with seed pots only
+        }
+      }
+
+      const allPots = [...seedPots, ...extraPots]
+      return allPots.map((p) => {
         const tama = calculateTamaStats({
           tradeVolume: p.tradeCount * 2,
           memberCount: p.memberCount,
@@ -125,9 +175,9 @@ export function usePots() {
           tamagotchiLevel: tama.level,
           tamagotchiEmoji: tama.emoji,
           tamagotchiXp: tama.xp,
-          trustLevel: p.trustLevel ?? 'unverified',
-          verifiedBy: p.verifiedBy ?? null,
-          auditUrl: p.auditUrl ?? null,
+          trustLevel: (p as any).trustLevel ?? 'unverified',
+          verifiedBy: (p as any).verifiedBy ?? null,
+          auditUrl: (p as any).auditUrl ?? null,
         }
       })
     },
@@ -391,6 +441,21 @@ export function useCreatePot() {
         authority: publicKey.toBase58(),
         ...params,
       })
+      // Persist to Supabase so other judges see this pot too
+      if (isSupabaseConfigured) {
+        supabase.from('demo_pots').upsert({
+          pubkey: potAddress,
+          name: params.name,
+          emoji: params.emoji,
+          balance: 0,
+          member_count: 0,
+          trade_count: 0,
+          total_volume: 0,
+          is_public: params.isPublic,
+          yield_strategy: params.yieldStrategy,
+          authority: publicKey.toBase58(),
+        }, { onConflict: 'pubkey' }).catch(() => {})
+      }
       return { potAddress, tx: 'mock-tx-' + Date.now() }
     },
     onSuccess: () => {

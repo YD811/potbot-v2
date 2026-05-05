@@ -10,7 +10,7 @@ import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 import { StatusBadge } from '@/components/StatusBadge'
 
 const ONE_POT_PUBKEY =
-  process.env.NEXT_PUBLIC_ONE_POT_PUBKEY ?? 'DEMO1111111111111111111111111111111111111111'
+  process.env.NEXT_PUBLIC_ONE_POT_PUBKEY ?? 'DemoPoT1111111111111111111111111111111111111'
 const CLUSTER: 'mainnet-beta' | 'devnet' =
   (process.env.NEXT_PUBLIC_SOLANA_CLUSTER as 'mainnet-beta' | 'devnet') ?? 'devnet'
 
