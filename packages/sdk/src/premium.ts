@@ -26,7 +26,6 @@ import {
   getMetadataAddress,
 } from './pda';
 import { IDL as PotVaultIDL } from './idl/pot_vault';
-import type { PotVault } from './idl/pot_vault';
 import { PROGRAM_ID } from './pda';
 
 // NOTE: These interface names are intentionally scoped with a Premium prefix
@@ -56,8 +55,10 @@ export interface PotSDKPremiumConfig {
 export class PotSDK {
   private connection: Connection;
   private wallet: any;
-  // Use the concrete PotVault type so program.account.* is fully typed.
-  private program: Program<PotVault>;
+  // Program<any>: Program<PotVault> fails TS2344 because `as const` IDL has
+  // readonly arrays incompatible with Anchor's mutable Idl constraint.
+  // Using Program<any> gives us full .methods / .account access without errors.
+  private program: Program<any>;
   private programId: PublicKey;
 
   constructor(config: PotSDKPremiumConfig) {
@@ -67,8 +68,8 @@ export class PotSDK {
 
     const provider = new AnchorProvider(this.connection, this.wallet, {});
     // Anchor 0.30 reads programId from idl.address.
-    // PotVaultIDL already has the correct address hardcoded; pass it directly.
-    this.program = new Program<PotVault>(PotVaultIDL, provider);
+    // Cast as any: Program<PotVault> fails TS2344 (readonly vs mutable Idl constraint).
+    this.program = new Program(PotVaultIDL as any, provider);
   }
 
   // ─── Premium Feature Methods ──────────────────────────────────────────────

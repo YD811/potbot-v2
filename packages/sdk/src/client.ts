@@ -146,7 +146,7 @@ export async function buildCreateStrategyVaultTx(
     rebalanceFrequencyHours: 24,
   }
 
-  const tx = await program.methods
+  const tx = await (program as any).methods
     .createStrategyVault(
       params.potName,
       params.description,
@@ -176,7 +176,7 @@ export async function buildJoinStrategyVaultTx(
   program: Program<any>,
   params: JoinStrategyVaultParams,
 ): Promise<Transaction> {
-  const tx = await program.methods
+  const tx = await (program as any).methods
     .joinStrategyVault(params.referrerWallet ?? null)
     .accounts({
       strategyVault: params.vaultPubkey,
@@ -202,7 +202,7 @@ export async function buildExitStrategyVaultTx(
   program: Program<any>,
   params: ExitStrategyVaultParams,
 ): Promise<Transaction> {
-  const tx = await program.methods
+  const tx = await (program as any).methods
     .exitStrategyVault(new BN(params.profitLamports))
     .accounts({
       strategyVault: params.vaultPubkey,
@@ -221,7 +221,7 @@ export async function buildEvolveTamagotchiTx(
   program: Program<any>,
   vaultPubkey: PublicKey,
 ): Promise<Transaction> {
-  const tx = await program.methods
+  const tx = await (program as any).methods
     .evolveTamagotchi()
     .accounts({ strategyVault: vaultPubkey })
     .transaction()
