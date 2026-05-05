@@ -94,7 +94,7 @@ export function computeExpectedTamagotchiLevel(
  * Call via program.methods.createStrategyVault(...)
  */
 export function buildCreateStrategyVaultIx(
-  program: Program,
+  program: Program<any>,
   authority: PublicKey,
   potPubkey: PublicKey,
   config: StrategyVaultConfig
@@ -126,7 +126,7 @@ export function buildCreateStrategyVaultIx(
  * Build a join_strategy_vault instruction
  */
 export function buildJoinStrategyVaultIx(
-  program: Program,
+  program: Program<any>,
   participant: PublicKey,
   potPubkey: PublicKey,
   referrer: PublicKey | null = null
@@ -161,7 +161,7 @@ export function buildJoinStrategyVaultIx(
  * Build an exit_strategy_vault instruction
  */
 export function buildExitStrategyVaultIx(
-  program: Program,
+  program: Program<any>,
   participant: PublicKey,
   potPubkey: PublicKey
 ): Promise<TransactionInstruction> {
@@ -190,7 +190,7 @@ export function buildExitStrategyVaultIx(
  * Build an evolve_tamagotchi instruction (permissionless — anyone can call)
  */
 export function buildEvolveTamagotchiIx(
-  program: Program,
+  program: Program<any>,
   caller: PublicKey,
   potPubkey: PublicKey
 ): Promise<TransactionInstruction> {

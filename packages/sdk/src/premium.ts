@@ -26,6 +26,7 @@ import {
   getMetadataAddress,
 } from './pda';
 import { IDL as PotVaultIDL } from './idl/pot_vault';
+import type { PotVault } from './idl/pot_vault';
 import { PROGRAM_ID } from './pda';
 
 // NOTE: These interface names are intentionally scoped with a Premium prefix
@@ -55,26 +56,22 @@ export interface PotSDKPremiumConfig {
 export class PotSDK {
   private connection: Connection;
   private wallet: any;
-  private program: Program;
+  // Use the concrete PotVault type so program.account.* is fully typed.
+  private program: Program<PotVault>;
   private programId: PublicKey;
 
   constructor(config: PotSDKPremiumConfig) {
     this.connection = config.connection;
     this.wallet = config.wallet;
     this.programId = config.programId || PROGRAM_ID;
-    
+
     const provider = new AnchorProvider(this.connection, this.wallet, {});
-    // Anchor 0.30 Program constructor is (idl, provider) — programId is
-    // read from idl.address. Splice the resolved programId in so callers
-    // can still override via `config.programId` at construction time.
-    const idlWithAddress = {
-      ...(PotVaultIDL as any),
-      address: this.programId.toBase58(),
-    };
-    this.program = new Program(idlWithAddress, provider);
+    // Anchor 0.30 reads programId from idl.address.
+    // PotVaultIDL already has the correct address hardcoded; pass it directly.
+    this.program = new Program<PotVault>(PotVaultIDL, provider);
   }
 
-  // ─── Premium Feature Methods ─────────────────────────────────────────────
+  // ─── Premium Feature Methods ──────────────────────────────────────────────
 
   /**
    * Create a private pot with invite code
@@ -156,7 +153,7 @@ export class PotSDK {
     const authority = this.wallet.publicKey;
     const [vault] = getVaultAddress(potPubkey);
     const [tokenMint] = getTokenMintAddress(potPubkey);
-    
+
     // PotBot v2 treasury that receives fees
     const treasury = new PublicKey('2LeG86xuss12WrYsamTGk4zLfBbXJpWZpr1yFrUqN98o');
 
@@ -181,7 +178,7 @@ export class PotSDK {
   /**
    * Create SNS subdomain for pot
    */
-  async buildCreateSnsdomainTx(
+  async buildCreateSnsDomainTx(
     potPubkey: PublicKey,
     domainName: string
   ): Promise<Transaction> {
@@ -211,14 +208,14 @@ export class PotSDK {
     const [tamagotchiNftAccount] = getTamagotchiNftAddress(potPubkey);
     const [tamagotchiMint] = getTamagotchiMintAddress(potPubkey);
     const [metadataAccount] = getMetadataAddress(tamagotchiMint);
-    
+
     const tamagotchiTokenAccount = getAssociatedTokenAddressSync(
       tamagotchiMint,
       authority
     );
-    
+
     const treasury = new PublicKey('2LeG86xuss12WrYsamTGk4zLfBbXJpWZpr1yFrUqN98o');
-    const metadataProgramId = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+    const metadataProgramId = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzbjb6a8bt518x1s');
 
     const instruction = await this.program.methods
       .mintTamagotchiNft()
@@ -241,7 +238,7 @@ export class PotSDK {
     return new Transaction().add(instruction);
   }
 
-  // ─── Fetch Methods for Premium Features ─────────────────────────────────
+  // ─── Fetch Methods for Premium Features ───────────────────────────────────
 
   /**
    * Fetch private pot account
@@ -306,8 +303,8 @@ export class PotSDK {
     }
   }
 
-  // ─── Existing Methods (unchanged) ───────────────────────────────────────
-  
+  // ─── Existing Methods (unchanged) ─────────────────────────────────────────
+
   async buildCreatePotTx(params: PremiumCreatePotParams): Promise<Transaction> {
     const authority = this.wallet.publicKey;
     const [pot] = getPotAddress(params.name, authority);

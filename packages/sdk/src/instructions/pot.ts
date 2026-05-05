@@ -29,11 +29,13 @@ export interface CreatePotParams {
 }
 
 export async function createPot(
-  program: Program,
+  program: Program<any>,
   authority: PublicKey,
   params: CreatePotParams
 ) {
-  const [potPda] = getPotAddress(authority, params.name)
+  // Fixed: was getPotAddress(authority, params.name) — args were swapped.
+  // getPotAddress signature: (name: string, authority: PublicKey)
+  const [potPda] = getPotAddress(params.name, authority)
   const [vaultPda] = getVaultAddress(potPda)
 
   return program.methods
@@ -68,7 +70,7 @@ export async function createPot(
 /* ── Deposit ── */
 
 export async function depositToPot(
-  program: Program,
+  program: Program<any>,
   potAddress: PublicKey,
   depositor: PublicKey,
   lamports: BN
@@ -91,7 +93,7 @@ export async function depositToPot(
 /* ── Withdraw ── */
 
 export async function withdrawFromPot(
-  program: Program,
+  program: Program<any>,
   potAddress: PublicKey,
   withdrawer: PublicKey,
   shares: BN
@@ -114,7 +116,7 @@ export async function withdrawFromPot(
 /* ── Create Proposal ── */
 
 export async function createProposal(
-  program: Program,
+  program: Program<any>,
   potAddress: PublicKey,
   proposer: PublicKey,
   nextProposalId: number,
@@ -144,7 +146,7 @@ export async function createProposal(
 /* ── Vote ── */
 
 export async function voteOnProposal(
-  program: Program,
+  program: Program<any>,
   potAddress: PublicKey,
   proposalAddress: PublicKey,
   voter: PublicKey,
@@ -169,7 +171,7 @@ export async function voteOnProposal(
 /* ── Execute Proposal ── */
 
 export async function executeProposal(
-  program: Program,
+  program: Program<any>,
   potAddress: PublicKey,
   proposalAddress: PublicKey,
   executor: PublicKey
