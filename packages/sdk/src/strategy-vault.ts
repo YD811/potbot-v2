@@ -104,8 +104,10 @@ export function buildCreateStrategyVaultIx(
     [Buffer.from('strategy_vault'), potPubkey.toBuffer()],
     program.programId
   )
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
 
-  return program.methods
+  return p.methods
     .createStrategyVault(
       config.description,
       new BN(config.entryFeeLamports),
@@ -144,7 +146,9 @@ export function buildJoinStrategyVaultIx(
     ? [{ pubkey: referrer, isSigner: false, isWritable: true }]
     : []
 
-  return program.methods
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
+  return p.methods
     .joinStrategyVault()
     .accounts({
       strategyVault: strategyVaultPda,
@@ -174,7 +178,9 @@ export function buildExitStrategyVaultIx(
     program.programId
   )
 
-  return program.methods
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
+  return p.methods
     .exitStrategyVault()
     .accounts({
       strategyVault: strategyVaultPda,
@@ -199,7 +205,9 @@ export function buildEvolveTamagotchiIx(
     program.programId
   )
 
-  return program.methods
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
+  return p.methods
     .evolveTamagotchi()
     .accounts({
       strategyVault: strategyVaultPda,
