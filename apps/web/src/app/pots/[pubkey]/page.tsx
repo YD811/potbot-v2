@@ -23,11 +23,9 @@ import SharesTab from '@/components/SharesTab'
 import ReferralPanel from '@/components/ReferralPanel'
 import { SquadsBanner } from '@/components/SquadsBanner'
 import { ShareBlinkButton } from '@/components/ShareBlinkButton'
-import { StrategyProposalBuilder } from '@/components/StrategyProposalBuilder'
 import { PotBotAISuggestions } from '@/components/PotBotAISuggestions'
 import { StatusBadge } from '@/components/StatusBadge'
 import { PotHeroStrip } from '@/components/PotHeroStrip'
-import { SponsorRail } from '@/components/SponsorRail'
 import { PotActivityFeed } from '@/components/PotActivityFeed'
 import { MembersList } from '@/components/MembersList'
 import { PremiumFeatures } from '@/components/PremiumFeatures'
@@ -50,11 +48,11 @@ const WalletMultiButtonDynamic = dynamic(
    - Community → who's in this pot, governance, referrals
    - AI      → PotBot AI base layer + your AI delegate
    - Features → roadmap stuff: tamagotchi, premium, privacy preview */
-const TABS = ['trade', 'community', 'ai', 'features'] as const
+const TABS = ['proposal', 'community', 'ai', 'features'] as const
 type Tab = (typeof TABS)[number]
 
 const TAB_LABELS: Record<Tab, string> = {
-  trade:     '🔄 Trade',
+  proposal:  '🗳️ Proposal',
   community: '👥 Community',
   ai:        '🤖 AI',
   features:  '🌟 Features',
@@ -413,7 +411,7 @@ export default function PotPage() {
   const { data: proposals = [] } = useProposals(pubkey)
   const { role } = usePotRole(pubkey)
 
-  const [activeTab, setActiveTab] = useState<Tab>('trade')
+  const [activeTab, setActiveTab] = useState<Tab>('proposal')
   const [proposalFilter, setProposalFilter] = useState<'all' | 'active' | 'passed' | 'executed' | 'rejected'>('all')
   const [snsName, setSnsName] = useState<string>('')
   const [isMember, setIsMember] = useState(false)
@@ -538,13 +536,6 @@ export default function PotPage() {
       />
 
       {/* Sponsor rail */}
-      <SponsorRail
-        potPubkey={pubkey}
-        lastSwapTx={lastSwapTx}
-        squadsManaged={squadsManaged}
-        cluster={CLUSTER}
-      />
-
       {/* Tabs row */}
       <div className="border-b border-pot-border bg-pot-dark">
         <div className="max-w-[1400px] mx-auto px-3 sm:px-6 flex gap-1 overflow-x-auto items-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -566,14 +557,32 @@ export default function PotPage() {
 
       <div className="max-w-[1400px] mx-auto px-3 sm:px-6 py-6 sm:py-8 w-full">
 
-        {/* ════════════════════ TRADE TAB ════════════════════
+        {/* ════════════════════ PROPOSAL TAB ════════════════════
             The killer demo flow. Everything a judge needs to see in 60s:
             deposit → propose → vote → activity. */}
-        {activeTab === 'trade' && (
+        {activeTab === 'proposal' && (
           <div className="space-y-8 w-full">
 
             {/* Squads banner if pot is multisig-managed */}
             <SquadsBanner potPubkey={pubkey} />
+
+            {/* ── How-it-works flow stepper ── */}
+            <div className="flex items-center gap-2 text-xs overflow-x-auto [scrollbar-width:none] pb-1 -mb-2">
+              {[
+                { n: '1', label: 'Deposit SOL' },
+                { n: '2', label: 'Create Proposal' },
+                { n: '3', label: 'Vote' },
+                { n: '4', label: 'Execute on-chain' },
+              ].map((step, i, arr) => (
+                <div key={step.n} className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-5 h-5 rounded-full bg-pot-accent/20 text-pot-accent text-[10px] font-bold flex items-center justify-center shrink-0">{step.n}</span>
+                    <span className="text-pot-muted whitespace-nowrap">{step.label}</span>
+                  </div>
+                  {i < arr.length - 1 && <span className="text-pot-border shrink-0">→</span>}
+                </div>
+              ))}
+            </div>
 
             {/* ── Pot context card ── strategy + yield overview for judges ── */}
             <PotContextCard pot={potAny} yieldStrategy={potAny.yieldStrategy ?? 0} />
@@ -689,19 +698,6 @@ export default function PotPage() {
               </div>
             </section>
 
-            {/* ── Propose Swap (StrategyProposalBuilder) ── */}
-            <section id="propose-section" className="space-y-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-bold text-white">🛠️ Propose a swap</h2>
-                <StatusBadge tier="live" compact label="Live · Jupiter v6 CPI" />
-              </div>
-              <StrategyProposalBuilder
-                potName={pot.name}
-                potBalanceSol={pot.balance}
-                onSubmit={() => setProposalModalOpen(true)}
-              />
-
-            </section>
 
             {/* ── Holdings & details ── hidden behind toggle to keep Trade tab tight.
                  Member-only: non-members don't need shares/withdraw UI on the main page. */}

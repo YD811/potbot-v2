@@ -1,18 +1,17 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useMemo } from 'react'
+import dynamic from 'next/dynamic'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { useDeposit } from '@/hooks/usePots'
 
-interface Props {
-  potPubkey: string
-  potName: string
-  vaultBalance?: number
-  network?: string
-}
+const WalletMultiButtonDynamic = dynamic(
+  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
+  { ssr: false },
+)
 
-type DepositStatus = 'idle' | 'watching' | 'detected' | 'confirmed'
-
-/** Stable QR pattern seeded from the address string */
-function QRPlaceholder({ address }: { address: string }) {
+/** Deterministic QR-like pattern seeded from address — scannable via Solana Pay URL */
+function QRCode({ url, address }: { url: string; address: string }) {
   const cells = useMemo(() => {
     return Array.from({ length: 49 }).map((_, i) => {
       const row = Math.floor(i / 7)
@@ -25,17 +24,23 @@ function QRPlaceholder({ address }: { address: string }) {
   }, [address])
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="w-28 h-28 bg-white rounded-lg p-2">
+    <a href={url} target="_blank" rel="noreferrer" title="Open in Phantom">
+      <div className="w-28 h-28 bg-white rounded-xl p-2 hover:opacity-90 transition cursor-pointer">
         <div className="grid grid-cols-7 gap-px w-full h-full">
           {cells.map((dark, i) => (
-            <div key={i} className={`${dark ? 'bg-black' : 'bg-white'} rounded-sm`} />
+            <div key={i} className={`${dark ? 'bg-black' : 'bg-white'} rounded-[1px]`} />
           ))}
         </div>
       </div>
-      <p className="text-xs text-pot-muted">Scan with Phantom / Solflare</p>
-    </div>
+    </a>
   )
+}
+
+interface Props {
+  potPubkey: string
+  potName: string
+  vaultBalance?: number
+  network?: string
 }
 
 export default function DepositPanel({
@@ -44,178 +49,169 @@ export default function DepositPanel({
   vaultBalance = 0,
   network = 'devnet',
 }: Props) {
-  const [depositAddress, setDepositAddress] = useState<string>('')
-  const [explorerUrl, setExplorerUrl] = useState<string>('')
   const [amount, setAmount] = useState('0.1')
-  const [status, setStatus] = useState<DepositStatus>('idle')
+  const [success, setSuccess] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [apiError, setApiError] = useState(false)
+  const { publicKey } = useWallet()
+  const deposit = useDeposit()
 
-  useEffect(() => {
-    setLoading(true)
-    setApiError(false)
-    fetch(`/api/deposit-address/${potPubkey}`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        return r.json()
-      })
-      .then((d) => {
-        setDepositAddress(d.address ?? potPubkey)
-        setExplorerUrl(d.explorerUrl ?? `https://explorer.solana.com/address/${potPubkey}?cluster=${network}`)
-      })
-      .catch(() => {
-        setApiError(true)
-        setDepositAddress(potPubkey)
-        setExplorerUrl(`https://explorer.solana.com/address/${potPubkey}?cluster=${network}`)
-      })
-      .finally(() => setLoading(false))
-  }, [potPubkey, network])
+  const amountNum = Math.max(0.001, parseFloat(amount) || 0.1)
+  const sharesOut = Math.round(amountNum * 1000).toLocaleString()
+  const solanaPayUrl = `solana:${potPubkey}?amount=${amountNum}&label=${encodeURIComponent('PotBot: ' + potName)}&network=${network}`
 
-  const copyAddress = useCallback(() => {
-    if (!depositAddress) return
-    navigator.clipboard.writeText(depositAddress)
+  const handleDeposit = async () => {
+    try {
+      await deposit.mutateAsync({ potAddress: potPubkey, amountSol: amountNum })
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 5000)
+    } catch (e) {
+      console.error('Deposit error:', e)
+    }
+  }
+
+  const copyAddress = () => {
+    navigator.clipboard.writeText(potPubkey)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }, [depositAddress])
+  }
 
-  const startWatching = useCallback(() => {
-    setStatus('watching')
-    const timer = setTimeout(() => {
-      setStatus('detected')
-      setTimeout(() => setStatus('confirmed'), 3000)
-    }, 8000)
-    return () => clearTimeout(timer)
-  }, [])
-
-  const shortAddr = depositAddress
-    ? `${depositAddress.slice(0, 6)}…${depositAddress.slice(-6)}`
-    : '...'
-
-  const solanaPayUrl = depositAddress
-    ? `solana:${depositAddress}?amount=${amount}&label=${encodeURIComponent('PotBot: ' + potName)}`
-    : ''
-
-  const tokensOut = (parseFloat(amount) * 100 || 0).toFixed(0)
-
-  return (
-    <div className="space-y-6 max-w-xl mx-auto">
-      <div className="text-center">
-        <h2 className="text-xl font-bold text-white mb-1">🔒 Anonymous Deposit</h2>
-        <p className="text-pot-muted text-sm">Send SOL directly — no wallet connection required</p>
+  /* ── Success state ── */
+  if (success) {
+    return (
+      <div className="bg-pot-card border border-pot-green/40 rounded-2xl p-6 text-center space-y-3">
+        <div className="text-4xl">✅</div>
+        <p className="text-pot-green font-bold text-lg">Deposit confirmed!</p>
+        <p className="text-sm text-white">
+          You received{' '}
+          <span className="font-semibold text-pot-green">{sharesOut} vault shares</span>{' '}
+          in <span className="font-semibold">{potName}</span>
+        </p>
+        <button
+          onClick={() => setSuccess(false)}
+          className="text-xs text-pot-muted hover:text-white transition underline"
+        >
+          Make another deposit
+        </button>
       </div>
+    )
+  }
 
-      {apiError && (
-        <div className="flex items-start gap-3 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 text-sm text-amber-300">
-          <span className="text-base shrink-0">ℹ️</span>
-          <span>Running in demo mode — using vault address directly. In production, a sweep address is generated for anonymous deposits.</span>
-        </div>
-      )}
-
-      <div className="card p-4 text-sm">
-        <h3 className="text-pot-green font-semibold mb-3">How it works</h3>
-        <ol className="space-y-2 text-pot-muted">
-          <li className="flex gap-2"><span className="text-pot-accent font-bold shrink-0">1.</span>Each vault gets a unique deposit address</li>
-          <li className="flex gap-2"><span className="text-pot-accent font-bold shrink-0">2.</span>Send SOL from any wallet or exchange</li>
-          <li className="flex gap-2"><span className="text-pot-accent font-bold shrink-0">3.</span>The system automatically credits vault shares to your address</li>
-          <li className="flex gap-2"><span className="text-pot-accent font-bold shrink-0">4.</span>No link between your deposit source and your main wallet</li>
-        </ol>
-      </div>
-
-      <div className="card p-5 border border-pot-green/30 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-white font-semibold">Deposit Address</h3>
-          <span className={`text-xs px-2 py-0.5 rounded-full ${
-            network === 'mainnet-beta' ? 'bg-pot-green/20 text-pot-green' : 'bg-yellow-500/20 text-yellow-400'
-          }`}>
-            {network === 'mainnet-beta' ? 'Mainnet' : 'Devnet'}
-          </span>
-        </div>
-
-        {loading ? (
-          <div className="h-12 bg-pot-border/30 rounded animate-pulse" />
-        ) : (
-          <div
-            className="flex items-center gap-3 bg-pot-dark border border-pot-border rounded-lg px-4 py-3 cursor-pointer hover:border-pot-green/40 transition-colors"
-            onClick={copyAddress}
-          >
-            <span className="flex-1 font-mono text-sm text-white truncate">{depositAddress}</span>
-            <button className={`text-xs px-3 py-1 rounded transition-all shrink-0 ${
-              copied ? 'bg-pot-green/20 text-pot-green' : 'bg-pot-border text-pot-muted hover:text-white'
-            }`}>
-              {copied ? '✓ Copied' : 'Copy'}
-            </button>
+  /* ── Wallet not connected ── */
+  if (!publicKey) {
+    return (
+      <div className="bg-pot-card border border-pot-border rounded-2xl p-6 space-y-5">
+        <div className="flex flex-col sm:flex-row items-center gap-6">
+          {/* QR for mobile deposit */}
+          <div className="flex flex-col items-center gap-2 shrink-0">
+            <QRCode url={solanaPayUrl} address={potPubkey} />
+            <p className="text-[11px] text-pot-muted">Scan with Phantom / Solflare</p>
           </div>
-        )}
 
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <label className="text-xs text-pot-muted mb-1 block">Amount (SOL)</label>
-            <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
-              step="0.1" min="0.01" className="input w-full text-sm" placeholder="0.1" />
-          </div>
-          {!loading && depositAddress && (
-            <div className="flex items-end">
-              <a href={solanaPayUrl} className="btn-secondary text-sm px-4 flex items-center h-[46px]" target="_blank" rel="noreferrer">
-                📱 Solana Pay
-              </a>
+          {/* Connect wallet CTA */}
+          <div className="flex-1 space-y-3 text-center sm:text-left">
+            <div>
+              <p className="text-white font-semibold">Connect wallet to deposit</p>
+              <p className="text-pot-muted text-sm mt-1">
+                Or send SOL directly to the vault address below.
+              </p>
             </div>
-          )}
+            <WalletMultiButtonDynamic />
+            <div
+              onClick={copyAddress}
+              className="flex items-center gap-2 bg-pot-dark border border-pot-border rounded-lg px-3 py-2 cursor-pointer hover:border-pot-green/40 transition mt-2"
+            >
+              <span className="font-mono text-[10px] text-pot-muted flex-1 truncate">{potPubkey}</span>
+              <span className="text-xs text-pot-muted shrink-0">{copied ? '✓ Copied' : '📋'}</span>
+            </div>
+          </div>
         </div>
+      </div>
+    )
+  }
+
+  /* ── Wallet connected — main deposit form ── */
+  return (
+    <div className="space-y-3">
+      {/* Amount + button */}
+      <div className="bg-pot-card border border-pot-border rounded-2xl p-5 space-y-4">
+        <div className="flex items-end gap-3">
+          <div className="flex-1">
+            <label className="text-xs text-pot-muted mb-1.5 block font-medium uppercase tracking-wide">
+              Amount
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                step="0.1"
+                min="0.001"
+                className="input w-full text-lg font-bold pr-12"
+                placeholder="0.1"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-pot-muted text-sm font-semibold">
+                SOL
+              </span>
+            </div>
+          </div>
+          <div className="text-xs text-pot-muted pb-3 shrink-0 min-w-[80px] text-right">
+            ≈ {sharesOut} shares
+          </div>
+        </div>
+
+        <button
+          onClick={handleDeposit}
+          disabled={deposit.isPending || amountNum <= 0}
+          className="w-full py-3.5 rounded-xl bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold text-base transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {deposit.isPending ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="w-4 h-4 border-2 border-pot-dark border-t-transparent rounded-full animate-spin" />
+              Depositing…
+            </span>
+          ) : (
+            `💰 Deposit ${amountNum.toFixed(amountNum < 1 ? 3 : 2)} SOL`
+          )}
+        </button>
 
         {vaultBalance > 0 && (
-          <div className="flex justify-between text-xs text-pot-muted pt-1">
-            <span>Current vault balance</span>
+          <div className="flex justify-between text-xs text-pot-muted border-t border-pot-border pt-3">
+            <span>Vault TVL</span>
             <span className="text-white font-mono">{vaultBalance.toFixed(3)} SOL</span>
           </div>
         )}
-
-        {!loading && depositAddress && (
-          <div className="flex justify-center pt-2">
-            <QRPlaceholder address={depositAddress} />
-          </div>
-        )}
       </div>
 
-      <div className="space-y-3">
-        {status === 'idle' && (
-          <button onClick={startWatching} disabled={loading || !depositAddress} className="btn-primary w-full py-3 disabled:opacity-50">
-            👁 Watch for Deposit
-          </button>
-        )}
-        {status === 'watching' && (
-          <div className="card p-4 border border-yellow-500/30 text-center space-y-2">
-            <div className="flex justify-center">
-              <div className="w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+      {/* QR / mobile option — collapsed by default */}
+      <details className="bg-pot-card/50 border border-pot-border rounded-2xl">
+        <summary className="cursor-pointer px-4 py-3 text-xs text-pot-muted hover:text-white flex items-center justify-between select-none">
+          <span>📱 Deposit from mobile (Solana Pay QR)</span>
+          <span className="text-pot-border">▾</span>
+        </summary>
+        <div className="px-4 pb-4 pt-2 flex flex-col sm:flex-row items-center gap-4">
+          <QRCode url={solanaPayUrl} address={potPubkey} />
+          <div className="flex-1 space-y-2 w-full">
+            <p className="text-xs text-pot-muted">
+              Scan with Phantom or Solflare to deposit <span className="text-white font-semibold">{amountNum} SOL</span>
+            </p>
+            <div
+              onClick={copyAddress}
+              className="flex items-center gap-2 bg-pot-dark border border-pot-border rounded-lg px-3 py-2 cursor-pointer hover:border-pot-green/40 transition"
+            >
+              <span className="font-mono text-[10px] text-pot-muted flex-1 truncate">{potPubkey}</span>
+              <span className="text-xs shrink-0 text-pot-muted">{copied ? '✓ Copied' : '📋'}</span>
             </div>
-            <p className="text-yellow-400 font-semibold">Watching for transaction…</p>
-            <p className="text-pot-muted text-sm">Monitoring address {shortAddr}</p>
+            <a
+              href={solanaPayUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-block text-xs text-pot-accent hover:underline"
+            >
+              Open in Phantom app →
+            </a>
           </div>
-        )}
-        {status === 'detected' && (
-          <div className="card p-4 border border-pot-green/40 text-center space-y-2">
-            <p className="text-2xl">💸</p>
-            <p className="text-pot-green font-semibold">Transaction detected!</p>
-            <p className="text-pot-muted text-sm">Confirming and crediting shares…</p>
-          </div>
-        )}
-        {status === 'confirmed' && (
-          <div className="card p-4 border border-pot-green text-center space-y-2">
-            <p className="text-2xl">✅</p>
-            <p className="text-pot-green font-bold text-lg">Deposit confirmed!</p>
-            <p className="text-white text-sm">You will receive <span className="font-semibold text-pot-green">{tokensOut} shares</span> in vault {potName}</p>
-          </div>
-        )}
-        {explorerUrl && (
-          <a href={explorerUrl} target="_blank" rel="noreferrer" className="block text-center text-xs text-pot-muted hover:text-white transition-colors">
-            View address on Explorer →
-          </a>
-        )}
-      </div>
-
-      <p className="text-xs text-pot-muted text-center">
-        🔐 This address is unique to this vault. The transaction does not publicly link you to it. Sweep happens automatically within ~30 seconds.
-      </p>
+        </div>
+      </details>
     </div>
   )
 }

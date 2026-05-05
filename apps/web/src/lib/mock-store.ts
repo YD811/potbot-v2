@@ -121,8 +121,8 @@ export interface MockReferral {
 const SEED_POTS: MockPot[] = [
   {
     pubkey: 'DemoPoT1111111111111111111111111111111111111',
-    name: 'Diamond Hands DAO',
-    emoji: '💎',
+    name: 'PotBot ONE',
+    emoji: '🪴',
     balance: 42.5,
     totalShares: 42500,
     memberCount: 5,
