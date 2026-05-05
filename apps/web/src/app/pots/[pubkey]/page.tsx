@@ -488,14 +488,14 @@ export default function PotPage() {
   const squadsManaged = potAny.isSquadsVault === true
 
   const goToDeposit = () => {
-    setActiveTab('trade')
+    setActiveTab('proposal')
     requestAnimationFrame(() => {
       document.getElementById('deposit-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
   }
 
   const goToPropose = () => {
-    setActiveTab('trade')
+    setActiveTab('proposal')
     requestAnimationFrame(() => {
       document.getElementById('propose-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
@@ -525,7 +525,7 @@ export default function PotPage() {
         isPublic={!!potAny.isPublic}
         isLive={isLive}
         squadsManaged={squadsManaged}
-        tvlSol={pot.balance}
+        tvlSol={(pot.balance ?? 0) + (potAny.meteoraLpBalance ?? 0)}
         members={pot.memberCount ?? members.length ?? 0}
         yourSharePct={yourSharePct}
         activeProposals={activeProposalsCount}
@@ -598,12 +598,12 @@ export default function PotPage() {
                 title="Connect your wallet to deposit"
                 subtitle="Deposit SOL and receive vault shares. Withdraw anytime per this vault’s policy."
               >
-                <DepositPanel potPubkey={pubkey} potName={pot.name} vaultBalance={pot.balance} />
+                <DepositPanel potPubkey={pubkey} potName={pot.name} vaultBalance={(pot.balance ?? 0) + (potAny.meteoraLpBalance ?? 0)} />
               </WalletGate>
             </section>
 
             {/* ── Active proposals ── 2-col layout: list + activity feed */}
-            <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <section id="propose-section" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-3">
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-2">
