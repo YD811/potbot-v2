@@ -3,6 +3,10 @@ import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import type BN from 'bn.js'
 import { getPotAddress, getVaultAddress, getMemberAddress, getProposalAddress, getVoterRecordAddress } from '../pda'
 
+// Note: all functions accept `program: Program<any>` for the public API surface,
+// but cast internally to avoid TS2589 "excessively deep instantiation" on
+// Program<any>.methods (an Anchor TS types limitation with deep generics).
+
 /* ── Create POT ── */
 
 export interface CreatePotParams {
@@ -29,14 +33,18 @@ export interface CreatePotParams {
 }
 
 export async function createPot(
-  program: Program,
+  program: Program<any>,
   authority: PublicKey,
   params: CreatePotParams
 ) {
-  const [potPda] = getPotAddress(authority, params.name)
+  // Fixed: was getPotAddress(authority, params.name) — args were swapped.
+  // getPotAddress signature: (name: string, authority: PublicKey)
+  const [potPda] = getPotAddress(params.name, authority)
   const [vaultPda] = getVaultAddress(potPda)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
 
-  return program.methods
+  return p.methods
     .createPot({
       name: params.name,
       emoji: params.emoji,
@@ -68,15 +76,17 @@ export async function createPot(
 /* ── Deposit ── */
 
 export async function depositToPot(
-  program: Program,
+  program: Program<any>,
   potAddress: PublicKey,
   depositor: PublicKey,
   lamports: BN
 ) {
   const [memberPda] = getMemberAddress(potAddress, depositor)
   const [vaultPda] = getVaultAddress(potAddress)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
 
-  return program.methods
+  return p.methods
     .deposit(lamports)
     .accounts({
       pot: potAddress,
@@ -91,15 +101,17 @@ export async function depositToPot(
 /* ── Withdraw ── */
 
 export async function withdrawFromPot(
-  program: Program,
+  program: Program<any>,
   potAddress: PublicKey,
   withdrawer: PublicKey,
   shares: BN
 ) {
   const [memberPda] = getMemberAddress(potAddress, withdrawer)
   const [vaultPda] = getVaultAddress(potAddress)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
 
-  return program.methods
+  return p.methods
     .withdraw(shares)
     .accounts({
       pot: potAddress,
@@ -114,7 +126,7 @@ export async function withdrawFromPot(
 /* ── Create Proposal ── */
 
 export async function createProposal(
-  program: Program,
+  program: Program<any>,
   potAddress: PublicKey,
   proposer: PublicKey,
   nextProposalId: number,
@@ -125,8 +137,10 @@ export async function createProposal(
 ) {
   const [proposalPda] = getProposalAddress(potAddress, nextProposalId)
   const [memberPda] = getMemberAddress(potAddress, proposer)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
 
-  return program.methods
+  return p.methods
     .createProposal({
       proposalType: params.proposalType,
       description: params.description,
@@ -144,7 +158,7 @@ export async function createProposal(
 /* ── Vote ── */
 
 export async function voteOnProposal(
-  program: Program,
+  program: Program<any>,
   potAddress: PublicKey,
   proposalAddress: PublicKey,
   voter: PublicKey,
@@ -152,8 +166,10 @@ export async function voteOnProposal(
 ) {
   const [memberPda] = getMemberAddress(potAddress, voter)
   const [voterRecordPda] = getVoterRecordAddress(proposalAddress, voter)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
 
-  return program.methods
+  return p.methods
     .vote(approve)
     .accounts({
       pot: potAddress,
@@ -169,14 +185,16 @@ export async function voteOnProposal(
 /* ── Execute Proposal ── */
 
 export async function executeProposal(
-  program: Program,
+  program: Program<any>,
   potAddress: PublicKey,
   proposalAddress: PublicKey,
   executor: PublicKey
 ) {
   const [vaultPda] = getVaultAddress(potAddress)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
 
-  return program.methods
+  return p.methods
     .executeProposal()
     .accounts({
       pot: potAddress,

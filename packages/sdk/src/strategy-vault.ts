@@ -94,7 +94,7 @@ export function computeExpectedTamagotchiLevel(
  * Call via program.methods.createStrategyVault(...)
  */
 export function buildCreateStrategyVaultIx(
-  program: Program,
+  program: Program<any>,
   authority: PublicKey,
   potPubkey: PublicKey,
   config: StrategyVaultConfig
@@ -104,8 +104,10 @@ export function buildCreateStrategyVaultIx(
     [Buffer.from('strategy_vault'), potPubkey.toBuffer()],
     program.programId
   )
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
 
-  return program.methods
+  return p.methods
     .createStrategyVault(
       config.description,
       new BN(config.entryFeeLamports),
@@ -126,7 +128,7 @@ export function buildCreateStrategyVaultIx(
  * Build a join_strategy_vault instruction
  */
 export function buildJoinStrategyVaultIx(
-  program: Program,
+  program: Program<any>,
   participant: PublicKey,
   potPubkey: PublicKey,
   referrer: PublicKey | null = null
@@ -144,7 +146,9 @@ export function buildJoinStrategyVaultIx(
     ? [{ pubkey: referrer, isSigner: false, isWritable: true }]
     : []
 
-  return program.methods
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
+  return p.methods
     .joinStrategyVault()
     .accounts({
       strategyVault: strategyVaultPda,
@@ -161,7 +165,7 @@ export function buildJoinStrategyVaultIx(
  * Build an exit_strategy_vault instruction
  */
 export function buildExitStrategyVaultIx(
-  program: Program,
+  program: Program<any>,
   participant: PublicKey,
   potPubkey: PublicKey
 ): Promise<TransactionInstruction> {
@@ -174,7 +178,9 @@ export function buildExitStrategyVaultIx(
     program.programId
   )
 
-  return program.methods
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
+  return p.methods
     .exitStrategyVault()
     .accounts({
       strategyVault: strategyVaultPda,
@@ -190,7 +196,7 @@ export function buildExitStrategyVaultIx(
  * Build an evolve_tamagotchi instruction (permissionless — anyone can call)
  */
 export function buildEvolveTamagotchiIx(
-  program: Program,
+  program: Program<any>,
   caller: PublicKey,
   potPubkey: PublicKey
 ): Promise<TransactionInstruction> {
@@ -199,7 +205,9 @@ export function buildEvolveTamagotchiIx(
     program.programId
   )
 
-  return program.methods
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
+  return p.methods
     .evolveTamagotchi()
     .accounts({
       strategyVault: strategyVaultPda,
