@@ -71,7 +71,7 @@ pub fn handler(ctx: Context<JoinPrivatePot>, invite_code: String) -> Result<()> 
     member_account.bump = ctx.bumps.member_account;
 
     private_pot.invited_members.push(member_key);
-    pot.member_count = pot.member_count.checked_add(1).unwrap();
+    pot.member_count = pot.member_count.checked_add(1).ok_or(PotError::ArithmeticOverflow)?;
     pot.last_activity_at = Clock::get()?.unix_timestamp;
 
     msg!(
