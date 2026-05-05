@@ -74,7 +74,7 @@ const NAV_LINKS = [
   { href: '/',            label: 'Home' },
   { href: '/vaults',      label: '⚡ Vaults' },
   { href: '/leaderboard', label: '🏆 Leaderboard' },
-  { href: '/hackathon',   label: '🏆 Hackathon' },
+  { href: '/hackathon',   label: '⚒️ Hackathon' },
   { href: '/create',      label: '+ Create' },
 ]
 

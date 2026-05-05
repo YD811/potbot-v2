@@ -37,6 +37,11 @@ const MIN_DEPOSIT_FLOOR = 0.001  // SOL, must be strictly > 0
 const LOCKUP_PRESETS = [0, 7, 30, 90, 180, 365]
 
 export default function CreatePotPage() {
+  // Set page title (client component — can't use metadata export)
+  useEffect(() => {
+    document.title = 'Create a Vault — PotBot'
+  }, [])
+
   const router = useRouter()
   const { publicKey } = useWallet()
   const createPot = useCreatePot()

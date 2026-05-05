@@ -425,27 +425,6 @@ function CountUp({ value, prefix = '', suffix = '' }: { value: number; prefix?: 
 }
 
 function WaitlistSection() {
-  const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'duplicate' | 'error'>('idle')
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!email.trim() || status === 'loading') return
-    setStatus('loading')
-    try {
-      const res = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), source: 'landing' }),
-      })
-      const data = await res.json()
-      if (!res.ok) { setStatus('error'); return }
-      setStatus(data.alreadyRegistered ? 'duplicate' : 'success')
-    } catch {
-      setStatus('error')
-    }
-  }
-
   return (
     <section className="bg-gradient-to-r from-pot-accent/10 via-pot-card to-pot-green/10 border-y border-pot-border py-16 px-4">
       <div className="max-w-2xl mx-auto text-center">
@@ -457,50 +436,17 @@ function WaitlistSection() {
           Get early access to <span className="text-pot-green">PotBot</span>
         </h2>
         <p className="text-pot-muted mb-8 max-w-lg mx-auto">
-          Be the first to know when mainnet launches. Early members get lower fees, founding member NFT badge, and priority access to Strategy Vaults.
+          Early members get lower fees, founding member NFT badge, and priority access to Strategy Vaults.
         </p>
-
-        {status === 'success' ? (
-          <div className="flex flex-col items-center gap-3">
-            <div className="text-4xl">🎉</div>
-            <p className="text-pot-green font-semibold">You're on the list!</p>
-            <p className="text-pot-muted text-sm">Check your inbox for a confirmation.</p>
-          </div>
-        ) : status === 'duplicate' ? (
-          <p className="text-pot-muted text-sm">Looks like you're already on the waitlist — we'll be in touch.</p>
-        ) : (
-          <>
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="your@email.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input flex-1 py-3 px-4 text-base"
-              />
-              <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="btn-primary px-6 py-3 text-base whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {status === 'loading' ? 'Sending…' : '🚀 Join Waitlist'}
-              </button>
-            </form>
-            <div className="mt-6 text-sm text-pot-muted">
-              Want founding-member perks (NFT badge, lower fees)?{' '}
-              <Link href="/signup" className="text-pot-green font-semibold hover:underline inline-flex items-center gap-1">
-                Full sign-up →
-              </Link>
-            </div>
-          </>
-        )}
-
-        {status === 'error' && (
-          <p className="text-red-400 text-sm mt-3">Something went wrong. Try again or DM us on X.</p>
-        )}
-
-        <p className="text-pot-muted/50 text-xs mt-4">No spam. Unsubscribe anytime.</p>
+        <div className="flex flex-wrap gap-4 justify-center">
+          <Link href="/signup" className="btn-primary text-base px-8 py-3 glow-green flex items-center gap-2">
+            🚀 Get Early Access
+          </Link>
+          <Link href="/create" className="btn-secondary text-base px-6 py-3 flex items-center gap-2">
+            🪴 Try devnet first
+          </Link>
+        </div>
+        <p className="text-pot-muted/50 text-xs mt-6">No spam. Unsubscribe anytime.</p>
       </div>
     </section>
   )
@@ -570,7 +516,16 @@ export default function LandingPage() {
               </svg>
               Follow on X
             </a>
+            <Link
+              href="/create"
+              className="btn-secondary text-base px-6 py-3 flex items-center gap-2"
+            >
+              🪴 Try devnet (no wallet)
+            </Link>
           </div>
+          <p className="text-pot-muted/50 text-xs -mt-8 mb-4 text-center">
+            Demo mode · no wallet needed · Solana devnet
+          </p>
 
           {/* Live protocol stats — only shown when data is real */}
           {totalTvlSol > 0 && (
@@ -601,7 +556,7 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-4 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           {[
-            { k: 'Network', v: 'Solana Devnet', sub: 'Mainnet rollout after hardening' },
+            { k: 'Network', v: 'Solana Devnet', sub: 'Live · Mainnet Q3 2026' },
             { k: 'Custody', v: 'Program-controlled vaults', sub: 'No bot-held treasury keys' },
             { k: 'Execution', v: 'Vote-gated actions', sub: 'AI proposes, members approve' },
             { k: 'Status', v: 'Live API health', sub: 'Public endpoint: /api/health' },
@@ -622,6 +577,9 @@ export default function LandingPage() {
           </Link>
         </div>
       </section>
+
+      {/* ── Live vault mockup ── */}
+      <LiveVaultMockup />
 
       {/* ── Features grid ── */}
       <section className="max-w-6xl mx-auto px-4 py-16">
@@ -676,9 +634,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* ── NEW: Rotating product mockup ── */}
-      <LiveVaultMockup />
 
       {/* ── How it works ── */}
       <section className="bg-pot-card border-y border-pot-border py-16 px-4">
