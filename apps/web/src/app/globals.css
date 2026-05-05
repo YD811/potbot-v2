@@ -8,6 +8,14 @@
     @apply bg-pot-dark text-white;
   }
 
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pot-green focus-visible:ring-offset-2 focus-visible:ring-offset-pot-dark;
+  }
+
   ::-webkit-scrollbar {
     width: 6px;
   }
@@ -28,19 +36,22 @@
   .btn-primary {
     @apply rounded-xl bg-pot-green px-6 py-2.5 font-semibold text-pot-dark
            transition hover:brightness-110 active:scale-[0.98]
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pot-green focus-visible:ring-offset-2 focus-visible:ring-offset-pot-dark
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
     @apply rounded-xl border border-pot-border bg-pot-card px-6 py-2.5
            font-medium text-white transition hover:border-pot-muted
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-pot-dark
            active:scale-[0.98];
   }
 
   .input {
     @apply w-full rounded-xl border border-pot-border bg-pot-dark px-4 py-3
            text-white placeholder:text-pot-muted
-           focus:border-pot-green focus:outline-none focus:ring-1 focus:ring-pot-green/50;
+           focus:border-pot-green focus:outline-none focus:ring-1 focus:ring-pot-green/50
+           focus-visible:ring-2 focus-visible:ring-pot-green focus-visible:ring-offset-2 focus-visible:ring-offset-pot-dark;
   }
 
   .glow-green {
@@ -91,7 +102,11 @@
   --c-border: #1A2332;
   --c-border-2: #24324A;
   --c-text: #ffffff;
+  --c-text-soft: #e8edf2;
   --c-muted: #8B9BB4;
+  --c-brand-green: #14f195;
+  --c-brand-accent: #9945ff;
+  --c-surface-shadow: rgba(0, 0, 0, 0.45);
 }
 
 html[data-theme="light"] {
@@ -111,13 +126,27 @@ html[data-theme="light"] {
   --c-border: #e5e7eb;
   --c-border-2: #d1d5db;
   --c-text: #0d1117;
+  --c-text-soft: #1f2937;
   --c-muted: #1f2937;
+  --c-brand-green: #067a46;
+  --c-brand-accent: #6d28d9;
+  --c-surface-shadow: rgba(15, 23, 42, 0.12);
 }
 
 /* ── Body & scrollbar ── */
 html[data-theme="light"] body {
   background-color: var(--pot-bg) !important;
   color: var(--pot-ink) !important;
+}
+html[data-theme="light"] a:focus-visible,
+html[data-theme="light"] button:focus-visible,
+html[data-theme="light"] input:focus-visible,
+html[data-theme="light"] select:focus-visible,
+html[data-theme="light"] textarea:focus-visible,
+html[data-theme="light"] .btn-primary:focus-visible,
+html[data-theme="light"] .btn-secondary:focus-visible,
+html[data-theme="light"] .input:focus-visible {
+  --tw-ring-offset-color: var(--pot-bg) !important;
 }
 html[data-theme="light"] ::-webkit-scrollbar-track { background: var(--pot-bg) !important; }
 html[data-theme="light"] ::-webkit-scrollbar-thumb { background: var(--pot-border-strong) !important; }

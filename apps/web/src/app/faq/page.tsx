@@ -54,11 +54,11 @@ const FAQ_DATA: FAQCategory[] = [
     items: [
       {
         q: 'How does PotBot make money?',
-        a: 'PotBot charges a 0.5% fee on every swap executed through a pot. There are no subscription fees, no fees on deposits or withdrawals, and no fees if your pot doesn\'t trade.',
+        a: 'PotBot charges a 0.30% protocol fee on every swap executed through a pot. There are no subscription fees, no fees on deposits or withdrawals, and no fees if your pot doesn\'t trade.',
       },
       {
         q: 'Where do the fees go?',
-        a: 'Of the 0.5% swap fee: 59% to the protocol treasury, 20% to the referrer of the depositing user, 20% to development and operations, and 1% to the Season Trading Competition Treasury.',
+        a: 'Of the 0.30% swap fee: 59% goes to the protocol treasury, 20% to the referrer of the depositing user, 20% to development and operations, and 1% to the Season Trading Competition Treasury.',
       },
       {
         q: 'How do members earn?',

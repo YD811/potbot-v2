@@ -33,11 +33,11 @@ Built for [Solana Frontier 2026](https://colosseum.com/frontier) · [@PotBot_sol
 **No wallet needed** — `potbot.fun` shows a live flagship pot in read-only mode at the top of `/vaults`.
 
 > Lifecycle legend used everywhere on this repo and the site:
-> 🟢 Live (mainnet) · 🟡 Devnet · 🔵 Phase 2 Q3 2026 · 🟣 Phase 3 Q4 2026 · ⚪ Vision
+> 🟢 Live/verifiable · 🟡 Devnet · 🔵 Phase 2 Q3 2026 · 🟣 Phase 3 Q4 2026 · ⚪ Vision
 
-### Live now (mainnet · Explorer-verifiable) 🟢
+### Live now (devnet · Explorer-verifiable) 🟡
 
-- `pot_vault` Anchor program with 30+ instructions: deposit, propose, vote, `execute_swap` via Jupiter v6 CPI, withdraw.
+- `pot_vault` Anchor program on devnet with 30+ instructions: deposit, propose, vote, `execute_swap` via Jupiter v6 CPI, withdraw.
 - Solana Blinks endpoints — `/api/actions/<potPubkey>/{deposit,vote}` — render as cards in Phantom / Backpack / X.
 - MCP server `@potbot/mcp@0.2.0` on npm — 18 tools, HTTP+SSE+stdio transports.
 - Squads v4 multisig path for the creator role on high-value pots.
@@ -189,7 +189,7 @@ Integrates **x402 micropayments** — agents pay per API call (0.001 USDC/reques
 | MarginFi | Lending/borrowing yield |
 | Metaplex Core | NFT Strategy Shares for Full Bloom+ vaults |
 | MagicBlock | Private USDC referral payouts (confidential transfers via MCP) |
-| Privy | Embedded wallet — join vaults by email, no Phantom needed |
+| Privy | Phase 2: embedded wallet — join vaults by email, no Phantom needed |
 | MoonPay | Fiat on-ramp on vault join page |
 | Pyth / Switchboard | Price oracle fallback |
 
@@ -306,7 +306,7 @@ potbot-v2/
 | NFT | Metaplex Core (Strategy Shares) |
 | Frontend | Next.js 14 · TypeScript · Tailwind CSS |
 | State | Zustand · TanStack Query v5 |
-| Wallets | Phantom · Privy (embedded) · WalletConnect |
+| Wallets | Phantom today · Privy embedded wallets in Phase 2 |
 | Backend | Hono.js · Node.js · PostgreSQL · Redis |
 | MCP | solana-agent-kit · @modelcontextprotocol/sdk |
 | Payments | x402 (AI micropayments) · MagicBlock (private) |

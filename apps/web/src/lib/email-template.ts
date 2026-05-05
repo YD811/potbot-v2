@@ -7,9 +7,9 @@
  *
  * Usage:
  *   renderEmail({
- *     subject: "PotBot is live on mainnet",
+ *     subject: "PotBot devnet is live",
  *     preheader: "Founding members — your early access has landed.",
- *     headline: "Mainnet is live 🚀",
+ *     headline: "Devnet is live",
  *     body: "<p>You asked to be first. You are.</p>",
  *     ctaLabel: "Open PotBot",
  *     ctaUrl: "https://potbot.fun",

@@ -84,7 +84,7 @@ const TRACKS: Track[] = [
     sponsor: 'Privy',
     emoji: '🪪',
     what: 'Email / social login → 60-second onboarding for non-crypto users.',
-    proof: 'PR #32 on the GitHub repo. Awaiting `NEXT_PUBLIC_PRIVY_APP_ID` env to ship to mainnet.',
+    proof: 'Implementation branch exists, but PR #32 was closed without merge. Phase 2 until env setup, review, and merge are complete.',
     proofHref: 'https://github.com/YD811/potbot-v2/pull/32',
     tier: 'phase-2',
   },
@@ -256,7 +256,9 @@ export default function HackathonPage() {
       <section className="px-4 sm:px-6 pb-12">
         <div className="max-w-[1100px] mx-auto bg-pot-card border border-pot-green/30 rounded-3xl p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-5 flex-wrap">
-            <h2 className="text-xl sm:text-2xl font-bold text-white">🟢 Live now — judge can verify</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-white">
+              {CLUSTER === 'mainnet-beta' ? '🟢 Live now — judge can verify' : '🟡 Devnet live — judge can verify'}
+            </h2>
             <StatusBadge tier={CLUSTER === 'mainnet-beta' ? 'live' : 'devnet'} compact />
           </div>
 
@@ -279,7 +281,7 @@ export default function HackathonPage() {
             ) : (
               <LiveCard
                 title="Flagship pot"
-                value="(awaiting mainnet deploy)"
+                value="(devnet flagship not configured)"
                 hrefLabel="See devnet pots →"
                 href="/vaults"
               />
@@ -446,7 +448,7 @@ export default function HackathonPage() {
               Solana Blinks turn any proposal into a tweet anyone can vote on. MCP lets Claude/GPT manage a pot. The on-chain `execute_swap` instruction is mode-aware — Admin / Proposal / AI-trigger — and matches mode-source strictly.
             </PitchStep>
             <PitchStep range="80–90s" headline="Ask">
-              Mainnet is live (or shipping this sprint). We want Colosseum to ship the privacy layer (Token-2022 confidential transfers) and the Saga / Seeker dApp Store entry.
+              The devnet product is live today, with mainnet planned after the final safety pass. We want Colosseum to help turn AI-governed strategy vaults into a production business.
             </PitchStep>
           </ol>
         </div>
@@ -457,7 +459,7 @@ export default function HackathonPage() {
         <div className="max-w-[1100px] mx-auto bg-gradient-to-br from-pot-accent/10 to-pot-green/5 border border-pot-accent/30 rounded-3xl p-6 sm:p-8 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">What ships next</h2>
           <p className="text-pot-muted max-w-xl mx-auto mb-5 text-sm sm:text-base">
-            Privy embedded wallets, Pyth in-program oracle guard, Meteora &amp; Kamino yield CPIs, Light Protocol ZK audit log, Tamagotchi NFT mint, STAMPPOT privacy mode. Each phase tagged on the public roadmap.
+            Privy embedded wallets, Pyth in-program oracle guard, Meteora &amp; Kamino yield CPIs, Light Protocol ZK audit log, Tamagotchi NFT mint, STAMPPOT privacy mode. Each phase is tagged on the public roadmap.
           </p>
           <Link
             href="/roadmap"

@@ -77,6 +77,10 @@ export default function CreatePotPage() {
   // separate concern enforced in `handleSubmit` and on the submit button.
   const formValid = nameOk && minDepositOk && lockupOk
   const canSubmit = formValid && !!publicKey && !createPot.isPending
+  const tradeGov = GOV_LEVELS.find((g) => g.value === form.tradeLevel) ?? GOV_LEVELS[0]
+  const withdrawGov = GOV_LEVELS.find((g) => g.value === form.withdrawLevel) ?? GOV_LEVELS[0]
+  const yieldStrategy = YIELD_STRATEGIES.find((s) => s.value === form.yieldStrategy) ?? YIELD_STRATEGIES[0]
+  const previewName = form.name.trim() || 'Amsterdam Alpha'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -104,12 +108,17 @@ export default function CreatePotPage() {
   // about to create. Connect is only required on final Submit (see below).
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold text-white mb-2">Create a New POT</h1>
-      <p className="text-pot-muted mb-8">
-        Set up your collective trading vault. You&apos;ll be the first member
-        and authority.
-      </p>
+    <div className="max-w-6xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-white mb-2">Create an AI strategy POT</h1>
+        <p className="text-pot-muted max-w-2xl">
+          Configure the vault your group will see: custody, deposits, voting rules,
+          and the AI proposal surface. Wallet is only needed for the final deploy transaction.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
+        <div className="min-w-0">
 
       {/* Wallet banner — only shown when form is otherwise valid but wallet
           is missing, so the user isn't nagged until the very last step. */}
@@ -467,6 +476,77 @@ export default function CreatePotPage() {
           </div>
         )}
       </form>
+        </div>
+
+        <aside className="lg:sticky lg:top-28 space-y-4">
+          <div className="rounded-2xl border border-pot-green/30 bg-gradient-to-br from-pot-green/10 via-pot-card to-pot-accent/10 p-5">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="min-w-0">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-pot-green">
+                  Live preview
+                </div>
+                <h2 className="mt-1 text-xl font-black text-white truncate">
+                  {form.emoji} {previewName}
+                </h2>
+                <p className="mt-1 text-xs text-pot-muted">
+                  {form.isPublic ? 'Public vault · anyone can join' : 'Private vault · invite flow'}
+                </p>
+              </div>
+              <span className="rounded-full border border-pot-border bg-pot-dark px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-pot-muted">
+                Devnet
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <PreviewStat label="Min deposit" value={`${form.minDeposit || 0} SOL`} />
+              <PreviewStat label="Lockup" value={form.lockupDays === 0 ? 'None' : `${form.lockupDays}d`} />
+              <PreviewStat label="Trade vote" value={tradeGov.label} />
+              <PreviewStat label="Withdraw vote" value={withdrawGov.label} />
+            </div>
+
+            <div className="rounded-xl border border-pot-border bg-pot-dark/70 p-4 space-y-3">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-pot-muted">
+                  Demo flow
+                </div>
+                <p className="mt-1 text-sm text-white">
+                  AI drafts proposals. Members vote. The program executes only after rules pass.
+                </p>
+              </div>
+              <div className="space-y-2">
+                {[
+                  'Deposit SOL and mint shares',
+                  `AI monitors ${yieldStrategy.label.toLowerCase()} strategy`,
+                  `${tradeGov.label} approval gates each swap`,
+                  'Jupiter execution creates Explorer proof',
+                ].map((item) => (
+                  <div key={item} className="flex items-start gap-2 text-xs text-pot-muted">
+                    <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-pot-green shrink-0" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-pot-border bg-pot-card/70 p-4 text-xs text-pot-muted">
+            <div className="font-bold text-white mb-2">Recommended for Frontier</div>
+            <p className="leading-relaxed">
+              Use Public, Majority trade governance, no lockup, and a small minimum deposit.
+              This gives judges the shortest path to deposit, vote, and verify execution.
+            </p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  )
+}
+
+function PreviewStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-pot-border bg-pot-dark/70 p-3">
+      <div className="text-[10px] uppercase tracking-wider text-pot-muted">{label}</div>
+      <div className="mt-1 truncate text-sm font-bold text-white">{value}</div>
     </div>
   )
 }
