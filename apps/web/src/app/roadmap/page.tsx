@@ -20,8 +20,8 @@ interface Section {
 const SECTIONS: Section[] = [
   {
     tier: 'live',
-    title: 'Live · mainnet',
-    blurb: 'Working today. Verifiable on Solana Explorer. The judge clicks through and watches it run.',
+    title: 'Live / verifiable',
+    blurb: 'Working today. Network-specific pages show whether the proof is on devnet or mainnet. The judge clicks through and watches it run.',
     features: [
       { emoji: '🪴', name: 'pot_vault Anchor program', desc: '30+ instructions deployed: create_pot, deposit, withdraw, vote, execute_swap, pot_admin, treasury config.', doc: '/docs/architecture/program' },
       { emoji: '⚡', name: 'execute_swap with Jupiter v6 CPI', desc: 'Vault PDA signs the swap directly. Three modes (AdminDirect / Proposal / StrategyTrigger) in one instruction with strict mode-source matching.' },
@@ -54,7 +54,7 @@ const SECTIONS: Section[] = [
       { emoji: '🔐', name: 'Pyth in-program oracle guard', desc: 'execute_swap re-reads Pyth price feeds inside the instruction and rejects keepers that fire on the wrong condition. Triggers cannot be faked.' },
       { emoji: '🌾', name: 'Meteora DLMM + DAMM yield CPI', desc: 'Park idle pot capital in Meteora pools. CPI path scaffolded, yield_strategy field on PotAccount supports it.' },
       { emoji: '🏦', name: 'Kamino lending CPI', desc: 'Lending-based yield strategy as an alternative to Meteora. Same allocation surface.' },
-      { emoji: '✉️', name: 'Privy embedded wallets', desc: 'Email + social login + Solana auto-create wallet. PR #32 ready, awaiting Privy app ID.' },
+      { emoji: '✉️', name: 'Privy embedded wallets', desc: 'Email + social login + Solana auto-create wallet. Implementation branch exists, but the PR was not merged; ships after env setup and final review.' },
       { emoji: '🪶', name: 'Light Protocol ZK-compressed audit log', desc: 'SwapEvent + NavSnapshot compressed accounts cut rent ~5000× while keeping full on-chain audit trail.', doc: '/docs/architecture/architecture-onchain' },
       { emoji: '🪙', name: 'init_share_mint graduation', desc: 'Off-chain shares (Seedling) graduate to on-chain SPL mint at Sprout+. Members hold transferable, DeFi-composable share tokens.', doc: '/docs/architecture/etf-token-system' },
       { emoji: '🎯', name: 'Advanced strategies (SL / TP / trailing / DCA)', desc: 'Stop-loss, take-profit, trailing-stop, recurring DCA — all built on the existing proposal flow.' },

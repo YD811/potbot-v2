@@ -7,7 +7,7 @@
 export type StatusTier = 'live' | 'devnet' | 'phase-2' | 'phase-3' | 'vision'
 
 const TIERS: Record<StatusTier, { dot: string; text: string; bg: string; border: string; label: string; emoji: string }> = {
-  'live':    { dot: 'bg-pot-green',   text: 'text-pot-green',    bg: 'bg-pot-green/10',    border: 'border-pot-green/30',    label: 'Live · mainnet',          emoji: '🟢' },
+  'live':    { dot: 'bg-pot-green',   text: 'text-pot-green',    bg: 'bg-pot-green/10',    border: 'border-pot-green/30',    label: 'Live',                    emoji: '🟢' },
   'devnet':  { dot: 'bg-yellow-400',  text: 'text-yellow-300',   bg: 'bg-yellow-400/10',   border: 'border-yellow-400/30',   label: 'Devnet',                  emoji: '🟡' },
   'phase-2': { dot: 'bg-blue-400',    text: 'text-blue-300',     bg: 'bg-blue-400/10',     border: 'border-blue-400/30',     label: 'Phase 2 · Q3 2026',       emoji: '🔵' },
   'phase-3': { dot: 'bg-pot-accent',  text: 'text-pot-accent',   bg: 'bg-pot-accent/10',   border: 'border-pot-accent/30',   label: 'Phase 3 · Q4 2026',       emoji: '🟣' },

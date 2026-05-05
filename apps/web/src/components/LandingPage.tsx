@@ -9,31 +9,37 @@ const FEATURES = [
   {
     icon: '🪴',
     title: 'Group Treasury (POT)',
+    status: 'Live on devnet',
     desc: 'Pool SOL with your group into a shared on-chain treasury. Every member holds SPL-tokenized shares proportional to NAV — no middleman, no custody risk.',
   },
   {
     icon: '🏛️',
     title: 'On-Chain Governance',
+    status: 'Live on devnet',
     desc: 'Every trade, withdrawal or strategy change requires a vote. Autocracy → Advisory → Majority → Supermajority → Consensus. Configure quorum, approval %, timelock.',
   },
   {
     icon: '🤖',
     title: 'AI Execution (BOT)',
+    status: 'Focus for Frontier',
     desc: 'Set IF/THEN rules — "if SOL drops 5%, buy 10%." The MCP-native agent creates proposals and executes after votes pass. Any LLM can drive it.',
   },
   {
     icon: '🆔',
     title: 'SNS Identity — .potbot.sol',
+    status: 'Next',
     desc: 'Every group gets a readable on-chain identity: amsterdam-alpha.potbot.sol. Reverse-lookup works across Solana apps. Agents get agent.{pot}.potbot.sol.',
   },
   {
     icon: '🌱',
     title: 'Money Tree evolution',
+    status: 'Gamified layer',
     desc: 'Your treasury grows 🌱 Seedling → 🌿 Sprout → 🍀 Bud → 🌾 Bloom → 🌺 Full Bloom → 🌳 Mature Tree. Higher levels unlock lower fees and perks.',
   },
   {
     icon: '🥷',
     title: 'Privacy layer (STAMPPOT)',
+    status: 'Later',
     desc: 'Optional per-pot: wrap deposits in PrivacyCash ZK proofs. Public governance, private balances. Transparent on demand.',
   },
 ]
@@ -90,7 +96,7 @@ function LiveVaultMockup() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'radial-gradient(ellipse at center, rgba(20,241,149,0.18) 0%, transparent 60%)',
+              'radial-gradient(ellipse at center, rgba(20,241,149,0.14) 0%, transparent 60%)',
             filter: 'blur(60px)',
           }}
         />
@@ -160,10 +166,10 @@ function LiveVaultMockup() {
           z-index: 1;
           border-radius: 20px;
           overflow: hidden;
-          background: #10151C;
-          border: 1px solid rgba(255,255,255,0.14);
+          background: var(--c-card);
+          border: 1px solid var(--c-border-2);
           box-shadow:
-            0 40px 80px rgba(0,0,0,0.45),
+            0 40px 80px var(--c-surface-shadow),
             0 0 0 1px rgba(20,241,149,0.08) inset;
           transform-style: preserve-3d;
           transform-origin: 50% 50%;
@@ -186,8 +192,8 @@ function LiveVaultMockup() {
         .potbot-mock-chrome {
           display: flex; align-items: center; gap: 8px;
           padding: 12px 16px;
-          background: #1A2028;
-          border-bottom: 1px solid rgba(255,255,255,0.07);
+          background: var(--c-card-2);
+          border-bottom: 1px solid var(--c-border);
         }
         .dot { width: 10px; height: 10px; border-radius: 50%; }
         .dot.r { background: #FF5F56; }
@@ -197,14 +203,14 @@ function LiveVaultMockup() {
           flex: 1; text-align: center;
           font-family: 'JetBrains Mono', ui-monospace, monospace;
           font-size: 11px;
-          color: rgba(255,255,255,0.45);
+          color: var(--c-muted);
         }
 
         .potbot-mock-body { padding: 24px; }
 
         .potbot-mock-vault {
-          background: #0D1117;
-          border: 1px solid rgba(255,255,255,0.07);
+          background: var(--c-bg);
+          border: 1px solid var(--c-border);
           border-radius: 14px;
           padding: 22px;
         }
@@ -219,12 +225,12 @@ function LiveVaultMockup() {
           display: flex; align-items: center; justify-content: center;
           font-size: 22px;
         }
-        .title { font-weight: 700; font-size: 15px; color: #fff; text-align: left; }
-        .sub { font-size: 11px; color: rgba(255,255,255,0.5); text-align: left; }
+        .title { font-weight: 700; font-size: 15px; color: var(--c-text); text-align: left; }
+        .sub { font-size: 11px; color: var(--c-muted); text-align: left; }
         .tvl {
           font-family: 'JetBrains Mono', ui-monospace, monospace;
           font-weight: 700; font-size: 18px;
-          color: #14F195;
+          color: var(--c-brand-green);
         }
 
         .stats {
@@ -232,25 +238,25 @@ function LiveVaultMockup() {
           gap: 10px; margin-bottom: 18px;
         }
         .stat {
-          background: #1A2028;
+          background: var(--c-card-2);
           border-radius: 10px;
           padding: 10px 12px;
           text-align: left;
         }
         .lbl {
-          font-size: 10px; color: rgba(255,255,255,0.4);
+          font-size: 10px; color: var(--c-muted);
           text-transform: uppercase; letter-spacing: 0.06em;
         }
         .val {
           font-family: 'JetBrains Mono', ui-monospace, monospace;
-          font-weight: 700; font-size: 14px; color: #fff;
+          font-weight: 700; font-size: 14px; color: var(--c-text);
           margin-top: 2px;
         }
-        .val.up { color: #14F195; }
+        .val.up { color: var(--c-brand-green); }
 
         .proposal {
-          background: #1A2028;
-          border: 1px solid rgba(255,255,255,0.07);
+          background: var(--c-card-2);
+          border: 1px solid var(--c-border);
           border-radius: 12px;
           padding: 14px;
         }
@@ -258,27 +264,27 @@ function LiveVaultMockup() {
           display: flex; align-items: center; justify-content: space-between;
           margin-bottom: 10px;
         }
-        .proposal-title { font-size: 13px; font-weight: 600; color: #fff; text-align: left; }
+        .proposal-title { font-size: 13px; font-weight: 600; color: var(--c-text); text-align: left; }
         .badge {
           font-size: 10px; padding: 3px 8px; border-radius: 6px;
-          background: rgba(20,241,149,0.1); color: #14F195;
+          background: rgba(20,241,149,0.1); color: var(--c-brand-green);
           font-weight: 700;
         }
         .bar {
-          height: 8px; background: #0D1117;
+          height: 8px; background: var(--c-bg);
           border-radius: 999px; overflow: hidden;
           margin-bottom: 8px;
         }
         .fill {
           height: 100%; width: 0;
-          background: linear-gradient(135deg, #14F195 0%, #9945FF 100%);
+          background: linear-gradient(135deg, var(--c-brand-green) 0%, var(--c-brand-accent) 100%);
           border-radius: 999px;
           animation: fill 2.2s cubic-bezier(0.2,0.8,0.2,1) forwards;
         }
         @keyframes fill { to { width: 72%; } }
         .vote-row {
           display: flex; justify-content: space-between;
-          font-size: 11px; color: rgba(255,255,255,0.5);
+          font-size: 11px; color: var(--c-muted);
         }
       `}</style>
     </section>
@@ -332,17 +338,17 @@ function AskClaudeChat() {
         .claude-chat {
           max-width: 640px;
           margin: 0 auto;
-          background: #10151C;
-          border: 1px solid rgba(255,255,255,0.1);
+          background: var(--c-card);
+          border: 1px solid var(--c-border);
           border-radius: 16px;
           overflow: hidden;
-          box-shadow: 0 30px 60px rgba(0,0,0,0.35);
+          box-shadow: 0 30px 60px var(--c-surface-shadow);
         }
         .claude-head {
           display: flex; align-items: center; justify-content: space-between;
           padding: 14px 18px;
-          background: linear-gradient(180deg, #1A2028 0%, #10151C 100%);
-          border-bottom: 1px solid rgba(255,255,255,0.07);
+          background: linear-gradient(180deg, var(--c-card-2) 0%, var(--c-card) 100%);
+          border-bottom: 1px solid var(--c-border);
         }
         .claude-brand { display: flex; align-items: center; gap: 12px; }
         .claude-logo {
@@ -351,15 +357,15 @@ function AskClaudeChat() {
           display: flex; align-items: center; justify-content: center;
           font-size: 18px; font-weight: 700;
         }
-        .claude-name { font-weight: 700; color: #fff; font-size: 14px; }
+        .claude-name { font-weight: 700; color: var(--c-text); font-size: 14px; }
         .claude-sub {
-          font-size: 11px; color: rgba(255,255,255,0.5);
+          font-size: 11px; color: var(--c-muted);
           font-family: 'JetBrains Mono', ui-monospace, monospace;
         }
         .claude-pill {
           font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
           padding: 3px 10px; border-radius: 999px;
-          background: rgba(20,241,149,0.12); color: #14F195;
+          background: rgba(20,241,149,0.12); color: var(--c-brand-green);
           text-transform: uppercase;
         }
         .claude-body {
@@ -377,21 +383,21 @@ function AskClaudeChat() {
           align-self: flex-end;
           background: rgba(153,69,255,0.12);
           border: 1px solid rgba(153,69,255,0.25);
-          color: #fff;
+          color: var(--c-text);
         }
         .bubble-claude {
           align-self: flex-start;
-          background: #1A2028;
-          border: 1px solid rgba(255,255,255,0.07);
-          color: #E8EDF2;
+          background: var(--c-card-2);
+          border: 1px solid var(--c-border);
+          color: var(--c-text-soft);
         }
         .claude-think {
-          font-size: 12px; color: rgba(255,255,255,0.55);
+          font-size: 12px; color: var(--c-muted);
           font-style: italic; margin-bottom: 10px;
         }
         .claude-tool {
-          background: #0D1117;
-          border: 1px solid rgba(255,255,255,0.07);
+          background: var(--c-bg);
+          border: 1px solid var(--c-border);
           border-radius: 10px;
           padding: 10px 12px;
           margin-bottom: 10px;
@@ -399,19 +405,19 @@ function AskClaudeChat() {
         .tool-label {
           display: inline-block; font-size: 10px; font-weight: 700;
           letter-spacing: 0.1em; text-transform: uppercase;
-          color: #9945FF; margin-bottom: 6px;
+          color: var(--c-brand-accent); margin-bottom: 6px;
         }
         .claude-tool code {
           display: block;
           font-family: 'JetBrains Mono', ui-monospace, monospace;
           font-size: 11.5px; line-height: 1.6;
-          color: #E8EDF2;
+          color: var(--c-text-soft);
           white-space: pre-wrap;
         }
-        .claude-tool .s { color: #14F195; }
+        .claude-tool .s { color: var(--c-brand-green); }
         .claude-tool .fn { color: #58A6FF; }
         .claude-result {
-          font-size: 13px; color: #14F195;
+          font-size: 13px; color: var(--c-brand-green);
           padding-top: 4px;
         }
       `}</style>
@@ -452,6 +458,29 @@ function WaitlistSection() {
   )
 }
 
+function FrontierFocusStrip() {
+  return (
+    <section className="max-w-6xl mx-auto px-4 pb-10">
+      <div className="card grid gap-4 p-4 sm:grid-cols-4 sm:p-5">
+        {[
+          { step: '01', title: 'Create a POT', desc: 'Name the vault and choose voting rules.' },
+          { step: '02', title: 'Pool SOL', desc: 'Members receive NAV-based shares.' },
+          { step: '03', title: 'AI proposes', desc: 'MCP rule drafts a Jupiter swap proposal.' },
+          { step: '04', title: 'Group executes', desc: 'Votes pass, program signs, swap settles.' },
+        ].map((item) => (
+          <div key={item.step} className="rounded-xl border border-pot-border bg-pot-dark/60 p-4">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-pot-green">
+              {item.step}
+            </div>
+            <div className="mt-1 font-bold text-white">{item.title}</div>
+            <p className="mt-1 text-sm leading-snug text-pot-muted">{item.desc}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 export default function LandingPage() {
   const { data: pots } = usePots()
   const { price: solPrice } = useSolPrice()
@@ -466,7 +495,7 @@ export default function LandingPage() {
     <div className="min-h-screen">
 
       {/* ── Hero ── */}
-      <section className="relative flex flex-col items-center text-center pt-16 pb-20 px-4 overflow-hidden">
+      <section className="relative flex flex-col items-center text-center pt-14 pb-12 px-4 overflow-hidden">
         {/* Glow background */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-pot-green/5 rounded-full blur-3xl" />
@@ -479,22 +508,22 @@ export default function LandingPage() {
             Built for Solana Frontier 2026 · Open source
           </div>
 
-          <div className="text-8xl mb-6 animate-float">🪴</div>
+          <div className="text-7xl mb-5 animate-float" aria-hidden="true">🪴</div>
 
           <h1 className="text-5xl sm:text-6xl font-black text-white leading-tight mb-4">
-            Group Treasury.<br />
-            <span className="text-pot-green">AI execution.</span><br />
-            <span className="text-pot-accent">Money tree that grows.</span>
+            Shared trading vaults<br />
+            <span className="text-pot-green">run by votes</span>{' '}
+            <span className="text-pot-accent">and AI proposals.</span>
           </h1>
 
           <p className="text-xl text-pot-muted max-w-2xl mx-auto mb-4 leading-relaxed">
-            <strong className="text-white">POT</strong> = on-chain group treasury.{' '}
-            <strong className="text-white">BOT</strong> = AI execution through MCP. 🪴 =
-            your money tree grows with every trade.
+            Launch a Solana vault for a group, pool funds without a custodian, let an
+            MCP agent draft trades, then execute only after the members vote.
           </p>
 
-          <p className="text-sm text-pot-muted/70 italic max-w-xl mx-auto mb-8">
-            For groups who'd rather decide together than argue in group chats.
+          <p className="text-sm text-pot-muted/70 max-w-xl mx-auto mb-8">
+            Frontier demo focus: create one public AI strategy vault, deposit, propose,
+            vote, and execute a Jupiter swap on devnet.
           </p>
 
           {/* CTA buttons — only 2: primary + Follow X. Browse / Leaderboard / Connect live further down the page where they belong. */}
@@ -552,6 +581,8 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <FrontierFocusStrip />
+
       {/* ── Trust & Risk ── */}
       <section className="max-w-6xl mx-auto px-4 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -591,7 +622,12 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {FEATURES.map((f) => (
             <div key={f.title} className="card p-6 hover:border-pot-green/20 transition-all group">
-              <div className="text-3xl mb-3 group-hover:animate-float">{f.icon}</div>
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div className="text-3xl group-hover:animate-float" aria-hidden="true">{f.icon}</div>
+                <span className="rounded-full border border-pot-border bg-pot-dark px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-pot-muted">
+                  {f.status}
+                </span>
+              </div>
               <h3 className="font-bold text-white text-lg mb-2">{f.title}</h3>
               <p className="text-pot-muted text-sm leading-relaxed">{f.desc}</p>
             </div>
@@ -736,7 +772,7 @@ export default function LandingPage() {
             <h3 className="font-bold text-white text-lg mb-2">How we earn</h3>
             <p className="text-pot-muted text-sm leading-relaxed">
               <strong className="text-white">0.30%</strong> fee on every swap routed
-              through a pot. <strong className="text-white">10% performance fee</strong>
+              through a pot. <strong className="text-white">10% performance fee</strong>{' '}
               on Strategy Vaults, split with the strategy creator. No token, no
               airdrop farming. If usage is zero, revenue is zero — honest unit
               economics.

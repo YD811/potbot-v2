@@ -8,7 +8,7 @@
 **Devnet program:** [`GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK`](https://explorer.solana.com/address/GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK?cluster=devnet)
 
 > **Lifecycle legend.** Every feature in this submission is tagged.
-> 🟢 Live (mainnet) · 🟡 Devnet (mainnet target this sprint) · 🔵 Phase 2 (Q3 2026) · 🟣 Phase 3 (Q4 2026) · ⚪ Vision (2027+)
+> 🟢 Live/verifiable · 🟡 Devnet (mainnet target after safety pass) · 🔵 Phase 2 (Q3 2026) · 🟣 Phase 3 (Q4 2026) · ⚪ Vision (2027+)
 > Full roadmap with every feature: [potbot.fun/roadmap](https://potbot.fun/roadmap)
 
 ---
@@ -66,21 +66,21 @@ PotBot is a thin wrapper over Solana's strongest primitives. Each integration ta
 
 | Integration | What it does | Status |
 |---|---|---|
-| **Jupiter v6 / Ultra** | swap execution (CPI from `execute_swap`) | 🟢 Live (mainnet) |
+| **Jupiter v6 / Ultra** | swap execution (CPI from `execute_swap`) | 🟡 Devnet |
 | **Helius** | RPC, webhooks for pot events, priority-fee API | 🟢 Live |
 | **Squads v4** | optional multisig path for the creator role on high-value pots | 🟢 Live (UI + lib; flagship pot uses it) |
 | **MCP (Claude / OpenAI agents)** | `@potbot/mcp` exposes 18 pot actions to any LLM | 🟢 Live (npm 0.2.0) |
 | **Solana Actions / Blinks** | shareable vote + deposit endpoints | 🟢 Live |
 | **Dune SIM** | SVM portfolio + activity for vault display, leaderboard TVL, keeper pre-flight | 🟡 Devnet (needs `DUNE_API_KEY`) |
 | **Pyth Network** | oracle price guard, in-program trigger verification | 🔵 Phase 2 |
-| **Privy** | email / social login + embedded Solana wallets for non-crypto users | 🔵 Phase 2 (PR #32 ready, awaiting App ID) |
+| **Privy** | email / social login + embedded Solana wallets for non-crypto users | 🔵 Phase 2 (implementation branch exists; PR #32 not merged) |
 | **Light Protocol** | ZK-compressed audit log: SwapEvent + NavSnapshot accounts | 🔵 Phase 2 |
 | **Meteora DLMM, Kamino** | yield parking strategies for idle pot capital | 🔵 Phase 2 (CPI scaffolded) |
 | **Metaplex Token Metadata** | Tamagotchi NFT metadata for season rewards | 🟣 Phase 3 |
 
 ---
 
-## What is live on mainnet today
+## What is live on devnet today
 
 - 🟢 `pot_vault` Anchor program — 30+ instructions deployed, IDL synced
 - 🟢 Frontend at `potbot.fun`: `/`, `/dashboard`, `/leaderboard`, `/faq`, `/vaults`, `/pots/[pubkey]`, `/pots/[pubkey]/pet`, `/create`, `/signup`, `/roadmap`

@@ -92,7 +92,7 @@ export function SeasonPrizePoolModal({ onClose }: { onClose: () => void }) {
           <div>
             <h3 className="text-xs font-semibold text-pot-muted uppercase tracking-wide mb-2">Prize Source</h3>
             <p className="text-xs text-pot-muted leading-relaxed">
-              1% of all protocol swap fees (0.5% × 1% = 0.005% per trade) flow into the
+              1% of all protocol swap fees (0.30% × 1% = 0.003% per trade) flow into the
               on-chain <code className="bg-pot-dark px-1 rounded text-pot-green">competition_treasury</code> PDA.
               Distribution is triggered by a permissioned admin instruction at season end,
               enforced by the smart contract rules above.

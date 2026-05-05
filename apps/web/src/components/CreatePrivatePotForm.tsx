@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PotSDK } from '@potbot/sdk';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
 import { StatusBadge } from '@/components/StatusBadge'
