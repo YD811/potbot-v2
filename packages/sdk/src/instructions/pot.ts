@@ -3,6 +3,10 @@ import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import type BN from 'bn.js'
 import { getPotAddress, getVaultAddress, getMemberAddress, getProposalAddress, getVoterRecordAddress } from '../pda'
 
+// Note: all functions accept `program: Program<any>` for the public API surface,
+// but cast internally to avoid TS2589 "excessively deep instantiation" on
+// Program<any>.methods (an Anchor TS types limitation with deep generics).
+
 /* ── Create POT ── */
 
 export interface CreatePotParams {
@@ -37,8 +41,10 @@ export async function createPot(
   // getPotAddress signature: (name: string, authority: PublicKey)
   const [potPda] = getPotAddress(params.name, authority)
   const [vaultPda] = getVaultAddress(potPda)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
 
-  return program.methods
+  return p.methods
     .createPot({
       name: params.name,
       emoji: params.emoji,
@@ -77,8 +83,10 @@ export async function depositToPot(
 ) {
   const [memberPda] = getMemberAddress(potAddress, depositor)
   const [vaultPda] = getVaultAddress(potAddress)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
 
-  return program.methods
+  return p.methods
     .deposit(lamports)
     .accounts({
       pot: potAddress,
@@ -100,8 +108,10 @@ export async function withdrawFromPot(
 ) {
   const [memberPda] = getMemberAddress(potAddress, withdrawer)
   const [vaultPda] = getVaultAddress(potAddress)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
 
-  return program.methods
+  return p.methods
     .withdraw(shares)
     .accounts({
       pot: potAddress,
@@ -127,8 +137,10 @@ export async function createProposal(
 ) {
   const [proposalPda] = getProposalAddress(potAddress, nextProposalId)
   const [memberPda] = getMemberAddress(potAddress, proposer)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
 
-  return program.methods
+  return p.methods
     .createProposal({
       proposalType: params.proposalType,
       description: params.description,
@@ -154,8 +166,10 @@ export async function voteOnProposal(
 ) {
   const [memberPda] = getMemberAddress(potAddress, voter)
   const [voterRecordPda] = getVoterRecordAddress(proposalAddress, voter)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
 
-  return program.methods
+  return p.methods
     .vote(approve)
     .accounts({
       pot: potAddress,
@@ -177,8 +191,10 @@ export async function executeProposal(
   executor: PublicKey
 ) {
   const [vaultPda] = getVaultAddress(potAddress)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = program as any
 
-  return program.methods
+  return p.methods
     .executeProposal()
     .accounts({
       pot: potAddress,

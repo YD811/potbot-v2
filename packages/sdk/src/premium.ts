@@ -55,10 +55,13 @@ export interface PotSDKPremiumConfig {
 export class PotSDK {
   private connection: Connection;
   private wallet: any;
-  // Program<any>: Program<PotVault> fails TS2344 because `as const` IDL has
-  // readonly arrays incompatible with Anchor's mutable Idl constraint.
-  // Using Program<any> gives us full .methods / .account access without errors.
-  private program: Program<any>;
+  // Typed as `any` (not Program<any>) because:
+  //   1. Program<PotVault> fails TS2344 — `as const` IDL has readonly arrays,
+  //      Anchor's Idl constraint requires mutable arrays.
+  //   2. Program<any>.account is AccountNamespace<any> which does NOT allow
+  //      arbitrary key access (TS2339) — `any` field resolves both issues.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private program: any;
   private programId: PublicKey;
 
   constructor(config: PotSDKPremiumConfig) {
