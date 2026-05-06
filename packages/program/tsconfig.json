@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "types": ["mocha", "chai", "node"],
+    "lib": ["es2022"],
+    "module": "commonjs",
+    "target": "es2022",
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "outDir": "dist"
+  },
+  "include": ["tests/**/*.ts"],
+  "exclude": ["node_modules"]
+}
