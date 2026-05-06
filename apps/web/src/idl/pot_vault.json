@@ -6,7 +6,7 @@
     "name": "pot_vault",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "PotBot v2 \u2014 Group trading vaults on Solana"
+    "description": "PotBot v2 — Group trading vaults on Solana"
   },
   "instructions": [
     {
@@ -1224,7 +1224,7 @@
     {
       "code": 6002,
       "name": "ProposalMismatch",
-      "msg": "Proposal mismatch \u2014 proposal_id or pot does not match attached spec"
+      "msg": "Proposal mismatch — proposal_id or pot does not match attached spec"
     },
     {
       "code": 6003,
