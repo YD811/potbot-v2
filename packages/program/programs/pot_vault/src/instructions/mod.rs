@@ -30,25 +30,63 @@ pub mod close_strategy;
 pub mod mark_proposal_passed;
 pub mod pot_admin;
 
-pub use create_pot::*;
-pub use deposit::*;
-pub use withdraw::*;
-pub use create_proposal::*;
-pub use vote::*;
-pub use vote_as_delegate::*;
-pub use delegate::*;
-pub use execute_proposal::*;
-pub use update_tamagotchi::*;
-pub use strategy_vault::*;
-pub use init_token_mint::*;
-pub use redeem_tokens::*;
-pub use route_to_yield::*;
-pub use tokenize_shares::*;
-pub use create_sns_domain::*;
-pub use mint_tamagotchi_nft::*;
-pub use update_tamagotchi_metadata::*;
-pub use execute_swap::*;
-pub use create_strategy::*;
-pub use close_strategy::*;
-pub use mark_proposal_passed::*;
-pub use pot_admin::*;
+pub use create_pot::{CreatePot, CreatePotParams};
+pub(crate) use create_pot::__client_accounts_create_pot;
+pub use deposit::Deposit;
+pub(crate) use deposit::__client_accounts_deposit;
+pub use withdraw::Withdraw;
+pub(crate) use withdraw::__client_accounts_withdraw;
+pub use create_proposal::{CreateProposal, CreateProposalParams};
+pub(crate) use create_proposal::__client_accounts_create_proposal;
+pub use vote::Vote;
+pub(crate) use vote::__client_accounts_vote;
+pub use vote_as_delegate::VoteAsDelegate;
+pub(crate) use vote_as_delegate::__client_accounts_vote_as_delegate;
+pub use delegate::{register_handler, revoke_handler, RegisterDelegate, RevokeDelegate};
+pub(crate) use delegate::{__client_accounts_register_delegate, __client_accounts_revoke_delegate};
+pub use execute_proposal::ExecuteProposal;
+pub(crate) use execute_proposal::__client_accounts_execute_proposal;
+pub use update_tamagotchi::UpdateTamagotchi;
+pub(crate) use update_tamagotchi::__client_accounts_update_tamagotchi;
+pub use strategy_vault::{
+    create_strategy_vault, evolve_tamagotchi, exit_strategy_vault, join_strategy_vault,
+    CreateStrategyVault, EvolveTamagotchi, ExitStrategyVault, JoinStrategyVault,
+    ParticipantExited, ParticipantJoined, StrategyVaultCreated, TamagotchiEvolved,
+};
+pub(crate) use strategy_vault::{
+    __client_accounts_create_strategy_vault, __client_accounts_evolve_tamagotchi,
+    __client_accounts_exit_strategy_vault, __client_accounts_join_strategy_vault,
+};
+pub use init_token_mint::InitTokenMint;
+pub(crate) use init_token_mint::__client_accounts_init_token_mint;
+pub use redeem_tokens::RedeemTokens;
+pub(crate) use redeem_tokens::__client_accounts_redeem_tokens;
+pub use route_to_yield::{RouteToYield, RouteToYieldEvent};
+pub(crate) use route_to_yield::__client_accounts_route_to_yield;
+pub use tokenize_shares::{mint_tokens_to_member, MintTokensToMember, TokenizeShares};
+pub(crate) use tokenize_shares::{__client_accounts_mint_tokens_to_member, __client_accounts_tokenize_shares};
+pub use create_sns_domain::CreateSnsDomain;
+pub(crate) use create_sns_domain::__client_accounts_create_sns_domain;
+pub use mint_tamagotchi_nft::MintTamagotchiNft;
+pub(crate) use mint_tamagotchi_nft::__client_accounts_mint_tamagotchi_nft;
+pub use update_tamagotchi_metadata::UpdateTamagotchiMetadata;
+pub(crate) use update_tamagotchi_metadata::__client_accounts_update_tamagotchi_metadata;
+pub use execute_swap::{ExecuteSwap, ExecuteSwapArgs, SwapExecuted, SwapMode};
+pub(crate) use execute_swap::__client_accounts_execute_swap;
+pub use create_strategy::{
+    CreateStrategy, CreateStrategyArgs, StrategyCreated, MIN_FEE_RESERVE_LAMPORTS,
+};
+pub(crate) use create_strategy::__client_accounts_create_strategy;
+pub use close_strategy::{CloseStrategy, StrategyClosed};
+pub(crate) use close_strategy::__client_accounts_close_strategy;
+pub use mark_proposal_passed::{MarkProposalPassed, ProposalMarkedPassed};
+pub(crate) use mark_proposal_passed::__client_accounts_mark_proposal_passed;
+pub use pot_admin::{
+    fund_fee_reserve, pause_pot, set_allowed_mints, set_spending_policy, unpause_pot,
+    AllowedMintsUpdated, FeeReserveFunded, FundFeeReserve, FundFeeReserveArgs, PausePot,
+    SetAllowedMints, SetAllowedMintsArgs, SetSpendingPolicy, SetSpendingPolicyArgs,
+};
+pub(crate) use pot_admin::{
+    __client_accounts_fund_fee_reserve, __client_accounts_pause_pot,
+    __client_accounts_set_allowed_mints, __client_accounts_set_spending_policy,
+};

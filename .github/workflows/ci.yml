@@ -61,7 +61,6 @@ jobs:
   anchor-build:
     name: anchor — build
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust toolchain
