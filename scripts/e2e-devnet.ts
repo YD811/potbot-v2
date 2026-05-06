@@ -159,7 +159,7 @@ async function main() {
 
     const testPotName = `e2e-${Date.now().toString(36)}`
     const [potPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from('pot'), Buffer.from(testPotName), payer.publicKey.toBuffer()],
+      [Buffer.from('pot'), payer.publicKey.toBuffer(), Buffer.from(testPotName)],
       program.programId
     )
     const [vaultPda] = PublicKey.findProgramAddressSync(

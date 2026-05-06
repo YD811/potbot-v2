@@ -110,8 +110,8 @@ pub fn handler(ctx: Context<MintTamagotchiNft>) -> Result<()> {
     // Build signer seeds for pot PDA
     let seeds: &[&[u8]] = &[
         b"pot",
-        pot_name.as_bytes(),
         pot_authority.as_ref(),
+        pot_name.as_bytes(),
         &[pot_bump],
     ];
     let signer_seeds = &[seeds];

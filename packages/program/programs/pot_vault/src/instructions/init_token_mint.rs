@@ -9,7 +9,7 @@ use crate::state::PotAccount;
 pub struct InitTokenMint<'info> {
     #[account(
         mut,
-        seeds = [b"pot", pot.name.as_bytes(), authority.key().as_ref()],
+        seeds = [b"pot", authority.key().as_ref(), pot.name.as_bytes()],
         bump = pot.pot_bump,
         has_one = authority,
     )]

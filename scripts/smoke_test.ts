@@ -78,8 +78,8 @@ function getPotPda(name: string, authority: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [
       Buffer.from("pot"),
-      Buffer.from(name, "utf8"),
       authority.toBuffer(),
+      Buffer.from(name, "utf8"),
     ],
     PROGRAM_ID
   );

@@ -35,6 +35,7 @@ pub fn handler(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
     let clock = Clock::get()?;
 
     require!(shares > 0 && shares <= member.shares, PotError::InsufficientShares);
+    require!(shares <= pot.total_shares, PotError::InsufficientShares);
 
     require!(
         member.can_withdraw(pot.config.lockup_seconds, clock.unix_timestamp),
@@ -47,8 +48,9 @@ pub fn handler(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
 
     let rent = Rent::get()?;
     let min_balance = rent.minimum_balance(0);
+    let remaining_lamports = vault_lamports.checked_sub(lamports_out).ok_or(PotError::InsufficientVaultBalance)?;
     require!(
-        vault_lamports.saturating_sub(lamports_out) >= min_balance,
+        remaining_lamports >= min_balance,
         PotError::InsufficientVaultBalance
     );
 

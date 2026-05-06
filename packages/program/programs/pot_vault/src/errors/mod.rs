@@ -147,9 +147,19 @@ pub enum ErrorCode {
     MathOverflow,
 
     // ─── redeem_tokens ────────────────────────────────────────────────────
+    #[msg("Burn amount must be > 0")]
+    InvalidBurnAmount,
+    #[msg("Redemption would violate 20% reserve guard")]
+    InsufficientReserve,
+    #[msg("Cannot redeem while pot is paused")]
+    RedemptionPausedWhilePotPaused,
+    #[msg("Insufficient vault balance for redemption")]
+    RedemptionInsufficientVault,
+    #[msg("YieldTarget None is not routable")]
+    YieldTargetNoneNotRoutable,
     #[msg("Redemption exceeds 80% vault liquidity reserve")]
     WithdrawalReserveBreached,
-    #[msg("Pot is paused — redemptions blocked")]
+    #[msg("Pot is paused \u2014 redemptions blocked")]
     PotPaused,
     #[msg("Amount must be greater than zero")]
     InvalidAmount,

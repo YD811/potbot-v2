@@ -132,10 +132,11 @@ impl PotAccount {
         if self.total_shares == 0 {
             return 1_000_000_000;
         }
-        let scaled = (vault_lamports as u128).saturating_mul(1_000_000_000);
-        let denom = self.total_shares as u128;
-        if denom == 0 { return 0; }
-        (scaled / denom) as u64
+        (vault_lamports as u128)
+            .checked_mul(1_000_000_000)
+            .unwrap_or(0)
+            .checked_div(self.total_shares as u128)
+            .unwrap_or(0) as u64
     }
 
     pub fn lamports_to_shares(&self, lamports: u64, vault_lamports: u64) -> u64 {
@@ -145,16 +146,31 @@ impl PotAccount {
         if vault_lamports == 0 {
             return 0;
         }
-        let num = (lamports as u128).saturating_mul(self.total_shares as u128);
-        (num / vault_lamports as u128) as u64
+        if self.total_shares == 0 {
+            return lamports;
+        }
+        if vault_lamports == 0 {
+            return 0;
+        }
+        (lamports as u128)
+            .checked_mul(self.total_shares as u128)
+            .unwrap_or(0)
+            .checked_div(vault_lamports as u128)
+            .unwrap_or(0) as u64
     }
 
     pub fn shares_to_lamports(&self, shares: u64, vault_lamports: u64) -> u64 {
         if self.total_shares == 0 {
             return 0;
         }
-        let num = (shares as u128).saturating_mul(vault_lamports as u128);
-        (num / self.total_shares as u128) as u64
+        if self.total_shares == 0 {
+            return 0;
+        }
+        (shares as u128)
+            .checked_mul(vault_lamports as u128)
+            .unwrap_or(0)
+            .checked_div(self.total_shares as u128)
+            .unwrap_or(0) as u64
     }
 
     pub fn is_autocracy(&self, level: u8) -> bool {

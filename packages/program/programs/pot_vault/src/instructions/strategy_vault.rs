@@ -12,7 +12,7 @@ pub struct CreateStrategyVault<'info> {
     pub creator: Signer<'info>,
 
     #[account(
-        seeds = [b"pot", pot_name.as_bytes(), creator.key().as_ref()],
+        seeds = [b"pot", creator.key().as_ref(), pot_name.as_bytes()],
         bump = pot.pot_bump,
     )]
     pub pot: Account<'info, PotAccount>,
