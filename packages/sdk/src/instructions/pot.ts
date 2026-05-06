@@ -1,7 +1,7 @@
 import type { Program } from '@coral-xyz/anchor'
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import type BN from 'bn.js'
-import { getPotAddress, getVaultAddress, getMemberAddress, getProposalAddress, getVoterRecordAddress } from '../pda'
+import { getPotAddress, getVaultAddress, getMemberAddress, getProposalAddress, getVoterRecordAddress, TREASURY_ADDRESS } from '../pda'
 
 // Note: all functions accept `program: Program<any>` for the public API surface,
 // but cast internally to avoid TS2589 "excessively deep instantiation" on
@@ -67,6 +67,7 @@ export async function createPot(
     .accounts({
       pot: potPda,
       vault: vaultPda,
+      treasury: TREASURY_ADDRESS,
       authority,
       systemProgram: SystemProgram.programId,
     })

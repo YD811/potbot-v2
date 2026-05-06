@@ -12,6 +12,7 @@ import {
   getProposalAddress,
   getVoterRecordAddress,
   POT_PROGRAM_ID,
+  TREASURY_ADDRESS,
   IDL,
 } from '@potbot/sdk'
 import { useMockStore } from '@/lib/mock-store'
@@ -422,10 +423,13 @@ export function useCreatePot() {
               quorumBps: 5001,
               maxTradeSizeBps: params.maxTradeSizeBps ?? 5000,
               maxMembers: params.maxMembers ?? 1000,
+              timelockSeconds: new BN(0),
+              protocolFeeBps: params.protocolFeeBps ?? 0,
             })
             .accounts({
               pot: potPda,
               vault: vaultPda,
+              treasury: TREASURY_ADDRESS,
               authority: publicKey,
               systemProgram: SystemProgram.programId,
             })

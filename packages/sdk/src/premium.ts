@@ -22,6 +22,7 @@ import {
   getSnsAddress,
   getTamagotchiNftAddress,
   getTokenMintAddress,
+  TREASURY_ADDRESS,
   getTamagotchiMintAddress,
   getMetadataAddress,
 } from './pda';
@@ -340,6 +341,7 @@ export class PotSDK {
       .accounts({
         pot,
         vault,
+        treasury: TREASURY_ADDRESS,
         authority,
         systemProgram: SystemProgram.programId,
       })

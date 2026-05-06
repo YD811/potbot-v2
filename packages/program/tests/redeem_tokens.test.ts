@@ -133,6 +133,9 @@ describe('redeem_tokens', () => {
     )
     await provider.sendAndConfirm(setupTx)
 
+    // mint_tokens_to_member emits `shares_amount * pot.shares_per_sol` SPL
+    // tokens. With the post-create_pot default `shares_per_sol = 100`,
+    // `mintTokensToMember(100)` mints 10_000 SPL tokens.
     await (program.methods as any)
       .mintTokensToMember(new BN(100))
       .accounts({
@@ -148,12 +151,20 @@ describe('redeem_tokens', () => {
       .rpc()
   })
 
-  it('burns tokens and pays SOL at NAV', async () => {
-    const before = await getTokenAccount(provider.connection, memberAta)
-    const beforeSol = await provider.connection.getBalance(provider.wallet.publicKey)
+  // Default shares_per_sol after create_pot is 100, so SPL tokens are minted
+  // at 100:1 vs internal shares. Tests must redeem in multiples of 100 to
+  // avoid fractional-internal-share rejection.
+  const SHARES_PER_SOL = 100
 
+  it('burns tokens at NAV and decrements total_shares by INTERNAL units', async () => {
+    const before = await getTokenAccount(provider.connection, memberAta)
+    const potBefore: any = await (program.account as any).potAccount.fetch(potPda)
+    const totalSharesBefore = Number(potBefore.totalShares)
+
+    // Redeem 5_000 SPL tokens = 50 internal shares.
+    const tokenRedeem = 50 * SHARES_PER_SOL // 5_000
     await (program.methods as any)
-      .redeemTokens(new BN(50))
+      .redeemTokens(new BN(tokenRedeem))
       .accounts({
         pot: potPda,
         vault: vaultPda,
@@ -166,21 +177,60 @@ describe('redeem_tokens', () => {
       .rpc()
 
     const after = await getTokenAccount(provider.connection, memberAta)
-    const afterSol = await provider.connection.getBalance(provider.wallet.publicKey)
+    const potAfter: any = await (program.account as any).potAccount.fetch(potPda)
+    const totalSharesAfter = Number(potAfter.totalShares)
 
-    expect(Number(after.amount)).to.equal(Number(before.amount) - 50)
-    expect(afterSol).to.be.greaterThan(beforeSol - 0.01 * LAMPORTS_PER_SOL) // rough fee allowance
+    expect(Number(after.amount)).to.equal(Number(before.amount) - tokenRedeem)
+    // total_shares must drop by INTERNAL share units (50), not SPL units (5000)
+    expect(totalSharesBefore - totalSharesAfter).to.equal(50)
   })
 
-  it('rejects redemption that exceeds 80% liquidity reserve', async () => {
-    // Try to redeem all remaining tokens — vault still holds ~1 SOL minus the
-    // first 50-token NAV. Burning everything would request > 80% of the
-    // current liquid balance, which the program must reject.
-    const remaining = (await getTokenAccount(provider.connection, memberAta)).amount
+  it('rejects redemption that is not a clean multiple of shares_per_sol', async () => {
     let threw = false
     try {
       await (program.methods as any)
-        .redeemTokens(new BN(remaining.toString()))
+        .redeemTokens(new BN(50)) // 50 SPL tokens / 100 = 0.5 internal shares
+        .accounts({
+          pot: potPda,
+          vault: vaultPda,
+          member: provider.wallet.publicKey,
+          tokenMint,
+          memberTokenAta: memberAta,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc()
+    } catch (err: any) {
+      threw = true
+      expect(String(err)).to.match(/InvalidAmount|0x/)
+    }
+    expect(threw).to.equal(true)
+  })
+
+  it('rejects redemption that exceeds 80% liquidity reserve', async () => {
+    // Mint enough tokens that one redemption would breach 80% of vault. We
+    // already burned 5000 above, so member has 5000 remaining; redeeming
+    // those would only be ~50% of the remaining ~0.5 SOL vault — within
+    // the cap. Mint another batch so the request crosses 80%.
+    await (program.methods as any)
+      .mintTokensToMember(new BN(900)) // +90_000 SPL tokens = 900 internal
+      .accounts({
+        pot: potPda,
+        tokenMint,
+        memberTokenAccount: memberAta,
+        memberWallet: provider.wallet.publicKey,
+        authority: provider.wallet.publicKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc()
+
+    const ata = await getTokenAccount(provider.connection, memberAta)
+    let threw = false
+    try {
+      await (program.methods as any)
+        .redeemTokens(new BN(ata.amount.toString())) // try to take everything
         .accounts({
           pot: potPda,
           vault: vaultPda,
