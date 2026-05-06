@@ -53,3 +53,6 @@ _local/
 _deploy/
 POTBOT_OPUS/
 .claude/worktrees/
+
+# Demo script JSON logs (keep .gitkeep)
+logs/*.json
