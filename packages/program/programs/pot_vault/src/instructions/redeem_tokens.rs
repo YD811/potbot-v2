@@ -57,6 +57,23 @@ pub fn handler(ctx: Context<RedeemTokens>, token_amount: u64) -> Result<()> {
     require!(token_amount > 0, PotError::InvalidAmount);
     require!(!ctx.accounts.pot.paused, PotError::PotPaused);
 
+    // Convert SPL token units → internal share units. The mint side
+    // (`mint_tokens_to_member`) emits `internal_shares * shares_per_sol`
+    // SPL tokens, so the redeem path must divide by the same scale before
+    // pricing or decrementing `total_shares`. Otherwise a holder of N
+    // tokens would redeem N internal shares' worth of SOL and burn N
+    // shares from the pot — overpaying by a factor of `shares_per_sol`.
+    let scale = ctx.accounts.pot.shares_per_sol;
+    require!(scale > 0, PotError::NotTokenized);
+    require!(
+        token_amount % scale == 0,
+        PotError::InvalidAmount
+    ); // disallow fractional internal shares; round at the UI
+    let internal_shares = token_amount
+        .checked_div(scale)
+        .ok_or(error!(PotError::MathOverflow))?;
+    require!(internal_shares > 0, PotError::InvalidAmount);
+
     // Liquid balance = vault.lamports() minus rent-exempt minimum, so the
     // SystemAccount stays rent-exempt after the redemption.
     let rent = Rent::get()?;
@@ -65,11 +82,9 @@ pub fn handler(ctx: Context<RedeemTokens>, token_amount: u64) -> Result<()> {
     let liquid = raw.saturating_sub(rent_min);
     require!(liquid > 0, PotError::InsufficientVaultBalance);
 
-    // NAV: lamports_out = token_amount * liquid / total_shares.
-    // Caller's `token_amount` is treated as 1:1 with `pot.total_shares`,
-    // matching the share/token convention used by tokenize_shares.
+    // NAV: lamports_out = internal_shares * liquid / total_shares.
     let pot = &ctx.accounts.pot;
-    let sol_out = pot.shares_to_lamports(token_amount, liquid);
+    let sol_out = pot.shares_to_lamports(internal_shares, liquid);
     require!(sol_out > 0, PotError::InvalidAmount);
 
     // 80% liquidity reserve: a single redemption can drain at most 80% of
@@ -117,12 +132,12 @@ pub fn handler(ctx: Context<RedeemTokens>, token_amount: u64) -> Result<()> {
         sol_out,
     )?;
 
-    // Bookkeeping.
+    // Bookkeeping — `total_shares` lives in INTERNAL share units, not SPL units.
     let now = Clock::get()?.unix_timestamp;
     let pot = &mut ctx.accounts.pot;
     pot.total_shares = pot
         .total_shares
-        .checked_sub(token_amount)
+        .checked_sub(internal_shares)
         .ok_or(error!(PotError::MathOverflow))?;
     pot.last_activity_at = now;
 
@@ -130,13 +145,15 @@ pub fn handler(ctx: Context<RedeemTokens>, token_amount: u64) -> Result<()> {
         pot: pot_key,
         member: ctx.accounts.member.key(),
         tokens_burned: token_amount,
+        internal_shares_burned: internal_shares,
         sol_out,
         timestamp: now,
     });
 
     msg!(
-        "Redeemed {} tokens -> {} lamports (pot {})",
+        "Redeemed {} SPL tokens ({} internal shares) -> {} lamports (pot {})",
         token_amount,
+        internal_shares,
         sol_out,
         pot_key
     );
@@ -148,6 +165,7 @@ pub struct TokensRedeemed {
     pub pot: Pubkey,
     pub member: Pubkey,
     pub tokens_burned: u64,
+    pub internal_shares_burned: u64,
     pub sol_out: u64,
     pub timestamp: i64,
 }
