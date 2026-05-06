@@ -146,6 +146,7 @@ pub enum ErrorCode {
     #[msg("Arithmetic overflow during fixed-point math")]
     MathOverflow,
 
+    // ─── redeem_tokens ────────────────────────────────────────────────────
     #[msg("Burn amount must be > 0")]
     InvalidBurnAmount,
     #[msg("Redemption would violate 20% reserve guard")]
@@ -156,6 +157,12 @@ pub enum ErrorCode {
     RedemptionInsufficientVault,
     #[msg("YieldTarget None is not routable")]
     YieldTargetNoneNotRoutable,
+    #[msg("Redemption exceeds 80% vault liquidity reserve")]
+    WithdrawalReserveBreached,
+    #[msg("Pot is paused \u2014 redemptions blocked")]
+    PotPaused,
+    #[msg("Amount must be greater than zero")]
+    InvalidAmount,
 }
 
 /// Alias used throughout instruction handlers.

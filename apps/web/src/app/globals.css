@@ -266,3 +266,93 @@ body { padding-bottom: env(safe-area-inset-bottom); }
   /* Modal full-screen on small screens for better thumb reach */
   .fixed.inset-0 > div[class*="rounded-3xl"] { border-radius: 1.25rem; }
 }
+
+/* ══════════════════════════════════════════════════════════════════ */
+/*  LIGHT-THEME CONTRAST PATCH                                          */
+/*  Pale tailwind colors (-300/-400) are designed for dark bgs and     */
+/*  fail WCAG-AA on white. Bump them to -600/-700 in light mode.        */
+/* ══════════════════════════════════════════════════════════════════ */
+
+/* Yellows (warnings, fees, caps) */
+html[data-theme="light"] .text-yellow-300,
+html[data-theme="light"] .text-yellow-400,
+html[data-theme="light"] .text-yellow-500 { color: #a16207 !important; } /* yellow-700 */
+
+/* Ambers (callouts, status) */
+html[data-theme="light"] .text-amber-200,
+html[data-theme="light"] .text-amber-300,
+html[data-theme="light"] .text-amber-400 { color: #b45309 !important; } /* amber-700 */
+
+/* Reds (errors, danger) */
+html[data-theme="light"] .text-red-300,
+html[data-theme="light"] .text-red-400 { color: #b91c1c !important; }   /* red-700 */
+
+/* Greens not-pot-green (status pills) */
+html[data-theme="light"] .text-green-300,
+html[data-theme="light"] .text-green-400 { color: #15803d !important; } /* green-700 */
+
+/* Purples (governance, premium) */
+html[data-theme="light"] .text-purple-200,
+html[data-theme="light"] .text-purple-300 { color: #6d28d9 !important; } /* violet-700 */
+
+/* Blues / Cyans (info pills) */
+html[data-theme="light"] .text-blue-300,
+html[data-theme="light"] .text-cyan-300 { color: #1d4ed8 !important; }  /* blue-700 */
+
+/* Oranges */
+html[data-theme="light"] .text-orange-200,
+html[data-theme="light"] .text-orange-300,
+html[data-theme="light"] .text-orange-400 { color: #c2410c !important; } /* orange-700 */
+
+/* Soft semi-transparent surfaces become barely-visible washes on white;
+   bump alpha so the pill/card edge is still legible. */
+html[data-theme="light"] .bg-yellow-500\/10  { background-color: rgba(234, 179, 8, 0.18) !important; }
+html[data-theme="light"] .bg-yellow-500\/20  { background-color: rgba(234, 179, 8, 0.22) !important; }
+html[data-theme="light"] .bg-amber-500\/10   { background-color: rgba(245, 158, 11, 0.18) !important; }
+html[data-theme="light"] .bg-amber-500\/20   { background-color: rgba(245, 158, 11, 0.22) !important; }
+html[data-theme="light"] .bg-amber-500\/30   { background-color: rgba(245, 158, 11, 0.28) !important; }
+html[data-theme="light"] .bg-red-500\/5      { background-color: rgba(239, 68, 68, 0.10) !important; }
+html[data-theme="light"] .bg-red-500\/10     { background-color: rgba(239, 68, 68, 0.15) !important; }
+html[data-theme="light"] .bg-red-500\/20     { background-color: rgba(239, 68, 68, 0.20) !important; }
+html[data-theme="light"] .bg-green-500\/10   { background-color: rgba(34, 197, 94, 0.16) !important; }
+html[data-theme="light"] .bg-green-500\/20   { background-color: rgba(34, 197, 94, 0.20) !important; }
+html[data-theme="light"] .bg-purple-500\/10  { background-color: rgba(168, 85, 247, 0.14) !important; }
+html[data-theme="light"] .bg-purple-500\/20  { background-color: rgba(168, 85, 247, 0.18) !important; }
+html[data-theme="light"] .bg-blue-500\/10    { background-color: rgba(59, 130, 246, 0.14) !important; }
+html[data-theme="light"] .bg-cyan-500\/10    { background-color: rgba(6, 182, 212, 0.14) !important; }
+
+/* pot-accent (purple) on white needs slightly more saturation in pill bg */
+html[data-theme="light"] .bg-pot-accent\/10  { background-color: rgba(139, 92, 246, 0.14) !important; }
+html[data-theme="light"] .bg-pot-accent\/20  { background-color: rgba(139, 92, 246, 0.20) !important; }
+
+/* pot-green pills — chip bg should still read in light mode */
+html[data-theme="light"] .bg-pot-green\/5   { background-color: rgba(0, 200, 110, 0.10) !important; }
+html[data-theme="light"] .bg-pot-green\/10  { background-color: rgba(0, 200, 110, 0.14) !important; }
+html[data-theme="light"] .bg-pot-green\/20  { background-color: rgba(0, 200, 110, 0.18) !important; }
+
+/* Translucent black surfaces (bg-black/40 etc) become invisible on white;
+   substitute a light card token. */
+html[data-theme="light"] .bg-black\/20,
+html[data-theme="light"] .bg-black\/30,
+html[data-theme="light"] .bg-black\/40,
+html[data-theme="light"] .bg-black\/50 {
+  background-color: rgba(229, 231, 235, 0.7) !important; /* gray-200 */
+}
+
+/* Translucent white surfaces (bg-white/5 etc) on a light bg are noise;
+   make them subtle gray instead. */
+html[data-theme="light"] .bg-white\/5,
+html[data-theme="light"] .bg-white\/10 {
+  background-color: rgba(243, 244, 246, 0.85) !important; /* gray-100 */
+}
+
+/* Dividers that used border-white/10 get the same treatment */
+html[data-theme="light"] .border-white\/10,
+html[data-theme="light"] .border-white\/5 {
+  border-color: var(--pot-border) !important;
+}
+
+/* Disabled buttons in light mode — tint slightly so they're distinguishable */
+html[data-theme="light"] button:disabled {
+  filter: grayscale(0.2);
+}

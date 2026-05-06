@@ -13,6 +13,13 @@ export const PROGRAM_ID = new PublicKey(
 // Back-compat alias — some callers import this name.
 export const POT_PROGRAM_ID = PROGRAM_ID;
 
+// Treasury that receives protocol fees (creation fee, tokenization fee, etc).
+// Must match `TREASURY_ADDRESS` in
+// `packages/program/programs/pot_vault/src/constants.rs`.
+export const TREASURY_ADDRESS = new PublicKey(
+  '2LeG86xuss12WrYsamTGk4zLfBbXJpWZpr1yFrUqN98o',
+);
+
 // Original PDAs
 export function getPotAddress(name: string, authority: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(

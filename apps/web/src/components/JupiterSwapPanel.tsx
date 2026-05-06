@@ -5,6 +5,7 @@ import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { useQuery } from '@tanstack/react-query'
 import { withTxToast } from '@/components/TxToast'
+import { ExplorerLink } from '@/components/ExplorerLink'
 import {
   getJupiterQuote,
   executeJupiterSwap,
@@ -361,16 +362,9 @@ export function JupiterSwapPanel({ potPubkey, vaultBalance, mode = 'personal', o
 
       {/* Last tx */}
       {lastTx && mode === 'personal' && (
-        <div className="flex items-center justify-between bg-green-500/10 border border-green-500/20 rounded-xl px-3 py-2 text-xs">
-          <span className="text-green-400">✅ Swap confirmed</span>
-          <a
-            href={`https://solscan.io/tx/${lastTx}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-pot-accent hover:underline font-mono"
-          >
-            {lastTx.slice(0, 8)}… ↗
-          </a>
+        <div className="flex items-center justify-between bg-green-500/10 border border-green-500/20 rounded-xl px-3 py-2 text-xs gap-3">
+          <span className="text-green-400 shrink-0">✅ Swap confirmed</span>
+          <ExplorerLink txSig={lastTx} variant="compact" />
         </div>
       )}
 

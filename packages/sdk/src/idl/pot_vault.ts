@@ -13,6 +13,16 @@ export const IDL = {
       name: 'createPot',
       discriminator: [132, 152, 9, 27, 112, 19, 95, 83],
       accounts: [
+        { name: 'pot', isMut: true, isSigner: false },
+        { name: 'vault', isMut: true, isSigner: false },
+        // PotBot protocol treasury — receives POT_CREATION_FEE on every
+        // create_pot call. Address-pinned at the program level to
+        // TREASURY_ADDRESS, so any other key here will be rejected.
+        { name: 'treasury', isMut: true, isSigner: false },
+        { name: 'authority', isMut: true, isSigner: true },
+        { name: 'systemProgram', isMut: false, isSigner: false },
+      ],
+      args: [
         {
           name: 'pot',
           writable: true,

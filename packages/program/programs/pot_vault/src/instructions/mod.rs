@@ -15,6 +15,7 @@ pub mod route_to_yield;
 
 // Premium features
 pub mod tokenize_shares;
+pub mod redeem_tokens;
 pub mod create_sns_domain;
 pub mod mint_tamagotchi_nft;
 pub mod update_tamagotchi_metadata;
@@ -29,6 +30,7 @@ pub mod create_strategy;
 pub mod close_strategy;
 pub mod mark_proposal_passed;
 pub mod pot_admin;
+pub mod route_to_yield;
 
 pub use create_pot::{CreatePot, CreatePotParams};
 pub(crate) use create_pot::__client_accounts_create_pot;
