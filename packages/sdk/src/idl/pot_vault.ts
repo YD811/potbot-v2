@@ -150,6 +150,70 @@ export const IDL = {
       ],
     },
     {
+      name: 'redeemTokens',
+      discriminator: [0, 0, 0, 0, 0, 0, 0, 0],
+      accounts: [
+        {
+          name: 'pot',
+          writable: true,
+          pda: {
+            seeds: [
+              { kind: 'const', value: [112, 111, 116] },
+              { kind: 'account', path: 'pot.authority' },
+              { kind: 'account', path: 'pot.name' },
+            ],
+          },
+        },
+        {
+          name: 'vault',
+          writable: true,
+          pda: {
+            seeds: [
+              { kind: 'const', value: [118, 97, 117, 108, 116] },
+              { kind: 'account', path: 'pot' },
+            ],
+          },
+        },
+        {
+          name: 'tokenMint',
+          writable: true,
+          pda: {
+            seeds: [
+              { kind: 'const', value: [116, 111, 107, 101, 110, 95, 109, 105, 110, 116] },
+              { kind: 'account', path: 'pot' },
+            ],
+          },
+        },
+        { name: 'memberTokenAccount', writable: true },
+        { name: 'member', writable: true, signer: true },
+        { name: 'tokenProgram' },
+        { name: 'systemProgram' },
+      ],
+      args: [{ name: 'amount', type: 'u64' }],
+    },
+    {
+      name: 'routeToYield',
+      discriminator: [0, 0, 0, 0, 0, 0, 0, 0],
+      accounts: [
+        {
+          name: 'pot',
+          writable: true,
+          pda: {
+            seeds: [
+              { kind: 'const', value: [112, 111, 116] },
+              { kind: 'account', path: 'pot.authority' },
+              { kind: 'account', path: 'pot.name' },
+            ],
+          },
+        },
+        { name: 'authority', signer: true },
+      ],
+      args: [
+        { name: 'target', type: { defined: { name: 'YieldTarget' } } },
+        { name: 'amount', type: 'u64' },
+      ],
+    },
+    {
       name: 'potAdmin',
       discriminator: [12, 252, 96, 204, 141, 175, 100, 98],
       accounts: [
