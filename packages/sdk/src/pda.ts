@@ -16,7 +16,7 @@ export const POT_PROGRAM_ID = PROGRAM_ID;
 // Original PDAs
 export function getPotAddress(name: string, authority: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('pot'), Buffer.from(name), authority.toBuffer()],
+    [Buffer.from('pot'), authority.toBuffer(), Buffer.from(name)],
     PROGRAM_ID
   );
 }

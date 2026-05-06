@@ -72,8 +72,8 @@ pub fn handler(ctx: Context<UpdateTamagotchiMetadata>) -> Result<()> {
         let bump_bytes = [pot.pot_bump];
         let seeds: &[&[u8]] = &[
             b"pot",
-            pot.name.as_bytes(),
             pot.authority.as_ref(),
+            pot.name.as_bytes(),
             &bump_bytes,
         ];
         let signer_seeds: &[&[&[u8]]] = &[seeds];

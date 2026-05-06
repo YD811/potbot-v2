@@ -127,8 +127,8 @@ pub fn mint_tokens_to_member(
     // Mint tokens using pot as authority
     let seeds = &[
         b"pot",
-        pot.name.as_bytes(),
         pot.authority.as_ref(),
+        pot.name.as_bytes(),
         &[pot.pot_bump],
     ];
     let signer_seeds = &[&seeds[..]];
