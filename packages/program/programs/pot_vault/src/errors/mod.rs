@@ -145,6 +145,17 @@ pub enum ErrorCode {
     // ─── Math (alias of ArithmeticOverflow for new instructions) ─────────
     #[msg("Arithmetic overflow during fixed-point math")]
     MathOverflow,
+
+    #[msg("Burn amount must be > 0")]
+    InvalidBurnAmount,
+    #[msg("Redemption would violate 20% reserve guard")]
+    InsufficientReserve,
+    #[msg("Cannot redeem while pot is paused")]
+    RedemptionPausedWhilePotPaused,
+    #[msg("Insufficient vault balance for redemption")]
+    RedemptionInsufficientVault,
+    #[msg("YieldTarget None is not routable")]
+    YieldTargetNoneNotRoutable,
 }
 
 /// Alias used throughout instruction handlers.

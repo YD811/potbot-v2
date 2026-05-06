@@ -1,483 +1,490 @@
-/**
- * IDL matching the pot_vault Anchor program — Anchor 0.30 format.
- *
- * Changes from 0.28 → 0.30 format:
- *  - accounts[]: now { name (camelCase), discriminator } only — no inline type
- *  - types[]:    account struct defs added here (moved from accounts[])
- *  - instructions[]: discriminators added
- */
 export const IDL = {
-  // Anchor 0.30 requires `address` on the root IDL object — it's what
-  // `new Program(idl, provider)` reads to resolve the program's public key.
-  // Must match `declare_id!` in programs/pot_vault/src/lib.rs and the
-  // value in root vercel.json (NEXT_PUBLIC_PROGRAM_ID).
   address: 'GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK',
   version: '0.1.0',
   name: 'pot_vault',
   metadata: {
-    address: 'GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK',
     name: 'pot_vault',
     version: '0.1.0',
     spec: '0.1.0',
+    description: 'PotBot v2 \u2014 Group trading vaults on Solana',
   },
   instructions: [
     {
       name: 'createPot',
-      discriminator: [232, 45, 123, 181, 204, 121, 131, 9],
+      discriminator: [132, 152, 9, 27, 112, 19, 95, 83],
       accounts: [
-        { name: 'pot', isMut: true, isSigner: false },
-        { name: 'vault', isMut: true, isSigner: false },
-        { name: 'authority', isMut: true, isSigner: true },
-        { name: 'systemProgram', isMut: false, isSigner: false },
+        {
+          name: 'pot',
+          writable: true,
+          pda: {
+            seeds: [
+              { kind: 'const', value: [112, 111, 116] },
+              { kind: 'arg', path: 'args.name' },
+              { kind: 'account', path: 'authority' },
+            ],
+          },
+        },
+        {
+          name: 'vault',
+          writable: true,
+          pda: {
+            seeds: [
+              { kind: 'const', value: [118, 97, 117, 108, 116] },
+              { kind: 'account', path: 'pot' },
+            ],
+          },
+        },
+        { name: 'authority', signer: true },
+        { name: 'payer', writable: true, signer: true },
+        { name: 'systemProgram', address: '11111111111111111111111111111111' },
+        { name: 'rent', address: 'SysvarRent111111111111111111111111111111111' },
       ],
       args: [
-        {
-          name: 'params',
-          type: { defined: 'CreatePotParams' },
-        },
+        { name: 'args', type: { defined: { name: 'CreatePotArgs' } } },
       ],
     },
     {
-      name: 'deposit',
-      discriminator: [242, 35, 198, 137, 82, 225, 242, 182],
+      name: 'setAllowedMints',
+      discriminator: [201, 88, 43, 12, 245, 7, 64, 199],
       accounts: [
-        { name: 'pot', isMut: true, isSigner: false },
-        { name: 'vault', isMut: true, isSigner: false },
-        { name: 'member', isMut: true, isSigner: false },
-        { name: 'depositor', isMut: true, isSigner: true },
-        { name: 'systemProgram', isMut: false, isSigner: false },
-      ],
-      args: [{ name: 'lamports', type: 'u64' }],
-    },
-    {
-      name: 'withdraw',
-      discriminator: [183, 18, 70, 156, 148, 109, 161, 34],
-      accounts: [
-        { name: 'pot', isMut: true, isSigner: false },
-        { name: 'vault', isMut: true, isSigner: false },
-        { name: 'member', isMut: true, isSigner: false },
-        { name: 'withdrawer', isMut: true, isSigner: true },
-        { name: 'systemProgram', isMut: false, isSigner: false },
-      ],
-      args: [{ name: 'shares', type: 'u64' }],
-    },
-    {
-      name: 'createProposal',
-      discriminator: [132, 116, 68, 174, 216, 160, 198, 22],
-      accounts: [
-        { name: 'pot', isMut: true, isSigner: false },
-        { name: 'proposal', isMut: true, isSigner: false },
-        { name: 'member', isMut: false, isSigner: false },
-        { name: 'proposer', isMut: true, isSigner: true },
-        { name: 'systemProgram', isMut: false, isSigner: false },
+        { name: 'pot', writable: true },
+        { name: 'authority', signer: true },
       ],
       args: [
+        { name: 'args', type: { defined: { name: 'SetAllowedMintsArgs' } } },
+      ],
+    },
+    {
+      name: 'createStrategy',
+      discriminator: [172, 40, 252, 198, 153, 25, 135, 2],
+      accounts: [
+        { name: 'pot', writable: true },
         {
-          name: 'params',
-          type: { defined: 'CreateProposalParams' },
+          name: 'strategy',
+          writable: true,
+          pda: {
+            seeds: [
+              { kind: 'const', value: [115, 116, 114, 97, 116, 101, 103, 121] },
+              { kind: 'account', path: 'pot' },
+              { kind: 'arg', path: 'args.slotId' },
+            ],
+          },
         },
+        { name: 'payer', writable: true, signer: true },
+        { name: 'authority', signer: true },
+        { name: 'systemProgram', address: '11111111111111111111111111111111' },
+      ],
+      args: [
+        { name: 'args', type: { defined: { name: 'CreateStrategyArgs' } } },
       ],
     },
     {
-      name: 'vote',
-      discriminator: [227, 110, 155, 23, 136, 126, 172, 25],
+      name: 'closeStrategy',
+      discriminator: [233, 29, 11, 234, 98, 129, 196, 0],
       accounts: [
-        { name: 'pot', isMut: false, isSigner: false },
-        { name: 'proposal', isMut: true, isSigner: false },
-        { name: 'member', isMut: false, isSigner: false },
-        { name: 'voterRecord', isMut: true, isSigner: false },
-        { name: 'voter', isMut: true, isSigner: true },
-        { name: 'systemProgram', isMut: false, isSigner: false },
+        { name: 'pot', writable: true },
+        {
+          name: 'strategy',
+          writable: true,
+          pda: {
+            seeds: [
+              { kind: 'const', value: [115, 116, 114, 97, 116, 101, 103, 121] },
+              { kind: 'account', path: 'pot' },
+              { kind: 'arg', path: 'slotId' },
+            ],
+          },
+        },
+        { name: 'authority', signer: true },
+        { name: 'payer', writable: true },
       ],
-      args: [{ name: 'approve', type: 'bool' }],
+      args: [
+        { name: 'slotId', type: 'u16' },
+      ],
     },
     {
-      name: 'executeProposal',
-      discriminator: [186, 60, 116, 133, 108, 128, 111, 28],
+      name: 'markProposalPassed',
+      discriminator: [45, 94, 243, 24, 184, 59, 243, 250],
       accounts: [
-        { name: 'pot', isMut: true, isSigner: false },
-        { name: 'vault', isMut: true, isSigner: false },
-        { name: 'proposal', isMut: true, isSigner: false },
-        { name: 'executor', isMut: true, isSigner: true },
-        { name: 'systemProgram', isMut: false, isSigner: false },
+        { name: 'pot', writable: true },
+        { name: 'proposal', writable: true },
+        { name: 'authority', signer: true },
       ],
-      args: [],
-    },
-    {
-      name: 'updateTamagotchi',
-      accounts: [
-        { name: 'pot', isMut: true, isSigner: false },
+      args: [
+        { name: 'proposalId', type: 'u64' },
       ],
-      args: [],
     },
     {
       name: 'executeSwap',
-      discriminator: [56, 182, 124, 215, 155, 140, 157, 102],
+      discriminator: [55, 152, 95, 233, 102, 111, 21, 178],
       accounts: [
-        { name: 'pot', isMut: true, isSigner: false },
-        { name: 'vault', isMut: true, isSigner: false },
-        { name: 'authority', isMut: false, isSigner: true },
-        { name: 'systemProgram', isMut: false, isSigner: false },
+        { name: 'pot', writable: true },
+        {
+          name: 'strategy',
+          writable: true,
+          pda: {
+            seeds: [
+              { kind: 'const', value: [115, 116, 114, 97, 116, 101, 103, 121] },
+              { kind: 'account', path: 'pot' },
+              { kind: 'account', path: 'strategy.slotId' },
+            ],
+          },
+        },
+        {
+          name: 'vault',
+          pda: {
+            seeds: [
+              { kind: 'const', value: [118, 97, 117, 108, 116] },
+              { kind: 'account', path: 'pot' },
+            ],
+          },
+        },
+        { name: 'sourceAta', writable: true },
+        { name: 'destinationAta', writable: true },
+        { name: 'jupiterProgram' },
+        { name: 'pythPriceUpdate' },
+        { name: 'proposalSwapSpec', writable: true, optional: true },
+        { name: 'authority', writable: true, signer: true },
       ],
       args: [
-        {
-          name: 'params',
-          type: { defined: 'ExecuteSwapParams' },
-        },
+        { name: 'args', type: { defined: { name: 'ExecuteSwapArgs' } } },
       ],
     },
     {
-      name: 'initTokenMint',
+      name: 'potAdmin',
+      discriminator: [12, 252, 96, 204, 141, 175, 100, 98],
       accounts: [
-        { name: 'pot', isMut: true, isSigner: false },
-        { name: 'tokenMint', isMut: true, isSigner: false },
-        { name: 'authority', isMut: true, isSigner: true },
-        { name: 'tokenProgram', isMut: false, isSigner: false },
-        { name: 'systemProgram', isMut: false, isSigner: false },
-        { name: 'rent', isMut: false, isSigner: false },
+        { name: 'pot', writable: true },
+        { name: 'authority', signer: true },
       ],
-      args: [],
+      args: [
+        { name: 'action', type: { defined: { name: 'PotAdminAction' } } },
+      ],
     },
   ],
-  // ── Anchor 0.30 accounts format ──────────────────────────────────────────
-  // Each entry is { name (camelCase), discriminator: sha256("account:<PascalCase>")[:8] }
-  // Struct field definitions live in types[] below.
   accounts: [
-    // Core program accounts
-    { name: 'potAccount',      discriminator: [202, 25,  205, 47,  59,  253, 100, 118] },
-    { name: 'memberAccount',   discriminator: [173, 25,  100, 97,  192, 177, 84,  139] },
-    { name: 'proposalAccount', discriminator: [164, 190, 4,   248, 203, 124, 243, 64]  },
-    { name: 'voterRecord',     discriminator: [178, 96,  138, 116, 143, 202, 115, 33]  },
-    // Premium feature accounts
-    { name: 'privatePotAccount',    discriminator: [229, 0,   144, 66,  200, 25,  159, 46]  },
-    { name: 'snsAccount',           discriminator: [220, 175, 137, 218, 31,  174, 154, 106] },
-    { name: 'tamagotchiNftAccount', discriminator: [242, 23,  107, 22,  102, 49,  226, 38]  },
+    { name: 'PotAccount', discriminator: [202, 25, 205, 47, 59, 253, 100, 118] },
+    { name: 'StrategyAccount', discriminator: [97, 218, 254, 239, 248, 146, 59, 42] },
   ],
   types: [
-    // ── Account struct definitions (camelCase names match accounts[] above) ──
     {
-      name: 'potAccount',
+      name: 'PotAccount',
       type: {
         kind: 'struct',
         fields: [
-          { name: 'authority',           type: 'publicKey' },
-          { name: 'name',                type: 'string' },
-          { name: 'emoji',               type: 'string' },
-          { name: 'vaultBump',           type: 'u8' },
-          { name: 'potBump',             type: 'u8' },
-          { name: 'totalShares',         type: 'u64' },
-          { name: 'memberCount',         type: 'u32' },
-          { name: 'tradeCount',          type: 'u32' },
-          { name: 'totalVolume',         type: 'u64' },
-          { name: 'tamagotchiLevel',     type: 'u8' },
-          { name: 'tamagotchiXp',        type: 'u64' },
-          { name: 'communityTokenMint',  type: 'publicKey' },
-          { name: 'config',              type: { defined: 'PotConfig' } },
-          { name: 'governance',          type: { defined: 'GovSettings' } },
-          { name: 'nextProposalId',      type: 'u64' },
-          { name: 'createdAt',           type: 'i64' },
-          { name: 'highWaterMark',       type: 'u64' },
-          { name: 'protocolFeeBps',      type: 'u16' },
-          { name: 'lastActivityAt',      type: 'i64' },
-          { name: 'agentPubkey',         type: { option: 'publicKey' } },
-          { name: 'agentMaxTradeBps',    type: 'u16' },
-          { name: 'agentLastProposalAt', type: 'i64' },
-          { name: 'dailyTradesCount',    type: 'u8' },
-          { name: 'lastTradeDay',        type: 'i64' },
-          { name: 'tokenMint',           type: 'publicKey' },
-          { name: 'sharesPerSol',        type: 'u64' },
+          { name: 'authority', type: 'pubkey' },
+          { name: 'name', type: 'string' },
+          { name: 'feeBps', type: 'u16' },
+          { name: 'isPublic', type: 'bool' },
+          { name: 'paused', type: 'bool' },
+          { name: 'totalDeposits', type: 'u64' },
+          { name: 'totalShares', type: 'u64' },
+          { name: 'memberCount', type: 'u32' },
+          { name: 'tradeCount', type: 'u32' },
+          { name: 'totalVolume', type: 'u64' },
+          { name: 'nextProposalId', type: 'u64' },
+          { name: 'allowedMints', type: { vec: 'pubkey' } },
+          { name: 'feeReserve', type: 'u64' },
+          { name: 'agentAuthority', type: 'pubkey' },
+          { name: 'tamagotchiLevel', type: 'u8' },
+          { name: 'tamagotchiXp', type: 'u64' },
+          { name: 'bump', type: 'u8' },
+          { name: 'vaultBump', type: 'u8' },
         ],
       },
     },
     {
-      name: 'memberAccount',
+      name: 'StrategyAccount',
       type: {
         kind: 'struct',
         fields: [
-          { name: 'pot',            type: 'publicKey' },
-          { name: 'wallet',         type: 'publicKey' },
-          { name: 'shares',         type: 'u64' },
-          { name: 'depositTotal',   type: 'u64' },
-          { name: 'withdrawTotal',  type: 'u64' },
-          { name: 'joinedAt',       type: 'i64' },
-          { name: 'lastDepositAt',  type: 'i64' },
-          { name: 'bump',           type: 'u8' },
+          { name: 'pot', type: 'pubkey' },
+          { name: 'slotId', type: 'u16' },
+          { name: 'bump', type: 'u8' },
+          { name: 'source', type: { defined: { name: 'StrategySource' } } },
+          { name: 'status', type: { defined: { name: 'StrategyStatus' } } },
+          { name: 'inputMint', type: 'pubkey' },
+          { name: 'outputMint', type: 'pubkey' },
+          { name: 'sizeIn', type: 'u64' },
+          { name: 'sizeOut', type: 'u64' },
+          { name: 'entryPriceX64', type: 'u128' },
+          { name: 'trailingHighPriceX64', type: 'u128' },
+          { name: 'pythPriceFeed', type: { option: 'pubkey' } },
+          { name: 'stopLossBps', type: { option: 'u16' } },
+          { name: 'takeProfitBps', type: { option: 'u16' } },
+          { name: 'trailingStopBps', type: { option: 'u16' } },
+          { name: 'yieldTarget', type: { defined: { name: 'YieldTarget' } } },
+          { name: 'yieldPosition', type: { option: { defined: { name: 'YieldPosition' } } } },
+          { name: 'executorNonce', type: 'u32' },
+          { name: 'createdAt', type: 'i64' },
+          { name: 'executedAt', type: 'i64' },
+          { name: 'closedAt', type: 'i64' },
+          { name: 'lastTriggerReason', type: { defined: { name: 'TriggerReason' } } },
+          { name: 'lastPriceUpdateTs', type: 'i64' },
+          { name: 'reserved', type: { array: ['u8', 64] } },
         ],
       },
     },
     {
-      name: 'proposalAccount',
+      name: 'CreatePotArgs',
       type: {
         kind: 'struct',
         fields: [
-          { name: 'pot',                  type: 'publicKey' },
-          { name: 'proposalId',           type: 'u64' },
-          { name: 'proposer',             type: 'publicKey' },
-          { name: 'proposalType',         type: { defined: 'ProposalType' } },
-          { name: 'description',          type: 'string' },
-          { name: 'status',               type: { defined: 'ProposalStatus' } },
-          { name: 'yesShares',            type: 'u64' },
-          { name: 'noShares',             type: 'u64' },
-          { name: 'totalSharesSnapshot',  type: 'u64' },
-          { name: 'createdAt',            type: 'i64' },
-          { name: 'resolvedAt',           type: 'i64' },
-          { name: 'bump',                 type: 'u8' },
+          { name: 'name', type: 'string' },
+          { name: 'feeBps', type: 'u16' },
+          { name: 'isPublic', type: 'bool' },
+          { name: 'maxMembers', type: 'u32' },
         ],
       },
     },
     {
-      name: 'voterRecord',
+      name: 'SetAllowedMintsArgs',
       type: {
         kind: 'struct',
         fields: [
-          { name: 'proposal',   type: 'publicKey' },
-          { name: 'voter',      type: 'publicKey' },
-          { name: 'votedYes',   type: 'bool' },
-          { name: 'votedAt',    type: 'i64' },
-          { name: 'bump',       type: 'u8' },
+          { name: 'mints', type: { vec: 'pubkey' } },
         ],
       },
     },
     {
-      name: 'privatePotAccount',
+      name: 'CreateStrategyArgs',
       type: {
         kind: 'struct',
         fields: [
-          { name: 'pot',            type: 'publicKey' },
-          { name: 'inviteCodeHash', type: { array: ['u8', 32] } },
-          { name: 'bump',           type: 'u8' },
+          { name: 'slotId', type: 'u16' },
+          { name: 'source', type: { defined: { name: 'StrategySource' } } },
+          { name: 'inputMint', type: 'pubkey' },
+          { name: 'outputMint', type: 'pubkey' },
+          { name: 'pythPriceFeed', type: { option: 'pubkey' } },
+          { name: 'stopLossBps', type: { option: 'u16' } },
+          { name: 'takeProfitBps', type: { option: 'u16' } },
+          { name: 'trailingStopBps', type: { option: 'u16' } },
+          { name: 'yieldTarget', type: { defined: { name: 'YieldTarget' } } },
         ],
       },
     },
     {
-      name: 'snsAccount',
+      name: 'ExecuteSwapArgs',
       type: {
         kind: 'struct',
         fields: [
-          { name: 'pot',          type: 'publicKey' },
-          { name: 'domain',       type: 'string' },
-          { name: 'registeredAt', type: 'i64' },
-          { name: 'bump',         type: 'u8' },
+          { name: 'mode', type: { defined: { name: 'SwapMode' } } },
+          { name: 'amountIn', type: 'u64' },
+          { name: 'minOut', type: 'u64' },
+          { name: 'maxIn', type: 'u64' },
+          { name: 'isEntry', type: 'bool' },
+          { name: 'jupiterIxData', type: 'bytes' },
         ],
       },
     },
     {
-      name: 'tamagotchiNftAccount',
+      name: 'SwapMode',
       type: {
-        kind: 'struct',
-        fields: [
-          { name: 'pot',           type: 'publicKey' },
-          { name: 'mint',          type: 'publicKey' },
-          { name: 'level',         type: 'u8' },
-          { name: 'xp',            type: 'u64' },
-          { name: 'lastEvolvedAt', type: 'i64' },
-          { name: 'bump',          type: 'u8' },
-        ],
-      },
-    },
-    // ── Instruction parameter types (unchanged) ───────────────────────────
-    {
-      name: 'CreatePotParams',
-      type: {
-        kind: 'struct',
-        fields: [
-          { name: 'name',                   type: 'string' },
-          { name: 'emoji',                  type: 'string' },
-          { name: 'isPublic',               type: 'bool' },
-          { name: 'minDeposit',             type: 'u64' },
-          { name: 'lockupSeconds',          type: 'i64' },
-          { name: 'yieldStrategy',          type: 'u8' },
-          { name: 'maxYieldAllocationBps',  type: 'u16' },
-          { name: 'tradeLevel',             type: 'u8' },
-          { name: 'withdrawLevel',          type: 'u8' },
-          { name: 'memberChangeLevel',      type: 'u8' },
-          { name: 'settingsChangeLevel',    type: 'u8' },
-          { name: 'yieldChangeLevel',       type: 'u8' },
-          { name: 'voteTimeoutSeconds',     type: 'i64' },
-          { name: 'quorumBps',              type: 'u16' },
-          { name: 'maxTradeSizeBps',        type: 'u16' },
-          { name: 'maxMembers',             type: 'u16' },
+        kind: 'enum',
+        variants: [
+          { name: 'AdminDirect' },
+          {
+            name: 'Proposal',
+            fields: [{ name: 'proposalId', type: 'u64' }],
+          },
+          {
+            name: 'StrategyTrigger',
+            fields: [{ name: 'reason', type: { defined: { name: 'TriggerReason' } } }],
+          },
         ],
       },
     },
     {
-      name: 'CreateProposalParams',
+      name: 'StrategySource',
       type: {
-        kind: 'struct',
-        fields: [
-          { name: 'proposalType', type: { defined: 'ProposalType' } },
-          { name: 'description',  type: 'string' },
+        kind: 'enum',
+        variants: [
+          {
+            name: 'AdminDirect',
+            fields: [{ name: 'admin', type: 'pubkey' }],
+          },
+          {
+            name: 'Proposal',
+            fields: [{ name: 'proposalId', type: 'u64' }],
+          },
+          {
+            name: 'Agent',
+            fields: [{ name: 'ruleId', type: { array: ['u8', 32] } }],
+          },
         ],
       },
     },
     {
-      name: 'ExecuteSwapParams',
+      name: 'StrategyStatus',
       type: {
-        kind: 'struct',
-        fields: [
-          { name: 'fromMint',     type: 'publicKey' },
-          { name: 'toMint',       type: 'publicKey' },
-          { name: 'amountIn',     type: 'u64' },
-          { name: 'minAmountOut', type: 'u64' },
+        kind: 'enum',
+        variants: [
+          { name: 'Pending' },
+          { name: 'Active' },
+          { name: 'Parked' },
+          { name: 'Closed' },
         ],
       },
     },
     {
-      name: 'PotConfig',
-      type: {
-        kind: 'struct',
-        fields: [
-          { name: 'isPublic',              type: 'bool' },
-          { name: 'minDeposit',            type: 'u64' },
-          { name: 'lockupSeconds',         type: 'i64' },
-          { name: 'yieldStrategy',         type: { defined: 'YieldStrategy' } },
-          { name: 'maxYieldAllocationBps', type: 'u16' },
-          { name: 'maxTradeSizeBps',       type: 'u16' },
-          { name: 'maxMembers',            type: 'u16' },
-        ],
-      },
-    },
-    {
-      name: 'GovSettings',
-      type: {
-        kind: 'struct',
-        fields: [
-          { name: 'tradeLevel',          type: 'u8' },
-          { name: 'withdrawLevel',       type: 'u8' },
-          { name: 'memberChangeLevel',   type: 'u8' },
-          { name: 'settingsChangeLevel', type: 'u8' },
-          { name: 'yieldChangeLevel',    type: 'u8' },
-          { name: 'voteTimeoutSeconds',  type: 'i64' },
-          { name: 'quorumBps',           type: 'u16' },
-        ],
-      },
-    },
-    {
-      name: 'YieldStrategy',
+      name: 'YieldTarget',
       type: {
         kind: 'enum',
         variants: [
           { name: 'None' },
-          { name: 'Conservative' },
-          { name: 'Balanced' },
-          { name: 'Aggressive' },
+          {
+            name: 'KaminoLend',
+            fields: [{ name: 'reserve', type: 'pubkey' }],
+          },
+          {
+            name: 'KaminoVault',
+            fields: [{ name: 'strategy', type: 'pubkey' }],
+          },
+          {
+            name: 'MeteoraDlmm',
+            fields: [
+              { name: 'pool', type: 'pubkey' },
+              { name: 'lowerBin', type: 'i32' },
+              { name: 'upperBin', type: 'i32' },
+            ],
+          },
+          {
+            name: 'MeteoraDynamic',
+            fields: [{ name: 'vault', type: 'pubkey' }],
+          },
         ],
       },
     },
     {
-      name: 'ProposalType',
+      name: 'YieldPosition',
       type: {
         kind: 'enum',
         variants: [
           {
-            name: 'Swap',
+            name: 'KaminoLend',
             fields: [
-              { name: 'fromMint',     type: 'publicKey' },
-              { name: 'toMint',       type: 'publicKey' },
-              { name: 'amountIn',     type: 'u64' },
-              { name: 'minAmountOut', type: 'u64' },
+              { name: 'reserve', type: 'pubkey' },
+              { name: 'collateralAta', type: 'pubkey' },
+              { name: 'liquidityDeposited', type: 'u64' },
+              { name: 'enteredAt', type: 'i64' },
             ],
           },
           {
-            name: 'Withdraw',
+            name: 'MeteoraDlmm',
             fields: [
-              { name: 'beneficiary', type: 'publicKey' },
-              { name: 'amount',      type: 'u64' },
-            ],
-          },
-          {
-            name: 'ChangeSettings',
-            fields: [
-              { name: 'newTradeLevel',    type: 'u8' },
-              { name: 'newWithdrawLevel', type: 'u8' },
-            ],
-          },
-          {
-            name: 'ChangeYield',
-            fields: [{ name: 'newStrategy', type: 'u8' }],
-          },
-          {
-            name: 'AddMember',
-            fields: [{ name: 'wallet', type: 'publicKey' }],
-          },
-          {
-            name: 'RemoveMember',
-            fields: [{ name: 'wallet', type: 'publicKey' }],
-          },
-          {
-            name: 'SetAgent',
-            fields: [
-              { name: 'agent',        type: 'publicKey' },
-              { name: 'maxTradeBps',  type: 'u16' },
-            ],
-          },
-          {
-            name: 'TransferFunds',
-            fields: [
-              { name: 'to',      type: 'publicKey' },
-              { name: 'amount',  type: 'u64' },
-              { name: 'purpose', type: 'string' },
-            ],
-          },
-          {
-            name: 'UpdateRiskConfig',
-            fields: [
-              { name: 'maxTradeSizeBps', type: 'u16' },
-              { name: 'maxMembers',      type: 'u16' },
-            ],
-          },
-          {
-            name: 'TokenizePot',
-            fields: [{ name: 'maxSupply', type: 'u64' }],
-          },
-          {
-            name: 'DepositToYield',
-            fields: [
-              { name: 'amount',   type: 'u64' },
-              { name: 'protocol', type: 'u8' },
-            ],
-          },
-          {
-            name: 'WithdrawFromYield',
-            fields: [
-              { name: 'amount',   type: 'u64' },
-              { name: 'protocol', type: 'u8' },
+              { name: 'position', type: 'pubkey' },
+              { name: 'pool', type: 'pubkey' },
+              { name: 'lowerBinId', type: 'i32' },
+              { name: 'upperBinId', type: 'i32' },
+              { name: 'enteredAt', type: 'i64' },
             ],
           },
         ],
       },
     },
     {
-      name: 'ProposalStatus',
+      name: 'TriggerReason',
       type: {
         kind: 'enum',
         variants: [
-          { name: 'Active' },
-          { name: 'Passed' },
-          { name: 'Rejected' },
-          { name: 'Executed' },
-          { name: 'Expired' },
+          { name: 'Manual' },
+          { name: 'StopLoss' },
+          { name: 'TakeProfit' },
+          { name: 'TrailingStop' },
+        ],
+      },
+    },
+    {
+      name: 'PotAdminAction',
+      type: {
+        kind: 'enum',
+        variants: [
+          { name: 'Pause' },
+          { name: 'Unpause' },
+          {
+            name: 'SetMints',
+            fields: [{ name: 'mints', type: { vec: 'pubkey' } }],
+          },
+          {
+            name: 'SetSpendingPolicy',
+            fields: [
+              { name: 'maxSwapBps', type: 'u16' },
+              { name: 'dailyBudgetSol', type: 'u64' },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      name: 'StrategyCreated',
+      type: {
+        kind: 'struct',
+        fields: [
+          { name: 'pot', type: 'pubkey' },
+          { name: 'strategy', type: 'pubkey' },
+          { name: 'slotId', type: 'u16' },
+          { name: 'inputMint', type: 'pubkey' },
+          { name: 'outputMint', type: 'pubkey' },
+          { name: 'hasYield', type: 'bool' },
+        ],
+      },
+    },
+    {
+      name: 'SwapExecuted',
+      type: {
+        kind: 'struct',
+        fields: [
+          { name: 'pot', type: 'pubkey' },
+          { name: 'strategy', type: 'pubkey' },
+          { name: 'slotId', type: 'u64' },
+          { name: 'modeTag', type: 'u8' },
+          { name: 'isEntry', type: 'bool' },
+          { name: 'inputMint', type: 'pubkey' },
+          { name: 'outputMint', type: 'pubkey' },
+          { name: 'spent', type: 'u64' },
+          { name: 'received', type: 'u64' },
+          { name: 'trigger', type: { defined: { name: 'TriggerReason' } } },
+          { name: 'nonce', type: 'u32' },
+          { name: 'statusAfter', type: { defined: { name: 'StrategyStatus' } } },
+          { name: 'signer', type: 'pubkey' },
+          { name: 'timestamp', type: 'i64' },
         ],
       },
     },
   ],
+  events: [
+    { name: 'StrategyCreated', discriminator: [24, 91, 78, 221, 111, 148, 232, 101] },
+    { name: 'SwapExecuted', discriminator: [151, 22, 79, 34, 77, 105, 250, 130] },
+  ],
   errors: [
-    { code: 6000, name: 'InvalidName',                msg: 'POT name must be 1-32 characters' },
-    { code: 6001, name: 'DepositTooSmall',            msg: 'Deposit below minimum' },
-    { code: 6002, name: 'InsufficientShares',         msg: 'Not enough shares to withdraw' },
-    { code: 6003, name: 'LockupActive',               msg: 'Lockup period has not elapsed' },
-    { code: 6004, name: 'Unauthorized',               msg: 'Unauthorized action' },
-    { code: 6005, name: 'NotPublic',                  msg: 'POT is not public' },
-    { code: 6006, name: 'ProposalNotActive',          msg: 'Proposal is not active' },
-    { code: 6007, name: 'AlreadyVoted',               msg: 'Already voted on this proposal' },
-    { code: 6008, name: 'ProposalNotPassed',          msg: 'Proposal has not passed' },
-    { code: 6009, name: 'ProposalAlreadyExecuted',    msg: 'Proposal already executed' },
-    { code: 6010, name: 'GovernanceBlocked',          msg: 'Governance level blocks this action' },
-    { code: 6011, name: 'MathOverflow',               msg: 'Math overflow' },
-    { code: 6012, name: 'InsufficientVaultBalance',   msg: 'Insufficient vault balance' },
-    { code: 6013, name: 'MemberNotFound',             msg: 'Member account not found' },
-    { code: 6014, name: 'InvalidYieldStrategy',       msg: 'Invalid yield strategy' },
-    { code: 6015, name: 'QuorumNotReached',           msg: 'Quorum not reached' },
+    { code: 6000, name: 'StrategyNotAdmin',          msg: 'Caller is not authorized as admin for this strategy' },
+    { code: 6001, name: 'SwapSpecMismatch',           msg: 'SwapSpec in instruction data does not match proposal intent' },
+    { code: 6002, name: 'ProposalMismatch',           msg: 'Proposal mismatch \u2014 proposal_id or pot does not match attached spec' },
+    { code: 6003, name: 'StrategyPotMismatch',        msg: 'Strategy.pot does not match the pot supplied in this ix' },
+    { code: 6004, name: 'ProposalExecutorForbidden',  msg: 'Caller is not allowed to execute this proposal' },
+    { code: 6005, name: 'SwapModeMismatch',           msg: 'SwapMode in args does not match strategy.source' },
+    { code: 6006, name: 'TriggerReasonMismatch',      msg: 'Trigger reason in args does not match the on-chain oracle reading' },
+    { code: 6007, name: 'MemberPermissionInvalid',    msg: 'MemberPermissions account is invalid' },
+    { code: 6008, name: 'SlippageExceeded',           msg: 'Swap output below min_out (slippage exceeded)' },
+    { code: 6009, name: 'OverspentInput',             msg: 'Swap consumed more than max_in' },
+    { code: 6010, name: 'StrategyInactive',           msg: 'Strategy is not in an executable state' },
+    { code: 6011, name: 'StrategyNonceMismatch',      msg: 'Strategy executor_nonce mismatch; possible replay' },
+    { code: 6012, name: 'MintNotAllowlisted',         msg: 'Input or output mint is not in pot allowlist' },
+    { code: 6013, name: 'SpendingLimitExceeded',      msg: 'Swap size exceeds SpendingLimit for this period' },
+    { code: 6014, name: 'SpendingLimitInactive',      msg: 'SpendingLimit is paused or expired' },
+    { code: 6015, name: 'InvalidSwapAmount',          msg: 'amount_in is zero or otherwise invalid for this swap mode' },
+    { code: 6016, name: 'VaultOwnerMismatch',         msg: 'Vault token account ownership does not match the vault PDA' },
+    { code: 6017, name: 'TriggerNotMet',              msg: 'Trigger condition not satisfied by current oracle price' },
+    { code: 6018, name: 'PriceStale',                 msg: 'Pyth price feed is stale' },
+    { code: 6019, name: 'PriceFeedMismatch',          msg: 'Pyth price feed account does not match strategy.pyth_price_feed' },
+    { code: 6020, name: 'NoPriceFeed',                msg: 'Strategy has no pyth feed configured; trusted keeper required' },
+    { code: 6021, name: 'YieldTargetInvalid',         msg: 'YieldTarget program does not match expected Kamino/Meteora id' },
+    { code: 6022, name: 'YieldPositionMismatch',      msg: 'Yield position mismatch; expected previously-stored account' },
+    { code: 6023, name: 'YieldNotConfigured',         msg: 'Strategy has no yield leg but yield ix was supplied' },
+    { code: 6024, name: 'FeeReserveTooLow',           msg: 'Fee reserve below threshold required to activate strategy' },
+    { code: 6025, name: 'MathOverflow',               msg: 'Arithmetic overflow during fixed-point math' },
+    { code: 6026, name: 'ProposalNotPassed',          msg: 'Proposal has not passed governance vote' },
+    { code: 6027, name: 'ProposalAlreadyExecuted',    msg: 'Proposal has already been executed' },
+    { code: 6028, name: 'ArithmeticOverflow',         msg: 'Arithmetic overflow' },
   ],
 } as const
 
