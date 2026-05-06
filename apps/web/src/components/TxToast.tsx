@@ -2,7 +2,7 @@
 
 import toast, { Toast } from 'react-hot-toast'
 
-import { solscanTx } from '@/lib/explorer'
+import { solscanTx, solanaExplorerTx } from '@/lib/explorer'
 
 
 /** Show a loading toast while a promise resolves */
@@ -20,15 +20,26 @@ export function txSuccess(message: string, signature?: string): void {
       <div className="flex flex-col gap-1">
         <span className="font-semibold">{message}</span>
         {signature && (
-          <a
-            href={solscanTx(signature)}
-            target="_blank"
-            rel="noreferrer"
-            className="text-xs text-purple-300 hover:text-purple-100 underline"
-            onClick={() => toast.dismiss(t.id)}
-          >
-            View on Solscan ↗
-          </a>
+          <div className="flex flex-col gap-0.5">
+            <a
+              href={solanaExplorerTx(signature, 'devnet')}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-pot-green hover:text-pot-green/80 underline"
+              onClick={() => toast.dismiss(t.id)}
+            >
+              🔍 View on Solana Explorer ↗
+            </a>
+            <a
+              href={solscanTx(signature, 'devnet')}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-purple-300 hover:text-purple-100 underline"
+              onClick={() => toast.dismiss(t.id)}
+            >
+              View on Solscan ↗
+            </a>
+          </div>
         )}
       </div>
     ),

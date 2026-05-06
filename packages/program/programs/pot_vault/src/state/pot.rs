@@ -126,15 +126,16 @@ pub enum YieldStrategy {
 
 impl PotAccount {
     /// Calculate the share price: vault_lamports / total_shares (scaled ×10^9).
+    /// Saturating semantics: overflow paths return 0 — unreachable for any
+    /// realistic vault size (mul would need vault > 1.8e10 SOL to overflow u128).
     pub fn share_price(&self, vault_lamports: u64) -> u64 {
         if self.total_shares == 0 {
             return 1_000_000_000;
         }
-        (vault_lamports as u128)
-            .checked_mul(1_000_000_000)
-            .ok_or(error!(PotError::ArithmeticOverflow))?
-            .checked_div(self.total_shares as u128)
-            .ok_or(error!(PotError::ArithmeticOverflow))? as u64
+        let scaled = (vault_lamports as u128).saturating_mul(1_000_000_000);
+        let denom = self.total_shares as u128;
+        if denom == 0 { return 0; }
+        (scaled / denom) as u64
     }
 
     pub fn lamports_to_shares(&self, lamports: u64, vault_lamports: u64) -> u64 {
@@ -144,22 +145,16 @@ impl PotAccount {
         if vault_lamports == 0 {
             return 0;
         }
-        (lamports as u128)
-            .checked_mul(self.total_shares as u128)
-            .ok_or(error!(PotError::ArithmeticOverflow))?
-            .checked_div(vault_lamports as u128)
-            .ok_or(error!(PotError::ArithmeticOverflow))? as u64
+        let num = (lamports as u128).saturating_mul(self.total_shares as u128);
+        (num / vault_lamports as u128) as u64
     }
 
     pub fn shares_to_lamports(&self, shares: u64, vault_lamports: u64) -> u64 {
         if self.total_shares == 0 {
             return 0;
         }
-        (shares as u128)
-            .checked_mul(vault_lamports as u128)
-            .ok_or(error!(PotError::ArithmeticOverflow))?
-            .checked_div(self.total_shares as u128)
-            .ok_or(error!(PotError::ArithmeticOverflow))? as u64
+        let num = (shares as u128).saturating_mul(vault_lamports as u128);
+        (num / self.total_shares as u128) as u64
     }
 
     pub fn is_autocracy(&self, level: u8) -> bool {
@@ -226,20 +221,14 @@ impl PotAccount {
             .any(|m| m == mint)
     }
 
-    /// Enforce the single-swap size cap. Returns Ok if the swap is within bounds.
-    /// `amount` is in lamports (or base token units for SPL).
+    /// Enforce the single-swap size cap against fee_reserve (legacy proxy).
+    /// Prefer `check_single_swap_cap_against_vault` — this method is kept for
+    /// backward compatibility. If fee_reserve is zero AND a cap is configured,
+    /// we deny (fail-closed).
     pub fn check_single_swap_cap(&self, amount: u64, _mint: &Pubkey) -> Result<()> {
         if self.single_swap_cap_bps == 0 {
             return Ok(()); // unlimited
         }
-        // Cap is expressed as bps of fee_reserve (keeper gas pool) as a proxy
-        // for vault balance, since we don't have the vault lamports in scope.
-        // For a real per-vault-balance cap, the caller should pass vault_lamports
-        // and this helper can be extended. For Phase 1, fee_reserve doubles as
-        // the reference. If fee_reserve is 0 (not yet funded), skip the cap.
-        // NOTE: cap is computed against fee_reserve as a vault-balance proxy.
-        // If fee_reserve is zero AND a cap is configured, we deny (fail-closed).
-        // Use set_spending_policy to fund fee_reserve before enabling the cap.
         if self.fee_reserve == 0 && self.single_swap_cap_bps > 0 {
             return err!(PotError::SpendingLimitExceeded);
         }
@@ -249,6 +238,30 @@ impl PotAccount {
         let cap = (self.fee_reserve as u128)
             .checked_mul(self.single_swap_cap_bps as u128)
             .unwrap_or(u128::MAX)
+            / 10_000u128;
+        require!(amount as u128 <= cap, PotError::SpendingLimitExceeded);
+        Ok(())
+    }
+
+    /// Enforce single-swap cap against the actual vault SOL balance.
+    /// `vault_lamports` MUST come from `vault.lamports()` at the call site.
+    /// This is the canonical safety check — `single_swap_cap_bps` is a fraction
+    /// of vault balance, e.g. 2000 bps = 20% of vault per swap.
+    pub fn check_single_swap_cap_against_vault(
+        &self,
+        amount: u64,
+        vault_lamports: u64,
+    ) -> Result<()> {
+        if self.single_swap_cap_bps == 0 {
+            return Ok(()); // unlimited
+        }
+        if vault_lamports == 0 {
+            // Vault drained — block any swap that has a cap configured.
+            return err!(PotError::SpendingLimitExceeded);
+        }
+        let cap = (vault_lamports as u128)
+            .checked_mul(self.single_swap_cap_bps as u128)
+            .ok_or(error!(PotError::MathOverflow))?
             / 10_000u128;
         require!(amount as u128 <= cap, PotError::SpendingLimitExceeded);
         Ok(())

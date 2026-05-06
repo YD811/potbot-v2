@@ -8,10 +8,13 @@ import {
   PublicKey,
   VersionedTransaction,
   LAMPORTS_PER_SOL,
+  AccountMeta,
 } from '@solana/web3.js'
 
 export const JUPITER_QUOTE_URL = 'https://quote-api.jup.ag/v6/quote'
 export const JUPITER_SWAP_URL  = 'https://quote-api.jup.ag/v6/swap'
+export const JUPITER_SWAP_INSTRUCTIONS_URL = 'https://quote-api.jup.ag/v6/swap-instructions'
+export const JUPITER_V6_PROGRAM_ID = new PublicKey('JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4')
 
 export const SOL_MINT  = 'So11111111111111111111111111111111111111112'
 export const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
@@ -159,4 +162,132 @@ export function priceImpactColor(pct: number): string {
   if (pct < 1)   return 'text-yellow-400'
   if (pct < 3)   return 'text-orange-400'
   return 'text-red-400'
+}
+
+// ─── Jupiter CPI payload (for execute_swap on our program) ────────────────
+//
+// /swap-instructions returns separate instructions instead of a packed
+// transaction so we can splice the swap into our program's CPI.
+
+interface JupiterAccountMetaJson {
+  pubkey: string
+  isSigner: boolean
+  isWritable: boolean
+}
+
+interface JupiterIxJson {
+  programId: string
+  accounts: JupiterAccountMetaJson[]
+  data: string // base64
+}
+
+interface JupiterSwapInstructionsResp {
+  computeBudgetInstructions?: JupiterIxJson[]
+  setupInstructions?: JupiterIxJson[]
+  swapInstruction: JupiterIxJson
+  cleanupInstruction?: JupiterIxJson
+  addressLookupTableAddresses?: string[]
+}
+
+/**
+ * Bare quote response (raw Jupiter v6 schema, used by /swap-instructions).
+ * Distinct from `getJupiterQuote()` which returns UI-shaped data.
+ */
+export async function getJupiterQuoteRaw(
+  inputMint: string,
+  outputMint: string,
+  amountLamports: number,
+  slippageBps = 50,
+): Promise<JupiterQuote> {
+  const params = new URLSearchParams({
+    inputMint,
+    outputMint,
+    amount: String(Math.floor(amountLamports)),
+    slippageBps: String(slippageBps),
+    onlyDirectRoutes: 'false',
+    asLegacyTransaction: 'false',
+  })
+  const res = await fetch(`${JUPITER_QUOTE_URL}?${params}`)
+  if (!res.ok) throw new Error(`Jupiter quote failed: ${res.statusText}`)
+  return res.json()
+}
+
+/**
+ * Fetch swap instructions for CPI from our program. The vault PDA acts as
+ * the userPublicKey because invoke_signed re-attaches the PDA signature.
+ */
+export async function getJupiterSwapInstructions(
+  quote: JupiterQuote,
+  vaultPda: string,
+  opts: { wrapAndUnwrapSol?: boolean } = {},
+): Promise<JupiterSwapInstructionsResp> {
+  const res = await fetch(JUPITER_SWAP_INSTRUCTIONS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      quoteResponse: quote,
+      userPublicKey: vaultPda,
+      wrapAndUnwrapSol: opts.wrapAndUnwrapSol ?? false,
+      dynamicComputeUnitLimit: true,
+      prioritizationFeeLamports: 'auto',
+    }),
+  })
+  if (!res.ok) throw new Error(`Jupiter swap-instructions failed: ${await res.text()}`)
+  const body = (await res.json()) as JupiterSwapInstructionsResp
+  if (!body.swapInstruction) throw new Error('Jupiter response missing swapInstruction')
+  return body
+}
+
+export interface JupiterCpiPayload {
+  ixData: Buffer
+  remainingAccounts: AccountMeta[]
+  minOut: bigint
+  addressLookupTableAddresses: string[]
+  quote: JupiterQuote
+}
+
+function decodeIx(ix: JupiterIxJson): { data: Buffer; metas: AccountMeta[] } {
+  const data = Buffer.from(ix.data, 'base64')
+  const metas: AccountMeta[] = ix.accounts.map((a) => ({
+    pubkey: new PublicKey(a.pubkey),
+    isSigner: a.isSigner,
+    isWritable: a.isWritable,
+  }))
+  return { data, metas }
+}
+
+/**
+ * One-call helper: quote + swap-instructions + repack into the shape
+ * `execute_swap(args, remainingAccounts)` expects.
+ *
+ * NOTE: pass `vaultPda` (NOT the wallet) because Jupiter routes outputs to
+ * `userPublicKey` and our program signs as the vault PDA via invoke_signed.
+ */
+export async function prepareJupiterCpiPayload(
+  inputMint: string,
+  outputMint: string,
+  amountLamports: number,
+  vaultPda: string,
+  slippageBps = 50,
+): Promise<JupiterCpiPayload> {
+  const quote = await getJupiterQuoteRaw(inputMint, outputMint, amountLamports, slippageBps)
+  const resp = await getJupiterSwapInstructions(quote, vaultPda)
+  const { data, metas } = decodeIx(resp.swapInstruction)
+
+  // minOut = otherAmountThreshold (Jupiter's slippage-bounded floor) when set,
+  // else outAmount * (10_000 - slippageBps) / 10_000 as a defensive fallback.
+  const out = BigInt(quote.outAmount)
+  const threshold = BigInt(quote.otherAmountThreshold ?? '0')
+  const minOut =
+    threshold > 0n
+      ? threshold
+      : (out * BigInt(10_000 - slippageBps)) / 10_000n
+
+  return {
+    ixData: data,
+    remainingAccounts: metas,
+    minOut,
+    addressLookupTableAddresses: resp.addressLookupTableAddresses ?? [],
+    quote,
+  }
 }

@@ -1,0 +1,23 @@
+{
+  "name": "@potbot/program",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PotBot v2 Anchor program (devnet) — Rust workspace + TS test harness",
+  "scripts": {
+    "test": "anchor test",
+    "test:redeem": "ts-mocha -p ./tsconfig.json -t 1000000 tests/redeem_tokens.test.ts",
+    "test:smoke": "ts-mocha -p ./tsconfig.json -t 1000000 tests/smoke.test.ts"
+  },
+  "devDependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@solana/spl-token": "^0.4.8",
+    "@solana/web3.js": "^1.95.0",
+    "@types/chai": "^4.3.16",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^20.14.0",
+    "chai": "^4.4.1",
+    "mocha": "^10.7.0",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^5.5.0"
+  }
+}

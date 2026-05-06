@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program;
 use crate::state::*;
 use crate::errors::PotError;
+use crate::constants::{POT_CREATION_FEE, TREASURY_ADDRESS};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CreatePotParams {
@@ -46,6 +47,14 @@ pub struct CreatePot<'info> {
         bump
     )]
     pub vault: SystemAccount<'info>,
+
+    /// PotBot protocol treasury — receives POT_CREATION_FEE.
+    /// CHECK: hardcoded constant; address constraint below pins the pubkey.
+    #[account(
+        mut,
+        address = TREASURY_ADDRESS @ PotError::UnauthorizedAccess
+    )]
+    pub treasury: SystemAccount<'info>,
 
     #[account(mut)]
     pub authority: Signer<'info>,
@@ -115,6 +124,21 @@ pub fn handler(ctx: Context<CreatePot>, params: CreatePotParams) -> Result<()> {
         quorum_bps:            params.quorum_bps,
         timelock_seconds:      params.timelock_seconds,
     };
+
+    // Protocol creation fee: 0.01 SOL → treasury.
+    if POT_CREATION_FEE > 0 {
+        system_program::transfer(
+            CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.authority.to_account_info(),
+                    to: ctx.accounts.treasury.to_account_info(),
+                },
+            ),
+            POT_CREATION_FEE,
+        )?;
+        msg!("Protocol fee: {} lamports -> treasury {}", POT_CREATION_FEE, TREASURY_ADDRESS);
+    }
 
     msg!("POT \"{}\" created by {} (public={}, timelock={}s)",
         pot.name, pot.authority, pot.config.is_public, pot.governance.timelock_seconds);

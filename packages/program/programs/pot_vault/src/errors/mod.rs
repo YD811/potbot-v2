@@ -145,6 +145,14 @@ pub enum ErrorCode {
     // ─── Math (alias of ArithmeticOverflow for new instructions) ─────────
     #[msg("Arithmetic overflow during fixed-point math")]
     MathOverflow,
+
+    // ─── redeem_tokens ────────────────────────────────────────────────────
+    #[msg("Redemption exceeds 80% vault liquidity reserve")]
+    WithdrawalReserveBreached,
+    #[msg("Pot is paused — redemptions blocked")]
+    PotPaused,
+    #[msg("Amount must be greater than zero")]
+    InvalidAmount,
 }
 
 /// Alias used throughout instruction handlers.
