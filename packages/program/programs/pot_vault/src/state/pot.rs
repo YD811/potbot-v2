@@ -132,9 +132,9 @@ impl PotAccount {
         }
         (vault_lamports as u128)
             .checked_mul(1_000_000_000)
-            .ok_or(error!(PotError::ArithmeticOverflow))?
+            .unwrap_or(0)
             .checked_div(self.total_shares as u128)
-            .ok_or(error!(PotError::ArithmeticOverflow))? as u64
+            .unwrap_or(0) as u64
     }
 
     pub fn lamports_to_shares(&self, lamports: u64, vault_lamports: u64) -> u64 {
@@ -146,9 +146,9 @@ impl PotAccount {
         }
         (lamports as u128)
             .checked_mul(self.total_shares as u128)
-            .ok_or(error!(PotError::ArithmeticOverflow))?
+            .unwrap_or(0)
             .checked_div(vault_lamports as u128)
-            .ok_or(error!(PotError::ArithmeticOverflow))? as u64
+            .unwrap_or(0) as u64
     }
 
     pub fn shares_to_lamports(&self, shares: u64, vault_lamports: u64) -> u64 {
@@ -157,9 +157,9 @@ impl PotAccount {
         }
         (shares as u128)
             .checked_mul(vault_lamports as u128)
-            .ok_or(error!(PotError::ArithmeticOverflow))?
+            .unwrap_or(0)
             .checked_div(self.total_shares as u128)
-            .ok_or(error!(PotError::ArithmeticOverflow))? as u64
+            .unwrap_or(0) as u64
     }
 
     pub fn is_autocracy(&self, level: u8) -> bool {
