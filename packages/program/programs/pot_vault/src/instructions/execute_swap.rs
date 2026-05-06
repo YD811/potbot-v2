@@ -513,7 +513,10 @@ fn enforce_spending_policy<'info>(
         crate::errors::PotError::MintNotAllowlisted
     );
 
-    pot.check_single_swap_cap(args.max_in, &strategy.input_mint)?;
+    // Use real vault SOL balance for the per-swap size cap. This replaces the
+    // legacy fee_reserve proxy and gives a faithful "% of vault" semantics.
+    let vault_lamports = ctx.accounts.vault.lamports();
+    pot.check_single_swap_cap_against_vault(args.max_in, vault_lamports)?;
     pot.check_daily_budget(args.max_in, Clock::get()?.unix_timestamp)?;
 
     Ok(())

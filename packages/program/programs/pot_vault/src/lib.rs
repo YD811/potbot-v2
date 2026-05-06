@@ -96,6 +96,12 @@ pub mod pot_vault {
         instructions::tokenize_shares::mint_tokens_to_member(ctx, shares_amount)
     }
 
+    /// Burn SPL share-tokens and receive SOL from the vault at NAV (liquid exit).
+    /// Caps a single redemption at 80% of liquid vault balance.
+    pub fn redeem_tokens(ctx: Context<RedeemTokens>, token_amount: u64) -> Result<()> {
+        instructions::redeem_tokens::handler(ctx, token_amount)
+    }
+
     // ─── Premium features ──────────────────────────────────────────────────
 
     pub fn create_sns_domain(ctx: Context<CreateSnsDomain>, domain_name: String) -> Result<()> {
@@ -207,5 +213,17 @@ pub mod pot_vault {
         args: SetSpendingPolicyArgs,
     ) -> Result<()> {
         instructions::pot_admin::set_spending_policy(ctx, args)
+    }
+
+    // ─── Yield routing (Phase 4 stub — emit-only) ─────────────────────────
+
+    /// Route idle vault SOL to a yield protocol (Kamino / Meteora).
+    /// Phase 4 stub: validates allocation guards and emits an event without
+    /// performing the external CPI. Real integration ships post-hackathon.
+    pub fn route_to_yield(
+        ctx: Context<RouteToYield>,
+        args: RouteToYieldArgs,
+    ) -> Result<()> {
+        instructions::route_to_yield::handler(ctx, args)
     }
 }

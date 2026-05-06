@@ -7,6 +7,7 @@ pub const TREASURY_ADDRESS: Pubkey = pubkey!("2LeG86xuss12WrYsamTGk4zLfBbXJpWZpr
 pub const TOKENIZATION_FEE: u64 = 100_000_000;  // 0.1 SOL
 pub const SNS_DOMAIN_FEE: u64 = 250_000_000;     // 0.25 SOL
 pub const TAMAGOTCHI_NFT_FEE: u64 = 50_000_000;  // 0.05 SOL
+pub const POT_CREATION_FEE: u64 = 10_000_000;    // 0.01 SOL — protocol fee on create_pot
 
 /// Tamagotchi level thresholds (XP)
 pub const TAMAGOTCHI_THRESHOLDS: &[u64] = &[0, 100, 500, 2000, 8000, 25000];
