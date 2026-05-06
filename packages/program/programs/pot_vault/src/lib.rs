@@ -96,6 +96,18 @@ pub mod pot_vault {
         instructions::tokenize_shares::mint_tokens_to_member(ctx, shares_amount)
     }
 
+    pub fn redeem_tokens(ctx: Context<RedeemTokens>, amount: u64) -> Result<()> {
+        instructions::redeem_tokens::handler(ctx, amount)
+    }
+
+    pub fn route_to_yield(
+        ctx: Context<RouteToYield>,
+        target: state::strategy::YieldTarget,
+        amount: u64,
+    ) -> Result<()> {
+        instructions::route_to_yield::handler(ctx, target, amount)
+    }
+
     // ─── Premium features ──────────────────────────────────────────────────
 
     pub fn create_sns_domain(ctx: Context<CreateSnsDomain>, domain_name: String) -> Result<()> {

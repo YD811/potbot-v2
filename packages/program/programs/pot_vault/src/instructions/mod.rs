@@ -10,6 +10,8 @@ pub mod execute_proposal;
 pub mod update_tamagotchi;
 pub mod strategy_vault;
 pub mod init_token_mint;
+pub mod redeem_tokens;
+pub mod route_to_yield;
 
 // Premium features
 pub mod tokenize_shares;
@@ -39,6 +41,8 @@ pub use execute_proposal::*;
 pub use update_tamagotchi::*;
 pub use strategy_vault::*;
 pub use init_token_mint::*;
+pub use redeem_tokens::*;
+pub use route_to_yield::*;
 pub use tokenize_shares::*;
 pub use create_sns_domain::*;
 pub use mint_tamagotchi_nft::*;
