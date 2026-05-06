@@ -4,12 +4,13 @@ import { useState, useMemo } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { usePots } from '@/hooks/usePots'
+import { usePots, useIsProgramLive } from '@/hooks/usePots'
 import { useMockStore } from '@/lib/mock-store'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 import { useSolPrice } from '@/lib/prices'
 import { useVaultAnalyticsBatch } from '@/hooks/useAnalytics'
 import SNSRegistrarPanel from '@/components/SNSRegistrarPanel'
+import { StrategyBadge } from '@/components/StrategyBadge'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -27,6 +28,7 @@ const YIELD_LABELS: Record<number, string> = {
 export default function MyPotsPage() {
   const { publicKey, connected } = useWallet()
   const { data: allPots, isLoading } = usePots()
+  const { data: isProgramLive } = useIsProgramLive()
   const { price: solPrice } = useSolPrice()
   const walletStr = publicKey?.toBase58() ?? ''
 
@@ -200,6 +202,10 @@ export default function MyPotsPage() {
                       {/* Name + badges */}
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <h3 className="font-semibold text-white text-base truncate">{pot.name}</h3>
+                        <StrategyBadge
+                          mode={isProgramLive ? 'LIVE' : 'MOCK'}
+                          className="shrink-0"
+                        />
                         {isCreator && (
                           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
                             👑 Creator
