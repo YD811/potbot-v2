@@ -66,14 +66,16 @@ const DEFAULT_STATE: WizardState = {
 
 const bpsToPercent = (bps: number) => (bps / 100).toFixed(1);
 
+// Palette consumes theme tokens from globals.css so this page follows
+// the global dark/light switch instead of being locked to dark.
 const css = {
-  bg: '#0D1117',
-  card: '#111827',
-  border: '#1A2332',
+  bg: 'var(--c-bg)',
+  card: 'var(--c-card)',
+  border: 'var(--c-border)',
   green: '#14F195',
   purple: '#9945FF',
-  muted: '#8B9BB4',
-  text: '#F9FAFB',
+  muted: 'var(--c-muted)',
+  text: 'var(--c-text)',
 };
 
 const inputStyle: React.CSSProperties = {
@@ -386,7 +388,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
       <span style={{ color: css.muted }}>{label}</span>
-      <span style={{ color: '#fff', fontWeight: '600', textAlign: 'right', maxWidth: '60%' }}>{value}</span>
+      <span style={{ color: 'var(--c-text)', fontWeight: '600', textAlign: 'right', maxWidth: '60%' }}>{value}</span>
     </div>
   );
 }
@@ -410,7 +412,7 @@ function Step4({ form }: { form: WizardState }) {
             {[
               { bg: `${stratMeta.color}20`, color: stratMeta.color, label: `${stratMeta.emoji} ${stratMeta.label}` },
               { bg: `${riskMeta.color}20`, color: riskMeta.color, label: riskMeta.label },
-              { bg: '#ffffff10', color: '#fff', label: `${tama.emoji} ${tama.title} (starts here)` },
+              { bg: '#ffffff10', color: 'var(--c-text)', label: `${tama.emoji} ${tama.title} (starts here)` },
             ].map((badge) => (
               <span key={badge.label} style={{
                 padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '700',
@@ -462,7 +464,7 @@ function Step5({ form, vaultPubkey }: { form: WizardState; vaultPubkey: string }
       <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '8px' }}>Vault Created!</h2>
       <p style={{ color: css.muted, fontSize: '14px', marginBottom: '28px' }}>
         Your Strategy Vault is live on Solana. You start as a{' '}
-        <span style={{ color: '#fff', fontWeight: '600' }}>🥚 Hatchling (Egg)</span>.
+        <span style={{ color: 'var(--c-text)', fontWeight: '600' }}>🥚 Hatchling (Egg)</span>.
         Grow your vault to unlock lower fees.
       </p>
 
@@ -534,7 +536,7 @@ export default function CreateVaultPage() {
   };
 
   return (
-    <div style={{ backgroundColor: css.bg, minHeight: '100vh', color: '#fff', fontFamily: 'Geist, sans-serif' }}>
+    <div style={{ backgroundColor: css.bg, minHeight: '100vh', color: 'var(--c-text)', fontFamily: 'Geist, sans-serif' }}>
       <div style={{ padding: '16px 24px', borderBottom: `1px solid ${css.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/vaults" style={{ color: css.muted, textDecoration: 'none', fontSize: '14px' }}>← Back to Vaults</Link>
         <span style={{ fontSize: '14px', color: css.muted }}>{step < 5 ? `Step ${step} of 4` : 'Done!'}</span>
@@ -600,7 +602,7 @@ export default function CreateVaultPage() {
               style={{
                 padding: '12px 32px',
                 backgroundColor: canGoNext() && !deploying ? css.purple : '#2D2D4E',
-                border: 'none', borderRadius: '8px', color: '#fff',
+                border: 'none', borderRadius: '8px', color: 'var(--c-text)',
                 fontSize: '14px', fontWeight: '700',
                 cursor: canGoNext() && !deploying ? 'pointer' : 'not-allowed',
                 display: 'flex', alignItems: 'center', gap: '8px',

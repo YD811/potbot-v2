@@ -1,7 +1,8 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useMockStore } from '@/lib/mock-store'
+import { RedeemModal } from '@/components/RedeemModal'
 
 interface Props {
   potPubkey: string
@@ -31,6 +32,7 @@ function deriveTokenSymbol(potName: string): string {
 
 export default function SharesTab({ potPubkey, canWithdraw = true }: Props) {
   const { pots, members } = useMockStore()
+  const [redeemOpen, setRedeemOpen] = useState(false)
 
   const pot = useMemo(() => pots.find((p) => p.pubkey === potPubkey), [pots, potPubkey])
   const myMembership = useMemo(
@@ -132,11 +134,12 @@ export default function SharesTab({ potPubkey, canWithdraw = true }: Props) {
             </div>
           </div>
           <button
-            disabled={!canWithdraw}
+            disabled={!canWithdraw || shareData.userBalance <= 0}
             title={!canWithdraw ? 'Members only' : undefined}
+            onClick={() => setRedeemOpen(true)}
             className="btn-secondary w-full mt-4 py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            🔥 Redeem Shares
+            🔥 Redeem Shares → SOL at NAV
           </button>
         </div>
       ) : (
@@ -178,6 +181,16 @@ export default function SharesTab({ potPubkey, canWithdraw = true }: Props) {
           <p>• Like an ETF: owning tokens = owning a proportional slice of all vault assets</p>
         </div>
       </div>
+
+      <RedeemModal
+        open={redeemOpen}
+        onClose={() => setRedeemOpen(false)}
+        potPubkey={potPubkey}
+        symbol={shareData.symbol}
+        userTokenBalance={shareData.userBalance}
+        vaultBalanceSol={shareData.aum}
+        totalShares={shareData.totalSupply}
+      />
     </div>
   )
 }

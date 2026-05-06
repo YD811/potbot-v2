@@ -12,11 +12,16 @@
 //
 // The handler enforces:
 //   - admin-only (signer == pot.authority)
-//   - YieldTarget matches pot.config.yield_strategy
+//   - YieldRouteTarget matches pot.config.yield_strategy
 //   - amount <= max_yield_allocation_bps of vault.lamports()
 //
 // When Phase 4 lands, replace the `// CPI placeholder` block with the real
 // CPI call; everything else stays.
+//
+// NOTE: named `YieldRouteTarget` (not `YieldTarget`) to avoid collision with
+// the on-chain `state::strategy::YieldTarget` enum, which has different
+// variants and is stored on `StrategyAccount`. Anchor's IDL generator
+// rejects two pub types with the same name in one program.
 
 use anchor_lang::prelude::*;
 
@@ -25,7 +30,7 @@ use crate::errors::PotError;
 use crate::state::pot::{PotAccount, YieldStrategy};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
-pub enum YieldTarget {
+pub enum YieldRouteTarget {
     Kamino,
     MeteoraStable,
     MeteoraDynamic,
@@ -34,7 +39,7 @@ pub enum YieldTarget {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct RouteToYieldArgs {
     pub amount_lamports: u64,
-    pub yield_target: YieldTarget,
+    pub yield_target: YieldRouteTarget,
 }
 
 #[derive(Accounts)]
@@ -68,9 +73,9 @@ pub fn handler(ctx: Context<RouteToYield>, args: RouteToYieldArgs) -> Result<()>
         let pot = &ctx.accounts.pot;
         let aligned = matches!(
             (&args.yield_target, &pot.config.yield_strategy),
-            (YieldTarget::Kamino, YieldStrategy::Conservative)
-                | (YieldTarget::MeteoraStable, YieldStrategy::Balanced)
-                | (YieldTarget::MeteoraDynamic, YieldStrategy::Aggressive)
+            (YieldRouteTarget::Kamino, YieldStrategy::Conservative)
+                | (YieldRouteTarget::MeteoraStable, YieldStrategy::Balanced)
+                | (YieldRouteTarget::MeteoraDynamic, YieldStrategy::Aggressive)
         );
         require!(aligned, PotError::InvalidYieldStrategy);
 
@@ -112,7 +117,7 @@ pub fn handler(ctx: Context<RouteToYield>, args: RouteToYieldArgs) -> Result<()>
 #[event]
 pub struct YieldRouted {
     pub pot: Pubkey,
-    pub target: YieldTarget,
+    pub target: YieldRouteTarget,
     pub amount: u64,
     pub executed: bool,
     pub timestamp: i64,

@@ -11,10 +11,12 @@ import {
   getMemberAddress,
   getProposalAddress,
   getVoterRecordAddress,
+  getTokenMintAddress,
   POT_PROGRAM_ID,
   TREASURY_ADDRESS,
   IDL,
 } from '@potbot/sdk'
+import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token'
 import { useMockStore } from '@/lib/mock-store'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
@@ -543,6 +545,68 @@ export function useWithdraw() {
       }
 
       useMockStore.getState().withdraw(params.potAddress, publicKey.toBase58(), params.shares)
+      return { tx: 'mock-tx-' + Date.now() }
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['pot', vars.potAddress] })
+      queryClient.invalidateQueries({ queryKey: ['members', vars.potAddress] })
+      queryClient.invalidateQueries({ queryKey: ['pots'] })
+    },
+  })
+}
+
+/**
+ * Burn SPL share-tokens from the member's ATA and receive SOL from the
+ * vault at NAV. Mirrors the on-chain `redeem_tokens` instruction.
+ *
+ * `tokenAmount` is in SPL token units (NOT internal shares). The on-chain
+ * program divides by `pot.shares_per_sol` (default 100) to get internal
+ * shares before pricing — so the caller MUST pass a clean multiple of
+ * `shares_per_sol` or the tx is rejected with InvalidAmount.
+ */
+export function useRedeemTokens() {
+  const { publicKey } = useWallet()
+  const program = useProgram()
+  const { data: isLive } = useIsProgramLive()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: { potAddress: string; tokenAmount: number }) => {
+      if (!publicKey) throw new Error('Wallet not connected')
+      if (!Number.isFinite(params.tokenAmount) || params.tokenAmount <= 0) {
+        throw new Error('Token amount must be > 0')
+      }
+
+      if (isLive && program) {
+        try {
+          const potPk = new PublicKey(params.potAddress)
+          const [vaultPda] = getVaultAddress(potPk)
+          const [tokenMintPda] = getTokenMintAddress(potPk)
+          const memberAta = getAssociatedTokenAddressSync(tokenMintPda, publicKey)
+          const tx = await (program as any).methods
+            .redeemTokens(new BN(params.tokenAmount))
+            .accounts({
+              pot: potPk,
+              vault: vaultPda,
+              member: publicKey,
+              tokenMint: tokenMintPda,
+              memberTokenAta: memberAta,
+              tokenProgram: TOKEN_PROGRAM_ID,
+              systemProgram: SystemProgram.programId,
+            })
+            .rpc()
+          return { tx }
+        } catch (e) {
+          console.warn('On-chain redeem failed, falling back to mock:', e)
+        }
+      }
+
+      // Mock fallback: treat tokenAmount as SPL units (1 internal share = 100
+      // SPL by default), then call mock withdraw with internal-share count.
+      const internalShares = Math.floor(params.tokenAmount / 100)
+      useMockStore
+        .getState()
+        .withdraw(params.potAddress, publicKey.toBase58(), internalShares)
       return { tx: 'mock-tx-' + Date.now() }
     },
     onSuccess: (_, vars) => {
