@@ -7,6 +7,11 @@
   --purple: #8b5cf6;
   --blue: #3b82f6;
   --bg: #090b12;
+  --surface-radius: 24px;
+  --surface-border: rgba(255, 255, 255, 0.12);
+  --surface-border-hover: rgba(255, 255, 255, 0.24);
+  --surface-bg: rgba(255, 255, 255, 0.04);
+  --surface-bg-hover: rgba(255, 255, 255, 0.07);
 }
 
 * {
@@ -65,17 +70,38 @@ body {
   66% { transform: translateY(12px) scale(0.98); }
 }
 
-.glass {
-  background: rgba(255, 255, 255, 0.04);
+.glass,
+.surface-card {
+  background: var(--surface-bg);
   backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--surface-radius);
   transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease;
 }
 
-.glass:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.22);
+.glass:hover,
+.surface-card:hover {
+  background: var(--surface-bg-hover);
+  border-color: var(--surface-border-hover);
+}
+
+.surface-card.surface-card-accent {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: rgba(0, 255, 136, 0.25);
+}
+
+.surface-card.surface-card-accent:hover {
+  background: rgba(0, 255, 136, 0.14);
+  border-color: rgba(0, 255, 136, 0.36);
+}
+
+.blog-page .blob,
+.blog-page .hero-shimmer,
+.blog-page .spotlight-card::after,
+[data-page="blog"] .blob,
+[data-page="blog"] .hero-shimmer,
+[data-page="blog"] .spotlight-card::after {
+  display: none;
 }
 
 .grid-bg {

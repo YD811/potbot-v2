@@ -1,85 +1,75 @@
-const stats = [
-  { value: '42+', label: 'Active groups' },
-  { value: '175+ SOL', label: 'Collective capital' },
-  { value: '< 2 min', label: 'Time to launch a vault' },
-  { value: '24/7', label: 'On-chain transparency' },
+const highlights = [
+  { value: '60+', label: 'MCP actions for LLMs' },
+  { value: '5', label: 'PotPet growth stages' },
+  { value: 'May 11', label: 'Frontier deadline' },
+  { value: 'Devnet', label: 'Anchor program live' },
 ]
 
-const audienceTracks = [
-  {
-    title: 'New to crypto',
-    badge: 'Beginner path',
-    desc: 'Clear setup wizard, plain-language voting, and guided prompts so friends can start safely without DeFi jargon.',
-    points: ['Simple deposit flow', 'Readable proposal summaries', 'Built-in voting reminders'],
-  },
-  {
-    title: 'For active traders',
-    badge: 'Pro controls',
-    desc: 'Advanced governance modes, detailed swap parameters, and predictable execution rules for serious communities.',
-    points: ['Configurable quorum & execution', 'Jupiter routing + slippage control', 'Auditable proposal lifecycle'],
-  },
+const stack = [
+  'Anchor 0.30',
+  'Rust',
+  'Next.js 14',
+  'TanStack Query',
+  'Zustand',
+  'Jupiter API v6',
+  'Cloudflare Pages + KV',
+  'Telegram Bot API',
+  'PrivacyCash ZK',
 ]
 
 const features = [
   {
-    icon: '🧺',
-    title: 'Shared Vault, personal ownership',
-    desc: 'Everyone contributes to one strategy vault, but each member keeps a proportional claim that can be withdrawn transparently.',
-    tags: ['Non-custodial', 'Share-based accounting', 'On-chain balance'],
-  },
-  {
-    icon: '✅',
-    title: 'Voting that feels familiar',
-    desc: 'Turn trade ideas into proposals that look like clear checklists. Members vote by stake, and approved decisions execute automatically.',
-    tags: ['Clear decision flow', 'Auto execution', 'Quorum rules'],
-  },
-  {
-    icon: '⚙️',
-    title: 'Professional trade execution',
-    desc: 'Use Jupiter aggregation for route discovery and define slippage guardrails before execution for predictable risk management.',
-    tags: ['Best-route quotes', 'Slippage guardrails', 'Atomic execution'],
-  },
-  {
     icon: '💬',
-    title: 'Operate from Telegram',
-    desc: 'Teams can create vaults, review proposals, and vote directly in chat, while the web app remains the full command center.',
-    tags: ['Chat-native UX', 'Instant alerts', 'Web + bot parity'],
+    title: 'Telegram-native pots',
+    desc: 'Groups create a shared vault, coordinate liquidity, and keep governance where the conversation already happens: Telegram.',
+    tags: ['Group vaults', 'Shared liquidity', 'Chat-native UX'],
+  },
+  {
+    icon: '🔁',
+    title: 'Jupiter swap governance',
+    desc: 'Members turn swap ideas into proposals, vote with transparent rules, and execute approved trades on-chain through the Anchor program.',
+    tags: ['Jupiter v6', 'Swap proposals', 'On-chain execution'],
+  },
+  {
+    icon: '🤖',
+    title: 'MCP-native AI agent',
+    desc: 'Any LLM can access 60+ on-chain PotBot actions through MCP, making PotBot the first Solana ecosystem interface built for AI-native group treasuries.',
+    tags: ['MCP', 'LLM-ready', 'Agent actions'],
+  },
+  {
+    icon: '🛡️',
+    title: 'Optional Squads v4 multisig',
+    desc: 'Teams can add Squads v4 as an extra withdrawal-control layer without compromising PotBot’s vote-driven product flow.',
+    tags: ['Multisig', 'Withdrawal safety', 'Treasury ops'],
   },
   {
     icon: '🪴',
-    title: 'Progress system that keeps teams engaged',
-    desc: 'Your vault companion evolves with activity, giving social groups a fun feedback loop without blocking serious workflows.',
-    tags: ['XP milestones', '6 growth stages', 'Community retention'],
+    title: 'PotPet / Money Tree',
+    desc: 'An animated SVG companion grows from Seed to Tree as the group earns season score, turning treasury activity into a visible social loop.',
+    tags: ['SVG animation', 'Season score', 'Seed → Tree'],
   },
   {
-    icon: '🔎',
-    title: 'Transparency and trust by design',
-    desc: 'From deposits to execution, every key action is visible and verifiable so both newcomers and power users understand what happened.',
-    tags: ['Event history', 'Accountability', 'Team confidence'],
+    icon: '🏆',
+    title: 'Season prize layer',
+    desc: 'Leaderboards, dashboards, tutorials, and seasonal competitions turn group treasury management into a product people return to.',
+    tags: ['Prize pool', 'Leaderboard', 'Onboarding'],
   },
 ]
 
-const steps = [
-  {
-    n: '01',
-    title: 'Create a vault in plain language',
-    desc: 'Name the group, choose a governance profile, and set basic safety defaults. Your team can start with simple settings and upgrade later.',
-  },
-  {
-    n: '02',
-    title: 'Invite members and fund the strategy',
-    desc: 'Share an invite link in chat. Members deposit and instantly see ownership share and available balance in one place.',
-  },
-  {
-    n: '03',
-    title: 'Propose a trade with clear context',
-    desc: 'Draft the swap, include reason + amount, and let the group review the plan with transparent execution parameters.',
-  },
-  {
-    n: '04',
-    title: 'Vote, execute, and track outcomes',
-    desc: 'Once a proposal passes quorum, execution happens automatically. Everyone can review what was approved and how it performed.',
-  },
+const roadmap = [
+  { label: 'Anchor program deployed on devnet', status: 'Done' },
+  { label: 'Phases 1–4 merged: UI backbone, season layer, token layer, polish + OG metadata', status: 'Done' },
+  { label: 'Squads v4 multisig integration merged to main', status: 'Done' },
+  { label: 'PR #32 Privy auth: email and social login awaiting Vercel env vars', status: 'In review' },
+  { label: 'Mainnet cut planned around May 7–8, 2026', status: 'Next' },
+  { label: 'ZK privacy layer STAMPPOT with PrivacyCash proofs', status: 'Building' },
+]
+
+const links = [
+  { label: 'Open App', href: 'https://potbot.fun' },
+  { label: 'GitHub', href: 'https://github.com/YD811/potbot-v2' },
+  { label: 'Telegram Bot', href: 'https://t.me/Trade_pot_bot' },
+  { label: 'Twitter', href: 'https://twitter.com/PotBot_sol' },
 ]
 
 export default function Home() {
@@ -93,75 +83,67 @@ export default function Home() {
         <nav className="relative z-20 max-w-6xl w-full mx-auto py-6 flex flex-wrap gap-4 items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-xl">
             <span className="text-2xl">🪴</span>
-            <span className="gradient-text">PotBot</span>
+            <span className="gradient-text">PotBot v2</span>
           </div>
           <div className="flex items-center gap-5 text-sm text-gray-300">
-            <a href="#features" className="hover:text-white transition-colors">Product</a>
-            <a href="#how-it-works" className="hover:text-white transition-colors">How it works</a>
-            <a href="#trust" className="hover:text-white transition-colors">Trust</a>
-            <a href="https://potbot-web.vercel.app" className="btn-primary py-2 px-5 text-sm">
-              Launch App →
-            </a>
+            <a href="#protocol" className="hover:text-white transition-colors">Protocol</a>
+            <a href="#features" className="hover:text-white transition-colors">Features</a>
+            <a href="#status" className="hover:text-white transition-colors">Status</a>
+            <a href="https://potbot.fun" className="btn-primary py-2 px-5 text-sm">Launch App →</a>
           </div>
         </nav>
 
-        <div className="relative z-10 max-w-6xl w-full mx-auto mt-8 md:mt-16 text-center md:text-left">
-          <div className="fade-in-delay-1 inline-flex items-center gap-2 bg-white/6 border border-white/10 rounded-full px-4 py-2 text-sm text-gray-200 mb-8">
-            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            Welcoming for first-time users, powerful for trading communities
+        <div className="relative z-10 max-w-6xl w-full mx-auto mt-8 md:mt-16 grid lg:grid-cols-[1.05fr_0.95fr] gap-10 items-center">
+          <div>
+            <div className="fade-in-delay-1 inline-flex items-center gap-2 bg-white/6 border border-green-400/30 rounded-full px-4 py-2 text-sm text-green-100 mb-8">
+              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              Featured Y-DAO Project · Solana Frontier 2026
+            </div>
+
+            <h1 className="fade-in-delay-2 text-5xl md:text-7xl font-black mb-6 leading-tight max-w-4xl">
+              Group treasuries on Solana.
+              <br />
+              <span className="gradient-text">Managed by AI, governed by members.</span>
+            </h1>
+
+            <p className="fade-in-delay-3 text-lg md:text-2xl text-gray-300 mb-8 max-w-3xl">
+              PotBot is the first Telegram-native protocol for collective treasury management on Solana. A group creates a shared vault, votes on swap proposals, and executes decisions on-chain through an Anchor program.
+            </p>
+
+            <blockquote className="fade-in-delay-3 glass p-5 mb-10 border-green-400/30 text-xl md:text-2xl font-semibold leading-snug">
+              “The first protocol where Claude manages a group treasury on Solana via MCP. AI proposes. Members vote. Program executes. No trust — only code.”
+            </blockquote>
+
+            <div className="fade-in-delay-4 flex flex-wrap items-center gap-4">
+              <a href="https://potbot.fun" className="btn-primary text-lg px-8 py-4">🌐 Open PotBot</a>
+              <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noreferrer" className="btn-secondary text-lg px-8 py-4">View GitHub</a>
+            </div>
           </div>
 
-          <h1 className="fade-in-delay-2 text-5xl md:text-7xl font-black mb-6 leading-tight max-w-4xl">
-            Trade together.
-            <br />
-            <span className="gradient-text">Without chaos.</span>
-          </h1>
-
-          <p className="fade-in-delay-3 text-lg md:text-2xl text-gray-300 mb-10 max-w-3xl">
-            PotBot helps groups pool capital, vote on decisions, and execute strategies transparently on Solana — with an interface that feels friendly, not intimidating.
-          </p>
-
-          <div className="fade-in-delay-4 flex flex-wrap items-center justify-center md:justify-start gap-4">
-            <a href="https://potbot-web.vercel.app" className="btn-primary text-lg px-8 py-4">
-              🚀 Start your first vault
-            </a>
-            <a
-              href="https://github.com/YD811/potbot-v2"
-              target="_blank"
-              rel="noreferrer"
-              className="btn-secondary text-lg px-8 py-4"
-            >
-              View architecture
-            </a>
-          </div>
-        </div>
-
-        <div className="relative z-10 max-w-6xl w-full mx-auto mt-12 mb-16 grid md:grid-cols-2 gap-5">
-          {audienceTracks.map((track) => (
-            <article key={track.title} className="glass audience-card p-6">
-              <div className="text-xs uppercase tracking-wide text-green-300 mb-3">{track.badge}</div>
-              <h2 className="text-2xl font-bold mb-3">{track.title}</h2>
-              <p className="text-gray-300 mb-4">{track.desc}</p>
-              <ul className="space-y-2 text-sm text-gray-200">
-                {track.points.map((point) => (
-                  <li key={point} className="flex items-start gap-2">
-                    <span className="text-green-400 mt-0.5">●</span>
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
+          <article className="fade-in-delay-4 glass p-8 spotlight-card">
+            <div className="text-xs uppercase tracking-[0.3em] text-green-300 mb-5">Project card</div>
+            <h2 className="text-4xl font-black mb-3">PotBot v2</h2>
+            <p className="text-gray-300 text-lg mb-6">AI-assisted group DeFi for Telegram communities: propose, vote, execute, and grow a shared Money Tree together.</p>
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {highlights.map((stat) => (
+                <div key={stat.label} className="surface-card p-4">
+                  <div className="text-2xl font-black gradient-text">{stat.value}</div>
+                  <div className="text-xs text-gray-400 mt-1">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+            <div className="surface-card surface-card-accent p-4 text-sm text-green-100 break-all">
+              <div className="font-bold mb-1">Devnet Program ID</div>
+              GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK
+            </div>
+          </article>
         </div>
       </section>
 
-      <section className="border-y border-white/10 bg-white/[0.02] py-8">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          {stats.map((stat) => (
-            <div key={stat.label}>
-              <div className="text-3xl font-black gradient-text">{stat.value}</div>
-              <div className="text-sm text-gray-400 mt-1">{stat.label}</div>
-            </div>
+      <section id="protocol" className="border-y border-white/10 bg-white/[0.02] py-10 px-6">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-5 text-center">
+          {['AI proposes through MCP', 'Members vote in Telegram', 'Anchor program executes on-chain'].map((item) => (
+            <div key={item} className="glass p-5 text-lg font-bold">{item}</div>
           ))}
         </div>
       </section>
@@ -169,30 +151,22 @@ export default function Home() {
       <section id="features" className="py-28 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-black mb-4">Product experience redesigned for clarity</h2>
+            <div className="text-sm uppercase tracking-[0.3em] text-green-300 mb-4">What is implemented</div>
+            <h2 className="text-4xl md:text-5xl font-black mb-4">A complete group-treasury product loop</h2>
             <p className="text-gray-300 text-lg max-w-3xl mx-auto">
-              We shifted the message from “crypto complexity” to “team decision quality”, while preserving deep controls for advanced operators.
+              PotBot combines Telegram onboarding, on-chain Solana governance, AI-native operations, seasonal engagement, and tokenization into one protocol surface.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((f, index) => (
-              <article
-                key={f.title}
-                className="glass feature-card p-6"
-                style={{ animationDelay: `${index * 0.08}s` }}
-              >
+              <article key={f.title} className="glass feature-card p-6" style={{ animationDelay: `${index * 0.08}s` }}>
                 <div className="text-4xl mb-4">{f.icon}</div>
                 <h3 className="text-xl font-bold mb-2">{f.title}</h3>
                 <p className="text-gray-300 text-sm leading-relaxed mb-4">{f.desc}</p>
                 <div className="flex flex-wrap gap-2">
                   {f.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-xs px-2 py-1 rounded-full bg-white/5 text-gray-300 border border-white/10"
-                    >
-                      {tag}
-                    </span>
+                    <span key={tag} className="text-xs px-2 py-1 rounded-full bg-white/5 text-gray-300 border border-white/10">{tag}</span>
                   ))}
                 </div>
               </article>
@@ -201,81 +175,50 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="how-it-works" className="py-28 px-6 bg-white/[0.01]">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-black mb-4">How it works</h2>
-            <p className="text-gray-300 text-lg">Simple onboarding for new members, deterministic workflow for professionals.</p>
+      <section id="status" className="py-28 px-6 bg-white/[0.01]">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-[0.9fr_1.1fr] gap-8 items-start">
+          <div>
+            <div className="text-sm uppercase tracking-[0.3em] text-green-300 mb-4">May 2026 status</div>
+            <h2 className="text-4xl md:text-5xl font-black mb-5">Built for the Solana Frontier deadline</h2>
+            <p className="text-gray-300 text-lg mb-8">
+              The devnet program is live, the product backbone is merged, Squads v4 support is in main, and the mainnet cut is planned around May 7–8 before the May 11, 2026 hackathon deadline.
+            </p>
+            <div className="glass p-5">
+              <div className="font-bold mb-3">Pot tokenization flywheel</div>
+              <p className="text-sm text-gray-300">bags.fm integration tokenizes each pot and creates a $POT buyback flywheel around active group treasuries.</p>
+            </div>
           </div>
 
-          <div className="space-y-6">
-            {steps.map((step) => (
-              <article key={step.n} className="flex gap-5 items-start glass p-6 step-card">
-                <div className="step-num">{step.n}</div>
-                <div>
-                  <h3 className="text-lg font-bold mb-1">{step.title}</h3>
-                  <p className="text-gray-300 text-sm leading-relaxed">{step.desc}</p>
-                </div>
+          <div className="space-y-4">
+            {roadmap.map((item) => (
+              <article key={item.label} className="glass p-5 flex gap-4 items-start">
+                <div className="rounded-full bg-green-400/15 border border-green-400/30 px-3 py-1 text-xs font-bold text-green-200 min-w-20 text-center">{item.status}</div>
+                <p className="text-gray-200">{item.label}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="trust" className="py-28 px-6">
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 items-stretch">
-          <article className="glass p-8 spotlight-card">
-            <h2 className="text-3xl font-black mb-4">UX trust upgrades</h2>
-            <p className="text-gray-300 mb-6">
-              The interface now emphasizes understandable decisions first: who proposed, what changes, what risk limits apply, and when execution triggers.
-            </p>
-            <ul className="space-y-3 text-sm text-gray-200">
-              <li>• Use everyday language before technical terms.</li>
-              <li>• Surface key safety settings in one line.</li>
-              <li>• Keep Telegram and web actions consistent.</li>
-              <li>• Maintain full auditability for every critical action.</li>
-            </ul>
-          </article>
-
+      <section className="py-28 px-6">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-8">
           <article className="glass p-8">
-            <h2 className="text-3xl font-black mb-4">For professional operators</h2>
-            <p className="text-gray-300 mb-6">
-              Advanced groups still get precise execution controls, governance flexibility, and transparent accountability across each proposal lifecycle.
-            </p>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              {['Governance profiles', 'Execution threshold', 'Quorum visibility', 'Swap parameter clarity', 'Proposal status timeline', 'Role accountability'].map((item) => (
-                <div key={item} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-gray-200">
-                  {item}
-                </div>
+            <h2 className="text-3xl font-black mb-5">Stack</h2>
+            <div className="flex flex-wrap gap-3">
+              {stack.map((item) => (
+                <span key={item} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-200">{item}</span>
               ))}
             </div>
           </article>
-        </div>
-      </section>
 
-      <section className="py-24 px-6">
-        <div className="max-w-4xl mx-auto glass p-14 text-center relative overflow-hidden">
-          <div className="absolute inset-0 hero-shimmer opacity-30" />
-          <div className="relative z-10">
-            <div className="text-5xl mb-6">🪴</div>
-            <h2 className="text-4xl font-black mb-4">Build a smarter group trading workflow</h2>
-            <p className="text-gray-300 text-lg mb-10 max-w-2xl mx-auto">
-              Friendly onboarding for new members. Reliable governance and execution for experienced traders.
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <a href="https://potbot-web.vercel.app" className="btn-primary text-lg px-10 py-4">
-                Open PotBot App
-              </a>
-              <a
-                href="https://t.me/potbot_sol"
-                target="_blank"
-                rel="noreferrer"
-                className="btn-secondary text-lg px-10 py-4"
-              >
-                Join Telegram
-              </a>
+          <article className="glass p-8 spotlight-card">
+            <h2 className="text-3xl font-black mb-5">Featured project links</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {links.map((link) => (
+                <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="btn-secondary justify-center px-5 py-3">{link.label}</a>
+              ))}
             </div>
-          </div>
+          </article>
         </div>
       </section>
 
@@ -283,16 +226,15 @@ export default function Home() {
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 font-bold text-lg">
             <span className="text-2xl">🪴</span>
-            <span className="gradient-text">PotBot</span>
-            <span className="text-gray-500 ml-2 text-sm font-normal">Solana Frontier 2026</span>
+            <span className="gradient-text">PotBot v2</span>
+            <span className="text-gray-500 ml-2 text-sm font-normal">Featured by Y-DAO</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-gray-400">
+            <a href="https://potbot.fun" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">App</a>
             <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">GitHub</a>
-            <a href="https://t.me/potbot_sol" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Telegram</a>
-            <a href="https://twitter.com/potbot_sol" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Twitter</a>
-            <a href="https://github.com/YD811/potbot-v2/blob/main/docs/architecture/architecture.md" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Docs</a>
+            <a href="https://t.me/Trade_pot_bot" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Bot</a>
+            <a href="https://twitter.com/PotBot_sol" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Twitter</a>
           </div>
-          <div className="text-xs text-gray-500">Built with love on Solana</div>
         </div>
       </footer>
     </main>

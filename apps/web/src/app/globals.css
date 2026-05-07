@@ -30,7 +30,8 @@
 /* ── Components ── */
 @layer components {
   .card {
-    @apply rounded-2xl border border-pot-border bg-pot-card;
+    border-radius: var(--c-surface-radius);
+    @apply border border-pot-border bg-pot-card;
   }
 
   .btn-primary {
@@ -73,10 +74,25 @@
   @apply !bg-pot-accent/80;
 }
 .wallet-adapter-modal-wrapper {
-  @apply !bg-pot-card !border !border-pot-border !rounded-2xl;
+  @apply !bg-pot-card !border !border-pot-border;
+  border-radius: var(--c-surface-radius) !important;
 }
 .wallet-adapter-modal-title {
   @apply !text-white;
+}
+
+
+/* Reading pages should not show cursor-follow/aura overlays.
+   These selectors cover current and future blog route wrappers. */
+.blog-page .cursor-aura,
+.blog-page .mouse-aura,
+.blog-page .pointer-aura,
+.blog-page [data-cursor-aura],
+[data-page="blog"] .cursor-aura,
+[data-page="blog"] .mouse-aura,
+[data-page="blog"] .pointer-aura,
+[data-page="blog"] [data-cursor-aura] {
+  display: none !important;
 }
 
 /* ══════════════════════════════════════════════════════════════════ */
@@ -107,6 +123,7 @@
   --c-brand-green: #14f195;
   --c-brand-accent: #9945ff;
   --c-surface-shadow: rgba(0, 0, 0, 0.45);
+  --c-surface-radius: 24px;
 }
 
 html[data-theme="light"] {
