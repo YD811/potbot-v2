@@ -4,9 +4,11 @@ import { Connection, type Commitment } from '@solana/web3.js'
  * Resolve the configured Solana RPC URL.
  *
  * Precedence:
- *   1. NEXT_PUBLIC_SOLANA_RPC_URL — explicit override (production env)
+ *   1. NEXT_PUBLIC_SOLANA_RPC_URL — primary override
  *   2. NEXT_PUBLIC_RPC_URL        — vercel.json convention
- *   3. devnet public endpoint     — safe demo fallback
+ *   3. NEXT_PUBLIC_HELIUS_RPC     — alias for the Helius URL when the
+ *                                   user pastes it under that name
+ *   4. devnet public endpoint     — safe demo fallback
  *
  * The mainnet public endpoint is intentionally not in the fallback chain —
  * the deployed program is currently devnet-only and a silent mainnet fall-
@@ -16,6 +18,7 @@ export function getRpcUrl(): string {
   return (
     process.env.NEXT_PUBLIC_SOLANA_RPC_URL ||
     process.env.NEXT_PUBLIC_RPC_URL ||
+    process.env.NEXT_PUBLIC_HELIUS_RPC ||
     'https://api.devnet.solana.com'
   )
 }
