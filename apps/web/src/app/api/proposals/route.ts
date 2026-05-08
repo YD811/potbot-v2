@@ -1,43 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createProposal, getPot } from '@/lib/db'
+import { NextResponse } from 'next/server'
 
 /**
  * POST /api/proposals
- * Body: { potPubkey, type, description, proposer, totalSharesSnapshot, expiresInHours? }
+ *
+ * Removed. Proposals are created on-chain via the program's `create_proposal`
+ * instruction — sign with a member's wallet through the dApp UI, the SDK
+ * (`@potbot/sdk`), or the MCP `create_swap_proposal` tool. The previous
+ * implementation wrote synthetic-pubkey rows to Supabase that never matched
+ * any real on-chain ProposalAccount and confused the indexer.
+ *
+ * GET /api/proposals/[pubkey] still works (read-only, decoded on-chain state).
  */
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json()
-    const { potPubkey, type, description, proposer, totalSharesSnapshot, expiresInHours = 24 } = body
-
-    if (!potPubkey || !type || !description || !proposer) {
-      return NextResponse.json({ error: 'potPubkey, type, description, proposer required' }, { status: 400 })
-    }
-
-    const pot = await getPot(potPubkey)
-    if (!pot) {
-      return NextResponse.json({ error: 'Pot not found' }, { status: 404 })
-    }
-
-    const proposalPubkey = `prop-${potPubkey.slice(0, 8)}-${pot.next_proposal_id}-${Date.now()}`
-
-    const proposal = await createProposal({
-      pubkey: proposalPubkey,
-      pot_pubkey: potPubkey,
-      proposal_id: pot.next_proposal_id,
-      type,
-      description,
-      status: 'active',
-      yes_shares: 0,
-      no_shares: 0,
-      total_shares_snapshot: totalSharesSnapshot ?? pot.total_shares,
-      proposer,
-      entry_price: null,
-      expires_at: new Date(Date.now() + expiresInHours * 3_600_000).toISOString(),
-    })
-
-    return NextResponse.json({ ok: true, proposal })
-  } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 })
-  }
+export async function POST() {
+  return NextResponse.json(
+    {
+      error: 'Endpoint removed. Create proposals on-chain via the dApp wallet flow, @potbot/sdk, or @potbot/mcp `create_swap_proposal`.',
+    },
+    { status: 410 },
+  )
 }

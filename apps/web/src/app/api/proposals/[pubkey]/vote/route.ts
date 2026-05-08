@@ -1,41 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { castVote, getProposal, getMember } from '@/lib/db'
+import { NextResponse } from 'next/server'
 
 /**
  * POST /api/proposals/[pubkey]/vote
- * Body: { voter: string, approve: boolean }
+ *
+ * Removed. Voting is on-chain only — sign and submit a `vote` (or
+ * `vote_as_delegate`) transaction with the member's wallet via the
+ * @potbot/sdk or @potbot/mcp `vote_on_proposal` tool. There is no
+ * off-chain `votes` table; tallies live in proposals.{yes_shares,no_shares}
+ * which the indexer populates from on-chain VoterRecord PDAs.
  */
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { pubkey: string } }
-) {
-  try {
-    const { voter, approve } = await req.json()
-    if (!voter || approve === undefined) {
-      return NextResponse.json({ error: 'voter and approve required' }, { status: 400 })
-    }
-
-    const proposal = await getProposal(params.pubkey)
-    if (!proposal) {
-      return NextResponse.json({ error: 'Proposal not found' }, { status: 404 })
-    }
-    if (proposal.status !== 'active') {
-      return NextResponse.json({ error: 'Proposal is not active' }, { status: 400 })
-    }
-
-    // Get voter's shares for voting power
-    const member = await getMember(proposal.pot_pubkey, voter)
-    const shares = member?.shares ?? 0
-
-    await castVote({
-      proposal_pubkey: params.pubkey,
-      voter,
-      approve,
-      shares,
-    })
-
-    return NextResponse.json({ ok: true, sharesUsed: shares })
-  } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 })
-  }
+export async function POST() {
+  return NextResponse.json(
+    {
+      error: 'Endpoint removed. Vote on-chain via the dApp wallet flow or the MCP `vote_on_proposal` tool.',
+    },
+    { status: 410 },
+  )
 }

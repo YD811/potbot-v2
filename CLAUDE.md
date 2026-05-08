@@ -15,12 +15,14 @@
 
 ## Stack
 - Solana + Anchor 0.30 (Rust smart contracts — `packages/program/`)
-- Next.js 14 App Router + TypeScript + Tailwind (`apps/web/`)
-- Hono.js + Node.js + PostgreSQL + Redis (`apps/api/`)
+- Next.js 14 App Router + TypeScript + Tailwind (`apps/web/`) — frontend AND backend
+- Vercel Functions for all server endpoints + cron (`apps/web/src/app/api/`)
+- Supabase Postgres (project `iybzibvnzgxqwhgmkopf`) — off-chain index of on-chain state
 - TanStack Query v5, Zustand (mock mode for UI without a wallet)
-- Jupiter API v6 (swaps), Jupiter Price API v2 (prices)
+- Jupiter Aggregator v6 (swaps) + Jupiter Price API v3 (prices, `lite-api.jup.ag`)
 - @solana/wallet-adapter · Privy (embedded wallets)
-- MCP server built on solana-agent-kit (`apps/potbot-mcp/`)
+- MCP server (`apps/potbot-mcp/`) — IDL-independent, builds raw ix
+- `apps/api/` — DEPRECATED Hono.js/Fly backend (see `apps/api/DEPRECATED.md`)
 
 ## Key commands
 ```bash

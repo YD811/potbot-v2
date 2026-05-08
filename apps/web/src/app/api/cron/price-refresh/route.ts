@@ -16,8 +16,11 @@ import { recordPrice } from '@/lib/db'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+// Jupiter Price API v3 (v6 was decommissioned, v2 returns 404).
+// Response shape: { "<mint>": { usdPrice, decimals, priceChange24h, ... } }
+// `lite-api.jup.ag` is the public/no-key endpoint; `api.jup.ag` is the paid tier.
 const JUPITER_PRICE_URL =
-  'https://price.jup.ag/v6/price?ids=So11111111111111111111111111111111111111112'
+  'https://lite-api.jup.ag/price/v3?ids=So11111111111111111111111111111111111111112'
 
 export async function GET(req: NextRequest) {
   // Verify Vercel cron secret (set automatically when cron is configured)
@@ -44,7 +47,8 @@ export async function GET(req: NextRequest) {
 
     const data = await res.json()
     const solMint = 'So11111111111111111111111111111111111111112'
-    const price: number | null = data?.data?.[solMint]?.price ?? null
+    // v3 shape: { [mint]: { usdPrice, ... } } — no `data` wrapper, `usdPrice` not `price`
+    const price: number | null = data?.[solMint]?.usdPrice ?? null
 
     if (price !== null) {
       try {

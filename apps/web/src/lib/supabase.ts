@@ -296,49 +296,7 @@ export async function upsertPotMetadata(
   if (error) throw new Error('upsertPotMetadata: ' + error.message)
 }
 
-// ─── Legacy type aliases (for backward compatibility) ───────────
-
-/** @deprecated Use Pot instead */
-export type DbPot = Pot & {
-  balance?: number
-  total_shares?: number
-  trade_count?: number
-  total_volume?: number
-  yield_strategy?: number
-  governance_level?: number
-  next_proposal_id?: number
-  tamagotchi_emoji?: string
-  updated_at?: string
-  trust_level?: 'unverified' | 'community' | 'audited' | 'institutional'
-  verified_at?: string | null
-  verified_by?: string | null
-  audit_url?: string | null
-  trust_note?: string | null
-}
-
-/** @deprecated Use Member instead */
-export type DbMember = Omit<Member, 'pot'> & { pot_pubkey?: string }
-
-/** @deprecated Use Proposal instead */
-export interface DbProposal {
-  pubkey: string
-  pot_pubkey: string
-  proposal_id: number
-  type: string
-  description: string | null
-  status: string
-  yes_shares: number
-  no_shares: number
-  total_shares_snapshot: number
-  proposer: string | null
-  entry_price: number | null
-  created_at: string
-  expires_at: string | null
-  executed_at: string | null
-}
-
-/** @deprecated Use AgentRule instead */
-export type DbAgentRule = AgentRule & { pot_pubkey?: string; rule_id?: string }
-
-/** @deprecated Use GovernanceSettings instead */
-export type DbGovernanceSettings = GovernanceSettings & { pot_pubkey?: string }
+// (Legacy `Db*` type aliases removed — they encoded a different set of
+// column names that never matched the live Postgres schema. Use the
+// canonical types `Pot`, `Member`, `Proposal`, `AgentRule`,
+// `GovernanceSettings` directly.)
