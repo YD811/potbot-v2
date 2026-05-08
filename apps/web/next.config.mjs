@@ -17,6 +17,11 @@ const config = {
     config.resolve.alias = {
       ...config.resolve.alias,
       'bs58': require.resolve('bs58'),
+      // pino is pulled in transitively by @walletconnect/logger but only
+      // tries to require pino-pretty at runtime when NODE_ENV=development.
+      // Stub it to false so webpack doesn't emit a "Module not found"
+      // warning during the production build.
+      'pino-pretty': false,
     }
     config.resolve.fallback = {
       ...config.resolve.fallback,

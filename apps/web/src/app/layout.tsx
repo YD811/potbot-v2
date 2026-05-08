@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import Link from 'next/link'
 import { AppProviders } from './providers'
 import { Navbar } from '@/components/Navbar'
@@ -33,16 +33,6 @@ export const metadata: Metadata = {
     description: 'Pool funds, vote on swaps, withdraw any time. Trustless group treasury management on Solana.',
     images: ['/og-image.png'],
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    viewportFit: 'cover',
-  },
-  themeColor: [
-    { media: '(prefers-color-scheme: dark)',  color: '#0D1117' },
-    { media: '(prefers-color-scheme: light)', color: '#f5f7fa' },
-  ],
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -52,6 +42,20 @@ export const metadata: Metadata = {
   icons: {
     apple: '/og-image.png',
   },
+}
+
+// Next.js 14 moved viewport + themeColor out of `metadata` into a
+// dedicated `viewport` export — anything left in `metadata` triggers
+// a runtime warning per route.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)',  color: '#0D1117' },
+    { media: '(prefers-color-scheme: light)', color: '#f5f7fa' },
+  ],
 }
 
 const THEME_BOOTSTRAP = `
