@@ -516,6 +516,27 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Mission statement — sets the wider frame before the "How it
+           works" mechanics below. Placed right after the hero so it
+           reads as the why before the what. ── */}
+      <section className="bg-gradient-to-br from-pot-green/10 via-pot-card to-pot-accent/10 border-y border-pot-border py-14 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-pot-dark/60 border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-muted mb-5">
+            🎯 Our mission
+          </div>
+          <p className="text-2xl sm:text-3xl font-bold text-white leading-snug">
+            Unite <span className="text-pot-green">people</span> and{' '}
+            <span className="text-pot-green">capital</span> across every direction
+            Solana offers —
+            <br className="hidden sm:block" />
+            as <span className="text-pot-accent">vault infrastructure</span> for
+            tokenized funds,
+            <br className="hidden sm:block" />
+            built natively for <span className="text-pot-accent">AI agents</span>.
+          </p>
+        </div>
+      </section>
+
       {/* ── HOW IT WORKS — actual 4-step pot lifecycle, no extra heading
            on a separate section anymore (we collapsed the duplicate
            below). Steps mirror the Pot detail page progress strip so
