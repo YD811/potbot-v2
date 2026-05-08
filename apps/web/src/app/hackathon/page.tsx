@@ -24,98 +24,72 @@ interface Track {
   tier: StatusTier
 }
 
+// Live tracks only — phase-2 / phase-3 / vision items live on /roadmap so the
+// judge page stays a snapshot of what actually works today.
 const TRACKS: Track[] = [
   {
-    sponsor: 'Jupiter',
+    sponsor: 'Jupiter v6',
     emoji: '🪐',
-    what: 'Jupiter v6 CPI inside `pot_vault::execute_swap`. Vault PDA signs.',
-    proof: 'See `programs/pot_vault/src/instructions/execute_swap.rs` — mode-aware (AdminDirect / Proposal / StrategyTrigger), JUPITER_V6_PROGRAM_ID constraint, vault-PDA signer.',
-    proofHref: 'https://github.com/YD811/potbot-v2/blob/main/programs/pot_vault/src/instructions/execute_swap.rs',
+    what: 'Vault PDA signs every swap via Jupiter v6 CPI inside `pot_vault::execute_swap`.',
+    proof: 'Mode-aware (AdminDirect · Proposal · StrategyTrigger), JUPITER_V6_PROGRAM_ID constraint, invoke_signed with vault bump.',
+    proofHref: 'https://github.com/YD811/potbot-v2/blob/main/packages/program/programs/pot_vault/src/instructions/execute_swap.rs',
     tier: 'live',
   },
   {
     sponsor: 'Solana Actions / Blinks',
     emoji: '⚡',
-    what: 'Vote and deposit straight from a tweet — no app install.',
-    proof: 'Endpoints at `/api/actions/[potPubkey]/{deposit,vote}`. Tweet a pot — Twitter renders an interactive Blink card.',
+    what: 'Deposit and vote straight from a tweet. No app install.',
+    proof: 'Endpoints at `/api/actions/[potPubkey]/{deposit,vote}` and `/actions.json`.',
     proofHref: '/api/actions',
     tier: 'live',
   },
   {
-    sponsor: 'MCP / Model Context Protocol',
+    sponsor: 'MCP — Model Context Protocol',
     emoji: '🤖',
-    what: 'Claude / GPT / any MCP-aware agent can manage a pot.',
-    proof: '`@potbot/mcp` on npm — stdio + HTTP/SSE, x402 micropayments. `npx @potbot/mcp` runs the stdio server.',
+    what: 'Any MCP client (Claude, Cursor, Cline) can list, propose and vote on pots.',
+    proof: '`npx @potbot/mcp` runs the stdio server. HTTP/SSE transport with x402 micropayments also ships.',
     proofHref: 'https://www.npmjs.com/package/@potbot/mcp',
     tier: 'live',
   },
   {
     sponsor: 'Helius',
-    emoji: '⚡',
-    what: 'RPC + webhooks + priority fees for the entire stack.',
-    proof: 'Webhook handler at `apps/web/src/app/api/webhooks/helius/route.ts` (HMAC-verified, writes swap_executions); RPC URL flows through `NEXT_PUBLIC_HELIUS_RPC`.',
+    emoji: '🌩',
+    what: 'RPC + webhook indexer. Every swap_execution lands in Supabase via Helius signature events.',
+    proof: 'HMAC-verified handler at `app/api/webhooks/helius/route.ts`; RPC URL flows through `NEXT_PUBLIC_HELIUS_RPC`.',
     proofHref: 'https://github.com/YD811/potbot-v2/blob/main/apps/web/src/app/api/webhooks/helius/route.ts',
     tier: 'live',
   },
   {
     sponsor: 'Squads v4',
     emoji: '🛡',
-    what: 'Optional multisig path for the pot creator role.',
-    proof: 'Detection in `apps/web/src/lib/squads.ts`. UI banner highlights when a pot is owned by a Squads vault.',
+    what: 'Pot authority can be a Squads multisig. Governance settings flow through Squads when set.',
+    proof: 'Detection in `apps/web/src/lib/squads.ts`. UI banner surfaces multisig pots; settings updates queue as Squads transactions.',
     proofHref: 'https://github.com/YD811/potbot-v2/blob/main/apps/web/src/lib/squads.ts',
+    tier: 'live',
+  },
+  {
+    sponsor: 'Multi-asset portfolio',
+    emoji: '📊',
+    what: 'Vault holdings grouped into Stable · SOL ecosystem · DeFi/LP · Liquid staking · High risk. Up to 10 assets per pot.',
+    proof: 'Component at `apps/web/src/components/VaultPortfolioDisplay.tsx`. Renders an allocation bar + per-category list on every pot page.',
+    proofHref: 'https://github.com/YD811/potbot-v2/blob/main/apps/web/src/components/VaultPortfolioDisplay.tsx',
+    tier: 'live',
+  },
+  {
+    sponsor: 'AI agent — base layer',
+    emoji: '🧠',
+    what: 'Decision-support feed: rebalance, liquid-staking conversions, LP entries. One click → on-chain proposal.',
+    proof: '`PotBotAISuggestions` runs deterministic heuristics over vault state + live prices; cron at `app/api/cron/agent-poll` posts proposals on-chain when AGENT_KEYPAIR is set.',
+    proofHref: 'https://github.com/YD811/potbot-v2/blob/main/apps/web/src/components/PotBotAISuggestions.tsx',
     tier: 'live',
   },
   {
     sponsor: 'Solana Mobile (Saga / Seeker)',
     emoji: '📱',
-    what: 'PWA manifest ships today, dApp Store metadata next.',
-    proof: '`apps/web/public/manifest.json` is mainnet-ready (theme color, icons, categories). Saga / Seeker dApp Store entry on the roadmap.',
+    what: 'PWA manifest is mainnet-ready (theme, icons, categories). Installable to Saga / Seeker home screen today.',
+    proof: '`apps/web/public/manifest.json`. dApp Store submission lives on /roadmap.',
     proofHref: 'https://github.com/YD811/potbot-v2/blob/main/apps/web/public/manifest.json',
     tier: 'live',
-  },
-  {
-    sponsor: 'Dune Analytics',
-    emoji: '📊',
-    what: 'Public on-chain dashboard fed from Anchor accounts.',
-    proof: 'Dune SIM portfolio + activity wired in `VaultPortfolio` component. Public dashboard at dune.com/potbot ships when `DUNE_API_KEY` is set in Vercel.',
-    tier: 'devnet',
-  },
-  {
-    sponsor: 'Privy',
-    emoji: '🪪',
-    what: 'Email / social login → 60-second onboarding for non-crypto users.',
-    proof: 'Implementation branch exists, but PR #32 was closed without merge. Phase 2 until env setup, review, and merge are complete.',
-    proofHref: 'https://github.com/YD811/potbot-v2/pull/32',
-    tier: 'phase-2',
-  },
-  {
-    sponsor: 'Pyth Network',
-    emoji: '🔮',
-    what: 'In-program oracle guard — re-reads price inside execute_swap to reject keepers that fired on stale data.',
-    proof: 'Code path is reserved (StrategyTrigger mode); Pyth SDK wiring is the next mainnet promotion.',
-    tier: 'phase-2',
-  },
-  {
-    sponsor: 'Metaplex Token Metadata',
-    emoji: '🎨',
-    what: 'Tamagotchi NFT mint at L4 (Bloom).',
-    proof: '`mint_tamagotchi_nft.rs` written, gated behind level check. Ships at Phase 3.',
-    proofHref: 'https://github.com/YD811/potbot-v2/blob/main/programs/pot_vault/src/instructions/mint_tamagotchi_nft.rs',
-    tier: 'phase-3',
-  },
-  {
-    sponsor: 'Light Protocol',
-    emoji: '🪶',
-    what: 'ZK-compressed audit log for swap events + NAV snapshots.',
-    proof: 'Spec lives in `docs/architecture/architecture-onchain.md`. Phase 2 cut.',
-    tier: 'phase-2',
-  },
-  {
-    sponsor: 'Adevar Labs',
-    emoji: '🔒',
-    what: 'Pre-mainnet-GA security audit (target post-hackathon).',
-    proof: 'Audit credits requested via Superteam NL. Out-of-scope for May 11 submission, in-scope for accelerator phase.',
-    tier: 'vision',
   },
 ]
 
@@ -125,34 +99,32 @@ interface ArchLayer {
   items: { name: string; tier: StatusTier }[]
 }
 
+// Architecture grid — only what ships today. Not-yet items live on /roadmap.
 const ARCHITECTURE: ArchLayer[] = [
   {
     layer: 'On-chain · Anchor 0.30',
     color: 'green',
     items: [
-      { name: 'pot_vault program (30+ ix)', tier: 'live' },
+      { name: 'pot_vault program — 30+ instructions', tier: 'live' },
       { name: 'create_pot · deposit · withdraw', tier: 'live' },
-      { name: 'create_proposal · vote · execute_swap', tier: 'live' },
-      { name: 'Jupiter v6 CPI (vault-PDA signer)', tier: 'live' },
-      { name: 'Pot admin (pause / allowed mints)', tier: 'live' },
-      { name: 'Strategy slot accounts', tier: 'live' },
-      { name: 'Pyth in-program oracle guard', tier: 'phase-2' },
-      { name: 'Tamagotchi NFT mint (Metaplex)', tier: 'phase-3' },
+      { name: 'create_proposal · vote · execute_proposal', tier: 'live' },
+      { name: 'execute_swap → Jupiter v6 CPI (vault-PDA signer)', tier: 'live' },
+      { name: 'Pot admin: pause · allowed mints · spending policy', tier: 'live' },
+      { name: 'Strategy slot accounts (StopLoss · TP · Trailing)', tier: 'live' },
+      { name: 'Delegate / vote_as_delegate flow', tier: 'live' },
     ],
   },
   {
     layer: 'Off-chain · Next.js 14 + Vercel Functions',
     color: 'purple',
     items: [
-      { name: 'Pot detail UX (sticky hero, sponsor rail)', tier: 'live' },
+      { name: 'Pot detail UX (sticky hero, tabs)', tier: 'live' },
       { name: 'Solana Action endpoints', tier: 'live' },
-      { name: 'Helius RPC + webhook ingest', tier: 'live' },
-      { name: 'Multi-asset portfolio (Stable · SOL · LP · Staking · High risk)', tier: 'live' },
-      { name: 'AI agent: rebalance · liquid staking · LP suggestions', tier: 'live' },
-      { name: 'PotBot AI base layer (suggestions feed)', tier: 'live' },
+      { name: 'Helius RPC + webhook indexer', tier: 'live' },
+      { name: 'Multi-asset portfolio panel', tier: 'live' },
+      { name: 'PotBot AI base layer (suggestion feed)', tier: 'live' },
       { name: 'User AI delegate (rules + presets)', tier: 'live' },
-      { name: 'Privy embedded wallets', tier: 'phase-2' },
-      { name: 'STAMPPOT privacy preview', tier: 'phase-3' },
+      { name: 'agent-poll cron — on-chain proposal posting', tier: 'live' },
     ],
   },
   {
@@ -160,22 +132,20 @@ const ARCHITECTURE: ArchLayer[] = [
     color: 'amber',
     items: [
       { name: 'Jupiter v6 swap (CPI)', tier: 'live' },
-      { name: 'Squads v4 multisig (optional creator)', tier: 'live' },
+      { name: 'Squads v4 multisig (optional)', tier: 'live' },
       { name: '@potbot/mcp on npm', tier: 'live' },
-      { name: 'Solana Blinks (Twitter/X)', tier: 'live' },
-      { name: 'PWA manifest (Saga / Seeker)', tier: 'live' },
+      { name: 'Solana Blinks (Twitter / X)', tier: 'live' },
+      { name: 'PWA manifest (Saga / Seeker installable)', tier: 'live' },
       { name: 'Dune SIM analytics', tier: 'live' },
-      { name: 'Light Protocol ZK audit log', tier: 'phase-2' },
-      { name: 'Saga / Seeker dApp Store entry', tier: 'vision' },
     ],
   },
 ]
 
 const WEDGE = [
-  { who: 'Squads', does: 'Multisig custody', noTrade: true },
-  { who: 'Drift Vaults', does: 'Single-strategy structured products', noTrade: false, why: 'Curators only — no group governance per swap' },
-  { who: 'Kamino / Gauntlet', does: 'Institutional curators', noTrade: false, why: 'No group primitive for friends pooling capital' },
-  { who: 'PotBot', does: 'Group trading vault', noTrade: false, why: 'Deposit + vote + Jupiter CPI in one Anchor program', highlight: true },
+  { who: 'Squads', does: 'Multisig custody. No trading UI.', why: 'Treasury, not strategy' },
+  { who: 'Drift Vaults', does: 'Curator-run structured products.', why: 'No group governance per swap' },
+  { who: 'Kamino / Gauntlet', does: 'Institutional curators.', why: 'No primitive for friends pooling capital' },
+  { who: 'PotBot', does: 'Group trading vault.', why: 'Deposit + vote + Jupiter CPI in one Anchor program', highlight: true },
 ]
 
 export default function HackathonPage() {
@@ -214,7 +184,7 @@ export default function HackathonPage() {
             🏁 Submission for Colosseum / Solana Frontier 2026
           </div>
           <h1 className="text-4xl sm:text-6xl font-black mb-4 leading-tight bg-gradient-to-br from-white to-pot-accent bg-clip-text text-transparent">
-            Squads moves money.<br />PotBot trades it.
+            Your group&apos;s hedge fund<br />— live on Solana.
           </h1>
           <p className="text-base sm:text-xl text-pot-muted max-w-2xl mx-auto">
             Your group&apos;s hedge fund — live on Solana. Create a shared vault, deposit, let
@@ -322,9 +292,11 @@ export default function HackathonPage() {
       {/* The wedge */}
       <section className="px-4 sm:px-6 pb-12">
         <div className="max-w-[1100px] mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">The wedge</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Where PotBot sits</h2>
           <p className="text-pot-muted max-w-2xl mb-6">
-            Group on-chain governance baked <strong className="text-white">into the swap instruction</strong>. Nobody else ships this primitive.
+            Group on-chain governance baked{' '}
+            <strong className="text-white">into the swap instruction</strong>. Nobody else
+            ships this primitive on Solana today.
           </p>
           <div className="overflow-x-auto rounded-2xl border border-pot-border">
             <table className="w-full text-sm">
@@ -349,7 +321,7 @@ export default function HackathonPage() {
                           ✅ Yes — pot_vault::execute_swap
                         </span>
                       ) : (
-                        <span className="text-pot-muted text-xs">{w.why ?? '—'}</span>
+                        <span className="text-pot-muted text-xs">{w.why}</span>
                       )}
                     </td>
                   </tr>
@@ -366,11 +338,12 @@ export default function HackathonPage() {
           <div className="flex items-end justify-between gap-3 mb-6 flex-wrap">
             <div>
               <h2 className="text-2xl sm:text-3xl font-bold text-white">Sponsor tracks &amp; integrations</h2>
-              <p className="text-pot-muted text-sm mt-1">Every claim is labelled with its lifecycle status. Live items are verifiable on Explorer.</p>
+              <p className="text-pot-muted text-sm mt-1">
+                Eight integrations live today on devnet — every claim has a source link.
+                Phase-2 / phase-3 items are on{' '}
+                <Link href="/roadmap" className="text-pot-accent hover:underline">/roadmap</Link>.
+              </p>
             </div>
-            <Link href="/roadmap" className="text-xs text-pot-accent hover:underline font-semibold">
-              See the full roadmap →
-            </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -440,39 +413,38 @@ export default function HackathonPage() {
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-5">90-second pitch</h2>
           <ol className="space-y-4 text-sm sm:text-base">
             <PitchStep range="0–15s" headline="Problem">
-              A group wants to trade together as a fund. Today they share a seed phrase or build a Squads multisig with no trading UI. Both suck.
+              A group of friends wants to trade together as one fund. Today they share a
+              seed phrase or build a Squads multisig with no trading UI. Both suck.
             </PitchStep>
             <PitchStep range="15–30s" headline="Solution">
-              PotBot is a group trading vault. Deposit. Propose. Vote. Execute. All on-chain, in one Anchor program.
+              PotBot is a group trading vault. Deposit, propose, vote, execute — all
+              on-chain, all in one Anchor program. AI agent drafts the proposals; the
+              group still has to vote.
             </PitchStep>
             <PitchStep range="30–60s" headline="Live demo">
-              Open `/vaults` → click a public pot → deposit 0.05 SOL via wallet → propose a swap → vote yes → watch it execute on Jupiter, Solana Explorer link visible.
+              Open <code>/vaults</code> → click the flagship pot → deposit 0.05 SOL →
+              the AI tab surfaces a rebalance / liquid-staking / LP suggestion → submit
+              as proposal → vote yes → watch <code>execute_swap</code> hit Jupiter v6
+              with the vault PDA as signer.
             </PitchStep>
             <PitchStep range="60–80s" headline="Differentiation">
-              Solana Blinks turn any proposal into a tweet anyone can vote on. MCP lets Claude/GPT manage a pot. The on-chain `execute_swap` instruction is mode-aware — Admin / Proposal / AI-trigger — and matches mode-source strictly.
+              Three things only PotBot ships together: (1) on-chain group governance
+              baked into the swap ix, (2) MCP-native server so any AI agent can run a
+              vault, (3) Solana Blinks so a proposal becomes a vote-able tweet.
             </PitchStep>
             <PitchStep range="80–90s" headline="Ask">
-              The devnet product is live today, with mainnet planned after the final safety pass. We want Colosseum to help turn AI-governed strategy vaults into a production business.
+              Devnet product is live today. Mainnet ships after the security pass.
+              We&apos;re asking Colosseum to back the team building the vault
+              infrastructure for AI-native asset management on Solana.
             </PitchStep>
           </ol>
         </div>
       </section>
 
-      {/* What's next */}
-      <section className="px-4 sm:px-6 pb-16">
-        <div className="max-w-[1100px] mx-auto bg-gradient-to-br from-pot-accent/10 to-pot-green/5 border border-pot-accent/30 rounded-3xl p-6 sm:p-8 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">What ships next</h2>
-          <p className="text-pot-muted max-w-xl mx-auto mb-5 text-sm sm:text-base">
-            Privy embedded wallets, Pyth in-program oracle guard, Meteora &amp; Kamino yield CPIs, Light Protocol ZK audit log, Tamagotchi NFT mint, STAMPPOT privacy mode. Each phase is tagged on the public roadmap.
-          </p>
-          <Link
-            href="/roadmap"
-            className="inline-block px-5 py-3 rounded-xl bg-pot-accent hover:bg-pot-accent/90 text-white font-bold transition text-sm sm:text-base"
-          >
-            🗺️ Open /roadmap
-          </Link>
-        </div>
-      </section>
+      {/* "What ships next" was removed — every phase-2/phase-3/vision item
+          now lives on /roadmap, which is linked in the footer. The judge
+          page is intentionally a snapshot of "live today", not an
+          aspirational list. */}
 
       {/* Footer */}
       <footer className="border-t border-pot-border px-4 sm:px-6 py-8">
