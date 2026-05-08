@@ -115,7 +115,7 @@ export function usePots() {
             ? await connection.getMultipleAccountsInfo(vaultPdas)
             : []
 
-          return accounts.map((acc: any, i: number) => {
+          const onChain = accounts.map((acc: any, i: number) => {
             const d = acc.account
             const balance = (vaultInfos[i]?.lamports ?? 0) / LAMPORTS_PER_SOL
             const tama = calculateTamaStats({
@@ -144,6 +144,65 @@ export function usePots() {
               sharesPerSol: d.sharesPerSol?.toNumber() ?? 100,
             }
           })
+
+          // Merge curated demo strategies (Solana Index Fund, Memecoin
+          // Basket, …) so the /vaults grid stays populated even when only
+          // a handful of pots have actually been created on-chain. The
+          // demo rows are clearly marked `mode: 'virtual'` so the pot
+          // detail page can render a "preview" state instead of trying
+          // to fetch a non-existent on-chain account.
+          const onChainPubkeys = new Set(onChain.map((p: any) => p.pubkey))
+          let demoExtras: any[] = []
+          if (isSupabaseConfigured) {
+            try {
+              const { data } = await supabase
+                .from('demo_pots')
+                .select('pubkey,name,emoji,balance,member_count,trade_count,total_volume,is_public,yield_strategy,authority,created_at')
+                .order('created_at', { ascending: true })
+                .limit(20)
+              if (data) {
+                demoExtras = data
+                  .filter((r: any) => !onChainPubkeys.has(r.pubkey))
+                  .map((r: any) => ({
+                    pubkey: r.pubkey,
+                    name: r.name,
+                    emoji: r.emoji,
+                    balance: Number(r.balance),
+                    totalShares: Math.round(Number(r.balance) * 1000),
+                    memberCount: r.member_count,
+                    tradeCount: r.trade_count,
+                    totalVolume: Number(r.total_volume),
+                    isPublic: r.is_public,
+                    yieldStrategy: r.yield_strategy,
+                    authority: r.authority,
+                    governanceLevel: 2,
+                    createdAt: new Date(r.created_at).getTime(),
+                    nextProposalId: 0,
+                    meteoraLpBalance: 0,
+                    totalYieldEarned: 0,
+                    lastYieldAccrualAt: Date.now(),
+                    mode: 'virtual',
+                    tokenTicker: '',
+                    navPerShareBps: 10000,
+                    tamagotchiLevel: 1,
+                    tamagotchiEmoji: '🌱',
+                    tamagotchiXp: 0,
+                  }))
+                // Inject into the mock store too — usePot(pubkey) falls
+                // back to it when an on-chain fetch misses.
+                const store = useMockStore.getState()
+                for (const ep of demoExtras) {
+                  if (!store.pots.find((p) => p.pubkey === ep.pubkey)) {
+                    useMockStore.setState((s) => ({ pots: [...s.pots, ep] }))
+                  }
+                }
+              }
+            } catch {
+              // Supabase unreachable — just return the on-chain list.
+            }
+          }
+
+          return [...onChain, ...demoExtras]
         } catch (e) {
           console.warn('On-chain fetch failed, using mock:', e)
         }
