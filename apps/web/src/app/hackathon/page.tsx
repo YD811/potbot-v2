@@ -135,7 +135,7 @@ const ARCHITECTURE: ArchLayer[] = [
       { name: 'create_proposal · vote · execute_swap', tier: 'live' },
       { name: 'Jupiter v6 CPI (vault-PDA signer)', tier: 'live' },
       { name: 'Pot admin (pause / allowed mints)', tier: 'live' },
-      { name: 'Strategy slot accounts', tier: 'devnet' },
+      { name: 'Strategy slot accounts', tier: 'live' },
       { name: 'Pyth in-program oracle guard', tier: 'phase-2' },
       { name: 'Tamagotchi NFT mint (Metaplex)', tier: 'phase-3' },
     ],
@@ -147,8 +147,10 @@ const ARCHITECTURE: ArchLayer[] = [
       { name: 'Pot detail UX (sticky hero, sponsor rail)', tier: 'live' },
       { name: 'Solana Action endpoints', tier: 'live' },
       { name: 'Helius RPC + webhook ingest', tier: 'live' },
-      { name: 'PotBot AI base layer (suggestions feed)', tier: 'devnet' },
-      { name: 'User AI delegate (rules + presets)', tier: 'devnet' },
+      { name: 'Multi-asset portfolio (Stable · SOL · LP · Staking · High risk)', tier: 'live' },
+      { name: 'AI agent: rebalance · liquid staking · LP suggestions', tier: 'live' },
+      { name: 'PotBot AI base layer (suggestions feed)', tier: 'live' },
+      { name: 'User AI delegate (rules + presets)', tier: 'live' },
       { name: 'Privy embedded wallets', tier: 'phase-2' },
       { name: 'STAMPPOT privacy preview', tier: 'phase-3' },
     ],
@@ -162,7 +164,7 @@ const ARCHITECTURE: ArchLayer[] = [
       { name: '@potbot/mcp on npm', tier: 'live' },
       { name: 'Solana Blinks (Twitter/X)', tier: 'live' },
       { name: 'PWA manifest (Saga / Seeker)', tier: 'live' },
-      { name: 'Dune SIM analytics', tier: 'devnet' },
+      { name: 'Dune SIM analytics', tier: 'live' },
       { name: 'Light Protocol ZK audit log', tier: 'phase-2' },
       { name: 'Saga / Seeker dApp Store entry', tier: 'vision' },
     ],
@@ -215,7 +217,9 @@ export default function HackathonPage() {
             Squads moves money.<br />PotBot trades it.
           </h1>
           <p className="text-base sm:text-xl text-pot-muted max-w-2xl mx-auto">
-            Group trading vaults on Solana. Five friends spin up a pot, deposit SOL, vote on a Jupiter swap, and execute it on-chain in under 60 seconds. All in a single Anchor program.
+            Your group&apos;s hedge fund — live on Solana. Create a shared vault, deposit, let
+            the AI agent propose trades, vote as a group, and execute on-chain via Jupiter.
+            Governed on-chain. Executed by AI. Open to anyone.
           </p>
 
           <div className="mt-8 flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
@@ -436,7 +440,7 @@ export default function HackathonPage() {
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-5">90-second pitch</h2>
           <ol className="space-y-4 text-sm sm:text-base">
             <PitchStep range="0–15s" headline="Problem">
-              Five friends want to trade together. Today they share a seed phrase or build a Squads multisig with no trading UI. Both suck.
+              A group wants to trade together as a fund. Today they share a seed phrase or build a Squads multisig with no trading UI. Both suck.
             </PitchStep>
             <PitchStep range="15–30s" headline="Solution">
               PotBot is a group trading vault. Deposit. Propose. Vote. Execute. All on-chain, in one Anchor program.

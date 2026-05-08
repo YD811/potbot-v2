@@ -32,6 +32,7 @@ import { PublicKey } from '@solana/web3.js'
 // the Trade tab and trims first-load JS for the page.
 const PnLDashboard      = dynamic(() => import('@/components/PnLDashboard').then(m => m.PnLDashboard))
 const VaultPortfolio    = dynamic(() => import('@/components/VaultPortfolio'))
+const VaultPortfolioDisplay = dynamic(() => import('@/components/VaultPortfolioDisplay'))
 const SharesTab         = dynamic(() => import('@/components/SharesTab'))
 const MembersList       = dynamic(() => import('@/components/MembersList').then(m => m.MembersList))
 const SquadsBanner      = dynamic(() => import('@/components/SquadsBanner').then(m => m.SquadsBanner))
@@ -312,27 +313,10 @@ function TamagotchiBlock({ stats }: { stats: ReturnType<typeof calculateTamaStat
 }
 
 
-/* ── Demo info banner ── shown on devnet so judges have instant context ── */
 const YIELD_LABEL: Record<number, string> = {
   0: 'No yield', 1: 'Conservative ~6% APY', 2: 'Balanced ~15% APY',
   3: 'Aggressive ~30% APY', 4: 'JLP Hedged ~40% APY',
   5: 'Exponent PT ~22% APY', 6: 'JLP Delta-Neutral ~35% APY',
-}
-
-function DemoInfoBanner({ cluster }: { cluster: string }) {
-  const [dismissed, setDismissed] = useState(false)
-  if (cluster === 'mainnet-beta' || dismissed) return null
-  return (
-    <div className="max-w-[1400px] mx-auto px-3 sm:px-6 pt-3">
-      <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-pot-accent/10 border border-pot-accent/25 text-xs">
-        <div className="flex items-center gap-2 min-w-0 flex-wrap">
-          <span className="text-pot-accent font-bold shrink-0">🧪 Devnet demo</span>
-          <span className="text-pot-muted">Deposit, vote, and propose real Jupiter swaps on Solana devnet. No real funds — just live on-chain governance.</span>
-        </div>
-        <button onClick={() => setDismissed(true)} className="text-pot-muted hover:text-white shrink-0 text-base leading-none">×</button>
-      </div>
-    </div>
-  )
 }
 
 function PotContextCard({ pot, yieldStrategy }: { pot: any; yieldStrategy: number }) {
@@ -414,6 +398,7 @@ export default function PotPage() {
   const [snsName, setSnsName] = useState<string>('')
   const [isMember, setIsMember] = useState(false)
   const [proposalModalOpen, setProposalModalOpen] = useState(false)
+  const [showHowItWorks, setShowHowItWorks] = useState(false)
 
   useEffect(() => {
     (async () => {
@@ -421,6 +406,14 @@ export default function PotPage() {
       setSnsName(name ?? '')
     })()
   }, [pubkey])
+
+  // Drive the browser tab title from the actual vault name. The page is
+  // a client component so we can't use the metadata export — set
+  // document.title imperatively instead. Falls back to a generic label
+  // until the pot loads.
+  useEffect(() => {
+    document.title = pot?.name ? `${pot.name} · PotBot` : 'Vault · PotBot'
+  }, [pot?.name])
 
   useEffect(() => {
     if (!userPubkey) { setIsMember(false); return }
@@ -458,7 +451,11 @@ export default function PotPage() {
   const potAny = pot as any
   const ownerAddress: string = potAny.authority ?? potAny.creator ?? potAny.owner ?? ''
   const isOwner = role === 'creator'
-  const canManage = role === 'creator' || role === 'member'
+  // Treat the local `isMember` flag (refreshed straight from the on-chain
+  // members list) as a fallback for `role` — usePotRole can lag a beat
+  // after a fresh deposit, which made the Propose button stay disabled
+  // for the user that just joined the pot.
+  const canManage = role === 'creator' || role === 'member' || isMember
   const canVote = canManage
   const canExecute = isOwner
   const canWithdraw = canManage
@@ -513,9 +510,6 @@ export default function PotPage() {
         <span className="text-white truncate inline-block max-w-[200px] sm:max-w-xs align-middle">{pot.name}</span>
       </div>
 
-      {/* Demo context banner — devnet only, dismissible */}
-      <DemoInfoBanner cluster={CLUSTER} />
-
       {/* Sticky hero strip */}
       <PotHeroStrip
         emoji={pot.emoji}
@@ -567,26 +561,19 @@ export default function PotPage() {
             {/* Squads banner if pot is multisig-managed */}
             <SquadsBanner potPubkey={pubkey} />
 
-            {/* ── How-it-works flow stepper ── */}
-            <div className="flex items-center gap-2 text-xs overflow-x-auto [scrollbar-width:none] pb-1 -mb-2">
-              {[
-                { n: '1', label: 'Deposit SOL' },
-                { n: '2', label: 'Create Proposal' },
-                { n: '3', label: 'Vote' },
-                { n: '4', label: 'Execute on-chain' },
-              ].map((step, i, arr) => (
-                <div key={step.n} className="flex items-center gap-2 shrink-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-pot-accent/20 text-pot-accent text-[10px] font-bold flex items-center justify-center shrink-0">{step.n}</span>
-                    <span className="text-pot-muted whitespace-nowrap">{step.label}</span>
-                  </div>
-                  {i < arr.length - 1 && <span className="text-pot-border shrink-0">→</span>}
-                </div>
-              ))}
-            </div>
+            {/* The 1→2→3→4 stepper used to live here. The "?" button
+                next to the Proposals heading below now folds it into a
+                discoverable tooltip so the Trade tab opens with less
+                visual noise. */}
 
             {/* ── Pot context card ── strategy + yield overview for judges ── */}
             <PotContextCard pot={potAny} yieldStrategy={potAny.yieldStrategy ?? 0} />
+
+            {/* ── Holdings (multi-asset portfolio) ── */}
+            <VaultPortfolioDisplay
+              totalSol={pot.balance}
+              totalUsd={undefined}
+            />
 
             {/* ── Deposit / Withdraw ── primary action */}
             <section id="deposit-section" className="space-y-3">
@@ -606,16 +593,65 @@ export default function PotPage() {
             {/* ── Active proposals ── 2-col layout: list + activity feed */}
             <section id="propose-section" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-3">
-                {/* Heading only — the "🗳️ Propose" CTA in the sticky hero strip is the
-                    single entry point for opening the proposal builder. */}
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold text-white">🗳️ Proposals</h2>
-                  {activeProposalsCount > 0 && (
-                    <span className="px-2 py-0.5 rounded-full bg-pot-accent/20 text-pot-accent text-[11px] font-bold animate-pulse">
-                      {activeProposalsCount} active
-                    </span>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-white">🗳️ Proposals</h2>
+                    {activeProposalsCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-full bg-pot-accent/20 text-pot-accent text-[11px] font-bold animate-pulse">
+                        {activeProposalsCount} active
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowHowItWorks((v) => !v)}
+                      className="w-5 h-5 rounded-full bg-pot-card border border-pot-border text-pot-muted text-[10px] font-bold flex items-center justify-center hover:border-pot-accent hover:text-white transition shrink-0"
+                      aria-label="How it works"
+                    >
+                      ?
+                    </button>
+                  </div>
+                  {/* Create Proposal — visible when wallet is connected; the
+                      hero "🗳️ Propose" still works as the primary CTA, but
+                      surfacing the action here avoids a long scroll on
+                      mobile and gives explicit feedback to depositors. */}
+                  {userPubkey && (
+                    canManage ? (
+                      <button
+                        type="button"
+                        onClick={() => setProposalModalOpen(true)}
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-pot-accent hover:bg-pot-accent/90 text-white transition"
+                      >
+                        + Create Proposal
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled
+                        title="Deposit first to become a member and create proposals"
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-pot-card border border-pot-border text-pot-muted opacity-60 cursor-not-allowed"
+                      >
+                        + Create Proposal
+                      </button>
+                    )
                   )}
                 </div>
+                {showHowItWorks && (
+                  <div className="bg-pot-card border border-pot-border rounded-xl p-4 text-xs space-y-2">
+                    {[
+                      { n: '1', label: 'Deposit SOL to join the vault and receive share tokens' },
+                      { n: '2', label: 'Create a proposal: pick tokens, amount, direction' },
+                      { n: '3', label: 'Members vote yes / no, weighted by their shares' },
+                      { n: '4', label: 'If quorum reached → Jupiter executes the swap on-chain automatically' },
+                    ].map((step) => (
+                      <div key={step.n} className="flex items-start gap-2">
+                        <span className="w-5 h-5 rounded-full bg-pot-accent/20 text-pot-accent text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                          {step.n}
+                        </span>
+                        <span className="text-pot-muted leading-snug">{step.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {!canManage && userPubkey && (
                   <div className="bg-pot-card border border-pot-border rounded-2xl p-4 flex items-center justify-between gap-3 flex-wrap">
@@ -763,7 +799,7 @@ export default function PotPage() {
             <section className="space-y-3">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white">🏛️ Governance</h2>
-                <StatusBadge tier={isLive ? 'live' : 'devnet'} compact />
+                {isLive && <StatusBadge tier="live" compact />}
               </div>
               <SquadsBanner potPubkey={pubkey} />
               <GovernanceSettings isAdmin={isOwner} potPubkey={pubkey} />
@@ -795,7 +831,6 @@ export default function PotPage() {
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-pot-border text-pot-muted uppercase tracking-wide">
                   user layer
                 </span>
-                <StatusBadge tier="devnet" compact />
               </div>
               <p className="text-xs text-pot-muted mb-4 break-words">
                 Sits on top of the base layer. Configure rules, presets and a delegate so your AI
@@ -812,20 +847,11 @@ export default function PotPage() {
             over-promised. Links to /roadmap for the full inventory. */}
         {activeTab === 'features' && (
           <div className="space-y-6 w-full">
-            <div className="bg-pot-card/50 border border-pot-border rounded-2xl p-5 flex items-center justify-between gap-3 flex-wrap">
-              <div>
-                <p className="text-white font-semibold">🗺️ Want the full picture?</p>
-                <p className="text-xs text-pot-muted mt-0.5">
-                  See every PotBot feature and its phase on the public roadmap.
-                </p>
-              </div>
-              <Link
-                href="/roadmap"
-                className="px-4 py-2 bg-pot-accent hover:bg-pot-accent/90 text-white rounded-xl text-xs font-bold transition shrink-0"
-              >
-                Open /roadmap →
-              </Link>
-            </div>
+            {/* Roadmap banner + STAMPPOT preview removed — both belong on
+                /roadmap (and STAMPPOT is now a top-level mode on /create
+                and the landing). The Features tab on the pot page is for
+                what this specific vault unlocks today: Tamagotchi
+                progression and the premium NFT/SNS extras. */}
 
             <TamagotchiBlock stats={tamaStats} />
 
@@ -838,25 +864,6 @@ export default function PotPage() {
               hasTamagotchiNft={!!potAny.hasTamagotchiNft}
               snsAddress={snsName || undefined}
             />
-
-            <section className="bg-pot-card border border-pot-border rounded-2xl p-5 sm:p-6 space-y-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-2xl">🔒</span>
-                <h3 className="font-bold text-white text-lg">STAMPPOT — privacy preview</h3>
-                <StatusBadge tier="phase-3" compact />
-              </div>
-              <p className="text-sm text-pot-muted">
-                Auditable-Private mode adds a privacy layer to deposits and votes via
-                PrivacyCash Merkle membership proofs and stealth addresses. Same Anchor
-                program, same governance, just with shielded balances. Ships in Phase 3.
-              </p>
-              <Link
-                href="/roadmap#phase-3"
-                className="inline-block text-xs text-pot-accent hover:underline"
-              >
-                Read the architecture spec →
-              </Link>
-            </section>
           </div>
         )}
       </div>

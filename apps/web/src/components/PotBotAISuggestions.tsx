@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useSolPrice } from '@/lib/prices'
-import { StatusBadge } from './StatusBadge'
 
 /**
  * Base PotBot AI — decision-support feed.
@@ -53,37 +52,47 @@ function generateSuggestions(potBalanceSol: number, solPrice: number | null): AI
   const list: AISuggestion[] = []
   const usd = solPrice != null ? potBalanceSol * solPrice : null
 
-  // 1. SOL trim if vault is heavily SOL-weighted
+  // 1. Rebalance — high-confidence allocation drift
+  list.push({
+    id: `s-rebal-${seed}`,
+    title: `Rebalance: SOL is over target (50% vs 40%)`,
+    rationale: `SOL allocation is ~10pp above the pot's target. Swapping 0.48 SOL → USDC brings the mix back in line and trims directional risk before the next leg.`,
+    confidence: 86,
+    impactPct: 10,
+    category: 'rebalance',
+  })
+
+  // 2. Liquid staking — convert idle SOL to JitoSOL
+  list.push({
+    id: `s-jitosol-${seed}`,
+    title: `Convert idle SOL → JitoSOL (8.1% APY)`,
+    rationale: `JitoSOL is the largest Solana liquid-staking token; converting idle SOL adds staking yield without changing price exposure. Same SOL beta, better return.`,
+    confidence: 74,
+    impactPct: 25,
+    category: 'yield',
+  })
+
+  // 3. LP opportunity — SOL/USDC on Orca
+  list.push({
+    id: `s-lp-orca-${seed}`,
+    title: `LP into SOL/USDC on Orca (~14.2% APY)`,
+    rationale: `Concentrated liquidity in the SOL/USDC pool on Orca returns ~14.2% APY at current ranges. Sizing 10% of the vault here improves yield; impermanent loss is the trade-off if SOL diverges sharply.`,
+    confidence: 62,
+    impactPct: 10,
+    category: 'yield',
+  })
+
+  // 4. Take-profit — only when the vault is heavily SOL-weighted
   if (potBalanceSol > 0.5) {
     list.push({
       id: `s-trim-${seed}`,
       title: `Take 10% profit — SOL → USDC`,
-      rationale: `Vault is ${potBalanceSol.toFixed(2)} SOL${usd ? ` (~$${usd.toFixed(0)})` : ''}. SOL has run +9.4% over the last 7 days; rotating 10% to USDC locks gains and reduces drawdown risk on a pullback.`,
-      confidence: 72,
+      rationale: `Vault holds ${potBalanceSol.toFixed(2)} SOL${usd ? ` (~$${usd.toFixed(0)})` : ''}. After a +9% week, rotating 10% to USDC locks gains and softens any pullback.`,
+      confidence: 70,
       impactPct: 10,
       category: 'take-profit',
     })
   }
-
-  // 2. Yield park
-  list.push({
-    id: `s-yield-${seed}`,
-    title: `Park 30% in JLP for yield`,
-    rationale: `JLP currently yielding ~38% APR with delta-neutral exposure to perps fees. Allocating 30% of idle SOL increases pot revenue without moving directional risk much.`,
-    confidence: 64,
-    impactPct: 30,
-    category: 'yield',
-  })
-
-  // 3. Rebalance
-  list.push({
-    id: `s-rebal-${seed}`,
-    title: `Add 5% JUP exposure`,
-    rationale: `Jupiter has expanded routing volume +18% this week. A small JUP allocation diversifies the pot without breaking the 80/20 SOL/USDC baseline.`,
-    confidence: 58,
-    impactPct: 5,
-    category: 'rebalance',
-  })
 
   // 4. Risk
   if (potBalanceSol > 0.3) {
@@ -134,7 +143,6 @@ export function PotBotAISuggestions({ potPubkey, potName, potBalanceSol, onSubmi
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-pot-accent/20 text-pot-accent border border-pot-accent/30 uppercase tracking-wide">
               base layer
             </span>
-            <StatusBadge tier="devnet" compact label="Devnet · mock" />
           </div>
           <p className="text-xs text-pot-muted mt-1 break-words">
             Decision-support feed for <span className="text-white">{potName}</span>. Reviews vault

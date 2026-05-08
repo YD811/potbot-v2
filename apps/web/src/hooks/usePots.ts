@@ -569,6 +569,10 @@ export function useDeposit() {
       queryClient.invalidateQueries({ queryKey: ['pot', vars.potAddress] })
       queryClient.invalidateQueries({ queryKey: ['members', vars.potAddress] })
       queryClient.invalidateQueries({ queryKey: ['pots'] })
+      // Pot role is derived from members + authority; refetch it too so the
+      // Propose CTA flips active immediately after the depositor's first
+      // deposit.
+      queryClient.invalidateQueries({ queryKey: ['potRole', vars.potAddress] })
     },
   })
 }
