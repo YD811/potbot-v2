@@ -56,3 +56,6 @@ POTBOT_OPUS/
 
 # Demo script JSON logs (keep .gitkeep)
 logs/*.json
+
+# create-frontier-demo-pot.ts persisted state — env-specific, do not share
+scripts/.demo-pot.json

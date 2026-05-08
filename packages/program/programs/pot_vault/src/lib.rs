@@ -101,7 +101,6 @@ pub mod pot_vault {
     pub fn redeem_tokens(ctx: Context<RedeemTokens>, token_amount: u64) -> Result<()> {
         instructions::redeem_tokens::handler(ctx, token_amount)
     }
-    }
 
     // ─── Premium features ──────────────────────────────────────────────────
 

@@ -15,7 +15,6 @@ pub mod route_to_yield;
 
 // Premium features
 pub mod tokenize_shares;
-pub mod redeem_tokens;
 pub mod create_sns_domain;
 pub mod mint_tamagotchi_nft;
 pub mod update_tamagotchi_metadata;
@@ -30,7 +29,6 @@ pub mod create_strategy;
 pub mod close_strategy;
 pub mod mark_proposal_passed;
 pub mod pot_admin;
-pub mod route_to_yield;
 
 pub use create_pot::{CreatePot, CreatePotParams};
 pub(crate) use create_pot::__client_accounts_create_pot;
@@ -63,7 +61,7 @@ pub use init_token_mint::InitTokenMint;
 pub(crate) use init_token_mint::__client_accounts_init_token_mint;
 pub use redeem_tokens::RedeemTokens;
 pub(crate) use redeem_tokens::__client_accounts_redeem_tokens;
-pub use route_to_yield::{RouteToYield, RouteToYieldEvent};
+pub use route_to_yield::{RouteToYield, RouteToYieldArgs, YieldRouted};
 pub(crate) use route_to_yield::__client_accounts_route_to_yield;
 pub use tokenize_shares::{mint_tokens_to_member, MintTokensToMember, TokenizeShares};
 pub(crate) use tokenize_shares::{__client_accounts_mint_tokens_to_member, __client_accounts_tokenize_shares};

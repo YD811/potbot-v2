@@ -159,7 +159,7 @@ pub enum ErrorCode {
     YieldTargetNoneNotRoutable,
     #[msg("Redemption exceeds 80% vault liquidity reserve")]
     WithdrawalReserveBreached,
-    #[msg("Pot is paused \u2014 redemptions blocked")]
+    #[msg("Pot is paused -- redemptions blocked")]
     PotPaused,
     #[msg("Amount must be greater than zero")]
     InvalidAmount,
