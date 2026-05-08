@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "deprecated": "Replaced by apps/web Vercel routes — see DEPRECATED.md",
   "scripts": {
-    "dev":   "tsx watch src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "lint":  "tsc --noEmit"
+    "dev":   "echo 'apps/api is deprecated — see DEPRECATED.md' && exit 0",
+    "build": "echo 'apps/api is deprecated — see DEPRECATED.md' && exit 0",
+    "start": "echo 'apps/api is deprecated — see DEPRECATED.md' && exit 0",
+    "lint":  "echo 'apps/api is deprecated — see DEPRECATED.md' && exit 0",
+    "test":  "echo 'apps/api is deprecated — see DEPRECATED.md' && exit 0"
   },
   "dependencies": {
     "@hono/node-server":  "^1.12.0",
