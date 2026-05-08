@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * PotBot MCP Server v0.1.0
+ * PotBot MCP Server
  *
  * Exposes PotBot vault operations as MCP tools for AI agents.
  * Compatible with Claude Desktop, Cursor, and any MCP client.
@@ -21,8 +21,19 @@
  *   get_agent_rules       — AI automation rules for a vault
  */
 
+import { readFileSync } from 'fs'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+
+// Load version from package.json at runtime so the handshake / startup
+// banner stay in sync with the published artifact. dist/index.js sits one
+// level below package.json, so `../package.json` is the right relative path.
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const { version: PKG_VERSION } = JSON.parse(
+  readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'),
+) as { version: string }
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -268,7 +279,7 @@ const YIELD_RATES = [
 
 // ── MCP Server ─────────────────────────────────────────────────────────────
 const server = new Server(
-  { name: 'potbot-mcp', version: '0.3.0' },
+  { name: 'potbot-mcp', version: PKG_VERSION },
   { capabilities: { tools: {}, resources: {}, prompts: {} } }
 )
 
@@ -1415,7 +1426,7 @@ function avg(nums: number[]): number {
 async function main() {
   const transport = new StdioServerTransport()
   await server.connect(transport)
-  console.error('🤖 PotBot MCP Server v0.1.0 running (stdio)')
+  console.error(`🤖 PotBot MCP Server v${PKG_VERSION} running (stdio)`)
   console.error(`   API:     ${POTBOT_API}`)
   console.error(`   RPC:     ${RPC_URL}`)
   console.error(`   Network: ${NETWORK}`)

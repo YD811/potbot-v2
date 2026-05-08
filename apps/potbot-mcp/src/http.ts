@@ -17,7 +17,14 @@
  */
 
 import http from 'http'
-import { URL } from 'url'
+import { URL, fileURLToPath } from 'url'
+import { readFileSync } from 'fs'
+import { dirname, join } from 'path'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const { version: PKG_VERSION } = JSON.parse(
+  readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'),
+) as { version: string }
 
 // ── Config ────────────────────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT ?? '3002', 10)
@@ -256,7 +263,7 @@ async function dispatchTool(name: string, args: Record<string, unknown>): Promis
 // ── Server info ───────────────────────────────────────────────────────────
 const SERVER_INFO = {
   name: 'potbot-mcp',
-  version: '0.3.0',
+  version: PKG_VERSION,
   transport: 'http+sse',
   x402_enabled: X402_ENABLED,
   x402_price_usdc: X402_ENABLED ? X402_PRICE_USDC : 0,
@@ -417,7 +424,7 @@ const server = http.createServer(async (req, res) => {
 })
 
 server.listen(PORT, () => {
-  console.log(`🌐 PotBot MCP HTTP Server v0.3.0`)
+  console.log(`🌐 PotBot MCP HTTP Server v${PKG_VERSION}`)
   console.log(`   Port:    ${PORT}`)
   console.log(`   x402:    ${X402_ENABLED ? `enabled (${X402_PRICE_USDC} USDC/paid-call)` : 'disabled'}`)
   console.log(`   Network: ${NETWORK}`)
