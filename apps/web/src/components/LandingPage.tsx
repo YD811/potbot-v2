@@ -461,8 +461,8 @@ export default function LandingPage() {
           </p>
 
           <p className="text-sm text-pot-muted/70 max-w-xl mx-auto mb-8">
-            Frontier demo focus: create one public AI strategy vault, deposit, propose,
-            vote, and execute a Jupiter swap on devnet.
+            Live on devnet today: real Anchor program, Jupiter v6 swaps, AI agent
+            suggestions, and an MCP server any LLM can drive.
           </p>
 
           <div className="flex flex-wrap gap-4 justify-center mb-12">
@@ -543,18 +543,6 @@ export default function LandingPage() {
            the user never has to learn a new mental model. ── */}
       <section className="bg-pot-card border-y border-pot-border py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-pot-dark border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-muted mb-4">
-              ⚙️ How it works
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mb-3">
-              Four steps. All on-chain.
-            </h2>
-            <p className="text-pot-muted max-w-xl mx-auto">
-              Same flow you see on every pot page — deposit, propose, vote, execute.
-            </p>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
               {
@@ -738,24 +726,21 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Why now / Why crypto / How we earn — full-width bg ── */}
+      {/* ── Why PotBot, why now — full-width bg, two cards ── */}
       <section className="bg-pot-dark border-b border-pot-border py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-black text-white mb-3">Why PotBot, why now</h2>
-            <p className="text-pot-muted max-w-2xl mx-auto">
-              Three honest questions, three direct answers.
-            </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="card p-6">
               <div className="text-2xl mb-3">🔓</div>
-              <h3 className="font-bold text-white text-lg mb-2">Why crypto, not a database</h3>
+              <h3 className="font-bold text-white text-lg mb-2">Why on-chain, not a database</h3>
               <p className="text-pot-muted text-sm leading-relaxed">
-                Group custody without a trusted middleman. The vault <em>is</em> the on-chain
-                account — every deposit, vote and trade is signed by the program itself.
-                A database can&apos;t enforce that without re-introducing the operator we&apos;re
-                removing.
+                Group custody without a trusted middleman. The vault <em>is</em> the
+                on-chain account — every deposit, vote and trade is signed by the
+                program itself. A database can&apos;t enforce that without re-
+                introducing the operator we&apos;re removing.
               </p>
             </div>
             <div className="card p-6">
@@ -763,20 +748,9 @@ export default function LandingPage() {
               <h3 className="font-bold text-white text-lg mb-2">Why now</h3>
               <p className="text-pot-muted text-sm leading-relaxed">
                 MCP standardised how AI agents connect to real systems. Solana ships
-                the throughput, Jupiter the routing, Pyth the prices. The full
-                agent-driven group-trading stack exists in 2026 — and the coordination
-                layer hasn&apos;t shipped. We&apos;re shipping it.
-              </p>
-            </div>
-            <div className="card p-6">
-              <div className="text-2xl mb-3">💰</div>
-              <h3 className="font-bold text-white text-lg mb-2">How we earn</h3>
-              <p className="text-pot-muted text-sm leading-relaxed">
-                <strong className="text-white">0.30%</strong> fee on every swap routed
-                through a pot. <strong className="text-white">10% performance fee</strong>{' '}
-                on Strategy Vaults, split with the strategy creator. No token, no
-                airdrop farming. If usage is zero, revenue is zero — honest unit
-                economics.
+                the throughput, Jupiter the routing. The agent-driven
+                group-trading stack exists in 2026 — and the coordination layer
+                hadn&apos;t shipped. We&apos;re shipping it.
               </p>
             </div>
           </div>

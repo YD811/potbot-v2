@@ -33,7 +33,7 @@ export default function VaultsPage() {
 
   const { data: pots = [], isLoading: potsLoading } = usePots()
   const { price: solPrice } = useSolPrice()
-  const { data: onePot } = usePot(ONE_POT_PUBKEY)
+  const { data: onePot, isLoading: onePotLoading } = usePot(ONE_POT_PUBKEY)
 
   // Pull batch analytics for the rest
   const livePubkeys = useMemo(() => pots.map((p: any) => p.pubkey), [pots])
@@ -98,11 +98,21 @@ export default function VaultsPage() {
             {/* Left — name + emoji + plant */}
             <div className="lg:col-span-3 min-w-0">
               <div className="flex items-start gap-4 sm:gap-5 mb-4">
-                <div className="text-5xl sm:text-7xl shrink-0">{onePot?.emoji ?? '🪴'}</div>
+                {/* Render the emoji + name only once the on-chain pot has
+                    actually resolved. Showing a stale "PotBot ONE / 🪴"
+                    placeholder caused a visible name flip when the real
+                    "Frontier Demo Vault" loaded a moment later. */}
+                <div className="text-5xl sm:text-7xl shrink-0">
+                  {onePot ? onePot.emoji : '🪴'}
+                </div>
                 <div className="min-w-0">
-                  <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight">
-                    {onePot?.name ?? 'PotBot ONE'}
-                  </h1>
+                  {onePotLoading || !onePot ? (
+                    <div className="h-9 sm:h-12 w-56 sm:w-72 rounded-lg bg-pot-border/40 animate-pulse" />
+                  ) : (
+                    <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight">
+                      {onePot.name}
+                    </h1>
+                  )}
                   <p className="text-sm sm:text-base text-pot-muted mt-1">
                     The flagship public pot. Deposit, propose a Jupiter swap, vote, watch it execute on-chain.
                   </p>
