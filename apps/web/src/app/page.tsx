@@ -3,17 +3,11 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useWallet } from '@solana/wallet-adapter-react'
-import dynamic from 'next/dynamic'
 import { usePots } from '@/hooks/usePots'
 import { useMockStore } from '@/lib/mock-store'
 import { useSolPrice } from '@/lib/prices'
 import LandingPage from '@/components/LandingPage'
 import { TrustBadge } from '@/components/TrustBadge'
-
-const WalletMultiButton = dynamic(
-  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  { ssr: false }
-)
 
 const YIELD_LABELS: Record<number, string> = {
   0: 'None',
@@ -134,21 +128,16 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Header + Search + Tabs */}
+      {/* Header + Search + Tabs — Create CTA is in the navbar, no need to repeat here. */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
         <h2 className="text-2xl font-bold">All POTs</h2>
-        <div className="flex gap-3 w-full sm:w-auto">
-          <input
-            type="text"
-            placeholder="Search POTs..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="input flex-1 sm:w-56 !py-2 text-sm"
-          />
-          <Link href="/create" className="btn-primary text-sm whitespace-nowrap">
-            + Create POT
-          </Link>
-        </div>
+        <input
+          type="text"
+          placeholder="Search POTs..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="input w-full sm:w-72 !py-2 text-sm"
+        />
       </div>
 
       {/* Tab row */}
