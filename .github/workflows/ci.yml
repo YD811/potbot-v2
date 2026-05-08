@@ -64,9 +64,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.85.0
+        uses: dtolnay/rust-toolchain@1.86.0
         with:
-          toolchain: "1.85.0"
+          toolchain: "1.86.0"
       - name: Cache Cargo
         uses: actions/cache@v4
         with:
@@ -92,7 +92,7 @@ jobs:
       - name: anchor build
         env:
           CARGO_BUILD_LOCKED: "true"
-          RUSTUP_TOOLCHAIN: "1.85.0"
+          RUSTUP_TOOLCHAIN: "1.86.0"
         run: cd packages/program && anchor build --no-idl
       - name: Upload IDL artifact
         uses: actions/upload-artifact@v4
