@@ -130,6 +130,11 @@
           }
         },
         {
+          "name": "treasury",
+          "writable": true,
+          "address": "2LeG86xuss12WrYsamTGk4zLfBbXJpWZpr1yFrUqN98o"
+        },
+        {
           "name": "authority",
           "writable": true,
           "signer": true

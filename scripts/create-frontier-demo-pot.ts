@@ -30,6 +30,8 @@ import {
   LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
+  Transaction,
+  sendAndConfirmTransaction,
 } from '@solana/web3.js'
 import * as fs from 'node:fs'
 import * as os from 'node:os'
@@ -130,7 +132,11 @@ async function main() {
   } else {
     console.log('› Creating pot on-chain (charges 0.01 SOL protocol fee to treasury)...')
     try {
-      const sig = await (program.methods as any)
+      // NOTE: We build the instruction via Anchor (correct accounts + args layout
+      // from IDL) but sign + send manually via web3.js. Anchor's `.rpc()` wrapper
+      // misbehaves with our Wallet provider here — the wallet's signature isn't
+      // attached, the program rejects with AccountNotSigner on `authority`.
+      const ix = await (program.methods as any)
         .createPot({
           name: POT_NAME,
           emoji: POT_EMOJI,
@@ -158,7 +164,9 @@ async function main() {
           authority: authority.publicKey,
           systemProgram: SystemProgram.programId,
         })
-        .rpc()
+        .instruction()
+      const tx = new Transaction().add(ix)
+      const sig = await sendAndConfirmTransaction(connection, tx, [authority], { commitment: 'confirmed' })
       createdNew = true
       console.log(`✓ create_pot tx: ${explorerTx(sig)}`)
     } catch (e: any) {
@@ -173,7 +181,7 @@ async function main() {
   if (createdNew || vaultBalance === 0) {
     console.log(`› Seeding vault with ${(DEPOSIT_LAMPORTS / LAMPORTS_PER_SOL).toFixed(2)} SOL...`)
     try {
-      const sig = await (program.methods as any)
+      const ix = await (program.methods as any)
         .deposit(new BN(DEPOSIT_LAMPORTS))
         .accounts({
           pot,
@@ -182,7 +190,9 @@ async function main() {
           depositor: authority.publicKey,
           systemProgram: SystemProgram.programId,
         })
-        .rpc()
+        .instruction()
+      const tx = new Transaction().add(ix)
+      const sig = await sendAndConfirmTransaction(connection, tx, [authority], { commitment: 'confirmed' })
       console.log(`✓ deposit tx: ${explorerTx(sig)}`)
     } catch (e: any) {
       console.error(`⚠ deposit failed (pot is created, but unfunded): ${e?.message ?? String(e)}`)
