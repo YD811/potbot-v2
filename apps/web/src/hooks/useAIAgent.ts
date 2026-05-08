@@ -106,12 +106,18 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
   /* ── Persist to Supabase + sync rules to API ── */
   const setConfig = useCallback((newConfig: AgentConfig) => {
     setConfigState(newConfig)
+    // Best-effort persist. Supabase v2 query builder is thenable but has no
+    // `.catch()`, so wrap in Promise.resolve(). The `agent_configs` table
+    // also isn't currently provisioned — when it lands the upsert will start
+    // sticking; until then the call is a no-op + warning.
     if (isSupabaseConfigured) {
-      supabase.from('agent_configs').upsert({
-        pot_pubkey:  potPubkey,
-        config_json: newConfig,
-        updated_at:  new Date().toISOString(),
-      }, { onConflict: 'pot_pubkey' }).catch(() => {})
+      void Promise.resolve(
+        supabase.from('agent_configs').upsert({
+          pot_pubkey:  potPubkey,
+          config_json: newConfig,
+          updated_at:  new Date().toISOString(),
+        }, { onConflict: 'pot_pubkey' }),
+      ).catch(() => { /* swallow — agent_configs table missing */ })
     }
     agentApi.updateRules(potPubkey, toBackendRules(newConfig)).catch(() => {})
   }, [potPubkey])

@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { useConnection, useWallet, useAnchorWallet } from '@solana/wallet-adapter-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { AnchorProvider, Program, BN } from '@coral-xyz/anchor'
-import { PublicKey, LAMPORTS_PER_SOL, SystemProgram } from '@solana/web3.js'
+import { PublicKey, LAMPORTS_PER_SOL, SystemProgram, Keypair } from '@solana/web3.js'
 import {
   getPotAddress,
   getVaultAddress,
@@ -40,6 +40,29 @@ export function useProgram() {
   }, [connection, wallet])
 }
 
+/* Read-only program — no wallet required. Used for queries that just need
+ * to decode account data (no signing). Falls through to a stub keypair
+ * wallet so AnchorProvider is happy.
+ */
+export function useReadProgram() {
+  const { connection } = useConnection()
+
+  return useMemo(() => {
+    try {
+      const dummy = Keypair.generate()
+      const stubWallet = {
+        publicKey: dummy.publicKey,
+        signTransaction: async <T>(_tx: T) => { throw new Error('read-only') },
+        signAllTransactions: async <T>(_txs: T[]) => { throw new Error('read-only') },
+      } as any
+      const provider = new AnchorProvider(connection, stubWallet, { commitment: 'confirmed' })
+      return new Program(IDL as any, provider)
+    } catch {
+      return null
+    }
+  }, [connection])
+}
+
 /* ── Detect if on-chain program is live ── */
 
 export function useIsProgramLive() {
@@ -67,7 +90,9 @@ export function useIsProgramLive() {
 export function usePots() {
   const mockStore = useMockStore()
   const { data: isLive } = useIsProgramLive()
-  const program = useProgram()
+  const walletProgram = useProgram()
+  const readProgram = useReadProgram()
+  const program = walletProgram ?? readProgram
   const { connection } = useConnection()
 
   return useQuery({
@@ -191,7 +216,9 @@ export function usePots() {
 export function usePot(pubkey?: string) {
   const mockStore = useMockStore()
   const { data: isLive } = useIsProgramLive()
-  const program = useProgram()
+  const walletProgram = useProgram()
+  const readProgram = useReadProgram()
+  const program = walletProgram ?? readProgram
   const { connection } = useConnection()
 
   return useQuery({
@@ -272,7 +299,9 @@ export function usePot(pubkey?: string) {
 export function useMembers(potPubkey?: string) {
   const mockStore = useMockStore()
   const { data: isLive } = useIsProgramLive()
-  const program = useProgram()
+  const walletProgram = useProgram()
+  const readProgram = useReadProgram()
+  const program = walletProgram ?? readProgram
 
   return useQuery({
     queryKey: ['members', potPubkey, isLive],
@@ -323,7 +352,9 @@ export function useMembers(potPubkey?: string) {
 export function useProposals(potPubkey?: string) {
   const mockStore = useMockStore()
   const { data: isLive } = useIsProgramLive()
-  const program = useProgram()
+  const walletProgram = useProgram()
+  const readProgram = useReadProgram()
+  const program = walletProgram ?? readProgram
 
   return useQuery({
     queryKey: ['proposals', potPubkey, isLive],
@@ -447,20 +478,25 @@ export function useCreatePot() {
         authority: publicKey.toBase58(),
         ...params,
       })
-      // Persist to Supabase so other judges see this pot too
+      // Persist to Supabase `demo_pots` so unconnected visitors / other judges
+      // see this pot too. Fire-and-forget — never block pot creation on the
+      // off-chain mirror. (Supabase v2 PostgrestQueryBuilder is thenable, NOT
+      // a real Promise — it has no `.catch()`. Use Promise.resolve() to wrap.)
       if (isSupabaseConfigured) {
-        supabase.from('demo_pots').upsert({
-          pubkey: potAddress,
-          name: params.name,
-          emoji: params.emoji,
-          balance: 0,
-          member_count: 0,
-          trade_count: 0,
-          total_volume: 0,
-          is_public: params.isPublic,
-          yield_strategy: params.yieldStrategy,
-          authority: publicKey.toBase58(),
-        }, { onConflict: 'pubkey' }).catch(() => {})
+        void Promise.resolve(
+          supabase.from('demo_pots').upsert({
+            pubkey: potAddress,
+            name: params.name,
+            emoji: params.emoji,
+            balance: 0,
+            member_count: 0,
+            trade_count: 0,
+            total_volume: 0,
+            is_public: params.isPublic,
+            yield_strategy: params.yieldStrategy,
+            authority: publicKey.toBase58(),
+          }, { onConflict: 'pubkey' }),
+        ).catch(() => { /* swallow — demo_pots mirror is best-effort */ })
       }
       return { potAddress, tx: 'mock-tx-' + Date.now() }
     },

@@ -396,15 +396,8 @@ export default function PotPage() {
     }
   }, [pubkey])
 
-  // Track referral in Supabase
-  useEffect(() => {
-    const ref = searchParams.get('ref')
-    if (!ref || !pubkey || !isSupabaseConfigured) return
-    supabase.from('referrals').upsert(
-      { pot_pubkey: pubkey, referrer_code: ref, visited_at: new Date().toISOString() },
-      { onConflict: 'pot_pubkey,referrer_code' },
-    ).catch(() => {})
-  }, [searchParams, pubkey])
+  // (Referral tracking removed — `referrals` table isn't provisioned. Will
+  //  be re-added when the protocol-economics phase ships its own table.)
 
   const { data: pot, isLoading: isPotLoading } = usePot(pubkey)
   const { data: members = [] } = useMembers(pubkey)
