@@ -66,7 +66,8 @@ const JUP_PRICE_URL    = 'https://api.jup.ag/price/v2'
 const DEFILLAMA_POOLS  = 'https://yields.llama.fi/pools'
 
 // ── Known mints ────────────────────────────────────────────────────────────
-const MINTS: Record<string, string> = {
+// Mainnet defaults — overridden per-symbol by MINTS_DEVNET when SOLANA_NETWORK=devnet.
+const MINTS_MAINNET: Record<string, string> = {
   SOL:    'So11111111111111111111111111111111111111112',
   USDC:   'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
   USDT:   'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
@@ -76,6 +77,16 @@ const MINTS: Record<string, string> = {
   JITOSOL:'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn',
   MSOL:   'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So',
 }
+
+// Devnet-only overrides (only symbols whose mints actually differ on devnet).
+// Anything not listed here falls through to mainnet — fine for SOL (same on
+// every cluster) and acceptable for tokens we never execute against on devnet.
+const MINTS_DEVNET: Record<string, string> = {
+  USDC:   '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU', // canonical devnet USDC faucet mint
+}
+
+const MINTS: Record<string, string> =
+  NETWORK === 'devnet' ? { ...MINTS_MAINNET, ...MINTS_DEVNET } : MINTS_MAINNET
 
 function resolveMint(tokenOrMint: string): string {
   return MINTS[tokenOrMint.toUpperCase()] ?? tokenOrMint
