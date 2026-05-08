@@ -1,31 +1,164 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllEnabledRules, markRuleTriggered } from '@/lib/db'
+import {
+  Keypair,
+  PublicKey,
+  Transaction,
+  sendAndConfirmTransaction,
+  SystemProgram,
+} from '@solana/web3.js'
+import { AnchorProvider, Program, BN, type Idl } from '@coral-xyz/anchor'
+import bs58 from 'bs58'
+
+import { createServerSupabase } from '@/lib/supabase'
+import { getRpcConnection } from '@/lib/rpc'
+import {
+  IDL,
+  PROGRAM_ID,
+  getMemberAddress,
+  getProposalAddress,
+  getVaultAddress,
+} from '@potbot/sdk'
 
 /**
  * GET /api/cron/agent-poll
  *
- * Vercel Cron job — runs every 5 minutes.
+ * Vercel Cron job — evaluates every active off-chain agent and submits
+ * a real on-chain `create_proposal` instruction for the first matching
+ * rule per pot.
  *
- * Reads enabled `agent_rules` from Supabase, evaluates trigger conditions
- * against the live SOL price, and (for rules whose cooldown has elapsed and
- * whose trigger fired) marks `last_fired_at` so the cooldown clock starts.
+ * Hard requirements:
+ *   - CRON_SECRET — bearer token from Vercel cron header
+ *   - AGENT_KEYPAIR — base58 secret key of the keypair that signs proposals
  *
- * NOTE: This cron does NOT create on-chain proposals. The previous version
- * tried to write off-chain "proposal" rows with synthetic pubkeys; that
- * never matched what the dApp actually displays (real proposals live in
- * ProposalAccount PDAs on-chain). To actually fire an AI proposal from a
- * triggered rule you need an `AGENT_KEYPAIR` registered as the pot's
- * delegate (`register_delegate` ix) and the agent must build + sign + send
- * a real `create_proposal` tx — that lives in the dedicated executor
- * service (or the @potbot/mcp `create_swap_proposal` tool when invoked by a
- * connected AI client). This cron is the heartbeat that decides "this rule
- * SHOULD fire now"; the fan-out is delegated.
+ * Behaviour when AGENT_KEYPAIR is missing: returns `{ skipped: true }`
+ * with reason — never throws so the cron logs stay clean.
+ *
+ * Each pot is wrapped in its own try/catch so one failure (member PDA
+ * missing, RPC rate limit, etc.) does not block the rest of the loop.
  */
+
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-export const maxDuration = 30  // seconds
+export const maxDuration = 60
+
+const SOL_MINT = 'So11111111111111111111111111111111111111112'
+
+interface AgentRuleJson {
+  id: string
+  name: string
+  enabled: boolean
+  cooldownMinutes: number
+  lastFiredAt?: number
+  trigger: {
+    type: string
+    tokenMint?: string
+    threshold?: number
+  }
+  action: {
+    type: string
+    fromMint?: string
+    toMint?: string
+    amountPct?: number
+    label?: string
+  }
+}
+
+interface AgentConfigRow {
+  pot_pubkey: string
+  config_json: {
+    rules?: AgentRuleJson[]
+    proposeOnly?: boolean
+    globalMaxPriceImpactPct?: number
+  } | null
+  last_fired_at: string | null
+  governance_mode: string
+}
+
+interface FiredEntry {
+  pot: string
+  rule: string
+  txSig: string
+}
+
+interface SkippedEntry {
+  pot: string
+  reason: string
+}
+
+function loadAgentKeypair(): Keypair | null {
+  const raw = process.env.AGENT_KEYPAIR
+  if (!raw) return null
+  try {
+    return Keypair.fromSecretKey(bs58.decode(raw))
+  } catch (err) {
+    console.error('[agent-poll] AGENT_KEYPAIR decode failed:', err)
+    return null
+  }
+}
+
+async function fetchSolPriceUsd(): Promise<number | null> {
+  try {
+    const res = await fetch(
+      `https://lite-api.jup.ag/price/v3?ids=${SOL_MINT}`,
+      { cache: 'no-store' },
+    )
+    if (!res.ok) return null
+    const data = (await res.json()) as Record<string, { usdPrice?: number }>
+    return data?.[SOL_MINT]?.usdPrice ?? null
+  } catch {
+    return null
+  }
+}
+
+function evaluateTrigger(
+  rule: AgentRuleJson,
+  prices: Record<string, number>,
+): { triggered: boolean; reason: string } {
+  const { trigger } = rule
+  const price = trigger.tokenMint ? (prices[trigger.tokenMint] ?? 0) : 0
+  const threshold = trigger.threshold ?? 0
+
+  switch (trigger.type) {
+    case 'price_above':
+      return {
+        triggered: price > 0 && price > threshold,
+        reason: `price ${price.toFixed(4)} vs > ${threshold}`,
+      }
+    case 'price_below':
+      return {
+        triggered: price > 0 && price < threshold,
+        reason: `price ${price.toFixed(4)} vs < ${threshold}`,
+      }
+    case 'time_interval':
+      return { triggered: true, reason: `time interval (cooldown gates frequency)` }
+    default:
+      return { triggered: false, reason: `trigger.type=${trigger.type} not supported by cron` }
+  }
+}
+
+function withinCooldown(lastIso: string | null, cooldownMinutes: number): boolean {
+  if (!lastIso) return false
+  const elapsedMin = (Date.now() - new Date(lastIso).getTime()) / 60_000
+  return elapsedMin < cooldownMinutes
+}
+
+function buildSwapProposalType(action: AgentRuleJson['action'], amountIn: BN) {
+  if (!action.fromMint || !action.toMint) {
+    throw new Error('propose_swap rule missing fromMint/toMint')
+  }
+  return {
+    swap: {
+      fromMint: new PublicKey(action.fromMint),
+      toMint: new PublicKey(action.toMint),
+      amountIn,
+      // 0 = best-effort routing; the executor sets a real slippage cap.
+      minAmountOut: new BN(0),
+    },
+  }
+}
 
 export async function GET(req: NextRequest) {
+  // ── Auth ─────────────────────────────────────────────────────────────
   const authHeader = req.headers.get('authorization')
   if (
     process.env.CRON_SECRET &&
@@ -35,68 +168,178 @@ export async function GET(req: NextRequest) {
   }
 
   const t0 = Date.now()
-
-  // Fetch current SOL price as a basis for rule evaluation
-  let solPrice: number | null = null
-  try {
-    const priceRes = await fetch(
-      'https://lite-api.jup.ag/price/v3?ids=So11111111111111111111111111111111111111112',
-      { next: { revalidate: 0 } },
-    )
-    if (priceRes.ok) {
-      const data = await priceRes.json()
-      solPrice = data?.['So11111111111111111111111111111111111111112']?.usdPrice ?? null
-    }
-  } catch {
-    // Price fetch failed — skip rule evaluation this tick
+  const agent = loadAgentKeypair()
+  if (!agent) {
+    return NextResponse.json({
+      ok: true,
+      skipped: true,
+      reason: 'AGENT_KEYPAIR not set',
+      checkedAt: new Date().toISOString(),
+    })
   }
 
-  let agentsEvaluated = 0
-  let triggersFired = 0
-  const fired: Array<{ id: string; pot: string; trigger_type: string }> = []
+  // ── Inputs ───────────────────────────────────────────────────────────
+  const db = createServerSupabase()
+  const conn = getRpcConnection('confirmed')
+  const provider = new AnchorProvider(
+    conn,
+    {
+      publicKey: agent.publicKey,
+      signTransaction: async <T extends Transaction>(tx: T) => {
+        // Anchor only ever calls this with a legacy Transaction here —
+        // the keypair signs in-place.
+        ;(tx as Transaction).partialSign(agent)
+        return tx
+      },
+      signAllTransactions: async <T extends Transaction>(txs: T[]) => {
+        for (const tx of txs) (tx as Transaction).partialSign(agent)
+        return txs
+      },
+    } as never,
+    { commitment: 'confirmed' },
+  )
+  const program = new Program(IDL as Idl, provider)
 
-  try {
-    const rules = await getAllEnabledRules()
-    agentsEvaluated = rules.length
+  const prices: Record<string, number> = {}
+  const solUsd = await fetchSolPriceUsd()
+  if (solUsd !== null) prices[SOL_MINT] = solUsd
 
-    for (const rule of rules) {
-      // Cooldown check (last_fired_at is the canonical column)
-      if (rule.last_fired_at) {
-        const lastMs = new Date(rule.last_fired_at).getTime()
-        const cooldownMs = (rule.cooldown_minutes ?? 60) * 60_000
-        if (Date.now() - lastMs < cooldownMs) continue
+  // ── Load active agent configs ────────────────────────────────────────
+  const { data: configs, error: cfgErr } = await db
+    .from('agent_configs')
+    .select('pot_pubkey, config_json, last_fired_at, governance_mode')
+    .eq('is_active', true)
+
+  if (cfgErr) {
+    console.error('[agent-poll] failed to load agent_configs:', cfgErr)
+    return NextResponse.json(
+      { ok: false, error: cfgErr.message ?? 'agent_configs query failed' },
+      { status: 500 },
+    )
+  }
+
+  const fired: FiredEntry[] = []
+  const skipped: SkippedEntry[] = []
+  const rows = (configs ?? []) as AgentConfigRow[]
+
+  // ── Per-pot loop ─────────────────────────────────────────────────────
+  for (const row of rows) {
+    try {
+      const rules = row.config_json?.rules ?? []
+      if (rules.length === 0) {
+        skipped.push({ pot: row.pot_pubkey, reason: 'no rules' })
+        continue
       }
 
-      let triggered = false
-      if (solPrice !== null) {
-        if (rule.trigger_type === 'price_above' && rule.trigger_threshold !== null) {
-          triggered = solPrice > rule.trigger_threshold
-        } else if (rule.trigger_type === 'price_below' && rule.trigger_threshold !== null) {
-          triggered = solPrice < rule.trigger_threshold
+      const potPk = new PublicKey(row.pot_pubkey)
+
+      // Pull pot account through the Anchor decoder so the discriminator
+      // is verified before we read any user-controlled bytes.
+      const potAcc = await (
+        program.account as Record<string, { fetch: (k: PublicKey) => Promise<Record<string, unknown>> }>
+      ).potAccount.fetch(potPk)
+
+      // The cron's keypair must already be a member of the pot for the
+      // proposal ix to succeed. Skip with a reason rather than crashing.
+      const [memberPda] = getMemberAddress(potPk, agent.publicKey)
+      const memberInfo = await conn.getAccountInfo(memberPda)
+      if (!memberInfo) {
+        skipped.push({
+          pot: row.pot_pubkey,
+          reason: `agent ${agent.publicKey.toBase58()} is not a member of this pot`,
+        })
+        continue
+      }
+
+      // Find the first rule that fires AND is past its individual cooldown.
+      let chosen: AgentRuleJson | null = null
+      let chosenReason = ''
+      for (const rule of rules) {
+        if (!rule.enabled) continue
+        if (rule.action.type !== 'propose_swap') continue
+        if (withinCooldown(row.last_fired_at, rule.cooldownMinutes)) continue
+        if (rule.lastFiredAt) {
+          const elapsedMin = (Date.now() - rule.lastFiredAt) / 60_000
+          if (elapsedMin < rule.cooldownMinutes) continue
+        }
+        const evald = evaluateTrigger(rule, prices)
+        if (evald.triggered) {
+          chosen = rule
+          chosenReason = evald.reason
+          break
         }
       }
-      if (rule.trigger_type === 'time_interval') {
-        triggered = true
+
+      if (!chosen) {
+        skipped.push({ pot: row.pot_pubkey, reason: 'no rule triggered' })
+        continue
       }
 
-      if (triggered) {
-        await markRuleTriggered(rule.id)
-        triggersFired++
-        fired.push({ id: rule.id, pot: rule.pot, trigger_type: rule.trigger_type })
-        console.log(`[agent-poll] rule ${rule.id} fired (pot=${rule.pot} trigger=${rule.trigger_type})`)
+      // Compute amountIn from vault SOL balance × amountPct.
+      const [vaultPda] = getVaultAddress(potPk)
+      const vaultLamports = await conn.getBalance(vaultPda, 'confirmed')
+      const pct = Math.max(0, Math.min(100, chosen.action.amountPct ?? 10))
+      const amountInLamports = Math.floor((vaultLamports * pct) / 100)
+      if (amountInLamports <= 0) {
+        skipped.push({ pot: row.pot_pubkey, reason: 'vault has no balance to swap' })
+        continue
       }
+
+      const nextProposalId = Number((potAcc.nextProposalId as BN | bigint))
+      const [proposalPda] = getProposalAddress(potPk, nextProposalId)
+
+      const proposalType = buildSwapProposalType(chosen.action, new BN(amountInLamports))
+      const description = chosen.action.label
+        ? `${chosen.action.label} — auto (${chosenReason})`
+        : `auto: ${chosen.name}`
+
+      const ix = await (program.methods as Record<string, (...args: unknown[]) => {
+        accounts: (a: Record<string, PublicKey>) => { instruction: () => Promise<unknown> }
+      }>)
+        .createProposal({ proposalType, description })
+        .accounts({
+          pot: potPk,
+          proposal: proposalPda,
+          member: memberPda,
+          vault: vaultPda,
+          proposer: agent.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .instruction()
+
+      const tx = new Transaction().add(ix as never)
+      const sig = await sendAndConfirmTransaction(conn, tx, [agent], {
+        commitment: 'confirmed',
+        skipPreflight: false,
+      })
+
+      // Persist the firing so the next tick respects the cooldown.
+      await db
+        .from('agent_configs')
+        .update({
+          last_fired_at: new Date().toISOString(),
+          last_proposal_tx: sig,
+        })
+        .eq('pot_pubkey', row.pot_pubkey)
+
+      fired.push({ pot: row.pot_pubkey, rule: chosen.name, txSig: sig })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error(`[agent-poll] pot=${row.pot_pubkey} failed:`, msg)
+      skipped.push({ pot: row.pot_pubkey, reason: `error: ${msg}` })
     }
-  } catch (dbErr) {
-    console.error('[agent-poll] DB error:', dbErr)
   }
 
+  // PROGRAM_ID is exported so we can include it in the response for
+  // verification — handy when a deploy lands on a new program id.
   return NextResponse.json({
     ok: true,
-    mode: process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet-beta' ? 'production' : 'demo',
-    solPrice,
-    agentsEvaluated,
-    triggersFired,
+    programId: PROGRAM_ID.toBase58(),
+    agent: agent.publicKey.toBase58(),
+    solUsd,
+    configsLoaded: rows.length,
     fired,
+    skipped,
     latencyMs: Date.now() - t0,
     checkedAt: new Date().toISOString(),
   })
