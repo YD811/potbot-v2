@@ -45,7 +45,7 @@ const TRACKS: Track[] = [
     sponsor: 'MCP / Model Context Protocol',
     emoji: '🤖',
     what: 'Claude / GPT / any MCP-aware agent can manage a pot.',
-    proof: '`@potbot/mcp@0.2.0` on npm — HTTP + SSE, x402 payments. 9 free tools + 3 paid.',
+    proof: '`@potbot/mcp` on npm — stdio + HTTP/SSE, x402 micropayments. `npx @potbot/mcp` runs the stdio server.',
     proofHref: 'https://www.npmjs.com/package/@potbot/mcp',
     tier: 'live',
   },
@@ -53,8 +53,8 @@ const TRACKS: Track[] = [
     sponsor: 'Helius',
     emoji: '⚡',
     what: 'RPC + webhooks + priority fees for the entire stack.',
-    proof: 'Wired in `apps/api/src/services/helius.ts` and front-end via `NEXT_PUBLIC_HELIUS_RPC`.',
-    proofHref: 'https://github.com/YD811/potbot-v2/blob/main/apps/api/src/services/helius.ts',
+    proof: 'Webhook handler at `apps/web/src/app/api/webhooks/helius/route.ts` (HMAC-verified, writes swap_executions); RPC URL flows through `NEXT_PUBLIC_HELIUS_RPC`.',
+    proofHref: 'https://github.com/YD811/potbot-v2/blob/main/apps/web/src/app/api/webhooks/helius/route.ts',
     tier: 'live',
   },
   {
@@ -141,7 +141,7 @@ const ARCHITECTURE: ArchLayer[] = [
     ],
   },
   {
-    layer: 'Off-chain · Next.js 14 + apps/api',
+    layer: 'Off-chain · Next.js 14 + Vercel Functions',
     color: 'purple',
     items: [
       { name: 'Pot detail UX (sticky hero, sponsor rail)', tier: 'live' },
@@ -288,7 +288,7 @@ export default function HackathonPage() {
             )}
             <LiveCard
               title="MCP server"
-              value="@potbot/mcp@0.2.0"
+              value="npx @potbot/mcp"
               href="https://www.npmjs.com/package/@potbot/mcp"
               hrefLabel="View on npm"
             />
