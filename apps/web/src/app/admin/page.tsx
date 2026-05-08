@@ -93,7 +93,7 @@ function AdminDashboard() {
   // Load agent configs from Supabase (migrated from localStorage)
   useEffect(() => {
     if (!pots || !isSupabaseConfigured) return
-    const pubkeys = pots.map((p) => p.pubkey)
+    const pubkeys = (pots as Array<{ pubkey: string }>).map((p) => p.pubkey)
     if (pubkeys.length === 0) return
     void Promise.resolve(
       supabase
@@ -112,27 +112,31 @@ function AdminDashboard() {
       .catch(() => {})
   }, [pots])
 
-  // Aggregate stats
-  const totalTvlSol  = pots?.reduce((s, p) => s + p.balance, 0) ?? 0
+  // Aggregate stats. Wider type lets us read arbitrary fields the table
+  // surfaces (tamagotchiLevel, mode, etc.) without listing them all —
+  // the inputs come from a heterogeneous source (on-chain + Supabase).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const adminPotRows = (pots ?? []) as any[]
+  const totalTvlSol  = adminPotRows.reduce((s, p) => s + p.balance, 0)
   const totalTvlUsd  = solPrice ? totalTvlSol * solPrice : 0
-  const totalMembers = pots?.reduce((s, p) => s + p.memberCount, 0) ?? 0
-  const totalTrades  = pots?.reduce((s, p) => s + p.tradeCount, 0) ?? 0
-  const totalVolume  = pots?.reduce((s, p) => s + (p.totalVolume ?? 0), 0) ?? 0
-  const publicVaults = pots?.filter((p) => p.isPublic).length ?? 0
-  const privateVaults = (pots?.length ?? 0) - publicVaults
+  const totalMembers = adminPotRows.reduce((s, p) => s + p.memberCount, 0)
+  const totalTrades  = adminPotRows.reduce((s, p) => s + p.tradeCount, 0)
+  const totalVolume  = adminPotRows.reduce((s, p) => s + (p.totalVolume ?? 0), 0)
+  const publicVaults = adminPotRows.filter((p) => p.isPublic).length
+  const privateVaults = adminPotRows.length - publicVaults
   const activeAgents  = agents.filter((a: any) => a.enabled).length
 
   // Yield stats
-  const totalYieldEarned = pots?.reduce((s, p) => s + (p.totalYieldEarned ?? 0), 0) ?? 0
-  const meteoraTvl       = pots?.reduce((s, p) => s + (p.meteoraLpBalance ?? 0), 0) ?? 0
+  const totalYieldEarned = adminPotRows.reduce((s, p) => s + (p.totalYieldEarned ?? 0), 0)
+  const meteoraTvl       = adminPotRows.reduce((s, p) => s + (p.meteoraLpBalance ?? 0), 0)
 
   // Pending proposals
   const pendingProposals = proposals.filter((p: any) => p.status === 'active').length
 
   // Sort vaults by balance desc
   const sortedVaults = useMemo(
-    () => [...(pots ?? [])].sort((a, b) => b.balance - a.balance),
-    [pots]
+    () => [...adminPotRows].sort((a, b) => b.balance - a.balance),
+    [adminPotRows]
   )
 
   const YIELD_LABELS: Record<number, string> = {
@@ -482,7 +486,7 @@ function AdminDashboard() {
                   </thead>
                   <tbody>
                     {agents.map((agent: any) => {
-                      const vault = pots?.find((p) => p.pubkey === agent.potPubkey)
+                      const vault = adminPotRows.find((p) => p.pubkey === agent.potPubkey)
                       return (
                         <tr key={agent.potPubkey} className="border-b border-pot-border/50 hover:bg-pot-card/50 transition">
                           <td className="px-4 py-3">

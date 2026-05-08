@@ -105,40 +105,45 @@ export function usePots() {
       if (isLive && program) {
         try {
           const accounts = await (program.account as any).potAccount.all()
-          const withBalances = await Promise.all(
-            accounts.map(async (acc: any) => {
-              const d = acc.account
-              const [vaultPda] = getVaultAddress(acc.publicKey)
-              const vaultInfo = await connection.getAccountInfo(vaultPda)
-              const balance = (vaultInfo?.lamports ?? 0) / LAMPORTS_PER_SOL
-              const tama = calculateTamaStats({
-                tradeVolume: d.totalVolume.toNumber() / LAMPORTS_PER_SOL,
-                memberCount: d.memberCount,
-                winRate: 0,
-                yieldApy: 0,
-                ageSeconds: Math.floor(Date.now() / 1000 - d.createdAt.toNumber()),
-              })
-              const stratKey = Object.keys(d.config.yieldStrategy)[0]
-              return {
-                pubkey: acc.publicKey.toBase58(),
-                name: d.name,
-                emoji: d.emoji || '🤴',
-                balance,
-                totalShares: d.totalShares.toNumber(),
-                memberCount: d.memberCount,
-                tradeCount: d.tradeCount,
-                tamagotchiLevel: tama.level,
-                tamagotchiEmoji: tama.emoji,
-                tamagotchiXp: tama.xp,
-                yieldStrategy: stratKey,
-                governanceLevel: d.governance.tradeLevel,
-                isPublic: d.config.isPublic,
-                createdAt: new Date(d.createdAt.toNumber() * 1000),
-                sharesPerSol: d.sharesPerSol?.toNumber() ?? 100,
-              }
+
+          // Batch every vault-balance lookup into a single
+          // getMultipleAccountsInfo call. Previously we fired one
+          // getAccountInfo per pot (N+1 RPC) which on devnet ran 200-
+          // 500 ms per request → noticeably slow /vaults render.
+          const vaultPdas = accounts.map((acc: any) => getVaultAddress(acc.publicKey)[0])
+          const vaultInfos = vaultPdas.length > 0
+            ? await connection.getMultipleAccountsInfo(vaultPdas)
+            : []
+
+          return accounts.map((acc: any, i: number) => {
+            const d = acc.account
+            const balance = (vaultInfos[i]?.lamports ?? 0) / LAMPORTS_PER_SOL
+            const tama = calculateTamaStats({
+              tradeVolume: d.totalVolume.toNumber() / LAMPORTS_PER_SOL,
+              memberCount: d.memberCount,
+              winRate: 0,
+              yieldApy: 0,
+              ageSeconds: Math.floor(Date.now() / 1000 - d.createdAt.toNumber()),
             })
-          )
-          return withBalances
+            const stratKey = Object.keys(d.config.yieldStrategy)[0]
+            return {
+              pubkey: acc.publicKey.toBase58(),
+              name: d.name,
+              emoji: d.emoji || '🤴',
+              balance,
+              totalShares: d.totalShares.toNumber(),
+              memberCount: d.memberCount,
+              tradeCount: d.tradeCount,
+              tamagotchiLevel: tama.level,
+              tamagotchiEmoji: tama.emoji,
+              tamagotchiXp: tama.xp,
+              yieldStrategy: stratKey,
+              governanceLevel: d.governance.tradeLevel,
+              isPublic: d.config.isPublic,
+              createdAt: new Date(d.createdAt.toNumber() * 1000),
+              sharesPerSol: d.sharesPerSol?.toNumber() ?? 100,
+            }
+          })
         } catch (e) {
           console.warn('On-chain fetch failed, using mock:', e)
         }
@@ -213,7 +218,10 @@ export function usePots() {
         }
       })
     },
-    staleTime: 5_000,
+    // Pot list only changes when someone creates a new pot — 60s avoids
+    // re-running the (newly batched, but still expensive) getProgramAccounts
+    // on every navigation.
+    staleTime: 60_000,
   })
 }
 

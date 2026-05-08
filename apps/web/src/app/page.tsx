@@ -38,12 +38,14 @@ export default function DashboardPage() {
   }, [walletStr])
 
   const basePots = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const all = (pots ?? []) as any[]
     if (tab === 'mine' && walletStr) {
-      return (pots ?? []).filter(
+      return all.filter(
         (p) => myPotPubkeys.has(p.pubkey) || p.authority === walletStr
       )
     }
-    return pots ?? []
+    return all
   }, [pots, tab, walletStr, myPotPubkeys])
 
   const filtered = useMemo(
@@ -51,10 +53,12 @@ export default function DashboardPage() {
     [basePots, search]
   )
 
-  const totalTvlSol  = pots?.reduce((sum, p) => sum + p.balance, 0) ?? 0
+  type StatsRow = { balance: number; memberCount: number; tradeCount: number }
+  const statsRows = (pots ?? []) as StatsRow[]
+  const totalTvlSol  = statsRows.reduce((sum, p) => sum + p.balance, 0)
   const totalTvlUsd  = solPrice ? totalTvlSol * solPrice : 0
-  const totalMembers = pots?.reduce((sum, p) => sum + p.memberCount, 0) ?? 0
-  const totalTrades  = pots?.reduce((sum, p) => sum + p.tradeCount, 0) ?? 0
+  const totalMembers = statsRows.reduce((sum, p) => sum + p.memberCount, 0)
+  const totalTrades  = statsRows.reduce((sum, p) => sum + p.tradeCount, 0)
 
   /* ── Landing (not connected) ──
      P0.4: show flagship ONE POT read-only at the top BEFORE marketing content,
@@ -106,7 +110,7 @@ export default function DashboardPage() {
             <div>
               <div className="text-sm font-semibold text-white">Public Leaderboard</div>
               <div className="text-xs text-pot-muted">
-                {pots?.filter((p) => p.isPublic).length ?? 0} public pots — see top performers
+                {((pots ?? []) as Array<{ isPublic: boolean }>).filter((p) => p.isPublic).length} public pots — see top performers
               </div>
             </div>
           </div>
@@ -164,7 +168,7 @@ export default function DashboardPage() {
           My POTs
           {walletStr && (
             <span className="ml-1.5 text-[10px] font-mono opacity-60">
-              {(pots ?? []).filter((p) => myPotPubkeys.has(p.pubkey) || p.authority === walletStr).length}
+              {((pots ?? []) as Array<{ pubkey: string; authority?: string }>).filter((p) => myPotPubkeys.has(p.pubkey) || p.authority === walletStr).length}
             </span>
           )}
         </button>

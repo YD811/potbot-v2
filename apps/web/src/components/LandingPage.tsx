@@ -485,11 +485,13 @@ export default function LandingPage() {
   const { data: pots } = usePots()
   const { price: solPrice } = useSolPrice()
 
-  const totalTvlSol = pots?.reduce((s, p) => s + p.balance, 0) ?? 0
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const potRows = (pots ?? []) as any[]
+  const totalTvlSol = potRows.reduce((s, p) => s + p.balance, 0)
   const totalTvlUsd = solPrice ? totalTvlSol * solPrice : 0
-  const totalMembers = pots?.reduce((s, p) => s + p.memberCount, 0) ?? 0
-  const totalTrades = pots?.reduce((s, p) => s + p.tradeCount, 0) ?? 0
-  const topVaults = [...(pots ?? [])].sort((a, b) => b.balance - a.balance).slice(0, 3)
+  const totalMembers = potRows.reduce((s, p) => s + p.memberCount, 0)
+  const totalTrades = potRows.reduce((s, p) => s + p.tradeCount, 0)
+  const topVaults = [...potRows].sort((a, b) => b.balance - a.balance).slice(0, 3)
 
   return (
     <div className="min-h-screen">

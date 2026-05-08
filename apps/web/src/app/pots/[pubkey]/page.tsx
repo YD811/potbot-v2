@@ -13,28 +13,33 @@ import {
 } from '@/hooks/usePots'
 import { usePotRole } from '@/hooks/usePotRole'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
-import { PnLDashboard } from '@/components/PnLDashboard'
 import { SharesPanel } from '@/components/SharesPanel'
 import { StrategyPanel } from '@/components/StrategyPanel'
-import { AIAgentPanel } from '@/components/AIAgentPanel'
-import { GovernanceSettings } from '@/components/GovernanceSettings'
 import DepositPanel from '@/components/DepositPanel'
-import SharesTab from '@/components/SharesTab'
-import ReferralPanel from '@/components/ReferralPanel'
-import { SquadsBanner } from '@/components/SquadsBanner'
 import { ShareBlinkButton } from '@/components/ShareBlinkButton'
-import { PotBotAISuggestions } from '@/components/PotBotAISuggestions'
 import { StatusBadge } from '@/components/StatusBadge'
 import { PotHeroStrip } from '@/components/PotHeroStrip'
 import { PotActivityFeed } from '@/components/PotActivityFeed'
-import { MembersList } from '@/components/MembersList'
-import { PremiumFeatures } from '@/components/PremiumFeatures'
 import { reverseSNS } from '@/lib/sns'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import SwapExecuteButton from '@/components/SwapExecuteButton'
 import CreateProposalModal from '@/components/pot/CreateProposalModal'
 import { PublicKey } from '@solana/web3.js'
-import VaultPortfolio from '@/components/VaultPortfolio'
+
+// Heavy panels that only render in their own tab or behind a <details>
+// disclosure. Defer their JS + initial fetches until the user actually
+// switches to that view — saves several hundred ms on first render of
+// the Trade tab and trims first-load JS for the page.
+const PnLDashboard      = dynamic(() => import('@/components/PnLDashboard').then(m => m.PnLDashboard))
+const VaultPortfolio    = dynamic(() => import('@/components/VaultPortfolio'))
+const SharesTab         = dynamic(() => import('@/components/SharesTab'))
+const MembersList       = dynamic(() => import('@/components/MembersList').then(m => m.MembersList))
+const SquadsBanner      = dynamic(() => import('@/components/SquadsBanner').then(m => m.SquadsBanner))
+const GovernanceSettings = dynamic(() => import('@/components/GovernanceSettings').then(m => m.GovernanceSettings))
+const ReferralPanel     = dynamic(() => import('@/components/ReferralPanel'))
+const PotBotAISuggestions = dynamic(() => import('@/components/PotBotAISuggestions').then(m => m.PotBotAISuggestions))
+const AIAgentPanel      = dynamic(() => import('@/components/AIAgentPanel').then(m => m.AIAgentPanel))
+const PremiumFeatures   = dynamic(() => import('@/components/PremiumFeatures').then(m => m.PremiumFeatures))
 
 // SSR-safe wallet button
 const WalletMultiButtonDynamic = dynamic(
@@ -701,14 +706,14 @@ export default function PotPage() {
                     <div><PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} /></div>
                   </div>
                   {vaultPda && (
-                    <details className="bg-pot-card/50 border border-pot-border rounded-2xl p-4">
-                      <summary className="cursor-pointer text-xs text-white font-semibold">
-                        🔎 Vault portfolio (live, Dune SIM)
-                      </summary>
+                    <DeferredDetails
+                      summary="🔎 Vault portfolio (live, Dune SIM)"
+                      className="bg-pot-card/50 border border-pot-border rounded-2xl p-4"
+                    >
                       <div className="mt-4">
                         <VaultPortfolio vaultPda={vaultPda} potName={pot.name} />
                       </div>
-                    </details>
+                    </DeferredDetails>
                   )}
                   <details className="bg-pot-card/50 border border-pot-border rounded-2xl p-4">
                     <summary className="cursor-pointer text-xs text-white font-semibold">
@@ -856,5 +861,34 @@ export default function PotPage() {
         )}
       </div>
     </div>
+  )
+}
+
+/**
+ * Wraps a native <details> so its children mount lazily on first
+ * expansion. Avoids running expensive child fetches (Dune SIM,
+ * sub-queries) when the disclosure is collapsed — which is the default
+ * state for the portfolio sections on /pots/[pubkey].
+ */
+function DeferredDetails({
+  summary,
+  className,
+  children,
+}: {
+  summary: ReactNode
+  className?: string
+  children: ReactNode
+}) {
+  const [opened, setOpened] = useState(false)
+  return (
+    <details
+      className={className}
+      onToggle={(e) => {
+        if ((e.currentTarget as HTMLDetailsElement).open) setOpened(true)
+      }}
+    >
+      <summary className="cursor-pointer text-xs text-white font-semibold">{summary}</summary>
+      {opened ? children : null}
+    </details>
   )
 }
