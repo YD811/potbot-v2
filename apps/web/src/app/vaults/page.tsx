@@ -213,12 +213,12 @@ export default function VaultsPage() {
                 <Link
                   key={p.pubkey}
                   href={`/pots/${p.pubkey}`}
-                  className="bg-pot-card border border-pot-border hover:border-pot-accent/40 rounded-2xl p-4 transition group"
+                  className="bg-pot-card border border-pot-border hover:border-pot-green/40 rounded-2xl p-4 transition-all duration-200 group hover:-translate-y-1 hover:shadow-lg hover:shadow-pot-green/10"
                 >
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="text-3xl shrink-0">{p.emoji ?? '🪴'}</div>
+                    <div className="text-3xl shrink-0 group-hover:animate-float">{p.emoji ?? '🪴'}</div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-white font-bold truncate group-hover:text-pot-accent transition">
+                      <p className="text-white font-bold truncate group-hover:text-pot-green transition">
                         {p.name ?? 'Unnamed pot'}
                       </p>
                       <p className="text-[10px] text-pot-muted font-mono truncate">
