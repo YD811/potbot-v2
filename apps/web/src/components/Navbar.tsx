@@ -86,7 +86,11 @@ export function Navbar() {
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
 
-  const showWaitlistCta = !pathname.startsWith('/signup')
+  // Hide the Waitlist CTA when the user has already connected a wallet —
+  // they obviously don't need a waitlist invite anymore, and the extra
+  // pill was the main reason the navbar wrapped to two lines on
+  // medium-width desktops.
+  const showWaitlistCta = !pathname.startsWith('/signup') && !publicKey
 
   return (
     <nav className="sticky top-0 z-50 border-b border-pot-border bg-pot-dark/80 backdrop-blur-xl">
@@ -125,11 +129,9 @@ export function Navbar() {
             </Link>
           )}
 
-          {publicKey && (
-            <span className="hidden md:block rounded-lg bg-pot-card px-3 py-1.5 text-xs font-mono text-pot-muted">
-              {publicKey.toBase58().slice(0, 4)}…{publicKey.toBase58().slice(-4)}
-            </span>
-          )}
+          {/* Wallet adapter button already shows the truncated address —
+              the second pubkey pill was redundant and forced the navbar
+              to wrap on medium widths. */}
           <WalletMultiButtonDynamic />
           <button onClick={() => setMenuOpen((v) => !v)}
             className="sm:hidden ml-1 p-2 rounded-lg text-pot-muted hover:text-white hover:bg-pot-card transition" aria-label="Toggle menu">

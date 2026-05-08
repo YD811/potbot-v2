@@ -44,29 +44,9 @@ const FEATURES = [
   },
 ]
 
-const HOW_IT_WORKS = [
-  {
-    step: '01',
-    title: 'Create a vault',
-    desc: 'Choose a name, emoji, governance level (from autocracy to full consensus), and yield strategy. Takes 30 seconds.',
-    color: 'text-pot-green',
-    border: 'border-pot-green/30',
-  },
-  {
-    step: '02',
-    title: 'Members deposit',
-    desc: 'Anyone sends SOL to the vault address — anonymously if needed. They receive shares proportional to the current NAV.',
-    color: 'text-pot-accent',
-    border: 'border-pot-accent/30',
-  },
-  {
-    step: '03',
-    title: 'Trade together',
-    desc: 'Members propose swaps via Jupiter. AI agents create proposals automatically. Shares of vault determine voting power.',
-    color: 'text-blue-400',
-    border: 'border-blue-500/30',
-  },
-]
+// HOW_IT_WORKS const was removed — the steps block is now inlined with
+// the actual 4-step pot lifecycle (deposit → propose → vote → execute)
+// directly in the section body so the page mirrors the on-pot UI.
 
 const FOR_BUILDERS = [
   { icon: '🔌', title: 'MCP Server', desc: '60+ on-chain actions via Model Context Protocol. Any LLM can control the vault.', href: '/for-agents' },
@@ -430,56 +410,12 @@ function CountUp({ value, prefix = '', suffix = '' }: { value: number; prefix?: 
   return <>{prefix}{value >= 1000 ? (value / 1000).toFixed(1) + 'K' : value.toLocaleString()}{suffix}</>
 }
 
-function WaitlistSection() {
-  return (
-    <section className="bg-gradient-to-r from-pot-accent/10 via-pot-card to-pot-green/10 border-y border-pot-border py-16 px-4">
-      <div className="max-w-2xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 bg-pot-dark border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-muted mb-4">
-          <span className="w-1.5 h-1.5 rounded-full bg-pot-accent animate-pulse inline-block" />
-          Mainnet launching soon
-        </div>
-        <h2 className="text-3xl font-black text-white mb-3">
-          Get early access to <span className="text-pot-green">PotBot</span>
-        </h2>
-        <p className="text-pot-muted mb-8 max-w-lg mx-auto">
-          Early members get lower fees, founding member NFT badge, and priority access to Strategy Vaults.
-        </p>
-        <div className="flex flex-wrap gap-4 justify-center">
-          <Link href="/signup" className="btn-primary text-base px-8 py-3 glow-green flex items-center gap-2">
-            🚀 Get Early Access
-          </Link>
-          <Link href="/create" className="btn-secondary text-base px-6 py-3 flex items-center gap-2">
-            🪴 Try devnet first
-          </Link>
-        </div>
-        <p className="text-pot-muted/50 text-xs mt-6">No spam. Unsubscribe anytime.</p>
-      </div>
-    </section>
-  )
-}
-
-function FrontierFocusStrip() {
-  return (
-    <section className="max-w-6xl mx-auto px-4 pb-10">
-      <div className="card grid gap-4 p-4 sm:grid-cols-4 sm:p-5">
-        {[
-          { step: '01', title: 'Create a POT', desc: 'Name the vault and choose voting rules.' },
-          { step: '02', title: 'Pool SOL', desc: 'Members receive NAV-based shares.' },
-          { step: '03', title: 'AI proposes', desc: 'MCP rule drafts a Jupiter swap proposal.' },
-          { step: '04', title: 'Group executes', desc: 'Votes pass, program signs, swap settles.' },
-        ].map((item) => (
-          <div key={item.step} className="rounded-xl border border-pot-border bg-pot-dark/60 p-4">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-pot-green">
-              {item.step}
-            </div>
-            <div className="mt-1 font-bold text-white">{item.title}</div>
-            <p className="mt-1 text-sm leading-snug text-pot-muted">{item.desc}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}
+// WaitlistSection and FrontierFocusStrip were removed:
+//   - WaitlistSection duplicated the final CTA at the bottom of the page.
+//   - FrontierFocusStrip was a 4-step compressed teaser that overlapped
+//     with the new full "How it works" section directly below the hero.
+// Both deletions consolidate the "what" of the protocol into one place
+// instead of three near-identical cards.
 
 export default function LandingPage() {
   const { data: pots } = usePots()
@@ -497,7 +433,7 @@ export default function LandingPage() {
     <div className="min-h-screen">
 
       {/* ── Hero ── */}
-      <section className="relative flex flex-col items-center text-center pt-14 pb-12 px-4 overflow-hidden">
+      <section className="relative flex flex-col items-center text-center pt-8 pb-12 px-4 overflow-hidden">
         {/* Glow background */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-pot-green/5 rounded-full blur-3xl" />
@@ -505,7 +441,8 @@ export default function LandingPage() {
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-pot-card border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-muted mb-6">
+          {/* Frontier badge moved up tighter to the top of the hero */}
+          <div className="inline-flex items-center gap-2 bg-pot-card border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-muted mb-3">
             <span className="w-1.5 h-1.5 rounded-full bg-pot-green animate-pulse inline-block" />
             Built for Solana Frontier 2026 · Open source
           </div>
@@ -528,7 +465,6 @@ export default function LandingPage() {
             vote, and execute a Jupiter swap on devnet.
           </p>
 
-          {/* CTA buttons — only 2: primary + Follow X. Browse / Leaderboard / Connect live further down the page where they belong. */}
           <div className="flex flex-wrap gap-4 justify-center mb-12">
             <Link
               href="/signup"
@@ -548,15 +484,12 @@ export default function LandingPage() {
               Follow on X
             </a>
             <Link
-              href="/create"
+              href="/vaults"
               className="btn-secondary text-base px-6 py-3 flex items-center gap-2"
             >
-              🪴 Try devnet (no wallet)
+              🪴 Explore live vault
             </Link>
           </div>
-          <p className="text-pot-muted/50 text-xs -mt-8 mb-4 text-center">
-            Demo mode · no wallet needed · Solana devnet
-          </p>
 
           {/* Live protocol stats — only shown when data is real */}
           {totalTvlSol > 0 && (
@@ -583,78 +516,106 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <FrontierFocusStrip />
-
-      {/* ── Trust & Risk ── */}
-      <section className="max-w-6xl mx-auto px-4 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          {[
-            { k: 'Network', v: 'Solana Devnet', sub: 'Live · Mainnet Q3 2026' },
-            { k: 'Custody', v: 'Program-controlled vaults', sub: 'No bot-held treasury keys' },
-            { k: 'Execution', v: 'Vote-gated actions', sub: 'AI proposes, members approve' },
-            { k: 'Status', v: 'Live API health', sub: 'Public endpoint: /api/health' },
-          ].map((item) => (
-            <div key={item.k} className="card p-4">
-              <div className="text-[11px] uppercase tracking-wider text-pot-muted">{item.k}</div>
-              <div className="text-white font-bold mt-1">{item.v}</div>
-              <div className="text-xs text-pot-muted mt-1">{item.sub}</div>
+      {/* ── HOW IT WORKS — actual 4-step pot lifecycle, no extra heading
+           on a separate section anymore (we collapsed the duplicate
+           below). Steps mirror the Pot detail page progress strip so
+           the user never has to learn a new mental model. ── */}
+      <section className="bg-pot-card border-y border-pot-border py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-pot-dark border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-muted mb-4">
+              ⚙️ How it works
             </div>
-          ))}
-        </div>
-        <p className="text-xs text-pot-muted mt-4 text-center">
-          Risk disclosure: DeFi strategies can lose principal. Start with demo mode and small sizes.
-        </p>
-        <div className="text-center mt-2">
-          <Link href="/status" className="text-xs text-pot-green hover:underline">
-            View public status checks →
-          </Link>
+            <h2 className="text-3xl sm:text-4xl font-black text-white mb-3">
+              Four steps. All on-chain.
+            </h2>
+            <p className="text-pot-muted max-w-xl mx-auto">
+              Same flow you see on every pot page — deposit, propose, vote, execute.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[
+              {
+                n: '1',
+                title: 'Deposit SOL',
+                desc: 'Pool funds with friends in a single program-controlled vault. Each member gets shares proportional to their deposit.',
+                color: 'text-pot-green',
+                border: 'border-pot-green/30',
+              },
+              {
+                n: '2',
+                title: 'Propose a swap',
+                desc: 'Anyone (or the AI agent) drafts a Jupiter swap with input mint, output mint and amount. Nothing moves yet.',
+                color: 'text-pot-accent',
+                border: 'border-pot-accent/30',
+              },
+              {
+                n: '3',
+                title: 'Vote',
+                desc: 'Members vote yes/no with their shares. Quorum and approval thresholds are governance settings the pot picks at creation.',
+                color: 'text-amber-300',
+                border: 'border-amber-300/30',
+              },
+              {
+                n: '4',
+                title: 'Execute on-chain',
+                desc: 'Once a proposal passes, anyone can trigger the on-chain execution. The vault PDA signs the Jupiter v6 CPI itself — no human keypair holds the funds.',
+                color: 'text-white',
+                border: 'border-pot-border',
+              },
+            ].map((step) => (
+              <div key={step.n} className={`rounded-2xl border ${step.border} bg-pot-dark p-6 relative`}>
+                <div className={`text-5xl font-black ${step.color} opacity-20 absolute top-4 right-5`}>{step.n}</div>
+                <div className={`text-sm font-bold ${step.color} mb-2`}>Step {step.n}</div>
+                <h3 className="text-white font-bold text-lg mb-2">{step.title}</h3>
+                <p className="text-pot-muted text-sm leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ── Live vault mockup ── */}
+      {/* ── Live vault mockup — "See your vault at a glance" ── */}
       <LiveVaultMockup />
 
-      {/* ── Features grid ── */}
-      <section className="max-w-6xl mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-black text-white mb-3">Everything your trading group needs</h2>
-          <p className="text-pot-muted max-w-xl mx-auto">One protocol. Group governance, AI automation, creator monetization, and DeFi yield — all composable on Solana.</p>
-        </div>
+      {/* ── Features grid — full-width section bg, content centered ── */}
+      <section className="bg-pot-dark border-b border-pot-border py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-black text-white mb-3">Everything your trading group needs</h2>
+            <p className="text-pot-muted max-w-xl mx-auto">One protocol. Group governance, AI automation, creator monetization, and DeFi yield — all composable on Solana.</p>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="card p-6 hover:border-pot-green/20 transition-all group">
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <div className="text-3xl group-hover:animate-float" aria-hidden="true">{f.icon}</div>
-                <span className="rounded-full border border-pot-border bg-pot-dark px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-pot-muted">
-                  {f.status}
-                </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {FEATURES.map((f) => (
+              <div key={f.title} className="card p-6 hover:border-pot-green/20 transition-all group">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="text-3xl group-hover:animate-float" aria-hidden="true">{f.icon}</div>
+                  <span className="rounded-full border border-pot-border bg-pot-dark px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-pot-muted">
+                    {f.status}
+                  </span>
+                </div>
+                <h3 className="font-bold text-white text-lg mb-2">{f.title}</h3>
+                <p className="text-pot-muted text-sm leading-relaxed">{f.desc}</p>
               </div>
-              <h3 className="font-bold text-white text-lg mb-2">{f.title}</h3>
-              <p className="text-pot-muted text-sm leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Secondary CTAs — the ones we removed from the hero live here, in context */}
-        <div className="flex flex-wrap gap-3 justify-center mt-10">
-          <Link href="/vaults" className="btn-secondary text-sm px-5 py-2.5">
-            ⚡ Browse Strategy Vaults
-          </Link>
-          <Link href="/leaderboard" className="btn-secondary text-sm px-5 py-2.5">
-            🏆 Leaderboard
-          </Link>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ── Plant evolution strip ── */}
-      <section className="max-w-6xl mx-auto px-4 pb-16">
-        <div className="card p-6 bg-gradient-to-r from-pot-green/5 via-pot-card to-pot-accent/5">
-          <div className="text-center mb-6">
-            <h3 className="text-xl font-bold text-white mb-1">Watch your vault grow</h3>
+      {/* ── Tamagotchi gamification — labelled section so the "Watch your vault grow"
+           strip reads as a feature, not a random plant rail ── */}
+      <section className="bg-gradient-to-b from-pot-dark to-pot-card border-b border-pot-border py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-pot-card border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-muted mb-4">
+              🌱 Tamagotchi gamification
+            </div>
+            <h2 className="text-3xl font-black text-white mb-2">Watch your vault grow</h2>
             <p className="text-pot-muted text-sm">Every trade, every member — your Tamagotchi plant levels up</p>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 max-w-4xl mx-auto">
             {[
               { emoji: '🌱', label: 'Seedling', tier: 'L1' },
               { emoji: '🌿', label: 'Sprout', tier: 'L2' },
@@ -667,27 +628,6 @@ export default function LandingPage() {
                 <div className="text-4xl mb-1">{stage.emoji}</div>
                 <div className="text-xs font-bold text-white">{stage.label}</div>
                 <div className="text-[10px] text-pot-muted">{stage.tier}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── How it works ── */}
-      <section className="bg-pot-card border-y border-pot-border py-16 px-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-black text-white mb-3">How it works</h2>
-            <p className="text-pot-muted">From zero to a fully governed trading vault in minutes.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {HOW_IT_WORKS.map((step) => (
-              <div key={step.step} className={`rounded-2xl border ${step.border} bg-pot-dark p-6 relative`}>
-                <div className={`text-5xl font-black ${step.color} opacity-20 absolute top-4 right-5`}>{step.step}</div>
-                <div className={`text-sm font-bold ${step.color} mb-2`}>Step {step.step}</div>
-                <h3 className="text-white font-bold text-lg mb-2">{step.title}</h3>
-                <p className="text-pot-muted text-sm leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
@@ -740,94 +680,20 @@ export default function LandingPage() {
         </section>
       )}
 
-      {/* ── Why now / Why crypto / How we earn ── */}
-      <section className="max-w-6xl mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-black text-white mb-3">Why PotBot, why now</h2>
-          <p className="text-pot-muted max-w-2xl mx-auto">
-            Three honest questions, three direct answers.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="card p-6">
-            <div className="text-2xl mb-3">🔓</div>
-            <h3 className="font-bold text-white text-lg mb-2">Why crypto, not a database</h3>
-            <p className="text-pot-muted text-sm leading-relaxed">
-              Group custody without a trusted middleman. The vault <em>is</em> the on-chain
-              account — every deposit, vote and trade is signed by the program itself.
-              A database can&apos;t enforce that without re-introducing the operator we&apos;re
-              removing.
-            </p>
-          </div>
-          <div className="card p-6">
-            <div className="text-2xl mb-3">⏰</div>
-            <h3 className="font-bold text-white text-lg mb-2">Why now</h3>
-            <p className="text-pot-muted text-sm leading-relaxed">
-              MCP standardised how AI agents connect to real systems. Solana ships
-              the throughput, Jupiter the routing, Pyth the prices. The full
-              agent-driven group-trading stack exists in 2026 — and the coordination
-              layer hasn&apos;t shipped. We&apos;re shipping it.
-            </p>
-          </div>
-          <div className="card p-6">
-            <div className="text-2xl mb-3">💰</div>
-            <h3 className="font-bold text-white text-lg mb-2">How we earn</h3>
-            <p className="text-pot-muted text-sm leading-relaxed">
-              <strong className="text-white">0.30%</strong> fee on every swap routed
-              through a pot. <strong className="text-white">10% performance fee</strong>{' '}
-              on Strategy Vaults, split with the strategy creator. No token, no
-              airdrop farming. If usage is zero, revenue is zero — honest unit
-              economics.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Privacy layer (STAMPPOT) ── */}
-      <section className="bg-gradient-to-br from-pot-accent/10 to-pot-card border-y border-pot-border py-16 px-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 bg-pot-dark border border-pot-accent/30 rounded-full px-4 py-1.5 text-xs text-pot-accent mb-4">
-                🥷 STAMPPOT · Privacy layer
-              </div>
-              <h2 className="text-3xl font-black text-white mb-3">
-                Public governance, <span className="text-pot-accent">private balances</span>
-              </h2>
-              <p className="text-pot-muted leading-relaxed mb-4">
-                Retail investors don't want their wallet tracked every time they join a
-                pot. STAMPPOT wraps deposits in <strong className="text-white">
-                PrivacyCash ZK proofs</strong> — members prove shares ownership without
-                exposing their address. Governance votes and swaps still settle on-chain
-                publicly; only the wallet-to-share link is hidden.
-              </p>
-              <p className="text-pot-muted text-sm">
-                Opt-in per pot. Transparency on demand.
-              </p>
-            </div>
-            <div className="bg-pot-dark border border-pot-border rounded-2xl p-6 font-mono text-xs">
-              <div className="text-pot-muted mb-2">// What an auditor sees</div>
-              <div className="text-pot-green">✓ Pot treasury: <span className="text-white">184 SOL</span></div>
-              <div className="text-pot-green">✓ Members: <span className="text-white">12</span></div>
-              <div className="text-pot-green">✓ Last trade: <span className="text-white">SOL → JUP, 8m ago</span></div>
-              <div className="text-pot-muted mt-3">// What stays private</div>
-              <div className="text-pot-accent">✗ Which wallet owns which shares</div>
-              <div className="text-pot-accent">✗ Individual deposit timing</div>
-              <div className="text-pot-accent">✗ Exit amounts per member</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── For builders ── */}
-      <section className="bg-gradient-to-b from-pot-card to-pot-dark border-y border-pot-border py-16 px-4">
-        <div className="max-w-5xl mx-auto">
+      {/* ── For AI Agents & Developers (MCP) — promoted up the page so the
+           agent-native angle lands right after the Tamagotchi strip and
+           before any of the deeper "why now" prose. ── */}
+      <section className="bg-gradient-to-b from-pot-card to-pot-dark border-b border-pot-border py-16 px-4">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 bg-pot-dark border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-accent mb-4">
               🔌 MCP-Native Protocol
             </div>
-            <h2 className="text-3xl font-black text-white mb-3">Built for AI Agents & Developers</h2>
-            <p className="text-pot-muted max-w-lg mx-auto">Any LLM can control PotBot vaults via the MCP server. Claude, GPT, or your own agent — 60+ on-chain actions available.</p>
+            <h2 className="text-3xl font-black text-white mb-3">Built for AI Agents &amp; Developers</h2>
+            <p className="text-pot-muted max-w-lg mx-auto">
+              Any LLM can control PotBot vaults via the MCP server. Claude, GPT, or your
+              own agent — 60+ on-chain actions available.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
@@ -851,38 +717,188 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Waitlist ── */}
-      <WaitlistSection />
-
-      {/* ── Final CTA ── */}
-      <section className="max-w-3xl mx-auto text-center px-4 py-20">
-        <div className="text-6xl mb-6 animate-float">🪴</div>
-        <h2 className="text-4xl font-black text-white mb-4">
-          Ready to trade together?
-        </h2>
-        <p className="text-pot-muted text-lg mb-8">
-          Create your vault in under a minute. No coding required.
-          Open source and free to use on Solana devnet.
-        </p>
-        <div className="flex flex-wrap gap-4 justify-center">
-          <Link href="/signup" className="btn-primary text-lg px-8 py-4 glow-green">
-            🚀 Get Early Access
-          </Link>
-          <Link href="/create" className="btn-secondary text-lg px-8 py-4">
-            🪴 Create Your Vault
-          </Link>
-          <a
-            href="https://github.com/YD811/potbot-v2"
-            target="_blank"
-            rel="noreferrer"
-            className="btn-secondary text-lg px-8 py-4"
-          >
-            ⭐ Star on GitHub
-          </a>
+      {/* ── Why now / Why crypto / How we earn — full-width bg ── */}
+      <section className="bg-pot-dark border-b border-pot-border py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-black text-white mb-3">Why PotBot, why now</h2>
+            <p className="text-pot-muted max-w-2xl mx-auto">
+              Three honest questions, three direct answers.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="card p-6">
+              <div className="text-2xl mb-3">🔓</div>
+              <h3 className="font-bold text-white text-lg mb-2">Why crypto, not a database</h3>
+              <p className="text-pot-muted text-sm leading-relaxed">
+                Group custody without a trusted middleman. The vault <em>is</em> the on-chain
+                account — every deposit, vote and trade is signed by the program itself.
+                A database can&apos;t enforce that without re-introducing the operator we&apos;re
+                removing.
+              </p>
+            </div>
+            <div className="card p-6">
+              <div className="text-2xl mb-3">⏰</div>
+              <h3 className="font-bold text-white text-lg mb-2">Why now</h3>
+              <p className="text-pot-muted text-sm leading-relaxed">
+                MCP standardised how AI agents connect to real systems. Solana ships
+                the throughput, Jupiter the routing, Pyth the prices. The full
+                agent-driven group-trading stack exists in 2026 — and the coordination
+                layer hasn&apos;t shipped. We&apos;re shipping it.
+              </p>
+            </div>
+            <div className="card p-6">
+              <div className="text-2xl mb-3">💰</div>
+              <h3 className="font-bold text-white text-lg mb-2">How we earn</h3>
+              <p className="text-pot-muted text-sm leading-relaxed">
+                <strong className="text-white">0.30%</strong> fee on every swap routed
+                through a pot. <strong className="text-white">10% performance fee</strong>{' '}
+                on Strategy Vaults, split with the strategy creator. No token, no
+                airdrop farming. If usage is zero, revenue is zero — honest unit
+                economics.
+              </p>
+            </div>
+          </div>
         </div>
-        <p className="text-pot-muted/50 text-xs mt-6">
-          Demo mode active — no wallet needed to explore · Built on Solana devnet
-        </p>
+      </section>
+
+      {/* ── Two pot modes — same Social-Fi vs Privacy layer story as on
+           /create, presented here as side-by-side cards instead of the
+           old single STAMPPOT pitch. Full-width bg. ── */}
+      <section className="bg-gradient-to-br from-pot-card via-pot-dark to-pot-card border-b border-pot-border py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 bg-pot-card border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-muted mb-4">
+              ⚖️ Two pot modes
+            </div>
+            <h2 className="text-3xl font-black text-white mb-3">
+              Social-Fi or Privacy — pick per pot
+            </h2>
+            <p className="text-pot-muted max-w-xl mx-auto">
+              Public pots compete on the leaderboard, share strategies, earn referrals.
+              Private pots wrap deposits in PrivacyCash ZK proofs so the wallet→share
+              link stays hidden. Same on-chain governance either way.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* PUBLIC / Social-Fi */}
+            <div
+              className="rounded-2xl p-6"
+              style={{
+                background: 'linear-gradient(135deg, rgba(20,241,149,0.08), rgba(20,241,149,0.02))',
+                border: '1px solid rgba(20,241,149,0.25)',
+              }}
+            >
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                  style={{ background: 'rgba(20,241,149,.12)', boxShadow: '0 0 24px rgba(20,241,149,.2)' }}
+                >
+                  🌐
+                </div>
+                <span
+                  className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full border"
+                  style={{ background: 'rgba(20,241,149,.12)', borderColor: 'rgba(20,241,149,.3)', color: '#14F195' }}
+                >
+                  Social-Fi
+                </span>
+              </div>
+              <div className="text-xl font-extrabold mb-1" style={{ color: '#14F195' }}>
+                Public POT
+              </div>
+              <p className="text-sm text-pot-muted leading-relaxed mb-4">
+                Open vault. Share strategy, earn referrals, compete on the leaderboard.
+                Community-powered alpha — anyone can deposit, anyone can vote.
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {['🏆 Leaderboard', '⚔️ Duels', '🔗 Referrals', '📊 Strategy Share', '👥 Community'].map((f) => (
+                  <span
+                    key={f}
+                    className="text-xs font-semibold px-2 py-1 rounded-full border"
+                    style={{ background: 'rgba(20,241,149,.08)', borderColor: 'rgba(20,241,149,.2)', color: '#14F195' }}
+                  >
+                    {f}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* PRIVATE / Privacy layer */}
+            <div
+              className="rounded-2xl p-6"
+              style={{
+                background: 'linear-gradient(135deg, rgba(153,69,255,0.08), rgba(153,69,255,0.02))',
+                border: '1px solid rgba(153,69,255,0.25)',
+              }}
+            >
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                  style={{ background: 'rgba(153,69,255,.12)', boxShadow: '0 0 24px rgba(153,69,255,.25)' }}
+                >
+                  🥷
+                </div>
+                <span
+                  className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full border"
+                  style={{ background: 'rgba(153,69,255,.12)', borderColor: 'rgba(153,69,255,.3)', color: '#9945FF' }}
+                >
+                  Privacy layer
+                </span>
+              </div>
+              <div className="text-xl font-extrabold mb-1" style={{ color: '#9945FF' }}>
+                Private POT (STAMPPOT)
+              </div>
+              <p className="text-sm text-pot-muted leading-relaxed mb-4">
+                Deposits wrapped in PrivacyCash ZK proofs. Members prove shares ownership
+                without exposing their wallet. Governance and swaps still settle on-chain
+                publicly — only the wallet→share link is hidden.
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {['🔐 ZK proofs', '🚫 No wallet doxxing', '🤝 Invite-only', '🛡 PrivacyCash', '📜 Auditor view'].map((f) => (
+                  <span
+                    key={f}
+                    className="text-xs font-semibold px-2 py-1 rounded-full border"
+                    style={{ background: 'rgba(153,69,255,.08)', borderColor: 'rgba(153,69,255,.2)', color: '#9945FF' }}
+                  >
+                    {f}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Final CTA — only one CTA section now; the Waitlist and final
+           CTA used to duplicate each other. ── */}
+      <section className="bg-pot-dark py-20 px-4">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="text-6xl mb-6 animate-float">🪴</div>
+          <h2 className="text-4xl font-black text-white mb-4">
+            Ready to trade together?
+          </h2>
+          <p className="text-pot-muted text-lg mb-8">
+            Create your vault in under a minute. No coding required.
+            Open source and free to use on Solana devnet.
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link href="/signup" className="btn-primary text-lg px-8 py-4 glow-green">
+              🚀 Get Early Access
+            </Link>
+            <Link href="/create" className="btn-secondary text-lg px-8 py-4">
+              🪴 Create Your Vault
+            </Link>
+            <a
+              href="https://github.com/YD811/potbot-v2"
+              target="_blank"
+              rel="noreferrer"
+              className="btn-secondary text-lg px-8 py-4"
+            >
+              ⭐ Star on GitHub
+            </a>
+          </div>
+        </div>
       </section>
 
 
