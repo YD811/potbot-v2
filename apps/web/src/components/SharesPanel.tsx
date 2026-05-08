@@ -53,7 +53,15 @@ export function SharesPanel({ potPubkey }: Props) {
   const [withdrawPct, setWithdrawPct] = useState(0)
 
   const myWallet = publicKey?.toBase58() ?? ''
-  const myMember = members?.find((m) => m.wallet === myWallet)
+  type MemberRow = {
+    wallet: string
+    shares: number
+    sharePercent: number
+    depositTotal: number
+    withdrawTotal: number
+    pnl: number
+  }
+  const myMember = (members as MemberRow[] | undefined)?.find((m) => m.wallet === myWallet)
 
   const myShares       = myMember?.shares ?? 0
   const totalShares    = pot?.totalShares ?? 0
@@ -170,7 +178,7 @@ export function SharesPanel({ potPubkey }: Props) {
           <div>
             <div className="text-xs text-pot-muted mb-2">Member allocations</div>
             <div className="space-y-1.5">
-              {members.slice(0, 5).map((m) => (
+              {(members as MemberRow[]).slice(0, 5).map((m) => (
                 <div key={m.wallet} className="flex items-center gap-2">
                   <span className="text-xs font-mono text-pot-muted w-20">{m.wallet.slice(0,4)}…{m.wallet.slice(-4)}</span>
                   <div className="flex-1 h-2 bg-pot-dark rounded-full overflow-hidden">

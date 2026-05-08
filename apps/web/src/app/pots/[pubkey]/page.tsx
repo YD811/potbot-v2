@@ -413,7 +413,7 @@ export default function PotPage() {
   useEffect(() => {
     (async () => {
       const name = await reverseSNS(pubkey)
-      setSnsName(name)
+      setSnsName(name ?? '')
     })()
   }, [pubkey])
 

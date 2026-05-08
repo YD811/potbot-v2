@@ -90,11 +90,13 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
   /* ── Load config from Supabase on mount ── */
   useEffect(() => {
     if (!isSupabaseConfigured) return
-    supabase
-      .from('agent_configs')
-      .select('config_json')
-      .eq('pot_pubkey', potPubkey)
-      .single()
+    void Promise.resolve(
+      supabase
+        .from('agent_configs')
+        .select('config_json')
+        .eq('pot_pubkey', potPubkey)
+        .single(),
+    )
       .then(({ data }) => {
         if (data?.config_json) {
           setConfigState(data.config_json as AgentConfig)
@@ -187,7 +189,13 @@ export function useAIAgent(potPubkey: string, pot: any): UseAIAgentReturn {
 
       // ── Proposal-created rules (auto-vote) ──
       if (proposals) {
-        const newProposals = proposals.filter(
+        type ProposalRow = {
+          pubkey: string
+          status: string
+          description: string
+          proposalId?: number
+        }
+        const newProposals = (proposals as ProposalRow[]).filter(
           (p) => p.status === 'active' && !proposalSeenRef.current.has(p.pubkey)
         )
         for (const proposal of newProposals) {

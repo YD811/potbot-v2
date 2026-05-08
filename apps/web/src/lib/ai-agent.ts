@@ -54,21 +54,29 @@ export interface Trigger {
 /* ── Actions ── */
 
 export type ActionType =
-  | 'propose_swap'       // create a swap proposal
-  | 'vote_yes'           // vote YES on matching proposals
-  | 'vote_no'            // vote NO on matching proposals
-  | 'alert'              // just log/notify, don't act on-chain
+  | 'propose_swap'         // create a swap proposal
+  | 'propose_limit_order'  // create a limit-order proposal (Jupiter-style trigger)
+  | 'propose_dca'          // schedule a DCA over N cycles
+  | 'vote_yes'             // vote YES on matching proposals
+  | 'vote_no'              // vote NO on matching proposals
+  | 'alert'                // just log/notify, don't act on-chain
 
 export interface Action {
   id: string
   type: ActionType
-  // For propose_swap:
+  // ─── propose_swap / propose_limit_order / propose_dca ──────────────────
   fromMint?: string
   fromSymbol?: string
   toMint?: string
   toSymbol?: string
-  amountPct?: number     // % of vault balance to use
-  // For vote:
+  amountPct?: number       // % of vault balance to use (swap, limit, dca)
+  // ─── propose_limit_order only ──────────────────────────────────────────
+  triggerPriceUi?: number  // strike price in `toSymbol` per `fromSymbol`
+  expiredAt?: number       // unix sec when the order expires (0 = never)
+  // ─── propose_dca only ──────────────────────────────────────────────────
+  totalCycles?: number       // how many slices (default 7)
+  cycleSecondsApart?: number // gap between slices (default 86400 = 1d)
+  // ─── vote_* ────────────────────────────────────────────────────────────
   proposalFilter?: 'any' | 'swap_only' | 'by_trusted_member'
   trustedMembers?: string[]
   maxPriceImpactPct?: number   // only vote YES if impact < this

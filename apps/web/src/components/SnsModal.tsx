@@ -50,7 +50,7 @@ export function SnsModal({
     try {
       const sdk = new PotSDK({ connection, wallet });
       
-      const tx = await sdk.buildCreateSnsdomainTx(potPubkey, domainName.toLowerCase());
+      const tx = await sdk.buildCreateSnsDomainTx(potPubkey, domainName.toLowerCase());
       
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
       tx.feePayer = wallet.publicKey;

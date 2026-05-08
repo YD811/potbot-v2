@@ -1,5 +1,12 @@
 import { AnchorProvider, BN, Program } from '@coral-xyz/anchor'
 import type { Idl, Wallet } from '@coral-xyz/anchor'
+import type { Transaction, VersionedTransaction } from '@solana/web3.js'
+
+interface BrowserWallet {
+  publicKey: PublicKey
+  signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T>
+  signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]>
+}
 import { PublicKey, SystemProgram, type Connection } from '@solana/web3.js'
 import { IDL, getMemberAddress, getProposalAddress, getVaultAddress, getVoterRecordAddress } from '@potbot/sdk'
 
@@ -50,8 +57,11 @@ export type StrategyAccount = Record<string, unknown>
 export class PotbotClient {
   readonly program: Program
 
-  constructor(connection: Connection, wallet: Wallet) {
-    const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed' })
+  constructor(connection: Connection, wallet: BrowserWallet) {
+    // AnchorProvider only calls publicKey + signTransaction + signAllTransactions
+    // at runtime. NodeWallet's `payer: Keypair` is unused in browser code, so we
+    // accept the structural AnchorWallet shape and cast to satisfy the type.
+    const provider = new AnchorProvider(connection, wallet as unknown as Wallet, { commitment: 'confirmed' })
     this.program = new Program(IDL as Idl, provider)
   }
 
@@ -178,6 +188,6 @@ export class PotbotClient {
   }
 }
 
-export function createPotbotClient(connection: Connection, wallet: Wallet) {
+export function createPotbotClient(connection: Connection, wallet: BrowserWallet) {
   return new PotbotClient(connection, wallet)
 }

@@ -42,8 +42,8 @@ export const TOKEN_MINTS = {
 // ── Config ─────────────────────────────────────────────────────────────────────
 
 /** Kora RPC endpoint — override with NEXT_PUBLIC_KORA_RPC env var */
-export const KORA_RPC_URL =
-  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_KORA_RPC) ??
+export const KORA_RPC_URL: string =
+  (typeof process !== 'undefined' ? process.env?.NEXT_PUBLIC_KORA_RPC : undefined) ??
   'https://kora.potbot.app'
 
 /** Default fee token: USDC */

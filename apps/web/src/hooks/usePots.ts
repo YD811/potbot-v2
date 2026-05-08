@@ -435,7 +435,11 @@ export function useCreatePot() {
 
       if (isLive && program) {
         try {
-          const [potPda] = getPotAddress(publicKey, params.name)
+          // SDK signature is getPotAddress(name, authority) — seeds order
+          // [b"pot", authority, name] is encoded inside the helper. Args
+          // were swapped here, which both broke types AND produced the
+          // wrong PDA at runtime.
+          const [potPda] = getPotAddress(params.name, publicKey)
           const [vaultPda] = getVaultAddress(potPda)
           // @ts-ignore — Anchor IDL types are too deeply nested for TS inference
           const tx = await program.methods

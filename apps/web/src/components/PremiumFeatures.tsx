@@ -23,7 +23,7 @@ export function PremiumFeatures({
   potName,
   tamagotchiLevel,
   isTokenized,
-  hasSnsAddress,
+  hasSnsdomain,
   hasTamagotchiNft,
   snsAddress
 }: PremiumFeaturesProps) {
@@ -48,8 +48,8 @@ export function PremiumFeatures({
       description: 'Custom potbot.sol subdomain',
       icon: '\ud83c\udf10',
       price: '0.25 SOL',
-      available: !hasSnsAddress,
-      status: hasSnsAddress ? snsAddress : 'Available',
+      available: !hasSnsdomain,
+      status: hasSnsdomain ? snsAddress : 'Available',
       onClick: () => setSnsModal(true),
     },
     {

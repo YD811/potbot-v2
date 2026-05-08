@@ -40,6 +40,8 @@ export interface VaultAnalytics {
   positions: PositionWithPnl[]
   solBalanceLamports: number
   solBalanceUsd: number
+  /** Total executed swaps for this vault (mirrors PotAccount.tradeCount on-chain). */
+  tradeCount?: number
   updatedAt: number
   cached?: boolean
 }

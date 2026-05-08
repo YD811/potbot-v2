@@ -169,10 +169,13 @@ export async function POST(
     }
 
     // Calculate totals
-    const totalAssets = assets.reduce((sum, asset) => sum + asset.value, 0);
-    const totalLiabilities = liabilities.reduce(
+    const totalAssets = (assets as Array<{ value: number }>).reduce(
+      (sum, asset) => sum + asset.value,
+      0,
+    );
+    const totalLiabilities = (liabilities as Array<{ value: number }>).reduce(
       (sum, liability) => sum + liability.value,
-      0
+      0,
     );
     const nav = totalAssets - totalLiabilities;
 

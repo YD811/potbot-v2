@@ -64,6 +64,8 @@ export default function SwapExecuteButton({ proposalPubkey, potAddress, swapMeta
       setError('Connect wallet to execute')
       return
     }
+    const m = meta
+    if (!m) return
 
     setError(null)
 
@@ -81,9 +83,9 @@ export default function SwapExecuteButton({ proposalPubkey, potAddress, swapMeta
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            inputMint:       meta.inputMint,
-            outputMint:      meta.outputMint,
-            amountLamports:  meta.amountLamports,
+            inputMint:       m.inputMint,
+            outputMint:      m.outputMint,
+            amountLamports:  m.amountLamports,
             slippageBps:     50,
             signerPublicKey: publicKey.toBase58(),
           }),
@@ -136,9 +138,9 @@ export default function SwapExecuteButton({ proposalPubkey, potAddress, swapMeta
 
         const sig = await potbotClient.executeSwap(
           {
-            fromMint: new PublicKey(meta.inputMint),
-            toMint: new PublicKey(meta.outputMint),
-            amountIn: new BN(meta.amountLamports),
+            fromMint: new PublicKey(m.inputMint),
+            toMint: new PublicKey(m.outputMint),
+            amountIn: new BN(m.amountLamports),
             minAmountOut: new BN(0),
           },
           {

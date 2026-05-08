@@ -108,11 +108,13 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
       setLoading(false)
       return
     }
-    supabase
-      .from('governance_settings')
-      .select('*')
-      .eq('pot_pubkey', potPubkey)
-      .single()
+    void Promise.resolve(
+      supabase
+        .from('governance_settings')
+        .select('*')
+        .eq('pot_pubkey', potPubkey)
+        .single(),
+    )
       .then(({ data }) => {
         if (data) {
           setSettingsState({
