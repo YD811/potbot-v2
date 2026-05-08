@@ -14,5 +14,8 @@ codegen-units = 1
 [profile.dev]
 overflow-checks = true
 
-[patch.crates-io]
-proc-macro2 = { git = "https://github.com/dtolnay/proc-macro2", tag = "1.0.86" }
+# Note: an earlier workaround pinned proc-macro2 1.0.86 here because the
+# default toolchain (1.85+) had dropped the unstable Span::source_file
+# API that anchor-syn 0.30.1 depends on. The real fix is the rustc 1.79
+# pin in rust-toolchain.toml — that toolchain still ships source_file,
+# so no patch is required.

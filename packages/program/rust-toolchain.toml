@@ -1,3 +1,16 @@
 [toolchain]
+# 1.85 is the toolchain `cargo build-sbf` ships with the Solana CLI.
+# It compiles the program fine via `cargo build-sbf`, but `anchor build`
+# (which also runs `idl-build`) errors because anchor-syn 0.30.x calls
+# the unstable `proc_macro::Span::source_file()` stdlib API that was
+# removed in 1.83+.
+#
+# Going the other direction (pinning to 1.79) hits a Cargo limitation:
+# downstream crates require the edition2024 feature which only ships
+# with newer Cargo. There is no rustc that satisfies both ends.
+#
+# Real fix is to bump anchor-lang past 0.30.x, but that would force a
+# program redeploy mid-hackathon. Instead we use `cargo build-sbf` for
+# the binary and keep the IDL hand-vendored with `make sync-idl`.
 channel = "1.85.0"
 components = ["rustfmt", "clippy"]
