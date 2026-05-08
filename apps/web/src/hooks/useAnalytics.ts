@@ -7,7 +7,9 @@ import { analyticsApi, type VaultAnalytics } from '../lib/api-client'
 
 /**
  * Fetch analytics for a single vault.
- * Refetches every 10 seconds so the UI stays live.
+ * Refetches every 30s — NAV/PnL barely move at sub-minute granularity
+ * and the previous 10s interval was firing 6 RPC-backed requests per
+ * minute per open tab.
  */
 export function useVaultAnalytics(
   pubkey: string | null | undefined,
@@ -17,8 +19,8 @@ export function useVaultAnalytics(
     queryKey: ['analytics', pubkey],
     queryFn: () => analyticsApi.getVault(pubkey!),
     enabled:  Boolean(pubkey) && (options?.enabled !== false),
-    refetchInterval: options?.refetchInterval ?? 10_000,  // 10s
-    staleTime: 8_000,
+    refetchInterval: options?.refetchInterval ?? 30_000,
+    staleTime: 25_000,
     retry: 2,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10_000),
   })
@@ -35,7 +37,10 @@ export function useVaultAnalyticsBatch(pubkeys: string[]) {
       queryKey: ['analytics', pubkey] as const,
       queryFn:  () => analyticsApi.getVault(pubkey),
       enabled:  Boolean(pubkey),
-      staleTime: 8_000,
+      // Batch on /vaults fans out one query per pot — 60s staleTime
+      // keeps the grid snappy without nuking the analytics service on
+      // every navigation.
+      staleTime: 60_000,
       retry: 1,
       // Stagger fetches slightly to avoid rate-limit bursts
       // React Query handles concurrency, but retryDelay adds back-pressure
@@ -56,7 +61,9 @@ export function useVaultAnalyticsBatch(pubkeys: string[]) {
 
 /**
  * Fetch live token prices via the API price oracle.
- * Refetches every 5 seconds — matches the API cache TTL.
+ * Refetches every 30s — sub-second moves don't affect the dashboard
+ * UX and the previous 5s interval was the largest single source of
+ * production traffic against /api/prices.
  */
 export function usePrices(
   mints: string[],
@@ -69,8 +76,8 @@ export function usePrices(
       return pricesApi.get(mints)
     },
     enabled:  mints.length > 0 && (options?.enabled !== false),
-    refetchInterval: 5_000,  // 5s — matches price oracle cache TTL
-    staleTime: 4_000,
+    refetchInterval: 30_000,
+    staleTime: 25_000,
     retry: 1,
   })
 }

@@ -61,6 +61,23 @@ async function proxyRequest(
     init.body = await req.text()
   }
 
+  // Cache policy:
+  //   GET /price/* — Vercel Edge cache for 10s (prices barely move at sub-
+  //                  second granularity and we were re-fetching ~3×/sec
+  //                  before this kicked in).
+  //   GET /quote   — short cache (5s) since quotes are time-sensitive but
+  //                  rerun anyway when a user actually swaps.
+  //   POST /swap   — never cache; signing payload is unique per request.
+  const isCacheableGet = req.method === 'GET'
+  const isPricePath    = path[0] === 'price'
+  const isQuotePath    = path[0] === 'quote'
+  const cacheControl =
+    isCacheableGet && isPricePath
+      ? 'public, s-maxage=10, stale-while-revalidate=30'
+      : isCacheableGet && isQuotePath
+      ? 'public, s-maxage=5, stale-while-revalidate=10'
+      : 'no-store'
+
   try {
     const upstream = await fetch(upstreamUrl, init)
     const body     = await upstream.text()
@@ -70,7 +87,7 @@ async function proxyRequest(
         const v3Json = JSON.parse(body) as Record<string, JupV3PriceRow>
         return NextResponse.json(rewriteV3ToV2(v3Json), {
           status: 200,
-          headers: { 'Cache-Control': 'no-store' },
+          headers: { 'Cache-Control': cacheControl },
         })
       } catch {
         // Fall through and serve the raw upstream body if parsing fails.
@@ -79,7 +96,7 @@ async function proxyRequest(
 
     return new NextResponse(body, {
       status:  upstream.status,
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': cacheControl },
     })
   } catch (err) {
     return NextResponse.json(
