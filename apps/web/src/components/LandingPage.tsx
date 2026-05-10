@@ -59,12 +59,12 @@ const FOR_BUILDERS = [
 /* ------------------------------------------------------------------ */
 function LiveVaultMockup() {
   return (
-    <section className="max-w-6xl mx-auto px-4 py-16">
-      <div className="text-center mb-10">
-        <h2 className="text-3xl font-black text-white mb-3">
+    <section className="mx-auto max-w-6xl px-4 py-20">
+      <div className="mx-auto mb-12 max-w-3xl text-center">
+        <h2 className="mb-4 text-3xl font-black tracking-[-0.04em] text-white sm:text-5xl">
           See your vault <span className="text-pot-green">at a glance</span>
         </h2>
-        <p className="text-white/75 max-w-xl mx-auto text-base">
+        <p className="mx-auto max-w-2xl text-base leading-relaxed text-white/70 sm:text-lg">
           Every pot is a Solana program account. TVL, quorum, active proposals —
           all live onchain, all visible to every member.
         </p>
@@ -438,10 +438,9 @@ export default function LandingPage() {
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute left-1/2 top-1/4 h-[520px] w-[760px] -translate-x-1/2 rounded-full bg-pot-green/10 blur-3xl" />
           <div className="absolute left-1/3 top-1/3 h-[380px] w-[520px] rounded-full bg-pot-accent/10 blur-3xl" />
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.024)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.024)_1px,transparent_1px)] bg-[size:72px_72px] [mask-image:radial-gradient(circle_at_center,black,transparent_78%)]" />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-4xl">
+        <div className="relative z-10 mx-auto max-w-6xl">
           {/* Frontier badge moved up tighter to the top of the hero */}
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.055] px-4 py-2 text-xs font-medium text-white/65 shadow-[0_0_50px_rgba(0,255,136,0.06)] backdrop-blur-xl">
             <span className="w-1.5 h-1.5 rounded-full bg-pot-green animate-pulse inline-block" />
@@ -450,16 +449,13 @@ export default function LandingPage() {
 
           <div className="text-7xl mb-5 animate-float" aria-hidden="true">🪴</div>
 
-          <h1 className="mb-5 text-5xl font-black leading-[0.96] tracking-[-0.055em] text-white sm:text-6xl md:text-7xl">
-            A vault for{' '}
-            <span className="text-pot-green">anything</span>{' '}
-            on{' '}
-            <span className="text-pot-accent">Solana</span>.
+          <h1 className="mb-5 text-4xl font-black leading-[0.96] tracking-[-0.055em] text-white sm:text-5xl md:text-6xl lg:whitespace-nowrap lg:text-7xl">
+            A vault for <span className="text-pot-green">anything</span> on <span className="text-pot-accent">Solana</span>.
           </h1>
 
           <p className="mx-auto mb-10 max-w-[62ch] text-xl leading-relaxed text-white/80 sm:text-2xl">
-            Programmable treasuries for internet communities.
-            Owned by the group, run by an AI agent, settled onchain.
+            <span className="block">Programmable treasuries for internet communities.</span>
+            <span className="block">Owned by the group, run by an AI agent, settled onchain.</span>
           </p>
 
           <div className="mx-auto mb-10 grid max-w-3xl grid-cols-1 gap-4 text-left sm:grid-cols-2">
@@ -551,13 +547,11 @@ export default function LandingPage() {
       {/* ── Mission statement — readable: white kicker, large body, no
            italics, no decorative chrome. ── */}
       <section className="px-4 py-24 sm:py-28">
-        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.075] via-white/[0.035] to-pot-accent/[0.045] px-6 py-14 text-center shadow-2xl shadow-black/25 backdrop-blur-xl sm:px-10 md:py-18">
-          <div className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-pot-green/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-28 right-0 h-72 w-72 rounded-full bg-pot-accent/10 blur-3xl" />
-          <div className="relative mb-8 text-xs font-bold uppercase tracking-[0.3em] text-pot-green">
+        <div className="mx-auto max-w-5xl text-center">
+          <div className="mb-8 text-xs font-bold uppercase tracking-[0.3em] text-pot-green">
             Our mission
           </div>
-          <p className="relative text-2xl font-bold leading-[1.22] tracking-[-0.035em] text-white sm:text-4xl md:text-5xl">
+          <p className="text-2xl font-bold leading-[1.22] tracking-[-0.035em] text-white sm:text-4xl md:text-5xl">
             Unite <span className="text-pot-green">people</span> and{' '}
             <span className="text-pot-green">capital</span> across every direction
             Solana offers,
