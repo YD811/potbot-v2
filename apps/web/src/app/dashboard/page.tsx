@@ -12,6 +12,8 @@ import { useHumanText } from '@/hooks/useHumanText'
 import { useActiveWallet } from '@/hooks/useActiveWallet'
 import { ConnectButton } from '@/components/ConnectButton'
 import { SolPrice } from '@/components/SolPrice'
+import { AddSolModal } from '@/components/AddSolModal'
+import { JupiterSwapPanel } from '@/components/JupiterSwapPanel'
 
 const QUEST_PLACEHOLDER = [
   {
@@ -88,6 +90,7 @@ export default function DashboardPage() {
   const walletStr = wallet.address ?? ''
   const connected = wallet.isConnected
   const [questTab, setQuestTab] = useState<'active' | 'points'>('active')
+  const [showAddSol, setShowAddSol] = useState(false)
 
   /* ── Live wallet SOL balance (signed in only) ── */
   const [walletSol, setWalletSol] = useState<number | null>(null)
@@ -202,14 +205,24 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {pending.length > 0 && (
-            <Link
-              href="#pending-votes"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-medium animate-pulse"
+          <div className="flex items-center gap-2 flex-wrap">
+            {pending.length > 0 && (
+              <Link
+                href="#pending-votes"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-medium animate-pulse"
+              >
+                🗳️ {pending.length} {t('Vote')}{pending.length !== 1 ? 's' : ''} pending
+              </Link>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowAddSol(true)}
+              disabled={!walletStr}
+              className="px-4 py-2 rounded-xl bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold text-sm transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              🗳️ {pending.length} {t('Vote')}{pending.length !== 1 ? 's' : ''} pending
-            </Link>
-          )}
+              + {t('Deposit')}
+            </button>
+          </div>
         </div>
 
         {/* ── Balance + analytics row ──────────────────────────────── */}
@@ -240,6 +253,17 @@ export default function DashboardPage() {
           />
         </div>
       </div>
+
+      {/* ── Quick swap (personal wallet) ───────────────────────────── */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <h2 className="text-lg font-bold text-white">⚡ Quick {t('Swap')}</h2>
+          <span className="text-[11px] text-pot-muted">
+            Trade between tokens straight from your wallet via Jupiter
+          </span>
+        </div>
+        <JupiterSwapPanel mode="personal" />
+      </section>
 
       {/* ── My POTs ──────────────────────────────────────────────── */}
       <section className="mb-8">
@@ -461,6 +485,12 @@ export default function DashboardPage() {
           )}
         </div>
       </section>
+
+      <AddSolModal
+        address={walletStr}
+        open={showAddSol}
+        onClose={() => setShowAddSol(false)}
+      />
     </div>
   )
 }

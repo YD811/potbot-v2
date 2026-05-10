@@ -177,15 +177,17 @@ html[data-theme="light"] .bg-pot-green\/10 {
   background-color: rgba(22, 101, 52, 0.08) !important;
 }
 
-/* Card surface fills (bg-pot-card/40..80) — were rendering as a near
-   invisible off-white on the white bg. Lift opacity, add a hairline
-   inner shadow so cards read as distinct surfaces with visible edges. */
+/* Card surface fills (bg-pot-card/20..80) — render as solid white with
+   a hairline ring so blocks have visible edges in light mode instead of
+   blending into the page. */
+html[data-theme="light"] .bg-pot-card\/20,
 html[data-theme="light"] .bg-pot-card\/30,
 html[data-theme="light"] .bg-pot-card\/40,
 html[data-theme="light"] .bg-pot-card\/50,
 html[data-theme="light"] .bg-pot-card\/60,
 html[data-theme="light"] .bg-pot-card\/70,
 html[data-theme="light"] .bg-pot-card\/80,
+html.light-theme .bg-pot-card\/20,
 html.light-theme .bg-pot-card\/30,
 html.light-theme .bg-pot-card\/40,
 html.light-theme .bg-pot-card\/50,
@@ -196,11 +198,21 @@ html.light-theme .bg-pot-card\/80 {
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(203, 213, 225, 0.6) !important;
 }
 
-/* bg-pot-dark used as the page bg becomes the light surface */
+/* bg-pot-dark and every opacity variant — the dark page-tone reads as
+   black on white. Map every variant to slate-100 so step bullets, input
+   wells, and the sticky pot-page header strip stay legible. */
 html[data-theme="light"] .bg-pot-dark\/40,
+html[data-theme="light"] .bg-pot-dark\/50,
 html[data-theme="light"] .bg-pot-dark\/60,
+html[data-theme="light"] .bg-pot-dark\/70,
+html[data-theme="light"] .bg-pot-dark\/80,
+html[data-theme="light"] .bg-pot-dark\/90,
 html.light-theme .bg-pot-dark\/40,
-html.light-theme .bg-pot-dark\/60 {
+html.light-theme .bg-pot-dark\/50,
+html.light-theme .bg-pot-dark\/60,
+html.light-theme .bg-pot-dark\/70,
+html.light-theme .bg-pot-dark\/80,
+html.light-theme .bg-pot-dark\/90 {
   background-color: #f1f5f9 !important;
 }
 
@@ -223,11 +235,13 @@ html[data-theme="light"] ::-webkit-scrollbar-track { background: var(--pot-bg) !
 html[data-theme="light"] ::-webkit-scrollbar-thumb { background: var(--pot-border-strong) !important; }
 
 /* ── Background tokens ── */
+/* (bare bg-pot-dark + /95 — pair with the opacity block above so every
+    variant remaps to slate-100 on the light surface) */
 html[data-theme="light"] .bg-pot-dark,
-html[data-theme="light"] .bg-pot-dark\/60,
-html[data-theme="light"] .bg-pot-dark\/80,
-html[data-theme="light"] .bg-pot-dark\/95 {
-  background-color: rgba(245, 247, 250, 0.92) !important;
+html[data-theme="light"] .bg-pot-dark\/95,
+html.light-theme .bg-pot-dark,
+html.light-theme .bg-pot-dark\/95 {
+  background-color: #f1f5f9 !important;
 }
 html[data-theme="light"] .bg-pot-card {
   background-color: #ffffff !important;

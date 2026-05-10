@@ -20,6 +20,7 @@ import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-tok
 import { useMockStore } from '@/lib/mock-store'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
+import { usePrivyAnchorWallet } from '@/hooks/usePrivyAnchorWallet'
 
 const TAMA_EMOJIS = ['🦚','🐓','🐔','🦅','🐉','👑']
 
@@ -27,7 +28,12 @@ const TAMA_EMOJIS = ['🦚','🐓','🐔','🦅','🐉','👑']
 
 export function useProgram() {
   const { connection } = useConnection()
-  const wallet = useAnchorWallet()
+  // Wallet-adapter wallet (Phantom/Solflare in Crypto mode).
+  const adapterWallet = useAnchorWallet()
+  // Privy embedded wallet (Normie mode — email/Google/Twitter/LinkedIn).
+  // Returns null when Privy isn't configured or the user isn't signed in.
+  const privyWallet = usePrivyAnchorWallet()
+  const wallet = adapterWallet ?? privyWallet
 
   return useMemo(() => {
     if (!wallet) return null
@@ -38,6 +44,19 @@ export function useProgram() {
       return null
     }
   }, [connection, wallet])
+}
+
+/**
+ * Active signer pubkey across both Crypto-mode (wallet-adapter) and
+ * Normie-mode (Privy embedded wallet). All mutation hooks below should
+ * read the user pubkey through this helper, not directly via
+ * `useWallet().publicKey`, so that Privy users can also create pots,
+ * deposit, vote, etc.
+ */
+export function useActivePubkey(): PublicKey | null {
+  const publicKey = useActivePubkey()
+  const privyWallet = usePrivyAnchorWallet()
+  return publicKey ?? privyWallet?.publicKey ?? null
 }
 
 /* Read-only program — no wallet required. Used for queries that just need
@@ -524,7 +543,7 @@ export function useProposals(potPubkey?: string) {
    ══════════════════════════════ */
 
 export function useCreatePot() {
-  const { publicKey } = useWallet()
+  const publicKey = useActivePubkey()
   const program = useProgram()
   const { data: isLive } = useIsProgramLive()
   const queryClient = useQueryClient()
@@ -623,7 +642,7 @@ export function useCreatePot() {
 }
 
 export function useDeposit() {
-  const { publicKey } = useWallet()
+  const publicKey = useActivePubkey()
   const program = useProgram()
   const { data: isLive } = useIsProgramLive()
   const queryClient = useQueryClient()
@@ -670,7 +689,7 @@ export function useDeposit() {
 }
 
 export function useWithdraw() {
-  const { publicKey } = useWallet()
+  const publicKey = useActivePubkey()
   const program = useProgram()
   const { data: isLive } = useIsProgramLive()
   const queryClient = useQueryClient()
@@ -721,7 +740,7 @@ export function useWithdraw() {
  * `shares_per_sol` or the tx is rejected with InvalidAmount.
  */
 export function useRedeemTokens() {
-  const { publicKey } = useWallet()
+  const publicKey = useActivePubkey()
   const program = useProgram()
   const { data: isLive } = useIsProgramLive()
   const queryClient = useQueryClient()
@@ -774,7 +793,7 @@ export function useRedeemTokens() {
 }
 
 export function useCreateProposal() {
-  const { publicKey } = useWallet()
+  const publicKey = useActivePubkey()
   const program = useProgram()
   const { data: isLive } = useIsProgramLive()
   const queryClient = useQueryClient()
@@ -846,7 +865,7 @@ export function useCreateProposal() {
 }
 
 export function useVote() {
-  const { publicKey } = useWallet()
+  const publicKey = useActivePubkey()
   const program = useProgram()
   const { data: isLive } = useIsProgramLive()
   const queryClient = useQueryClient()
@@ -893,7 +912,7 @@ export function useVote() {
 }
 
 export function useExecuteProposal() {
-  const { publicKey } = useWallet()
+  const publicKey = useActivePubkey()
   const program = useProgram()
   const { data: isLive } = useIsProgramLive()
   const queryClient = useQueryClient()
