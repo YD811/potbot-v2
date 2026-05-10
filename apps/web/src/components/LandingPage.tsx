@@ -430,39 +430,40 @@ export default function LandingPage() {
   const topVaults = [...potRows].sort((a, b) => b.balance - a.balance).slice(0, 3)
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-hidden bg-[#0D1117] text-white">
 
       {/* ── Hero ── */}
-      <section className="relative flex flex-col items-center text-center pt-8 pb-12 px-4 overflow-hidden">
+      <section className="relative flex min-h-[86vh] flex-col items-center justify-center overflow-hidden px-4 pb-16 pt-10 text-center sm:pb-20">
         {/* Glow background */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-pot-green/5 rounded-full blur-3xl" />
-          <div className="absolute top-1/3 left-1/3 w-[400px] h-[300px] bg-pot-accent/5 rounded-full blur-3xl" />
+          <div className="absolute left-1/2 top-1/4 h-[520px] w-[760px] -translate-x-1/2 rounded-full bg-pot-green/10 blur-3xl" />
+          <div className="absolute left-1/3 top-1/3 h-[380px] w-[520px] rounded-full bg-pot-accent/10 blur-3xl" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.024)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.024)_1px,transparent_1px)] bg-[size:72px_72px] [mask-image:radial-gradient(circle_at_center,black,transparent_78%)]" />
         </div>
 
-        <div className="relative z-10 max-w-4xl mx-auto">
+        <div className="relative z-10 mx-auto max-w-4xl">
           {/* Frontier badge moved up tighter to the top of the hero */}
-          <div className="inline-flex items-center gap-2 bg-pot-card border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-muted mb-3">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.055] px-4 py-2 text-xs font-medium text-white/65 shadow-[0_0_50px_rgba(0,255,136,0.06)] backdrop-blur-xl">
             <span className="w-1.5 h-1.5 rounded-full bg-pot-green animate-pulse inline-block" />
             Built for Solana Frontier 2026 · Open source
           </div>
 
           <div className="text-7xl mb-5 animate-float" aria-hidden="true">🪴</div>
 
-          <h1 className="text-5xl sm:text-6xl font-black text-white leading-tight mb-4">
+          <h1 className="mb-5 text-5xl font-black leading-[0.96] tracking-[-0.055em] text-white sm:text-6xl md:text-7xl">
             A vault for{' '}
             <span className="text-pot-green">anything</span>{' '}
             on{' '}
             <span className="text-pot-accent">Solana</span>.
           </h1>
 
-          <p className="text-xl sm:text-2xl text-white/80 max-w-3xl mx-auto mb-10 leading-relaxed">
+          <p className="mx-auto mb-10 max-w-[62ch] text-xl leading-relaxed text-white/80 sm:text-2xl">
             Programmable treasuries for internet communities.
             Owned by the group, run by an AI agent, settled onchain.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto mb-10 text-left">
-            <div className="rounded-2xl border border-pot-green/25 bg-pot-card/40 backdrop-blur-sm p-5 transition hover:border-pot-green/50">
+          <div className="mx-auto mb-10 grid max-w-3xl grid-cols-1 gap-4 text-left sm:grid-cols-2">
+            <div className="rounded-3xl border border-pot-green/25 bg-gradient-to-br from-pot-green/[0.10] via-white/[0.045] to-white/[0.02] p-5 shadow-2xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-pot-green/50 hover:shadow-pot-green/10">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
                 <span className="text-2xl font-black text-pot-green">POT</span>
                 <span className="text-sm font-semibold text-white">
@@ -478,7 +479,7 @@ export default function LandingPage() {
                 shares, the vault holds the assets.
               </p>
             </div>
-            <div className="rounded-2xl border border-pot-accent/25 bg-pot-card/40 backdrop-blur-sm p-5 transition hover:border-pot-accent/50">
+            <div className="rounded-3xl border border-pot-accent/25 bg-gradient-to-br from-pot-accent/[0.11] via-white/[0.045] to-white/[0.02] p-5 shadow-2xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-pot-accent/50 hover:shadow-pot-accent/10">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
                 <span className="text-2xl font-black text-pot-accent">BOT</span>
                 <span className="text-sm font-semibold text-white">
@@ -496,10 +497,10 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4 justify-center mb-12">
+          <div className="mb-12 flex flex-wrap justify-center gap-4">
             <Link
               href="/signup"
-              className="btn-primary text-base px-6 py-3 glow-green flex items-center gap-2"
+              className="btn-primary flex items-center gap-2 rounded-full px-7 py-3 text-base shadow-[0_0_42px_rgba(0,255,136,0.20)]"
             >
               🚀 Get Early Access
             </Link>
@@ -507,7 +508,7 @@ export default function LandingPage() {
               href="https://x.com/PotBot_sol"
               target="_blank"
               rel="noreferrer"
-              className="btn-secondary text-base px-6 py-3 flex items-center gap-2"
+              className="btn-secondary flex items-center gap-2 rounded-full border-white/15 bg-white/[0.035] px-7 py-3 text-base backdrop-blur-xl"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -516,7 +517,7 @@ export default function LandingPage() {
             </a>
             <Link
               href="/vaults"
-              className="btn-secondary text-base px-6 py-3 flex items-center gap-2"
+              className="btn-secondary flex items-center gap-2 rounded-full border-white/15 bg-white/[0.035] px-7 py-3 text-base backdrop-blur-xl"
             >
               🪴 Explore live vault
             </Link>
@@ -549,12 +550,14 @@ export default function LandingPage() {
 
       {/* ── Mission statement — readable: white kicker, large body, no
            italics, no decorative chrome. ── */}
-      <section className="py-20 px-4">
-        <div className="max-w-5xl mx-auto text-center">
-          <div className="text-xs font-bold uppercase tracking-[0.3em] text-pot-green mb-8">
+      <section className="px-4 py-24 sm:py-28">
+        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.075] via-white/[0.035] to-pot-accent/[0.045] px-6 py-14 text-center shadow-2xl shadow-black/25 backdrop-blur-xl sm:px-10 md:py-18">
+          <div className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-pot-green/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-28 right-0 h-72 w-72 rounded-full bg-pot-accent/10 blur-3xl" />
+          <div className="relative mb-8 text-xs font-bold uppercase tracking-[0.3em] text-pot-green">
             Our mission
           </div>
-          <p className="text-2xl sm:text-4xl md:text-5xl font-bold text-white leading-[1.25]">
+          <p className="relative text-2xl font-bold leading-[1.22] tracking-[-0.035em] text-white sm:text-4xl md:text-5xl">
             Unite <span className="text-pot-green">people</span> and{' '}
             <span className="text-pot-green">capital</span> across every direction
             Solana offers,
@@ -569,25 +572,25 @@ export default function LandingPage() {
 
       {/* ── Two pot modes — promoted up the page so it sits right after
            the mission, before the step-by-step protocol mechanics. ── */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10 max-w-4xl mx-auto">
-            <div className="text-xs font-bold uppercase tracking-[0.3em] text-pot-green mb-6">
+      <section className="px-4 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto mb-12 max-w-4xl text-center">
+            <div className="mb-6 text-xs font-bold uppercase tracking-[0.3em] text-pot-green">
               Two pot modes
             </div>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white leading-[1.25] mb-4">
+            <h2 className="mb-4 text-3xl font-black leading-[1.08] tracking-[-0.04em] text-white sm:text-4xl md:text-5xl">
               Social-Fi or Privacy.{' '}
               <span className="text-pot-green">Pick per pot.</span>
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {/* PUBLIC / Social-Fi */}
             <div
-              className="rounded-2xl p-6 backdrop-blur-sm transition"
+              className="group relative overflow-hidden rounded-[2rem] p-7 shadow-2xl shadow-black/20 backdrop-blur-xl transition duration-300 hover:-translate-y-1 md:p-8"
               style={{
-                background: 'linear-gradient(135deg, rgba(20,241,149,0.04), rgba(20,241,149,0.01))',
-                border: '1px solid rgba(20,241,149,0.25)',
+                background: 'radial-gradient(circle at 20% 0%, rgba(20,241,149,0.16), transparent 36%), linear-gradient(135deg, rgba(20,241,149,0.075), rgba(255,255,255,0.025))',
+                border: '1px solid rgba(20,241,149,0.28)',
               }}
             >
               <div className="flex items-start justify-between gap-3 mb-4">
@@ -604,7 +607,7 @@ export default function LandingPage() {
                   Social-Fi
                 </span>
               </div>
-              <div className="text-xl font-extrabold mb-1" style={{ color: '#14F195' }}>
+              <div className="mb-2 text-2xl font-extrabold" style={{ color: '#14F195' }}>
                 Public POT
               </div>
               <p className="text-base text-white/80 leading-relaxed mb-4">
@@ -627,10 +630,10 @@ export default function LandingPage() {
 
             {/* PRIVATE / Privacy layer */}
             <div
-              className="rounded-2xl p-6 backdrop-blur-sm transition"
+              className="group relative overflow-hidden rounded-[2rem] p-7 shadow-2xl shadow-black/20 backdrop-blur-xl transition duration-300 hover:-translate-y-1 md:p-8"
               style={{
-                background: 'linear-gradient(135deg, rgba(153,69,255,0.04), rgba(153,69,255,0.01))',
-                border: '1px solid rgba(153,69,255,0.25)',
+                background: 'radial-gradient(circle at 20% 0%, rgba(153,69,255,0.18), transparent 36%), linear-gradient(135deg, rgba(153,69,255,0.075), rgba(255,255,255,0.025))',
+                border: '1px solid rgba(153,69,255,0.30)',
               }}
             >
               <div className="flex items-start justify-between gap-3 mb-4">
@@ -647,7 +650,7 @@ export default function LandingPage() {
                   Privacy layer
                 </span>
               </div>
-              <div className="text-xl font-extrabold mb-1" style={{ color: '#9945FF' }}>
+              <div className="mb-2 text-2xl font-extrabold" style={{ color: '#9945FF' }}>
                 Private POT (STAMPPOT)
               </div>
               <p className="text-base text-white/80 leading-relaxed mb-4">
@@ -672,14 +675,15 @@ export default function LandingPage() {
       </section>
 
       {/* ── HOW IT WORKS — actual 4-step pot lifecycle. ── */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-pot-muted">
+      <section className="px-4 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto mb-12 max-w-3xl text-center">
+            <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.25em] text-pot-green">
               How it works
             </div>
+            <h2 className="text-3xl font-black tracking-[-0.04em] text-white sm:text-5xl">From pooled capital to onchain execution.</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             {[
               {
                 n: '1',
@@ -710,11 +714,11 @@ export default function LandingPage() {
                 border: 'border-pot-border',
               },
             ].map((step) => (
-              <div key={step.n} className={`rounded-2xl border ${step.border} bg-pot-card/40 backdrop-blur-sm p-6 relative hover:bg-pot-card/60 transition`}>
-                <div className={`text-5xl font-black ${step.color} opacity-20 absolute top-4 right-5`}>{step.n}</div>
-                <div className={`text-sm font-bold ${step.color} mb-2`}>Step {step.n}</div>
-                <h3 className="text-white font-bold text-lg mb-2">{step.title}</h3>
-                <p className="text-white/75 text-sm leading-relaxed">{step.desc}</p>
+              <div key={step.n} className={`group relative overflow-hidden rounded-[1.75rem] border ${step.border} bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-xl shadow-black/15 backdrop-blur-xl transition hover:-translate-y-1 hover:bg-pot-card/60`}>
+                <div className={`absolute right-5 top-4 text-6xl font-black ${step.color} opacity-15 transition group-hover:opacity-25`}>{step.n}</div>
+                <div className={`mb-3 inline-flex rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-bold ${step.color}`}>Step {step.n}</div>
+                <h3 className="mb-2 text-lg font-bold text-white">{step.title}</h3>
+                <p className="text-sm leading-relaxed text-white/75">{step.desc}</p>
               </div>
             ))}
           </div>
@@ -725,16 +729,16 @@ export default function LandingPage() {
       <LiveVaultMockup />
 
       {/* ── Features grid — full-width section bg, content centered ── */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-black text-white mb-3">Everything your community needs</h2>
-            <p className="text-white/70 max-w-xl mx-auto">One protocol. Group governance, AI automation, creator monetization, and DeFi yield — all composable on Solana.</p>
+      <section className="px-4 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto mb-12 max-w-3xl text-center">
+            <h2 className="mb-3 text-3xl font-black tracking-[-0.035em] text-white sm:text-5xl">Everything your community needs</h2>
+            <p className="mx-auto max-w-2xl text-base leading-relaxed text-white/70">One protocol. Group governance, AI automation, creator monetization, and DeFi yield — all composable on Solana.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
-              <div key={f.title} className="bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-6 hover:border-pot-green/30 hover:bg-pot-card/60 transition-all group">
+              <div key={f.title} className="group rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6 shadow-xl shadow-black/15 backdrop-blur-xl transition-all hover:-translate-y-1 hover:border-pot-green/30 hover:bg-white/[0.065]">
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="text-3xl group-hover:animate-float" aria-hidden="true">{f.icon}</div>
                   <span className="rounded-full border border-pot-border px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-pot-muted">
@@ -751,16 +755,16 @@ export default function LandingPage() {
 
       {/* ── Tamagotchi gamification — labelled section so the "Watch your vault grow"
            strip reads as a feature, not a random plant rail ── */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8">
+      <section className="px-4 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 text-center">
             <div className="text-xs font-bold uppercase tracking-[0.3em] text-pot-green mb-4">
               Tamagotchi gamification
             </div>
             <h2 className="text-3xl font-black text-white mb-2">Watch your vault grow</h2>
             <p className="text-white/70 text-base">Every trade, every member — your Tamagotchi plant levels up</p>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 max-w-4xl mx-auto">
+          <div className="mx-auto grid max-w-4xl grid-cols-3 gap-3 sm:grid-cols-6">
             {[
               { emoji: '🌱', label: 'Seedling', tier: 'L1' },
               { emoji: '🌿', label: 'Sprout', tier: 'L2' },
@@ -769,8 +773,8 @@ export default function LandingPage() {
               { emoji: '🌺', label: 'Full Bloom', tier: 'L5' },
               { emoji: '🌳', label: 'Mature Tree', tier: 'L6' },
             ].map((stage) => (
-              <div key={stage.label} className="text-center">
-                <div className="text-4xl mb-1">{stage.emoji}</div>
+              <div key={stage.label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center backdrop-blur-xl transition hover:-translate-y-1 hover:border-pot-green/30">
+                <div className="mb-1 text-4xl">{stage.emoji}</div>
                 <div className="text-xs font-bold text-white">{stage.label}</div>
                 <div className="text-[10px] text-pot-muted">{stage.tier}</div>
               </div>
