@@ -1,19 +1,17 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
-import { useWallet } from '@solana/wallet-adapter-react'
-import dynamic from 'next/dynamic'
+import { useConnection } from '@solana/wallet-adapter-react'
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { usePots } from '@/hooks/usePots'
 import { useMockStore } from '@/lib/mock-store'
 import { useSolPrice } from '@/lib/prices'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 import { useHumanText } from '@/hooks/useHumanText'
-
-const WalletMultiButton = dynamic(
-  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  { ssr: false }
-)
+import { useActiveWallet } from '@/hooks/useActiveWallet'
+import { ConnectButton } from '@/components/ConnectButton'
+import { SolPrice } from '@/components/SolPrice'
 
 const QUEST_PLACEHOLDER = [
   {
@@ -71,7 +69,7 @@ function SkeletonCard() {
   )
 }
 
-function StatCard({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
+function StatCard({ label, value, sub, accent }: { label: string; value: React.ReactNode; sub?: string; accent?: boolean }) {
   return (
     <div className={`card p-4 text-center ${accent ? 'glow-green border-pot-green/20' : ''}`}>
       <div className={`text-2xl font-bold ${accent ? 'text-pot-green' : 'text-white'}`}>{value}</div>
@@ -83,11 +81,26 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string;
 
 export default function DashboardPage() {
   const t = useHumanText()
-  const { publicKey, connected } = useWallet()
+  const wallet = useActiveWallet()
+  const { connection } = useConnection()
   const { data: allPots, isLoading } = usePots()
   const { price: solPrice } = useSolPrice()
-  const walletStr = publicKey?.toBase58() ?? ''
+  const walletStr = wallet.address ?? ''
+  const connected = wallet.isConnected
   const [questTab, setQuestTab] = useState<'active' | 'points'>('active')
+
+  /* ── Live wallet SOL balance (signed in only) ── */
+  const [walletSol, setWalletSol] = useState<number | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    if (!walletStr) { setWalletSol(null); return }
+    let pk: PublicKey
+    try { pk = new PublicKey(walletStr) } catch { return }
+    connection.getBalance(pk).then((lamports) => {
+      if (!cancelled) setWalletSol(lamports / LAMPORTS_PER_SOL)
+    }).catch(() => { if (!cancelled) setWalletSol(0) })
+    return () => { cancelled = true }
+  }, [connection, walletStr])
 
   /* ── My pots ── */
   const allMembers = useMockStore.getState().members
@@ -134,6 +147,17 @@ export default function DashboardPage() {
     return stats.emoji
   }
 
+  /* ── Aggregate user analytics across mock-store memberships ── */
+  const totalDepositedSol = myMemberships.reduce(
+    (s: number, m: any) => s + (m.depositTotal ?? 0),
+    0,
+  )
+  const totalWithdrawnSol = myMemberships.reduce(
+    (s: number, m: any) => s + (m.withdrawTotal ?? 0),
+    0,
+  )
+  const realisedPnlSol = totalWithdrawnSol - totalDepositedSol
+
   /* ── Not connected ── */
   if (!connected) {
     return (
@@ -141,54 +165,79 @@ export default function DashboardPage() {
         <div className="text-5xl mb-4">🪴</div>
         <h1 className="text-2xl font-bold text-white mb-2">{t('My Dashboard')}</h1>
         <p className="text-pot-muted mb-6 max-w-sm">
-          Connect your wallet to see your pots, points, pending votes, and referral earnings.
+          Sign in to see your pots, balance, votes you owe and your activity.
         </p>
-        <WalletMultiButton />
+        <ConnectButton />
       </div>
     )
   }
 
+  const sourceLabel = wallet.source === 'privy' ? 'Email account' : 'Wallet'
+
   return (
     <div>
-      {/* ── Hero ─────────────────────────────────────────────────── */}
+      {/* ── Profile header ─────────────────────────────────────────── */}
       <div className="card p-6 mb-6 bg-gradient-to-br from-pot-card to-pot-dark border-pot-border">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <div className="text-xs text-pot-muted font-mono mb-1">
-              {walletStr.slice(0, 6)}…{walletStr.slice(-6)}
+          <div className="flex items-center gap-4 min-w-0">
+            {/* Avatar — first letter of label, gradient bg */}
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black text-pot-dark shrink-0"
+              style={{ background: 'linear-gradient(135deg,#14F195 0%,#9945FF 100%)' }}
+              aria-hidden
+            >
+              {(wallet.label || '🪴').charAt(0).toUpperCase()}
             </div>
-            <h1 className="text-2xl font-black text-white">{t('My Dashboard')}</h1>
-            <p className="text-pot-muted text-sm mt-0.5">
-              {myPots.length} pot{myPots.length !== 1 ? 's' : ''} · Season 1 🌱
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <div className="text-xl font-bold text-pot-green">
-                {totalUsd > 0
-                  ? `$${totalUsd >= 1000 ? (totalUsd / 1000).toFixed(1) + 'K' : totalUsd.toFixed(0)}`
-                  : `${totalSol.toFixed(2)} SOL`}
+            <div className="min-w-0">
+              <h1 className="text-2xl font-black text-white truncate">{t('My Dashboard')}</h1>
+              <div className="text-sm text-white truncate">{wallet.label}</div>
+              <div className="flex items-center gap-2 mt-1 text-[11px] text-pot-muted">
+                <span className="px-1.5 py-0.5 rounded bg-pot-border/40 uppercase tracking-wider font-bold">
+                  {sourceLabel}
+                </span>
+                <span className="font-mono truncate">
+                  {walletStr ? `${walletStr.slice(0, 6)}…${walletStr.slice(-6)}` : '—'}
+                </span>
               </div>
-              <div className="text-xs text-pot-muted">Portfolio Value</div>
             </div>
-            {pending.length > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-medium animate-pulse">
-                🗳️ {pending.length} vote{pending.length !== 1 ? 's' : ''} pending
-              </div>
-            )}
           </div>
+
+          {pending.length > 0 && (
+            <Link
+              href="#pending-votes"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-medium animate-pulse"
+            >
+              🗳️ {pending.length} {t('Vote')}{pending.length !== 1 ? 's' : ''} pending
+            </Link>
+          )}
         </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
+        {/* ── Balance + analytics row ──────────────────────────────── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
           <StatCard
-            label="Total Value"
-            value={totalUsd > 0 ? `$${totalUsd.toFixed(0)}` : `${totalSol.toFixed(2)} SOL`}
+            label={t('Wallet')}
+            value={walletSol == null
+              ? '—'
+              : <SolPrice sol={walletSol} compact />}
+          />
+          <StatCard
+            label="In pots"
+            value={<SolPrice sol={totalSol} compact />}
             accent
           />
-          <StatCard label="Active POTs" value={String(myPots.length)} />
-          <StatCard label="Season Points" value="—" sub="coming soon" />
-          <StatCard label="Season Rank" value="—" sub="coming soon" />
+          <StatCard
+            label={`Active ${t('Vaults')}`}
+            value={String(myPots.length)}
+          />
+          <StatCard
+            label={t('PnL')}
+            value={
+              <span className={realisedPnlSol >= 0 ? 'text-pot-green' : 'text-red-400'}>
+                {realisedPnlSol >= 0 ? '+' : ''}<SolPrice sol={realisedPnlSol} compact />
+              </span>
+            }
+            sub={`${totalDepositedSol.toFixed(2)} SOL deposited`}
+          />
         </div>
       </div>
 
@@ -273,8 +322,8 @@ export default function DashboardPage() {
 
       {/* ── Pending Votes ─────────────────────────────────────────── */}
       {pending.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-lg font-bold text-white mb-4">⏳ Pending Votes</h2>
+        <section id="pending-votes" className="mb-8 scroll-mt-24">
+          <h2 className="text-lg font-bold text-white mb-4">⏳ Pending {t('Vote')}s</h2>
           <div className="space-y-2">
             {pending.map((p: any) => {
               const pot = (allPots ?? []).find((pot: any) => pot.pubkey === p.potPubkey) as any
