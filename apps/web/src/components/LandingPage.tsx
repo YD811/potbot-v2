@@ -447,22 +447,21 @@ export default function LandingPage() {
             Built for Solana Frontier 2026 · Open source
           </div>
 
-          <div className="text-7xl mb-5 animate-float" aria-hidden="true">🪴</div>
+          {/* 🌱 renders consistently across Windows / macOS / iOS / Android.
+              The plant pot 🪴 was missing on older Windows fonts. */}
+          <div className="text-7xl mb-5 animate-float" aria-hidden="true">🌱</div>
 
           <h1 className="text-5xl sm:text-6xl font-black text-white leading-tight mb-4">
-            Shared trading vaults<br />
-            <span className="text-pot-green">run by votes</span>{' '}
-            <span className="text-pot-accent">and AI proposals.</span>
+            A vault for{' '}
+            <span className="text-pot-green">anything</span>{' '}
+            on{' '}
+            <span className="text-pot-accent">Solana</span>.
           </h1>
 
-          <p className="text-xl text-pot-muted max-w-2xl mx-auto mb-4 leading-relaxed">
-            Launch a Solana vault for a group, pool funds without a custodian, let an
-            MCP agent draft trades, then execute only after the members vote.
-          </p>
-
-          <p className="text-sm text-pot-muted/70 max-w-xl mx-auto mb-8">
-            Live on devnet today: real Anchor program, Jupiter v6 swaps, AI agent
-            suggestions, and an MCP server any LLM can drive.
+          <p className="text-xl text-pot-muted max-w-2xl mx-auto mb-8 leading-relaxed">
+            Drop any tokenized Solana asset into a shared vault with friends.
+            An AI agent suggests trades, the group votes, the program executes.
+            No custodian, no single signer.
           </p>
 
           <div className="flex flex-wrap gap-4 justify-center mb-12">
@@ -487,7 +486,7 @@ export default function LandingPage() {
               href="/vaults"
               className="btn-secondary text-base px-6 py-3 flex items-center gap-2"
             >
-              🪴 Explore live vault
+              🌱 Explore live vault
             </Link>
           </div>
 
