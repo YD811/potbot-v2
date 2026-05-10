@@ -449,7 +449,10 @@ export default function LandingPage() {
 
           <div className="text-7xl mb-6 animate-float" aria-hidden="true">🪴</div>
 
-          <h1 className="text-5xl sm:text-7xl font-black text-white leading-[1.05] tracking-tight mb-6">
+          <h1
+            className="whitespace-nowrap font-black text-white leading-[1.05] tracking-tight mb-6"
+            style={{ fontSize: 'clamp(1.5rem, 5.5vw, 4rem)' }}
+          >
             A vault for{' '}
             <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">
               anything
@@ -463,11 +466,25 @@ export default function LandingPage() {
 
           <p className="text-lg sm:text-2xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
             Programmable treasuries for internet communities.
-            Owned by the group, run by an AI agent, settled onchain.
+            <br />
+            Owned by the group, run by an AI agent,
+            <br className="hidden sm:block" />
+            {' '}settled onchain.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto mb-10 text-left">
-            <div className="rounded-2xl border border-pot-green/25 bg-pot-card/40 backdrop-blur-sm p-5 transition hover:border-pot-green/50">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto mb-10 text-left">
+            <div
+              className="group relative rounded-2xl p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
+              style={{
+                background: 'linear-gradient(135deg, rgba(20,241,149,0.06), rgba(20,241,149,0.01))',
+                border: '1px solid rgba(20,241,149,0.25)',
+              }}
+            >
+              <div
+                aria-hidden
+                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{ boxShadow: '0 0 50px rgba(20,241,149,0.12), inset 0 0 0 1px rgba(20,241,149,0.4)' }}
+              />
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
                 <span className="text-2xl font-black text-pot-green">POT</span>
                 <span className="text-sm font-semibold text-white">
@@ -483,7 +500,18 @@ export default function LandingPage() {
                 shares, the vault holds the assets.
               </p>
             </div>
-            <div className="rounded-2xl border border-pot-accent/25 bg-pot-card/40 backdrop-blur-sm p-5 transition hover:border-pot-accent/50">
+            <div
+              className="group relative rounded-2xl p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
+              style={{
+                background: 'linear-gradient(135deg, rgba(153,69,255,0.06), rgba(153,69,255,0.01))',
+                border: '1px solid rgba(153,69,255,0.25)',
+              }}
+            >
+              <div
+                aria-hidden
+                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{ boxShadow: '0 0 50px rgba(153,69,255,0.12), inset 0 0 0 1px rgba(153,69,255,0.4)' }}
+              />
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
                 <span className="text-2xl font-black text-pot-accent">BOT</span>
                 <span className="text-sm font-semibold text-white">

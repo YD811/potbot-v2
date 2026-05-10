@@ -175,12 +175,40 @@ html[data-theme="light"] .border-pot-border\/50 {
 
 /* ── Text tokens ── */
 html[data-theme="light"] .text-white { color: var(--pot-ink) !important; }
+/* Opacity-modified white (text-white/60–90) reads as ~white in light mode
+   because the underlying color stays rgb(255 255 255 / N). Remap to the
+   dark-ink palette with a matching alpha so body copy stays legible. */
+html[data-theme="light"] .text-white\/90 { color: rgba(13, 17, 23, 0.95) !important; }
+html[data-theme="light"] .text-white\/80 { color: rgba(13, 17, 23, 0.88) !important; }
+html[data-theme="light"] .text-white\/75 { color: rgba(13, 17, 23, 0.85) !important; }
+html[data-theme="light"] .text-white\/70 { color: rgba(13, 17, 23, 0.80) !important; }
+html[data-theme="light"] .text-white\/60 { color: rgba(13, 17, 23, 0.72) !important; }
+html[data-theme="light"] .text-white\/50 { color: rgba(13, 17, 23, 0.64) !important; }
 html[data-theme="light"] .text-pot-muted { color: var(--pot-ink-muted) !important; }
 html[data-theme="light"] .text-pot-muted\/70 { color: rgba(31, 41, 55, 0.95) !important; }
 html[data-theme="light"] .text-pot-muted\/50 { color: rgba(31, 41, 55, 0.8) !important; }
 html[data-theme="light"] .text-gray-400 { color: var(--pot-ink-muted) !important; }
 html[data-theme="light"] .text-gray-500 { color: var(--pot-ink-muted) !important; }
 html[data-theme="light"] .text-gray-300 { color: var(--pot-ink) !important; }
+
+/* Subtle pot-card surface variants used everywhere on the new landing
+   become invisible on a white bg. Soft-shade them in light mode. */
+html[data-theme="light"] .bg-pot-card\/40,
+html[data-theme="light"] .bg-pot-card\/50,
+html[data-theme="light"] .bg-pot-card\/60,
+html[data-theme="light"] .bg-pot-card\/70,
+html[data-theme="light"] .bg-pot-card\/80 {
+  background-color: rgba(245, 247, 250, 0.95) !important;
+}
+
+/* Hairline divider rules in section kickers — switch from white-fade to
+   ink-fade so they remain visible on the light surface. */
+html[data-theme="light"] .from-pot-green\/60,
+html[data-theme="light"] .to-pot-green\/60 { --tw-gradient-from: rgba(6, 122, 70, 0.5) !important; --tw-gradient-to: rgba(6, 122, 70, 0.5) !important; }
+html[data-theme="light"] .from-pot-accent\/60,
+html[data-theme="light"] .to-pot-accent\/60 { --tw-gradient-from: rgba(109, 40, 217, 0.5) !important; --tw-gradient-to: rgba(109, 40, 217, 0.5) !important; }
+html[data-theme="light"] .from-pot-muted\/60,
+html[data-theme="light"] .to-pot-muted\/60 { --tw-gradient-from: rgba(31, 41, 55, 0.4) !important; --tw-gradient-to: rgba(31, 41, 55, 0.4) !important; }
 
 /* Dark theme: bump low-contrast mutes a touch for readability */
 html:not([data-theme="light"]) .text-pot-muted\/50 { color: rgba(139, 155, 180, 0.75) !important; }
