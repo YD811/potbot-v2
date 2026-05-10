@@ -461,34 +461,34 @@ export default function LandingPage() {
             Owned by the group, run by an AI agent, settled onchain.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto mb-10 text-left">
-            <div className="p-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto mb-10 text-left">
+            <div className="rounded-2xl border border-pot-green/25 bg-pot-card/40 backdrop-blur-sm p-5 transition hover:border-pot-green/50">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
-                <span className="text-3xl font-black text-pot-green">POT</span>
-                <span className="text-base font-semibold text-white">
+                <span className="text-2xl font-black text-pot-green">POT</span>
+                <span className="text-sm font-semibold text-white">
                   Programmable On-chain Treasury
                 </span>
               </div>
-              <div className="text-xs text-pot-muted uppercase tracking-wider mb-2">
+              <div className="text-[11px] text-pot-muted uppercase tracking-wider mb-2">
                 the container
               </div>
-              <p className="text-base text-white/75 leading-relaxed">
+              <p className="text-sm text-white/80 leading-relaxed">
                 A program-controlled vault on Solana. Drop in SOL, USDC, LSTs,
                 LP positions, memecoins, anything tokenized. Members hold
                 shares, the vault holds the assets.
               </p>
             </div>
-            <div className="p-1">
+            <div className="rounded-2xl border border-pot-accent/25 bg-pot-card/40 backdrop-blur-sm p-5 transition hover:border-pot-accent/50">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
-                <span className="text-3xl font-black text-pot-accent">BOT</span>
-                <span className="text-base font-semibold text-white">
+                <span className="text-2xl font-black text-pot-accent">BOT</span>
+                <span className="text-sm font-semibold text-white">
                   Blockchain Orchestration Tool
                 </span>
               </div>
-              <div className="text-xs text-pot-muted uppercase tracking-wider mb-2">
+              <div className="text-[11px] text-pot-muted uppercase tracking-wider mb-2">
                 the AI agent
               </div>
-              <p className="text-base text-white/75 leading-relaxed">
+              <p className="text-sm text-white/80 leading-relaxed">
                 Suggests trades, posts proposals, executes once the vote
                 passes. Delegate it to vote on your behalf based on rules
                 you set, or keep it advisory.
@@ -584,8 +584,11 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* PUBLIC / Social-Fi */}
             <div
-              className="rounded-2xl p-6"
-              style={{ border: '1px solid rgba(20,241,149,0.25)' }}
+              className="rounded-2xl p-6 backdrop-blur-sm transition"
+              style={{
+                background: 'linear-gradient(135deg, rgba(20,241,149,0.04), rgba(20,241,149,0.01))',
+                border: '1px solid rgba(20,241,149,0.25)',
+              }}
             >
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div
@@ -624,8 +627,11 @@ export default function LandingPage() {
 
             {/* PRIVATE / Privacy layer */}
             <div
-              className="rounded-2xl p-6"
-              style={{ border: '1px solid rgba(153,69,255,0.25)' }}
+              className="rounded-2xl p-6 backdrop-blur-sm transition"
+              style={{
+                background: 'linear-gradient(135deg, rgba(153,69,255,0.04), rgba(153,69,255,0.01))',
+                border: '1px solid rgba(153,69,255,0.25)',
+              }}
             >
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div
@@ -704,7 +710,7 @@ export default function LandingPage() {
                 border: 'border-pot-border',
               },
             ].map((step) => (
-              <div key={step.n} className={`rounded-2xl border ${step.border} p-6 relative`}>
+              <div key={step.n} className={`rounded-2xl border ${step.border} bg-pot-card/40 backdrop-blur-sm p-6 relative hover:bg-pot-card/60 transition`}>
                 <div className={`text-5xl font-black ${step.color} opacity-20 absolute top-4 right-5`}>{step.n}</div>
                 <div className={`text-sm font-bold ${step.color} mb-2`}>Step {step.n}</div>
                 <h3 className="text-white font-bold text-lg mb-2">{step.title}</h3>
@@ -726,9 +732,9 @@ export default function LandingPage() {
             <p className="text-white/70 max-w-xl mx-auto">One protocol. Group governance, AI automation, creator monetization, and DeFi yield — all composable on Solana.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map((f) => (
-              <div key={f.title} className="border border-pot-border rounded-2xl p-6 hover:border-pot-green/30 transition-all group">
+              <div key={f.title} className="bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-6 hover:border-pot-green/30 hover:bg-pot-card/60 transition-all group">
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="text-3xl group-hover:animate-float" aria-hidden="true">{f.icon}</div>
                   <span className="rounded-full border border-pot-border px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-pot-muted">
@@ -786,7 +792,7 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {topVaults.map((pot, i) => {
               const balanceUsd = solPrice ? pot.balance * solPrice : 0
               const medals = ['🥇', '🥈', '🥉']
@@ -794,7 +800,7 @@ export default function LandingPage() {
                 <Link
                   key={pot.pubkey}
                   href={`/pots/${pot.pubkey}`}
-                  className="border border-pot-border rounded-2xl p-5 hover:border-pot-green/30 transition-all group"
+                  className="bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-5 hover:border-pot-green/30 hover:bg-pot-card/60 transition-all group"
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <span className="text-2xl">{medals[i]}</span>
@@ -835,14 +841,14 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
             {FOR_BUILDERS.map((item) => (
               <a
                 key={item.title}
                 href={item.href}
                 target={item.href.startsWith('http') ? '_blank' : undefined}
                 rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
-                className="border border-pot-border rounded-2xl p-5 hover:border-pot-accent/30 transition-all group"
+                className="bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-5 hover:border-pot-accent/30 hover:bg-pot-card/60 transition-all group"
               >
                 <div className="text-2xl mb-3">{item.icon}</div>
                 <div className="font-bold text-white mb-1 group-hover:text-pot-accent transition">{item.title}</div>
@@ -862,8 +868,8 @@ export default function LandingPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-black text-white mb-3">Why PotBot, why now</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="border border-pot-border rounded-2xl p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-6 hover:border-pot-green/30 transition">
               <div className="text-2xl mb-3">🔓</div>
               <h3 className="font-bold text-white text-lg mb-2">Why onchain, not a database</h3>
               <p className="text-white/80 text-base leading-relaxed">
@@ -873,7 +879,7 @@ export default function LandingPage() {
                 introducing the operator we&apos;re removing.
               </p>
             </div>
-            <div className="border border-pot-border rounded-2xl p-6">
+            <div className="bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-6 hover:border-pot-accent/30 transition">
               <div className="text-2xl mb-3">⏰</div>
               <h3 className="font-bold text-white text-lg mb-2">Why now</h3>
               <p className="text-white/80 text-base leading-relaxed">
