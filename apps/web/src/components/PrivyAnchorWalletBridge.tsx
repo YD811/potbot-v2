@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, type ReactNode } from 'react'
+import { Component, useMemo, type ReactNode } from 'react'
 import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js'
 import type { Wallet as AnchorWallet } from '@coral-xyz/anchor'
+import { usePrivy } from '@privy-io/react-auth'
 import { useSignTransaction, useWallets } from '@privy-io/react-auth/solana'
 import { PrivyAnchorWalletContext } from '@/contexts/PrivyAnchorWalletContext'
 
@@ -11,16 +12,62 @@ const SOLANA_CHAIN: `solana:${string}` =
   CLUSTER === 'mainnet-beta' ? 'solana:mainnet' : 'solana:devnet'
 
 /**
- * Renders nothing visible. Its only job is to call Privy's Solana hooks
- * (`useWallets` + `useSignTransaction`) inside the component tree and
- * publish a wallet-adapter-compatible `AnchorWallet` to its descendants.
- *
- * Must only be rendered on the client. The wrapper that mounts it does
- * `nextDynamic(..., { ssr: false })` so this module never loads in a
- * server bundle — `@privy-io/react-auth/solana` crashes Next.js's
- * static prerender otherwise (Maximum call stack in `S`).
+ * Belt-and-braces error boundary. If anything inside the Solana bridge
+ * throws (Privy hooks misbehaving, version mismatch, missing peer),
+ * we catch it and keep providing `null` for the wallet context so the
+ * page doesn't go to the generic "Application error" screen.
+ */
+class BridgeErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false }
+  static getDerivedStateFromError() { return { hasError: true } }
+  componentDidCatch(err: unknown) {
+    console.warn('[PrivyAnchorWalletBridge] crashed — falling back to null wallet:', err)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <PrivyAnchorWalletContext.Provider value={null}>
+          {this.props.children}
+        </PrivyAnchorWalletContext.Provider>
+      )
+    }
+    return this.props.children
+  }
+}
+
+/**
+ * Outer entry point — wraps the inner authed bridge in an error
+ * boundary and gates calls to the `/solana` hooks until Privy reports
+ * `ready` AND the user is authenticated. The Solana hooks complain in
+ * various ways when called before that, so this is the safe order.
  */
 export function PrivyAnchorWalletBridge({ children }: { children: ReactNode }) {
+  return (
+    <BridgeErrorBoundary>
+      <BridgeGate>{children}</BridgeGate>
+    </BridgeErrorBoundary>
+  )
+}
+
+function BridgeGate({ children }: { children: ReactNode }) {
+  // `usePrivy` lives in the base package and is safe to call always.
+  const { ready, authenticated } = usePrivy()
+
+  // Until Privy has finished initialising AND the user has signed in,
+  // there's nothing for the Solana hooks to consume — short-circuit
+  // with a null wallet so the rest of the app keeps rendering.
+  if (!ready || !authenticated) {
+    return (
+      <PrivyAnchorWalletContext.Provider value={null}>
+        {children}
+      </PrivyAnchorWalletContext.Provider>
+    )
+  }
+
+  return <AuthedBridge>{children}</AuthedBridge>
+}
+
+function AuthedBridge({ children }: { children: ReactNode }) {
   const { wallets } = useWallets()
   const { signTransaction: privySign } = useSignTransaction()
   const wallet = wallets[0] ?? null

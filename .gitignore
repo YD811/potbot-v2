@@ -65,3 +65,4 @@ logs/*.json
 
 # create-frontier-demo-pot.ts persisted state — env-specific
 scripts/.demo-pot.json
+supabase/.temp/
