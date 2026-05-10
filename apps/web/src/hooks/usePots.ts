@@ -55,7 +55,7 @@ export function useProgram() {
  * deposit, vote, etc.
  */
 export function useActivePubkey(): PublicKey | null {
-  const publicKey = useActivePubkey()
+  const { publicKey } = useWallet()
   const privyWallet = usePrivyAnchorWallet()
   return publicKey ?? privyWallet?.publicKey ?? null
 }
