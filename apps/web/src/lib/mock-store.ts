@@ -620,7 +620,12 @@ export const useMockStore = create<MockState>((set, get) => ({
       emoji: params.emoji,
       balance: 0,
       totalShares: 0,
-      memberCount: 0,
+      // Creator counts as the first member from the moment the pot
+      // exists — even before any deposit. This matches the UX every
+      // pot page assumes: the wallet that just created the pot
+      // immediately sees themselves under "Members" and the
+      // membership chip flips to "Creator".
+      memberCount: 1,
       tradeCount: 0,
       totalVolume: 0,
       tamagotchiLevel: 0,
@@ -639,7 +644,18 @@ export const useMockStore = create<MockState>((set, get) => ({
       tokenTicker: '',
       navPerShareBps: 10000,
     }
-    set((s) => ({ pots: [...s.pots, pot] }))
+    const creatorMember: MockMember = {
+      potPubkey: pubkey,
+      wallet: params.authority,
+      shares: 0,
+      depositTotal: 0,
+      withdrawTotal: 0,
+      joinedAt: Date.now(),
+    }
+    set((s) => ({
+      pots: [...s.pots, pot],
+      members: [...s.members, creatorMember],
+    }))
     return pubkey
   },
 

@@ -22,7 +22,7 @@ jobs:
         run: cd apps/web && npm run build
         env:
           NEXT_PUBLIC_SOLANA_NETWORK: devnet
-          NEXT_PUBLIC_PROGRAM_ID: 2ywztkP4gaJr2HtmBvqMXrBWab3FLd3uG6TjGXvVogJL
+          NEXT_PUBLIC_PROGRAM_ID: GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
           NEXT_PUBLIC_API_URL: https://api.potbot.fun

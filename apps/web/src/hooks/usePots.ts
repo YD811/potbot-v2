@@ -609,6 +609,37 @@ export function useCreatePot() {
               systemProgram: SystemProgram.programId,
             })
             .rpc()
+
+          // Make the creator the first onchain member by depositing
+          // their min_deposit. The pot_vault program only opens a
+          // MemberAccount inside `deposit`, so without this the
+          // creator would show as an empty pot with member_count = 0.
+          // Best-effort — pot is already created, so swallow errors
+          // here and let the user deposit manually if this fails.
+          const seedLamports = Math.max(
+            Math.round((params.minDeposit ?? 0) * LAMPORTS_PER_SOL),
+            10_000_000, // 0.01 SOL fallback so the member account opens
+          )
+          try {
+            const [memberPda] = getMemberAddress(potPda, publicKey)
+            // @ts-ignore — IDL types
+            await program.methods
+              .deposit(new BN(seedLamports))
+              .accounts({
+                pot: potPda,
+                vault: vaultPda,
+                member: memberPda,
+                depositor: publicKey,
+                systemProgram: SystemProgram.programId,
+              })
+              .rpc()
+          } catch (depositErr) {
+            console.warn(
+              'Creator seed deposit failed — pot exists but creator is not a member yet:',
+              depositErr,
+            )
+          }
+
           return { potAddress: potPda.toBase58(), tx }
         } catch (e) {
           console.warn('On-chain createPot failed, falling back to mock:', e)
