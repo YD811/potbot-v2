@@ -1,27 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { SeasonPrizePoolModal } from '@/components/SeasonPrizePoolModal'
-
-// Season 1 end date — update this to actual date
-const SEASON_END = new Date('2026-07-11T00:00:00Z').getTime()
 
 // Mock prize pool until we have real on-chain treasury data
 // Real value: sum 1% of all protocol swap fees since season start
 const MOCK_PRIZE_POOL_USDC = 1_247.83
 
-function useCountdown(targetMs: number) {
-  const now = Date.now()
-  const diff = Math.max(0, targetMs - now)
-  const days    = Math.floor(diff / 86_400_000)
-  const hours   = Math.floor((diff % 86_400_000) / 3_600_000)
-  const minutes = Math.floor((diff % 3_600_000) / 60_000)
-  return { days, hours, minutes, ended: diff === 0 }
-}
-
 export function SeasonPrizeCard() {
-  const { days, hours, minutes, ended } = useCountdown(SEASON_END)
   const [showModal, setShowModal] = useState(false)
 
   return (
@@ -50,20 +36,15 @@ export function SeasonPrizeCard() {
             </div>
           </div>
 
-          {/* Right: countdown + CTA */}
+          {/* Right: status + CTA */}
           <div className="flex items-center gap-4 shrink-0">
-            {!ended && (
-              <div className="text-right">
-                <div className="text-xs text-pot-muted mb-1">Season ends in</div>
-                <div className="flex items-center gap-1 font-mono text-sm text-white">
-                  <span className="bg-pot-dark px-2 py-1 rounded-lg">{String(days).padStart(2,'0')}d</span>
-                  <span className="text-pot-muted">:</span>
-                  <span className="bg-pot-dark px-2 py-1 rounded-lg">{String(hours).padStart(2,'0')}h</span>
-                  <span className="text-pot-muted">:</span>
-                  <span className="bg-pot-dark px-2 py-1 rounded-lg">{String(minutes).padStart(2,'0')}m</span>
-                </div>
+            <div className="text-right">
+              <div className="text-xs text-pot-muted mb-1">Season 1</div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-pot-dark border border-pot-accent/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-pot-accent animate-pulse" />
+                <span className="text-xs font-semibold text-white">Starts after mainnet</span>
               </div>
-            )}
+            </div>
             <button
               onClick={() => setShowModal(true)}
               className="text-xs text-pot-muted hover:text-white border border-pot-border rounded-xl px-3 py-1.5 transition hover:border-pot-accent/50 shrink-0"

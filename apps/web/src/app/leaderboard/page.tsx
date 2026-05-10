@@ -8,7 +8,6 @@ import { useSupabaseLeaderboard } from '@/hooks/useSupabaseLeaderboard'
 import { useSolPrice } from '@/lib/prices'
 import { reverseSNS } from '@/lib/sns'
 import { SeasonPrizeCard } from '@/components/SeasonPrizeCard'
-import { OnePotBanner } from '@/components/OnePotBanner'
 import { calculatePlantStats, plantInputFromMockPot } from '@/lib/tamagotchi/plant'
 import { seasonScoreFromMockPot, fmtSeasonScore } from '@/lib/season-score'
 
@@ -88,8 +87,8 @@ export default function LeaderboardPage() {
     [pots]
   )
   const pubkeys = useMemo(() => publicPots.map((p: any) => p.pubkey as string), [publicPots])
-  const { dataMap: analyticsMap, isAllSettled } = useVaultAnalyticsBatch(pubkeys)
-  const { data: lbCache, error: lbError, refreshedAt: lbRefreshedAt } = useSupabaseLeaderboard(50)
+  const { dataMap: analyticsMap } = useVaultAnalyticsBatch(pubkeys)
+  const { data: lbCache } = useSupabaseLeaderboard(50)
 
   const cacheMap = useMemo(() => {
     const m = new Map<string, (typeof lbCache)[number]>()
@@ -157,8 +156,6 @@ export default function LeaderboardPage() {
     ? enriched.reduce((s: number, p: any) => s + p.apy30d, 0) / enriched.length
     : 0
   const liveCount   = enriched.filter((p: any) => p.hasLive).length
-  const cachedCount = enriched.filter((p: any) => p.hasCached).length
-  const cacheAgeSec = lbRefreshedAt ? Math.floor((Date.now() - lbRefreshedAt) / 1000) : null
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -166,34 +163,14 @@ export default function LeaderboardPage() {
       {/* ── Season Prize Pool ────────────────────────────────────────────── */}
       <SeasonPrizeCard />
 
-      {/* ── ONE POT (compact) ────────────────────────────────────────────── */}
-      <OnePotBanner compact />
-
       {/* ── Header ───────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            🏆 Leaderboard
-          </h1>
-          <p className="text-pot-muted text-sm mt-1">
-            Top performing public vaults · ranked by Season Score by default
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-1 text-[10px] text-pot-muted">
-          <div className="flex items-center gap-1.5">
-            <span className={`w-1.5 h-1.5 rounded-full ${isAllSettled && liveCount > 0 ? 'bg-pot-green animate-pulse' : 'bg-pot-muted'}`} />
-            {isAllSettled && liveCount > 0
-              ? <span className="text-pot-green">{liveCount} live · Analytics API</span>
-              : <span>Loading analytics…</span>
-            }
-          </div>
-          {cachedCount > 0 && !lbError && (
-            <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-pot-accent" />
-              <span className="text-pot-accent">{cachedCount} cached · Supabase{cacheAgeSec != null ? ` · ${cacheAgeSec}s ago` : ''}</span>
-            </div>
-          )}
-        </div>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+          🏆 Leaderboard
+        </h1>
+        <p className="text-pot-muted text-sm mt-1">
+          Top performing public vaults · ranked by Season Score by default
+        </p>
       </div>
 
       {/* Devnet banner */}

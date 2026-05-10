@@ -5,27 +5,6 @@ import Link from 'next/link'
 import { usePots } from '@/hooks/usePots'
 import { useSolPrice } from '@/lib/prices'
 import { useVaultAnalyticsBatch } from '@/hooks/useAnalytics'
-import { usePot } from '@/hooks/usePots'
-import { calculateTamaStats } from '@/lib/tamagotchi/stats'
-import { StatusBadge } from '@/components/StatusBadge'
-
-const ONE_POT_PUBKEY =
-  process.env.NEXT_PUBLIC_ONE_POT_PUBKEY ?? 'DemoPoT1111111111111111111111111111111111111'
-const CLUSTER: 'mainnet-beta' | 'devnet' =
-  (process.env.NEXT_PUBLIC_SOLANA_CLUSTER as 'mainnet-beta' | 'devnet') ?? 'devnet'
-
-const TAMA_EMOJI: Record<number, string> = { 1: '🌱', 2: '🌿', 3: '🪴', 4: '🌳', 5: '🌲' }
-const TAMA_NAME: Record<number, string> = {
-  1: 'Seedling', 2: 'Sprout', 3: 'Bud', 4: 'Bloom', 5: 'Mature Tree',
-}
-
-const STRATEGY_RULES = [
-  { icon: '⚖️', label: '70% SOL / 30% USDC baseline allocation' },
-  { icon: '🤖', label: 'AI Agent proposes rebalances when SOL moves ±10% from 7-day MA' },
-  { icon: '⏱️', label: '24h voting window · 50% quorum · 60% approval threshold' },
-  { icon: '🔒', label: 'Max 20% of treasury per single swap — hard-coded in the contract' },
-  { icon: '📖', label: 'All rules visible on the pot page under the Trade tab' },
-]
 
 export default function VaultsPage() {
   const [search, setSearch] = useState('')
@@ -33,15 +12,12 @@ export default function VaultsPage() {
 
   const { data: pots = [], isLoading: potsLoading } = usePots()
   const { price: solPrice } = useSolPrice()
-  const { data: onePot, isLoading: onePotLoading } = usePot(ONE_POT_PUBKEY)
 
-  // Pull batch analytics for the rest
   const livePubkeys = useMemo(() => pots.map((p: any) => p.pubkey), [pots])
   const { dataMap: analyticsMap } = useVaultAnalyticsBatch(livePubkeys)
 
   const otherVaults = useMemo(() => {
     return pots
-      .filter((p: any) => p.pubkey !== ONE_POT_PUBKEY)
       .filter((p: any) => p.name?.toLowerCase().includes(search.toLowerCase()) ||
                           p.pubkey.toLowerCase().includes(search.toLowerCase()))
       .sort((a: any, b: any) => {
@@ -50,20 +26,6 @@ export default function VaultsPage() {
         return (b.createdAt ?? 0) - (a.createdAt ?? 0)
       })
   }, [pots, search, sortBy])
-
-  const onePotBalanceUsd = onePot && solPrice ? onePot.balance * solPrice : null
-  const onePotAny = onePot as any
-
-  const tamaStats = onePot
-    ? calculateTamaStats({
-        tradeVolume: onePotAny.totalVolume ?? 0,
-        memberCount: onePotAny.memberCount ?? 0,
-        winRate: 0.5,
-        yieldApy: 0,
-        ageSeconds: 86400,
-      })
-    : null
-  const tamaLevel = tamaStats ? Math.max(1, Math.min(5, Math.floor(tamaStats.hp / 20) + 1)) : 1
 
   return (
     <div className="min-h-screen">
@@ -82,96 +44,11 @@ export default function VaultsPage() {
         </Link>
       </div>
 
-      {/* ════════════════════ ONE POT HERO ════════════════════ */}
-      <section className="max-w-[1400px] mx-auto px-3 sm:px-6 mb-10">
-        <div className="relative overflow-hidden rounded-3xl border border-pot-green/30 bg-gradient-to-br from-pot-green/10 via-pot-card to-pot-accent/10 p-5 sm:p-8">
-          {/* Status header */}
-          <div className="flex items-center gap-2 flex-wrap mb-4">
-            <span className="px-2 py-0.5 rounded-full bg-pot-green/20 text-pot-green text-[10px] font-bold uppercase tracking-wider">
-              ⭐ Featured
-            </span>
-            <StatusBadge tier={CLUSTER === 'mainnet-beta' ? 'live' : 'devnet'} compact />
-            <span className="text-[11px] text-pot-muted">Public flagship pot · open to anyone</span>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8 items-center">
-            {/* Left — name + emoji + plant */}
-            <div className="lg:col-span-3 min-w-0">
-              <div className="flex items-start gap-4 sm:gap-5 mb-4">
-                {/* Render the emoji + name only once the on-chain pot has
-                    actually resolved. Showing a stale "PotBot ONE / 🪴"
-                    placeholder caused a visible name flip when the real
-                    "Frontier Demo Vault" loaded a moment later. */}
-                <div className="text-5xl sm:text-7xl shrink-0">
-                  {onePot ? onePot.emoji : '🪴'}
-                </div>
-                <div className="min-w-0">
-                  {onePotLoading || !onePot ? (
-                    <div className="h-9 sm:h-12 w-56 sm:w-72 rounded-lg bg-pot-border/40 animate-pulse" />
-                  ) : (
-                    <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight">
-                      {onePot.name}
-                    </h1>
-                  )}
-                  <p className="text-sm sm:text-base text-pot-muted mt-1">
-                    The flagship public pot. Deposit, propose a Jupiter swap, vote, watch it execute on-chain.
-                  </p>
-                  {tamaStats && (
-                    <div className="mt-3 flex items-center gap-2 text-xs text-pot-muted">
-                      <span className="text-lg">{TAMA_EMOJI[tamaLevel]}</span>
-                      <span className="text-white font-semibold">{TAMA_NAME[tamaLevel]}</span>
-                      <span>· HP {tamaStats.hp}/100</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Strategy rules */}
-              <div className="bg-pot-dark/60 border border-pot-border rounded-2xl p-4 sm:p-5 space-y-2">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-pot-green mb-1">
-                  How this pot trades
-                </div>
-                {STRATEGY_RULES.map((r) => (
-                  <div key={r.label} className="flex items-start gap-2 text-xs sm:text-sm">
-                    <span className="shrink-0">{r.icon}</span>
-                    <span className="text-white/90 leading-snug">{r.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right — metrics + CTAs */}
-            <div className="lg:col-span-2 space-y-3">
-              <Stat label="TVL" value={onePot ? `${onePot.balance.toFixed(2)} SOL` : '—'} sub={onePotBalanceUsd ? `$${onePotBalanceUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : undefined} accent="green" />
-              <div className="grid grid-cols-2 gap-3">
-                <Stat label="Members" value={String(onePot?.memberCount ?? 0)} />
-                <Stat label="Trades" value={String(onePotAny?.tradeCount ?? 0)} />
-              </div>
-
-              <div className="flex flex-col gap-2 pt-2">
-                <Link
-                  href={`/pots/${ONE_POT_PUBKEY}`}
-                  className="w-full px-5 py-3 rounded-xl bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold text-sm sm:text-base text-center transition"
-                >
-                  💰 Open & deposit
-                </Link>
-                <Link
-                  href={`/pots/${ONE_POT_PUBKEY}#propose-section`}
-                  className="w-full px-5 py-3 rounded-xl bg-pot-accent hover:bg-pot-accent/90 text-white font-bold text-sm sm:text-base text-center transition"
-                >
-                  🗳️ See active proposals
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════ OTHER PUBLIC VAULTS ════════════════════ */}
-      <section className="max-w-[1400px] mx-auto px-3 sm:px-6 pb-12">
+      {/* ════════════════════ PUBLIC VAULTS ════════════════════ */}
+      <section className="max-w-[1400px] mx-auto px-3 sm:px-6 pt-4 pb-12">
         <div className="flex items-end justify-between gap-3 mb-4 flex-wrap">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-white">More public vaults</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-white">Public vaults</h2>
             <p className="text-xs text-pot-muted mt-0.5">
               {potsLoading ? 'Loading…' : `${otherVaults.length} active pot${otherVaults.length === 1 ? '' : 's'}`}
             </p>
@@ -271,27 +148,6 @@ export default function VaultsPage() {
           </div>
         </Link>
       </section>
-    </div>
-  )
-}
-
-function Stat({
-  label,
-  value,
-  sub,
-  accent,
-}: {
-  label: string
-  value: string
-  sub?: string
-  accent?: 'green'
-}) {
-  const valueClass = accent === 'green' ? 'text-pot-green' : 'text-white'
-  return (
-    <div className="bg-pot-dark/60 border border-pot-border rounded-2xl px-4 py-3">
-      <div className="text-[10px] uppercase tracking-wider text-pot-muted font-bold">{label}</div>
-      <div className={`text-xl sm:text-2xl font-black tabular-nums ${valueClass} mt-0.5`}>{value}</div>
-      {sub && <div className="text-[11px] text-pot-muted tabular-nums">{sub}</div>}
     </div>
   )
 }

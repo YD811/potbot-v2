@@ -41,10 +41,6 @@ const FAQ_DATA: FAQCategory[] = [
         q: 'What is the AI Agent?',
         a: 'The AI Agent is an optional feature that monitors price and balance conditions and creates proposals automatically based on rules the pot members configure. The agent can only propose — it cannot vote or execute. All trades still require member voting.',
       },
-      {
-        q: 'What is ONE POT?',
-        a: 'ONE POT is a publicly available example vault that anyone can join. It runs a transparent, conservative SOL/USDC rotation strategy and exists so new users can experience the platform with a small deposit before creating their own pot. ONE POT is not a recommendation — it\'s a demo with real funds.',
-      },
     ],
   },
   {

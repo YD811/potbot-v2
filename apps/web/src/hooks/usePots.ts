@@ -300,9 +300,17 @@ export function usePot(pubkey?: string) {
       if (isLive && program) {
         try {
           const pk = new PublicKey(pubkey)
-          const d = await (program.account as any).potAccount.fetch(pk)
+          const d: any = await withTimeout(
+            (program.account as any).potAccount.fetch(pk),
+            8_000,
+            'potAccount.fetch',
+          )
           const [vaultPda] = getVaultAddress(pk)
-          const vaultInfo = await connection.getAccountInfo(vaultPda)
+          const vaultInfo = await withTimeout(
+            connection.getAccountInfo(vaultPda),
+            8_000,
+            'vault getAccountInfo',
+          )
           const balance = (vaultInfo?.lamports ?? 0) / LAMPORTS_PER_SOL
           const stratKey = Object.keys(d.config.yieldStrategy)[0]
           const tama = calculateTamaStats({
@@ -367,6 +375,17 @@ export function usePot(pubkey?: string) {
     // proposal. 30s avoids re-running 2 RPCs every time the user
     // navigates between tabs of the same pot.
     staleTime: 30_000,
+    retry: 1,
+  })
+}
+
+// getProgramAccounts can be very slow on devnet (5–30s) and React Query's
+// default retry of 3 turns one slow scan into 90s of "loading…". Wrap any
+// scan in a hard timeout so the UI falls back to a usable state quickly.
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+    p.then((v) => { clearTimeout(t); resolve(v) }, (e) => { clearTimeout(t); reject(e) })
   })
 }
 
@@ -385,10 +404,18 @@ export function useMembers(potPubkey?: string) {
       if (isLive && program) {
         try {
           const potPk = new PublicKey(potPubkey)
-          const potAcc = await (program.account as any).potAccount.fetch(potPk)
-          const accounts = await (program.account as any).memberAccount.all([
-            { memcmp: { offset: 8, bytes: potPubkey } },
-          ])
+          const potAcc: any = await withTimeout(
+            (program.account as any).potAccount.fetch(potPk),
+            8_000,
+            'potAccount.fetch',
+          )
+          const accounts: any[] = await withTimeout(
+            (program.account as any).memberAccount.all([
+              { memcmp: { offset: 8, bytes: potPubkey } },
+            ]),
+            10_000,
+            'memberAccount.all',
+          )
           return accounts.map((acc: any) => {
             const d = acc.account
             const totalShares = potAcc.totalShares.toNumber()
@@ -401,7 +428,7 @@ export function useMembers(potPubkey?: string) {
               withdrawTotal: d.withdrawTotal.toNumber() / LAMPORTS_PER_SOL,
               pnl: (d.withdrawTotal.toNumber() - d.depositTotal.toNumber()) / LAMPORTS_PER_SOL,
               joinedAt: new Date(d.joinedAt.toNumber() * 1000),
-            }
+            } as any
           })
         } catch (e) {
           console.warn('On-chain members fetch failed:', e)
@@ -422,6 +449,7 @@ export function useMembers(potPubkey?: string) {
     // Members list refreshes only on deposit/withdraw — 30s is plenty
     // and saves a getProgramAccounts scan per page-nav.
     staleTime: 30_000,
+    retry: 1,
   })
 }
 
@@ -439,9 +467,13 @@ export function useProposals(potPubkey?: string) {
 
       if (isLive && program) {
         try {
-          const accounts = await (program.account as any).proposalAccount.all([
-            { memcmp: { offset: 8, bytes: potPubkey } },
-          ])
+          const accounts: any[] = await withTimeout(
+            (program.account as any).proposalAccount.all([
+              { memcmp: { offset: 8, bytes: potPubkey } },
+            ]),
+            10_000,
+            'proposalAccount.all',
+          )
           return accounts.map((acc: any) => {
             const p = acc.account
             const typeKey = Object.keys(p.proposalType)[0]
@@ -483,6 +515,7 @@ export function useProposals(potPubkey?: string) {
     // tallies in real time). Keep relatively fresh but stop refetching
     // 3× per page nav — 15s is the new sweet spot.
     staleTime: 15_000,
+    retry: 1,
   })
 }
 
