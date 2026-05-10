@@ -5,6 +5,7 @@ import { PublicKey } from '@solana/web3.js'
 import { JupiterSwapPanel } from '@/components/JupiterSwapPanel'
 import { BudgetGrantPanel } from '@/components/BudgetGrantPanel'
 import { useCreateProposal } from '@/hooks/usePots'
+import { useHumanText } from '@/hooks/useHumanText'
 
 /* ──────────────────────────────────────────────────────────────
    CreateProposalModal — Phase 2
@@ -82,6 +83,7 @@ export default function CreateProposalModal({
   potPubkey, nextProposalId, vaultBalance,
   potForBudgetGrant, currentUserPubkey,
 }: Props) {
+  const t = useHumanText()
   const createProposal = useCreateProposal()
   const [category, setCategory] = useState<Category | null>(null)
   const [option, setOption] = useState<string | null>(null)
@@ -116,8 +118,8 @@ export default function CreateProposalModal({
               </button>
             )}
             <h2 className="text-xl font-bold text-white truncate">
-              {!category && 'Create Proposal'}
-              {category && !option && `Create Proposal — ${CATEGORIES.find((c) => c.id === category)?.label}`}
+              {!category && `Create ${t('Proposal')}`}
+              {category && !option && `Create ${t('Proposal')} — ${CATEGORIES.find((c) => c.id === category)?.label}`}
               {pickedOption && `${pickedOption.emoji} ${pickedOption.label}`}
             </h2>
           </div>

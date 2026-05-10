@@ -5,8 +5,10 @@ import Link from 'next/link'
 import { usePots } from '@/hooks/usePots'
 import { useSolPrice } from '@/lib/prices'
 import { useVaultAnalyticsBatch } from '@/hooks/useAnalytics'
+import { useHumanText } from '@/hooks/useHumanText'
 
 export default function VaultsPage() {
+  const t = useHumanText()
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState<'tvl' | 'members' | 'recent'>('tvl')
 
@@ -34,13 +36,13 @@ export default function VaultsPage() {
         <div className="flex items-center gap-2 text-xs text-pot-muted">
           <Link href="/" className="hover:text-white transition">Home</Link>
           <span>/</span>
-          <span className="text-white font-semibold">Vaults</span>
+          <span className="text-white font-semibold">{t('Vaults')}</span>
         </div>
         <Link
           href="/create"
           className="px-4 py-2 rounded-xl bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold text-sm transition"
         >
-          + Create Vault
+          + {t('Create Vault')}
         </Link>
       </div>
 
@@ -48,7 +50,7 @@ export default function VaultsPage() {
       <section className="max-w-[1400px] mx-auto px-3 sm:px-6 pt-4 pb-12">
         <div className="flex items-end justify-between gap-3 mb-4 flex-wrap">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-white">Public vaults</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-white">{t('Public vaults')}</h2>
             <p className="text-xs text-pot-muted mt-0.5">
               {potsLoading ? 'Loading…' : `${otherVaults.length} active pot${otherVaults.length === 1 ? '' : 's'}`}
             </p>
@@ -82,13 +84,13 @@ export default function VaultsPage() {
         ) : otherVaults.length === 0 ? (
           <div className="bg-pot-card border border-pot-border rounded-2xl p-8 text-center">
             <div className="text-3xl mb-2">🌱</div>
-            <p className="text-white font-semibold mb-1">No other public pots yet</p>
+            <p className="text-white font-semibold mb-1">No public pots yet</p>
             <p className="text-pot-muted text-sm mb-4">Be first — create one in 30 seconds.</p>
             <Link
               href="/create"
               className="inline-block px-4 py-2 rounded-xl bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold text-sm transition"
             >
-              + Create Vault
+              + {t('Create Vault')}
             </Link>
           </div>
         ) : (

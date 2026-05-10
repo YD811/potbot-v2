@@ -638,7 +638,7 @@ export default function PotPage() {
                         onClick={() => setProposalModalOpen(true)}
                         className="px-3 py-1.5 rounded-lg text-xs font-bold bg-pot-accent hover:bg-pot-accent/90 text-white transition"
                       >
-                        + Create Proposal
+                        + Create {t('Proposal')}
                       </button>
                     ) : (
                       <button
@@ -647,7 +647,7 @@ export default function PotPage() {
                         title="Deposit first to become a member and create proposals"
                         className="px-3 py-1.5 rounded-lg text-xs font-bold bg-pot-card border border-pot-border text-pot-muted opacity-60 cursor-not-allowed"
                       >
-                        + Create Proposal
+                        + Create {t('Proposal')}
                       </button>
                     )
                   )}

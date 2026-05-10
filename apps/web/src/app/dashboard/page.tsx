@@ -8,6 +8,7 @@ import { usePots } from '@/hooks/usePots'
 import { useMockStore } from '@/lib/mock-store'
 import { useSolPrice } from '@/lib/prices'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
+import { useHumanText } from '@/hooks/useHumanText'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -81,6 +82,7 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string;
 }
 
 export default function DashboardPage() {
+  const t = useHumanText()
   const { publicKey, connected } = useWallet()
   const { data: allPots, isLoading } = usePots()
   const { price: solPrice } = useSolPrice()
@@ -137,7 +139,7 @@ export default function DashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <div className="text-5xl mb-4">🪴</div>
-        <h1 className="text-2xl font-bold text-white mb-2">Your Personal Dashboard</h1>
+        <h1 className="text-2xl font-bold text-white mb-2">{t('My Dashboard')}</h1>
         <p className="text-pot-muted mb-6 max-w-sm">
           Connect your wallet to see your pots, points, pending votes, and referral earnings.
         </p>
@@ -155,7 +157,7 @@ export default function DashboardPage() {
             <div className="text-xs text-pot-muted font-mono mb-1">
               {walletStr.slice(0, 6)}…{walletStr.slice(-6)}
             </div>
-            <h1 className="text-2xl font-black text-white">My Dashboard</h1>
+            <h1 className="text-2xl font-black text-white">{t('My Dashboard')}</h1>
             <p className="text-pot-muted text-sm mt-0.5">
               {myPots.length} pot{myPots.length !== 1 ? 's' : ''} · Season 1 🌱
             </p>

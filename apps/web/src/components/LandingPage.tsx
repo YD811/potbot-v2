@@ -4,8 +4,17 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { usePots } from '@/hooks/usePots'
 import { useSolPrice } from '@/lib/prices'
+import { useTheme } from '@/contexts/ThemeContext'
+import { useHumanText } from '@/hooks/useHumanText'
 
-const FEATURES = [
+interface FeatureCard {
+  icon: string
+  title: string
+  status: string
+  desc: string
+}
+
+const FEATURES_CRYPTO: FeatureCard[] = [
   {
     icon: '🪴',
     title: 'Group Treasury (POT)',
@@ -44,6 +53,45 @@ const FEATURES = [
   },
 ]
 
+const FEATURES_NORMIE: FeatureCard[] = [
+  {
+    icon: '🪴',
+    title: 'Shared pot',
+    status: 'Test mode',
+    desc: 'Add money to a single pot with your group. Everyone gets a slice that matches what they put in. No middleman holds it.',
+  },
+  {
+    icon: '🏛️',
+    title: 'Group decisions',
+    status: 'Test mode',
+    desc: 'Every trade or change goes to a vote. Pick how strict the rules are — from "creator decides" all the way to "everyone has to agree".',
+  },
+  {
+    icon: '🤖',
+    title: 'AI helper',
+    status: 'Coming soon',
+    desc: 'Set simple rules — "if the price drops 5%, suggest buying more." The AI writes the trade idea, the group still decides.',
+  },
+  {
+    icon: '🆔',
+    title: 'Easy name for your pot',
+    status: 'Next',
+    desc: 'Each pot can have a friendly name like amsterdam-alpha.potbot.sol instead of a long random address.',
+  },
+  {
+    icon: '🌱',
+    title: 'A plant that grows',
+    status: 'Game layer',
+    desc: 'Your pot has a plant that grows from a seedling to a full tree as your group is active. Higher levels unlock perks and lower fees.',
+  },
+  {
+    icon: '🥷',
+    title: 'Private mode',
+    status: 'Later',
+    desc: 'Want to keep your strategy to yourselves? Turn on private mode. Members and amounts stay hidden, group decisions still happen.',
+  },
+]
+
 // HOW_IT_WORKS const was removed — the steps block is now inlined with
 // the actual 4-step pot lifecycle (deposit → propose → vote → execute)
 // directly in the section body so the page mirrors the on-pot UI.
@@ -58,15 +106,21 @@ const FOR_BUILDERS = [
 /*  Product mockup with 3-D tilt + gentle auto-rotation                */
 /* ------------------------------------------------------------------ */
 function LiveVaultMockup() {
+  const { isLight } = useTheme()
   return (
     <section className="max-w-6xl mx-auto px-4 py-16">
       <div className="text-center mb-10">
         <h2 className="text-3xl font-black text-white mb-3">
-          See your vault <span className="text-pot-green">at a glance</span>
+          {isLight ? (
+            <>See your pot <span className="text-pot-green">at a glance</span></>
+          ) : (
+            <>See your vault <span className="text-pot-green">at a glance</span></>
+          )}
         </h2>
         <p className="text-white/75 max-w-xl mx-auto text-base">
-          Every pot is a Solana program account. TVL, quorum, active proposals —
-          all live onchain, all visible to every member.
+          {isLight
+            ? 'How much money is in. Who has voted. What is being decided. Everyone in the pot sees the same thing, in real time.'
+            : 'Every pot is a Solana program account. TVL, quorum, active proposals — all live onchain, all visible to every member.'}
         </p>
       </div>
 
@@ -420,6 +474,8 @@ function CountUp({ value, prefix = '', suffix = '' }: { value: number; prefix?: 
 export default function LandingPage() {
   const { data: pots } = usePots()
   const { price: solPrice } = useSolPrice()
+  const { isLight } = useTheme()
+  const t = useHumanText()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const potRows = (pots ?? []) as any[]
@@ -465,11 +521,21 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg sm:text-2xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Programmable treasuries for internet communities.
-            <br />
-            Owned by the group, run by an AI agent,
-            <br className="hidden sm:block" />
-            {' '}settled onchain.
+            {isLight ? (
+              <>
+                A shared money pot for any group online.
+                <br />
+                Everyone votes. An AI helps. The money stays safe.
+              </>
+            ) : (
+              <>
+                Programmable treasuries for internet communities.
+                <br />
+                Owned by the group, run by an AI agent,
+                <br className="hidden sm:block" />
+                {' '}settled onchain.
+              </>
+            )}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto mb-10 text-left">
@@ -495,9 +561,9 @@ export default function LandingPage() {
                 the container
               </div>
               <p className="text-sm text-white/80 leading-relaxed">
-                A program-controlled vault on Solana. Drop in SOL, USDC, LSTs,
-                LP positions, memecoins, anything tokenized. Members hold
-                shares, the vault holds the assets.
+                {isLight
+                  ? 'A shared pot you and your friends own together. Add money, hold a share, take it out any time. Nobody else can touch it.'
+                  : 'A program-controlled vault on Solana. Drop in SOL, USDC, LSTs, LP positions, memecoins, anything tokenized. Members hold shares, the vault holds the assets.'}
               </p>
             </div>
             <div
@@ -522,9 +588,9 @@ export default function LandingPage() {
                 the AI agent
               </div>
               <p className="text-sm text-white/80 leading-relaxed">
-                Suggests trades, posts proposals, executes once the vote
-                passes. Delegate it to vote on your behalf based on rules
-                you set, or keep it advisory.
+                {isLight
+                  ? 'An AI helper that suggests trades and runs them once the group says yes. Or set rules and let it vote for you.'
+                  : 'Suggests trades, posts proposals, executes once the vote passes. Delegate it to vote on your behalf based on rules you set, or keep it advisory.'}
               </p>
             </div>
           </div>
@@ -551,7 +617,7 @@ export default function LandingPage() {
               href="/vaults"
               className="btn-secondary text-base px-6 py-3 flex items-center gap-2"
             >
-              🪴 Explore live vault
+              🪴 {isLight ? 'See a live POT' : 'Explore live vault'}
             </Link>
           </div>
 
@@ -600,15 +666,26 @@ export default function LandingPage() {
             </span>
             <span className="h-px w-8 bg-gradient-to-l from-transparent to-pot-green/60" />
           </div>
-          <p className="text-3xl sm:text-5xl md:text-6xl font-bold text-white leading-[1.15] tracking-tight">
-            Unite <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">people</span> and{' '}
-            <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">capital</span>{' '}
-            across every direction Solana offers,
-            <br className="hidden sm:block" />
-            as <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">vault infrastructure</span> for tokenized funds,
-            <br className="hidden sm:block" />
-            built natively for <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">AI agents</span>.
-          </p>
+          {isLight ? (
+            <p className="text-3xl sm:text-5xl md:text-6xl font-bold text-white leading-[1.15] tracking-tight">
+              Bring <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">people</span> and their{' '}
+              <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">money</span> together,
+              <br className="hidden sm:block" />
+              in one <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">shared pot</span>,
+              <br className="hidden sm:block" />
+              with an <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">AI helper</span>.
+            </p>
+          ) : (
+            <p className="text-3xl sm:text-5xl md:text-6xl font-bold text-white leading-[1.15] tracking-tight">
+              Unite <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">people</span> and{' '}
+              <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">capital</span>{' '}
+              across every direction Solana offers,
+              <br className="hidden sm:block" />
+              as <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">vault infrastructure</span> for tokenized funds,
+              <br className="hidden sm:block" />
+              built natively for <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">AI agents</span>.
+            </p>
+          )}
         </div>
       </section>
 
@@ -633,9 +710,9 @@ export default function LandingPage() {
               <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-green/60" />
             </div>
             <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold text-white leading-[1.15] tracking-tight">
-              Social-Fi or Privacy.{' '}
+              {isLight ? 'Open or private. ' : 'Social-Fi or Privacy. '}
               <span className="bg-gradient-to-r from-pot-green to-pot-accent bg-clip-text text-transparent">
-                Pick per pot.
+                {isLight ? 'Your call.' : 'Pick per pot.'}
               </span>
             </h2>
           </div>
@@ -666,16 +743,16 @@ export default function LandingPage() {
                   className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full border"
                   style={{ background: 'rgba(20,241,149,.12)', borderColor: 'rgba(20,241,149,.3)', color: '#14F195' }}
                 >
-                  Social-Fi
+                  {isLight ? 'Open' : 'Social-Fi'}
                 </span>
               </div>
               <div className="text-xl font-extrabold mb-1" style={{ color: '#14F195' }}>
-                Public POT
+                {isLight ? 'Open POT' : 'Public POT'}
               </div>
               <p className="text-base text-white/80 leading-relaxed mb-4">
-                Open to anyone. Real members, real deposits, visible on the
-                leaderboard. The proof that people actually use it is the
-                thing that pulls more in.
+                {isLight
+                  ? 'Anyone can join. Real people, real money in. You can see who is in and how the pot is doing.'
+                  : 'Open to anyone. Real members, real deposits, visible on the leaderboard. The proof that people actually use it is the thing that pulls more in.'}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {['🏆 Leaderboard', '⚔️ Duels', '🔗 Referrals', '📊 Strategy Share', '👥 Community'].map((f) => (
@@ -715,16 +792,16 @@ export default function LandingPage() {
                   className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full border"
                   style={{ background: 'rgba(153,69,255,.12)', borderColor: 'rgba(153,69,255,.3)', color: '#9945FF' }}
                 >
-                  Privacy layer
+                  {isLight ? 'Private' : 'Privacy layer'}
                 </span>
               </div>
               <div className="text-xl font-extrabold mb-1" style={{ color: '#9945FF' }}>
-                Private POT (STAMPPOT)
+                {isLight ? 'Private POT' : 'Private POT (STAMPPOT)'}
               </div>
               <p className="text-base text-white/80 leading-relaxed mb-4">
-                For groups that want their strategy to stay theirs. Deposits
-                and members are hidden behind ZK proofs, so the alpha
-                doesn't leak the moment you open the pot.
+                {isLight
+                  ? 'For groups who want to keep their strategy to themselves. Members and amounts stay hidden, only the group can see inside.'
+                  : "For groups that want their strategy to stay theirs. Deposits and members are hidden behind ZK proofs, so the alpha doesn't leak the moment you open the pot."}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {['🔐 ZK proofs', '🚫 No wallet doxxing', '🤝 Invite-only', '🛡 PrivacyCash', '📜 Auditor view'].map((f) => (
@@ -754,9 +831,9 @@ export default function LandingPage() {
               <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-muted/60" />
             </div>
             <h2 className="text-3xl sm:text-5xl font-bold text-white leading-[1.15] tracking-tight">
-              From deposit to execution,{' '}
+              {isLight ? 'From sign-in to trade, ' : 'From deposit to execution, '}
               <span className="bg-gradient-to-r from-pot-green to-pot-accent bg-clip-text text-transparent">
-                fully onchain.
+                {isLight ? 'all in one place.' : 'fully onchain.'}
               </span>
             </h2>
           </div>
@@ -773,36 +850,68 @@ export default function LandingPage() {
             />
 
             <div className="relative grid grid-cols-1 md:grid-cols-4 gap-5">
-              {[
-                {
-                  n: '01',
-                  title: 'Deposit SOL',
-                  desc: 'Pool capital with your group in a single program-controlled vault. Each member gets shares proportional to their deposit.',
-                  color: '#14F195',
-                  border: 'border-pot-green/30',
-                },
-                {
-                  n: '02',
-                  title: 'Propose a swap',
-                  desc: 'Anyone (or the AI agent) drafts a Jupiter swap with input mint, output mint and amount. Nothing moves yet.',
-                  color: '#9945FF',
-                  border: 'border-pot-accent/30',
-                },
-                {
-                  n: '03',
-                  title: 'Vote',
-                  desc: 'Members vote yes/no with their shares. Quorum and approval thresholds are governance settings the pot picks at creation.',
-                  color: '#FCD34D',
-                  border: 'border-amber-300/30',
-                },
-                {
-                  n: '04',
-                  title: 'Execute onchain',
-                  desc: 'Once a proposal passes, anyone can trigger the onchain execution. The vault PDA signs the Jupiter v6 CPI itself — no human keypair holds the funds.',
-                  color: '#FFFFFF',
-                  border: 'border-pot-border',
-                },
-              ].map((step) => (
+              {(isLight
+                ? [
+                    {
+                      n: '01',
+                      title: 'Add money',
+                      desc: 'Put money into the shared pot with your group. Everyone gets a slice that matches what they put in.',
+                      color: '#14F195',
+                      border: 'border-pot-green/30',
+                    },
+                    {
+                      n: '02',
+                      title: 'Suggest a trade',
+                      desc: 'Anyone (or the AI helper) writes up a trade idea — what to buy, what to sell, how much. Nothing happens yet.',
+                      color: '#9945FF',
+                      border: 'border-pot-accent/30',
+                    },
+                    {
+                      n: '03',
+                      title: 'Decide together',
+                      desc: 'The group votes yes or no. The bigger your slice, the bigger your vote.',
+                      color: '#FCD34D',
+                      border: 'border-amber-300/30',
+                    },
+                    {
+                      n: '04',
+                      title: 'Trade happens',
+                      desc: 'If the group says yes, the trade runs automatically. No one person can move the money on their own.',
+                      color: '#FFFFFF',
+                      border: 'border-pot-border',
+                    },
+                  ]
+                : [
+                    {
+                      n: '01',
+                      title: 'Deposit SOL',
+                      desc: 'Pool capital with your group in a single program-controlled vault. Each member gets shares proportional to their deposit.',
+                      color: '#14F195',
+                      border: 'border-pot-green/30',
+                    },
+                    {
+                      n: '02',
+                      title: 'Propose a swap',
+                      desc: 'Anyone (or the AI agent) drafts a Jupiter swap with input mint, output mint and amount. Nothing moves yet.',
+                      color: '#9945FF',
+                      border: 'border-pot-accent/30',
+                    },
+                    {
+                      n: '03',
+                      title: 'Vote',
+                      desc: 'Members vote yes/no with their shares. Quorum and approval thresholds are governance settings the pot picks at creation.',
+                      color: '#FCD34D',
+                      border: 'border-amber-300/30',
+                    },
+                    {
+                      n: '04',
+                      title: 'Execute onchain',
+                      desc: 'Once a proposal passes, anyone can trigger the onchain execution. The vault PDA signs the Jupiter v6 CPI itself — no human keypair holds the funds.',
+                      color: '#FFFFFF',
+                      border: 'border-pot-border',
+                    },
+                  ]
+              ).map((step) => (
                 <div
                   key={step.n}
                   className={`relative rounded-2xl border ${step.border} bg-pot-card/50 backdrop-blur-sm p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-pot-card/70`}
@@ -853,13 +962,14 @@ export default function LandingPage() {
               Everything your community needs
             </h2>
             <p className="text-white/70 max-w-xl mx-auto text-base sm:text-lg leading-relaxed">
-              One protocol. Group governance, AI automation, creator monetization,
-              DeFi yield. All composable on Solana.
+              {isLight
+                ? 'One simple app. Group decisions, an AI helper, ways to earn, ways to invite friends. All in one place.'
+                : 'One protocol. Group governance, AI automation, creator monetization, DeFi yield. All composable on Solana.'}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {FEATURES.map((f) => (
+            {(isLight ? FEATURES_NORMIE : FEATURES_CRYPTO).map((f) => (
               <div
                 key={f.title}
                 className="group relative bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:border-pot-green/40 hover:bg-pot-card/70"
@@ -1025,15 +1135,15 @@ export default function LandingPage() {
               <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-accent/60" />
             </div>
             <h2 className="text-3xl sm:text-5xl font-bold text-white leading-[1.15] tracking-tight mb-4">
-              Built for the{' '}
+              {isLight ? 'Built for ' : 'Built for the '}
               <span className="bg-gradient-to-r from-pot-accent to-pot-green bg-clip-text text-transparent">
-                agent economy.
+                {isLight ? 'AI helpers.' : 'agent economy.'}
               </span>
             </h2>
             <p className="text-white/75 max-w-xl mx-auto text-base sm:text-lg leading-relaxed">
-              Any LLM can read, propose against, and execute on a POT through
-              the MCP server. Claude, GPT, or your own agent — 60+ onchain
-              actions, one install away.
+              {isLight
+                ? 'AI tools like ChatGPT and Claude can read your pot, suggest trades, and run them once the group says yes. Just install once.'
+                : 'Any LLM can read, propose against, and execute on a POT through the MCP server. Claude, GPT, or your own agent — 60+ onchain actions, one install away.'}
             </p>
           </div>
 
@@ -1092,12 +1202,13 @@ export default function LandingPage() {
                 style={{ boxShadow: '0 0 40px rgba(20,241,149,0.08)' }}
               />
               <div className="text-3xl mb-4">🔓</div>
-              <h3 className="font-bold text-white text-xl mb-3 leading-tight">Why onchain, not a database</h3>
+              <h3 className="font-bold text-white text-xl mb-3 leading-tight">
+                {isLight ? 'Nobody holds your money' : 'Why onchain, not a database'}
+              </h3>
               <p className="text-white/80 text-base leading-relaxed">
-                Community custody without a trusted middleman. The vault <em>is</em> the
-                onchain account — every deposit, vote and trade is signed by the
-                program itself. A database can&apos;t enforce that without re-
-                introducing the operator we&apos;re removing.
+                {isLight
+                  ? "There's no company sitting between you and your money. The pot itself is the bank — only your group's votes can move what's inside."
+                  : 'Community custody without a trusted middleman. The vault is the onchain account — every deposit, vote and trade is signed by the program itself. A database can’t enforce that without re-introducing the operator we’re removing.'}
               </p>
             </div>
             <div className="group relative bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-7 hover:border-pot-accent/40 hover:bg-pot-card/70 transition-all duration-300">
@@ -1109,10 +1220,9 @@ export default function LandingPage() {
               <div className="text-3xl mb-4">⏰</div>
               <h3 className="font-bold text-white text-xl mb-3 leading-tight">Why now</h3>
               <p className="text-white/80 text-base leading-relaxed">
-                MCP standardised how AI agents connect to real systems. Solana ships
-                the throughput, Jupiter the routing. The agent-driven
-                community coordination stack exists in 2026 — and the layer
-                hadn&apos;t shipped. We&apos;re shipping it.
+                {isLight
+                  ? 'AI helpers are finally smart enough to suggest real trades. Putting them inside a group pot — where humans still decide — turns "pool money with friends" from a spreadsheet into an actual product.'
+                  : 'MCP standardised how AI agents connect to real systems. Solana ships the throughput, Jupiter the routing. The agent-driven community coordination stack exists in 2026 — and the layer hadn’t shipped. We’re shipping it.'}
               </p>
             </div>
           </div>
@@ -1141,8 +1251,9 @@ export default function LandingPage() {
             </span>
           </h2>
           <p className="text-white/80 text-base sm:text-lg max-w-xl mx-auto mb-10 leading-relaxed">
-            Spin up your treasury in under a minute. No coding required.
-            Open source and free to use on Solana devnet.
+            {isLight
+              ? 'Set up your shared pot in under a minute. No coding. Free to try in test mode.'
+              : 'Spin up your treasury in under a minute. No coding required. Open source and free to use on Solana devnet.'}
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <Link
@@ -1155,7 +1266,7 @@ export default function LandingPage() {
               href="/create"
               className="px-7 py-4 rounded-xl bg-pot-card/80 backdrop-blur border border-pot-accent/40 hover:border-pot-accent text-white font-bold transition text-base"
             >
-              🪴 Create your vault
+              🪴 {t('Create your vault')}
             </Link>
             <a
               href="https://github.com/YD811/potbot-v2"

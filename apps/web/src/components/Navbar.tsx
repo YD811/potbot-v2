@@ -10,6 +10,7 @@ import { healthApi } from '@/lib/api-client'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ConnectButton } from '@/components/ConnectButton'
 import { SeasonPrizePoolModal } from '@/components/SeasonPrizePoolModal'
+import { useHumanText } from '@/hooks/useHumanText'
 
 function LivePriceTicker() {
   const { price: solPrice } = useSolPrice()
@@ -64,18 +65,23 @@ function LivePriceTicker() {
   )
 }
 
-const NAV_LINKS = [
-  { href: '/',            label: 'Home' },
-  { href: '/vaults',      label: '⚡ Vaults' },
-  { href: '/leaderboard', label: '🏆 Leaderboard' },
-  { href: '/hackathon',   label: '⚒️ Hackathon' },
-  { href: '/create',      label: '+ Create' },
+// Static keys; visible labels are computed at render so the human-text
+// translator can swap "Vaults" → "POTs" etc. in light mode.
+const NAV_LINKS: { href: string; emoji: string; term: string }[] = [
+  { href: '/',            emoji: '',     term: 'Home' },
+  { href: '/vaults',      emoji: '⚡',   term: 'Vaults' },
+  { href: '/leaderboard', emoji: '🏆',   term: 'Leaderboard' },
+  { href: '/hackathon',   emoji: '⚒️',   term: 'Hackathon' },
+  { href: '/create',      emoji: '+',    term: 'Create' },
 ]
 
 export function Navbar() {
+  const t = useHumanText()
   const { publicKey } = useWallet()
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
+  const navLabel = (l: { emoji: string; term: string }) =>
+    l.emoji ? `${l.emoji} ${t(l.term)}` : t(l.term)
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -96,15 +102,15 @@ export function Navbar() {
         </Link>
 
         <div className="hidden sm:flex items-center gap-1 text-sm font-medium">
-          {NAV_LINKS.map(({ href, label }) => (
-            <Link key={href} href={href} className={`px-3 py-1.5 rounded-lg transition ${
-              isActive(href) ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
-            }`}>{label}</Link>
+          {NAV_LINKS.map((link) => (
+            <Link key={link.href} href={link.href} className={`px-3 py-1.5 rounded-lg transition ${
+              isActive(link.href) ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
+            }`}>{navLabel(link)}</Link>
           ))}
           {publicKey && (
             <Link href="/dashboard" className={`px-3 py-1.5 rounded-lg transition ${
               isActive('/dashboard') ? 'text-pot-accent bg-pot-accent/10 border border-pot-accent/30' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
-            }`}>My Dashboard</Link>
+            }`}>{t('My Dashboard')}</Link>
           )}
           <Link href="/faq" className={`px-3 py-1.5 rounded-lg transition ${
             isActive('/faq') ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
@@ -153,17 +159,17 @@ export function Navbar() {
             </Link>
           )}
 
-          {NAV_LINKS.map(({ href, label }) => (
-            <Link key={href} href={href} onClick={() => setMenuOpen(false)}
+          {NAV_LINKS.map((link) => (
+            <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}
               className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
-                isActive(href) ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
-              }`}>{label}</Link>
+                isActive(link.href) ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
+              }`}>{navLabel(link)}</Link>
           ))}
           {publicKey && (
             <Link href="/dashboard" onClick={() => setMenuOpen(false)}
               className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
                 isActive('/dashboard') ? 'text-pot-accent bg-pot-accent/10 border border-pot-accent/30' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
-              }`}>My Dashboard</Link>
+              }`}>{t('My Dashboard')}</Link>
           )}
           <Link href="/faq" onClick={() => setMenuOpen(false)}
             className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
