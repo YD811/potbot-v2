@@ -2,22 +2,23 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'PotBot — Group Trading Vaults on Solana',
+  metadataBase: new URL('https://potbot.fun'),
+  title: 'PotBot — Programmable Onchain Treasuries on Solana',
   description:
-    'Create shared on-chain vaults, vote on trades, and watch your Tamagotchi grow. Group DeFi made simple.',
-  keywords: ['Solana', 'DeFi', 'trading', 'vault', 'DAO', 'governance'],
+    'Tokenize any internet community with programmable onchain treasuries and AI coordination on Solana.',
+  keywords: ['Solana', 'treasury', 'tokenized communities', 'vault', 'AI governance', 'onchain coordination'],
   authors: [{ name: 'PotBot' }],
   openGraph: {
-    title: 'PotBot — Group Trading Vaults on Solana',
-    description: 'Create shared on-chain vaults, vote on trades, and watch your Tamagotchi grow.',
+    title: 'PotBot — Programmable Onchain Treasuries on Solana',
+    description: 'Programmable onchain treasuries with AI coordination for tokenized internet communities.',
     type: 'website',
     url: 'https://potbot.fun',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'PotBot — Group Trading Vaults on Solana',
-    description: 'Create shared on-chain vaults, vote on trades, and watch your Tamagotchi grow.',
+    title: 'PotBot — Programmable Onchain Treasuries on Solana',
+    description: 'Programmable onchain treasuries with AI coordination for tokenized internet communities.',
     images: ['/og-image.png'],
   },
 }
@@ -30,7 +31,7 @@ export const viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className="bg-[#0a0a0f] text-white antialiased">{children}</body>
+      <body className="bg-[#0D1117] text-white antialiased">{children}</body>
     </html>
   )
 }

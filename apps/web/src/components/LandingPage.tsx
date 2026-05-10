@@ -1,57 +1,62 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
-import { usePots } from '@/hooks/usePots'
-import { useSolPrice } from '@/lib/prices'
 
-const FEATURES = [
+const MANIFESTO_POINTS = [
+  'programmable ownership',
+  'liquid coordination',
+  'AI-native execution',
+  'onchain governance',
+]
+
+const ARCHITECTURE_FLOW = [
+  'Community',
+  'POT',
+  'Vault',
+  'Tokenized Shares',
+  'Governance',
+  'AI Layer',
+]
+
+const GOVERNANCE_SPECTRUM = [
   {
-    icon: '🪴',
-    title: 'Group Treasury (POT)',
-    status: 'Live on devnet',
-    desc: 'Pool SOL with your group into a shared on-chain treasury. Every member holds SPL-tokenized shares proportional to NAV — no middleman, no custody risk.',
+    title: 'Creator Controlled',
+    desc: 'A trusted creator can move quickly while every treasury action remains visible onchain.',
   },
   {
-    icon: '🏛️',
-    title: 'On-Chain Governance',
-    status: 'Live on devnet',
-    desc: 'Every trade, withdrawal or strategy change requires a vote. Autocracy → Advisory → Majority → Supermajority → Consensus. Configure quorum, approval %, timelock.',
+    title: 'Community Governed',
+    desc: 'Members coordinate proposals, votes, and execution through tokenized ownership.',
   },
   {
-    icon: '🤖',
-    title: 'AI Execution (BOT)',
-    status: 'Focus for Frontier',
-    desc: 'Set IF/THEN rules — "if SOL drops 5%, buy 10%." The MCP-native agent creates proposals and executes after votes pass. Any LLM can drive it.',
-  },
-  {
-    icon: '🆔',
-    title: 'SNS Identity — .potbot.sol',
-    status: 'Next',
-    desc: 'Every group gets a readable on-chain identity: amsterdam-alpha.potbot.sol. Reverse-lookup works across Solana apps. Agents get agent.{pot}.potbot.sol.',
-  },
-  {
-    icon: '🌱',
-    title: 'Money Tree evolution',
-    status: 'Gamified layer',
-    desc: 'Your treasury grows 🌱 Seedling → 🌿 Sprout → 🍀 Bud → 🌾 Bloom → 🌺 Full Bloom → 🌳 Mature Tree. Higher levels unlock lower fees and perks.',
-  },
-  {
-    icon: '🥷',
-    title: 'Privacy layer (STAMPPOT)',
-    status: 'Later',
-    desc: 'Optional per-pot: wrap deposits in PrivacyCash ZK proofs. Public governance, private balances. Transparent on demand.',
+    title: 'AI Assisted',
+    desc: 'Agents summarize context, draft actions, and help the community keep momentum.',
   },
 ]
 
-// HOW_IT_WORKS const was removed — the steps block is now inlined with
-// the actual 4-step pot lifecycle (deposit → propose → vote → execute)
-// directly in the section body so the page mirrors the on-pot UI.
+const BOT_ACTIONS = [
+  'generates proposals',
+  'monitors vault activity',
+  'helps coordinate governance',
+  'executes through MCP, SDK and APIs',
+]
 
-const FOR_BUILDERS = [
-  { icon: '🔌', title: 'MCP Server', desc: '60+ on-chain actions via Model Context Protocol. Any LLM can control the vault.', href: '/for-agents' },
-  { icon: '📦', title: 'TypeScript SDK', desc: 'Full SDK for vault creation, governance, trading, and analytics.', href: 'https://github.com/YD811/potbot-v2/tree/main/packages/sdk' },
-  { icon: '⚡', title: 'REST API', desc: 'Price oracle, PnL engine, leaderboard — all available as public API endpoints.', href: '/api/leaderboard' },
+const GARDEN_STAGES = ['🌱', '🌿', '🍀', '🌾', '🌺', '🌳']
+
+const USE_CASES = [
+  { icon: '🎥', title: 'Creator Fund', desc: 'Fans fund drops, content, and shared upside.' },
+  { icon: '🤖', title: 'AI Vault', desc: 'Agents propose allocations for an onchain treasury.' },
+  { icon: '🚀', title: 'Startup Syndicate', desc: 'Operators coordinate capital around early bets.' },
+  { icon: '🎟️', title: 'Event Treasury', desc: 'Communities fund venues, prizes, and experiences.' },
+  { icon: '👥', title: 'Friend Group ETF', desc: 'Friends share a transparent programmable vault.' },
+  { icon: '🐸', title: 'Meme Treasury', desc: 'Memes get capital, governance, and lore.' },
+  { icon: '📈', title: 'Investment Club', desc: 'Members vote on strategy with tokenized ownership.' },
+]
+
+const TRUST_ITEMS = [
+  'Solana-native vault accounting',
+  'Tokenized share ownership',
+  'Readable proposal history',
+  'Governance paths that mature over time',
 ]
 
 /* ------------------------------------------------------------------ */
@@ -405,265 +410,96 @@ function AskClaudeChat() {
   )
 }
 
-function CountUp({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
-  if (value === 0) return <span className="text-pot-muted">—</span>
-  return <>{prefix}{value >= 1000 ? (value / 1000).toFixed(1) + 'K' : value.toLocaleString()}{suffix}</>
-}
-
-// WaitlistSection and FrontierFocusStrip were removed:
-//   - WaitlistSection duplicated the final CTA at the bottom of the page.
-//   - FrontierFocusStrip was a 4-step compressed teaser that overlapped
-//     with the new full "How it works" section directly below the hero.
-// Both deletions consolidate the "what" of the protocol into one place
-// instead of three near-identical cards.
-
 export default function LandingPage() {
-  const { data: pots } = usePots()
-  const { price: solPrice } = useSolPrice()
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const potRows = (pots ?? []) as any[]
-  const totalTvlSol = potRows.reduce((s, p) => s + p.balance, 0)
-  const totalTvlUsd = solPrice ? totalTvlSol * solPrice : 0
-  const totalMembers = potRows.reduce((s, p) => s + p.memberCount, 0)
-  const totalTrades = potRows.reduce((s, p) => s + p.tradeCount, 0)
-  const topVaults = [...potRows].sort((a, b) => b.balance - a.balance).slice(0, 3)
-
   return (
-    <div className="min-h-screen">
-
-      {/* ── Hero ── */}
-      <section className="relative flex flex-col items-center text-center pt-8 pb-12 px-4 overflow-hidden">
-        {/* Glow background */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-pot-green/5 rounded-full blur-3xl" />
-          <div className="absolute top-1/3 left-1/3 w-[400px] h-[300px] bg-pot-accent/5 rounded-full blur-3xl" />
+    <div className="min-h-screen bg-[#0D1117] text-white overflow-hidden">
+      {/* ── Hero: one idea above the fold ── */}
+      <section className="relative min-h-[92vh] flex flex-col px-4 sm:px-6">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-40 left-1/2 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-pot-green/10 blur-3xl" />
+          <div className="absolute right-[-10rem] top-24 h-[28rem] w-[28rem] rounded-full bg-pot-accent/15 blur-3xl" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:64px_64px]" />
         </div>
 
-        <div className="relative z-10 max-w-4xl mx-auto">
-          {/* Frontier badge moved up tighter to the top of the hero */}
-          <div className="inline-flex items-center gap-2 bg-pot-card border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-muted mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-pot-green animate-pulse inline-block" />
-            Built for Solana Frontier 2026 · Open source
-          </div>
-
-          <div className="text-7xl mb-5 animate-float" aria-hidden="true">🪴</div>
-
-          <h1 className="text-5xl sm:text-6xl font-black text-white leading-tight mb-4">
-            A vault for{' '}
-            <span className="text-pot-green">anything</span>{' '}
-            on{' '}
-            <span className="text-pot-accent">Solana</span>.
-          </h1>
-
-          <p className="text-xl sm:text-2xl text-white/80 max-w-3xl mx-auto mb-10 leading-relaxed">
-            Programmable treasuries for internet communities.
-            Owned by the group, run by an AI agent, settled onchain.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto mb-10 text-left">
-            <div className="rounded-2xl border border-pot-green/25 bg-pot-card/40 backdrop-blur-sm p-5 transition hover:border-pot-green/50">
-              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
-                <span className="text-2xl font-black text-pot-green">POT</span>
-                <span className="text-sm font-semibold text-white">
-                  Programmable On-chain Treasury
-                </span>
-              </div>
-              <div className="text-[11px] text-pot-muted uppercase tracking-wider mb-2">
-                the container
-              </div>
-              <p className="text-sm text-white/80 leading-relaxed">
-                A program-controlled vault on Solana. Drop in SOL, USDC, LSTs,
-                LP positions, memecoins, anything tokenized. Members hold
-                shares, the vault holds the assets.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-pot-accent/25 bg-pot-card/40 backdrop-blur-sm p-5 transition hover:border-pot-accent/50">
-              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
-                <span className="text-2xl font-black text-pot-accent">BOT</span>
-                <span className="text-sm font-semibold text-white">
-                  Blockchain Orchestration Tool
-                </span>
-              </div>
-              <div className="text-[11px] text-pot-muted uppercase tracking-wider mb-2">
-                the AI agent
-              </div>
-              <p className="text-sm text-white/80 leading-relaxed">
-                Suggests trades, posts proposals, executes once the vote
-                passes. Delegate it to vote on your behalf based on rules
-                you set, or keep it advisory.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-4 justify-center mb-12">
-            <Link
-              href="/signup"
-              className="btn-primary text-base px-6 py-3 glow-green flex items-center gap-2"
-            >
-              🚀 Get Early Access
-            </Link>
-            <a
-              href="https://x.com/PotBot_sol"
-              target="_blank"
-              rel="noreferrer"
-              className="btn-secondary text-base px-6 py-3 flex items-center gap-2"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-              Follow on X
-            </a>
-            <Link
-              href="/vaults"
-              className="btn-secondary text-base px-6 py-3 flex items-center gap-2"
-            >
-              🪴 Explore live vault
+        <nav className="relative z-10 mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 py-6">
+          <Link href="/" className="flex items-center gap-2 text-xl font-black" aria-label="PotBot home">
+            <span className="text-2xl">🪴</span>
+            <span className="bg-gradient-to-r from-pot-green via-white to-pot-accent bg-clip-text text-transparent">PotBot</span>
+          </Link>
+          <div className="flex items-center gap-4 text-sm text-white/70 sm:gap-6">
+            <a href="#architecture" className="transition hover:text-white">Protocol</a>
+            <a href="#garden" className="transition hover:text-white">Garden</a>
+            <a href="#use-cases" className="hidden transition hover:text-white sm:inline">Use cases</a>
+            <Link href="/create" className="btn-primary !rounded-full !px-5 !py-2 text-sm">
+              Launch a POT
             </Link>
           </div>
+        </nav>
 
-          {/* Live protocol stats — only shown when data is real */}
-          {totalTvlSol > 0 && (
-            <div className="inline-flex flex-wrap items-center gap-0 bg-pot-card border border-pot-border rounded-2xl overflow-hidden shadow-xl">
-              {[
-                {
-                  label: 'Total Value Locked',
-                  value: totalTvlUsd > 0
-                    ? `$${totalTvlUsd >= 1000 ? (totalTvlUsd / 1000).toFixed(1) + 'K' : totalTvlUsd.toFixed(0)}`
-                    : `${totalTvlSol.toFixed(1)} SOL`,
-                  color: 'text-pot-green',
-                },
-                { label: 'Active Vaults', value: String(pots?.length ?? 0), color: 'text-white' },
-                { label: 'Members', value: String(totalMembers), color: 'text-white' },
-                { label: 'Total Trades', value: String(totalTrades), color: 'text-pot-accent' },
-              ].map((s, i, arr) => (
-                <div key={s.label} className={`px-6 py-4 text-center ${i < arr.length - 1 ? 'border-r border-pot-border' : ''}`}>
-                  <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
-                  <div className="text-xs text-pot-muted mt-0.5">{s.label}</div>
-                </div>
-              ))}
+        <div className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 items-center gap-12 py-12 lg:grid-cols-[1.02fr_0.98fr] lg:py-20">
+          <div className="text-center lg:text-left">
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm text-white/80">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-pot-green" />
+              AI-native infrastructure for Solana communities
             </div>
-          )}
+
+            <h1 className="mx-auto mb-6 max-w-4xl text-5xl font-black leading-[0.95] tracking-[-0.055em] text-white sm:text-6xl md:text-7xl lg:mx-0">
+              Tokenize Any Internet Community
+            </h1>
+
+            <p className="mx-auto mb-10 max-w-[58ch] text-lg leading-relaxed text-white/75 sm:text-2xl lg:mx-0">
+              Programmable onchain treasuries with AI coordination on Solana.
+            </p>
+
+            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start">
+              <Link href="/create" className="btn-primary glow-green w-full justify-center !rounded-full px-8 py-4 text-lg sm:w-auto">
+                Launch a POT
+              </Link>
+              <Link href="/signup" className="btn-secondary w-full justify-center !rounded-full px-8 py-4 text-lg sm:w-auto">
+                Join Waitlist
+              </Link>
+            </div>
+          </div>
+
+          <div className="relative flex justify-center lg:justify-end" aria-hidden="true">
+            <div className="relative grid aspect-square w-[min(78vw,430px)] place-items-center">
+              <div className="absolute inset-[12%] rounded-full bg-[radial-gradient(circle,rgba(20,241,149,0.30),transparent_58%),radial-gradient(circle,rgba(153,69,255,0.24),transparent_70%)] blur-xl animate-pulse-slow" />
+              <div className="absolute h-[44%] w-[90%] rotate-[-18deg] rounded-full border border-white/15" />
+              <div className="absolute h-[32%] w-[68%] rotate-[18deg] rounded-full border border-pot-accent/25" />
+              <div className="relative z-10 animate-float text-[10rem] leading-none drop-shadow-[0_30px_35px_rgba(0,0,0,0.45)] sm:text-[14rem] md:text-[17rem]">
+                🪴
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ── Mission statement — readable: white kicker, large body, no
-           italics, no decorative chrome. ── */}
-      <section className="py-20 px-4">
-        <div className="max-w-5xl mx-auto text-center">
-          <div className="text-xs font-bold uppercase tracking-[0.3em] text-pot-green mb-8">
-            Our mission
-          </div>
-          <p className="text-2xl sm:text-4xl md:text-5xl font-bold text-white leading-[1.25]">
-            Unite <span className="text-pot-green">people</span> and{' '}
-            <span className="text-pot-green">capital</span> across every direction
-            Solana offers,
-            <br className="hidden sm:block" />
-            as <span className="text-pot-accent">vault infrastructure</span> for
-            tokenized funds,
-            <br className="hidden sm:block" />
-            built natively for <span className="text-pot-accent">AI agents</span>.
-          </p>
-        </div>
-      </section>
-
-      {/* ── Two pot modes — promoted up the page so it sits right after
-           the mission, before the step-by-step protocol mechanics. ── */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10 max-w-4xl mx-auto">
-            <div className="text-xs font-bold uppercase tracking-[0.3em] text-pot-green mb-6">
-              Two pot modes
-            </div>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white leading-[1.25] mb-4">
-              Social-Fi or Privacy.{' '}
-              <span className="text-pot-green">Pick per pot.</span>
+      {/* ── Manifesto ── */}
+      <section className="border-y border-white/10 bg-black/10 px-4 py-20 sm:px-6 md:py-32">
+        <div className="mx-auto grid max-w-6xl items-start gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
+          <div>
+            <p className="mb-5 text-xs font-black uppercase tracking-[0.24em] text-pot-green">Manifesto</p>
+            <h2 className="max-w-[12ch] text-4xl font-black leading-tight tracking-[-0.04em] md:text-6xl">
+              The internet already coordinates capital.
             </h2>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* PUBLIC / Social-Fi */}
-            <div
-              className="rounded-2xl p-6 backdrop-blur-sm transition"
-              style={{
-                background: 'linear-gradient(135deg, rgba(20,241,149,0.04), rgba(20,241,149,0.01))',
-                border: '1px solid rgba(20,241,149,0.25)',
-              }}
-            >
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                  style={{ background: 'rgba(20,241,149,.12)', boxShadow: '0 0 24px rgba(20,241,149,.2)' }}
-                >
-                  🌐
-                </div>
-                <span
-                  className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full border"
-                  style={{ background: 'rgba(20,241,149,.12)', borderColor: 'rgba(20,241,149,.3)', color: '#14F195' }}
-                >
-                  Social-Fi
-                </span>
-              </div>
-              <div className="text-xl font-extrabold mb-1" style={{ color: '#14F195' }}>
-                Public POT
-              </div>
-              <p className="text-base text-white/80 leading-relaxed mb-4">
-                Open to anyone. Real members, real deposits, visible on the
-                leaderboard. The proof that people actually use it is the
-                thing that pulls more in.
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {['🏆 Leaderboard', '⚔️ Duels', '🔗 Referrals', '📊 Strategy Share', '👥 Community'].map((f) => (
-                  <span
-                    key={f}
-                    className="text-xs font-semibold px-2 py-1 rounded-full border"
-                    style={{ background: 'rgba(20,241,149,.08)', borderColor: 'rgba(20,241,149,.2)', color: '#14F195' }}
-                  >
-                    {f}
-                  </span>
-                ))}
-              </div>
+          <div className="space-y-10">
+            <div className="space-y-2 text-2xl font-bold leading-tight text-white md:text-4xl">
+              <p>Friends invest together.</p>
+              <p>Communities speculate together.</p>
+              <p>Creators build economies together.</p>
             </div>
-
-            {/* PRIVATE / Privacy layer */}
-            <div
-              className="rounded-2xl p-6 backdrop-blur-sm transition"
-              style={{
-                background: 'linear-gradient(135deg, rgba(153,69,255,0.04), rgba(153,69,255,0.01))',
-                border: '1px solid rgba(153,69,255,0.25)',
-              }}
-            >
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                  style={{ background: 'rgba(153,69,255,.12)', boxShadow: '0 0 24px rgba(153,69,255,.25)' }}
-                >
-                  🥷
-                </div>
-                <span
-                  className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full border"
-                  style={{ background: 'rgba(153,69,255,.12)', borderColor: 'rgba(153,69,255,.3)', color: '#9945FF' }}
-                >
-                  Privacy layer
-                </span>
-              </div>
-              <div className="text-xl font-extrabold mb-1" style={{ color: '#9945FF' }}>
-                Private POT (STAMPPOT)
-              </div>
-              <p className="text-base text-white/80 leading-relaxed mb-4">
-                For groups that want their strategy to stay theirs. Deposits
-                and members are hidden behind ZK proofs, so the alpha
-                doesn't leak the moment you open the pot.
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {['🔐 ZK proofs', '🚫 No wallet doxxing', '🤝 Invite-only', '🛡 PrivacyCash', '📜 Auditor view'].map((f) => (
-                  <span
-                    key={f}
-                    className="text-xs font-semibold px-2 py-1 rounded-full border"
-                    style={{ background: 'rgba(153,69,255,.08)', borderColor: 'rgba(153,69,255,.2)', color: '#9945FF' }}
-                  >
-                    {f}
-                  </span>
+            <p className="max-w-[42ch] text-xl leading-relaxed text-white/75 md:text-2xl">
+              But the infrastructure is still primitive.
+            </p>
+            <div className="rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 backdrop-blur-xl md:p-8">
+              <p className="mb-6 text-lg text-white/70">PotBot gives every community:</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {MANIFESTO_POINTS.map((point) => (
+                  <div key={point} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white/90">
+                    <span className="text-pot-green">✦</span>
+                    <span>{point}</span>
+                  </div>
                 ))}
               </div>
             </div>
@@ -671,263 +507,183 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS — actual 4-step pot lifecycle. ── */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-pot-muted">
-              How it works
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[
-              {
-                n: '1',
-                title: 'Deposit SOL',
-                desc: 'Pool capital with your group in a single program-controlled vault. Each member gets shares proportional to their deposit.',
-                color: 'text-pot-green',
-                border: 'border-pot-green/30',
-              },
-              {
-                n: '2',
-                title: 'Propose a swap',
-                desc: 'Anyone (or the AI agent) drafts a Jupiter swap with input mint, output mint and amount. Nothing moves yet.',
-                color: 'text-pot-accent',
-                border: 'border-pot-accent/30',
-              },
-              {
-                n: '3',
-                title: 'Vote',
-                desc: 'Members vote yes/no with their shares. Quorum and approval thresholds are governance settings the pot picks at creation.',
-                color: 'text-amber-300',
-                border: 'border-amber-300/30',
-              },
-              {
-                n: '4',
-                title: 'Execute on-chain',
-                desc: 'Once a proposal passes, anyone can trigger the on-chain execution. The vault PDA signs the Jupiter v6 CPI itself — no human keypair holds the funds.',
-                color: 'text-white',
-                border: 'border-pot-border',
-              },
-            ].map((step) => (
-              <div key={step.n} className={`rounded-2xl border ${step.border} bg-pot-card/40 backdrop-blur-sm p-6 relative hover:bg-pot-card/60 transition`}>
-                <div className={`text-5xl font-black ${step.color} opacity-20 absolute top-4 right-5`}>{step.n}</div>
-                <div className={`text-sm font-bold ${step.color} mb-2`}>Step {step.n}</div>
-                <h3 className="text-white font-bold text-lg mb-2">{step.title}</h3>
-                <p className="text-white/75 text-sm leading-relaxed">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Live vault mockup — "See your vault at a glance" ── */}
-      <LiveVaultMockup />
-
-      {/* ── Features grid — full-width section bg, content centered ── */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-black text-white mb-3">Everything your community needs</h2>
-            <p className="text-white/70 max-w-xl mx-auto">One protocol. Group governance, AI automation, creator monetization, and DeFi yield — all composable on Solana.</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-6 hover:border-pot-green/30 hover:bg-pot-card/60 transition-all group">
-                <div className="mb-3 flex items-start justify-between gap-3">
-                  <div className="text-3xl group-hover:animate-float" aria-hidden="true">{f.icon}</div>
-                  <span className="rounded-full border border-pot-border px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-pot-muted">
-                    {f.status}
-                  </span>
-                </div>
-                <h3 className="font-bold text-white text-lg mb-2">{f.title}</h3>
-                <p className="text-white/75 text-sm leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Tamagotchi gamification — labelled section so the "Watch your vault grow"
-           strip reads as a feature, not a random plant rail ── */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="text-xs font-bold uppercase tracking-[0.3em] text-pot-green mb-4">
-              Tamagotchi gamification
-            </div>
-            <h2 className="text-3xl font-black text-white mb-2">Watch your vault grow</h2>
-            <p className="text-white/70 text-base">Every trade, every member — your Tamagotchi plant levels up</p>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 max-w-4xl mx-auto">
-            {[
-              { emoji: '🌱', label: 'Seedling', tier: 'L1' },
-              { emoji: '🌿', label: 'Sprout', tier: 'L2' },
-              { emoji: '🍀', label: 'Bud', tier: 'L3' },
-              { emoji: '🌾', label: 'Bloom', tier: 'L4' },
-              { emoji: '🌺', label: 'Full Bloom', tier: 'L5' },
-              { emoji: '🌳', label: 'Mature Tree', tier: 'L6' },
-            ].map((stage) => (
-              <div key={stage.label} className="text-center">
-                <div className="text-4xl mb-1">{stage.emoji}</div>
-                <div className="text-xs font-bold text-white">{stage.label}</div>
-                <div className="text-[10px] text-pot-muted">{stage.tier}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Top vaults ── */}
-      {topVaults.length > 0 && (
-        <section className="max-w-5xl mx-auto px-4 py-16">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-3xl font-black text-white">Top Vaults</h2>
-              <p className="text-pot-muted text-sm mt-1">Best performing community vaults this week</p>
-            </div>
-            <Link href="/leaderboard" className="btn-secondary text-sm">
-              Full Leaderboard →
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {topVaults.map((pot, i) => {
-              const balanceUsd = solPrice ? pot.balance * solPrice : 0
-              const medals = ['🥇', '🥈', '🥉']
-              return (
-                <Link
-                  key={pot.pubkey}
-                  href={`/pots/${pot.pubkey}`}
-                  className="bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-5 hover:border-pot-green/30 hover:bg-pot-card/60 transition-all group"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-2xl">{medals[i]}</span>
-                    <span className="text-2xl group-hover:animate-float">{pot.emoji}</span>
-                    <div>
-                      <div className="font-bold text-white">{pot.name}</div>
-                      <div className="text-xs text-pot-muted">{pot.memberCount} members</div>
-                    </div>
-                  </div>
-                  <div className="text-xl font-black text-pot-green">{pot.balance.toFixed(2)} SOL</div>
-                  {balanceUsd > 0 && (
-                    <div className="text-xs text-pot-muted">≈ ${balanceUsd >= 1000 ? (balanceUsd / 1000).toFixed(1) + 'K' : balanceUsd.toFixed(0)}</div>
-                  )}
-                  <div className="flex gap-2 mt-3">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-pot-green/10 text-pot-green">{pot.isPublic ? 'Public' : 'Private'}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-pot-border text-pot-muted">L{pot.governanceLevel} Gov</span>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* ── For AI Agents & Developers (MCP) — promoted up the page so the
-           agent-native angle lands right after the Tamagotchi strip and
-           before any of the deeper "why now" prose. ── */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="text-xs font-bold uppercase tracking-[0.3em] text-pot-accent mb-4">
-              MCP-Native Protocol
-            </div>
-            <h2 className="text-3xl font-black text-white mb-3">Built for AI Agents &amp; Developers</h2>
-            <p className="text-white/75 max-w-lg mx-auto text-base">
-              Any LLM can control PotBot vaults via the MCP server. Claude, GPT, or your
-              own agent — 60+ on-chain actions available.
+      {/* ── Simple architecture diagram ── */}
+      <section id="architecture" className="px-4 py-20 sm:px-6 md:py-32">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 max-w-3xl">
+            <p className="mb-5 text-xs font-black uppercase tracking-[0.24em] text-pot-green">Protocol in five seconds</p>
+            <h2 className="mb-5 text-4xl font-black tracking-[-0.04em] md:text-6xl">
+              From community energy to programmable capital.
+            </h2>
+            <p className="max-w-[64ch] text-lg leading-relaxed text-white/75 md:text-xl">
+              POT means Programmable On-chain Treasury. BOT means Blockchain Orchestration Tool. Together, they turn social coordination into a transparent Solana-native vault.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-            {FOR_BUILDERS.map((item) => (
-              <a
-                key={item.title}
-                href={item.href}
-                target={item.href.startsWith('http') ? '_blank' : undefined}
-                rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
-                className="bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-5 hover:border-pot-accent/30 hover:bg-pot-card/60 transition-all group"
-              >
-                <div className="text-2xl mb-3">{item.icon}</div>
-                <div className="font-bold text-white mb-1 group-hover:text-pot-accent transition">{item.title}</div>
-                <div className="text-sm text-white/75">{item.desc}</div>
-              </a>
+          <div className="overflow-x-auto rounded-[2rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-xl md:p-8">
+            <div className="flex min-w-max items-stretch gap-3">
+              {ARCHITECTURE_FLOW.map((item, index) => (
+                <div key={item} className="flex items-center gap-3">
+                  <div className="flex min-h-[104px] w-[160px] flex-col justify-between rounded-2xl border border-white/10 bg-white/[0.05] p-4">
+                    <span className="text-xs text-white/35">0{index + 1}</span>
+                    <strong className="text-lg leading-tight text-white">{item}</strong>
+                  </div>
+                  {index < ARCHITECTURE_FLOW.length - 1 ? (
+                    <span className="text-2xl text-pot-green drop-shadow-[0_0_18px_rgba(0,255,136,0.5)]">→</span>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Keep this block and its animation intact. */}
+      <LiveVaultMockup />
+
+      {/* ── Governance ── */}
+      <section className="bg-white/[0.015] px-4 py-20 sm:px-6 md:py-32">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <p className="mb-5 text-xs font-black uppercase tracking-[0.24em] text-pot-green">Governance</p>
+            <h2 className="mb-5 text-4xl font-black tracking-[-0.04em] md:text-5xl">
+              Governance should match the community.
+            </h2>
+            <p className="max-w-[58ch] text-lg leading-relaxed text-white/75">
+              Start simple. Mature when the treasury, membership, and decision quality need more decentralization.
+            </p>
+          </div>
+          <div className="grid gap-3 rounded-[2rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-xl md:grid-cols-3 md:p-6">
+            {GOVERNANCE_SPECTRUM.map((mode, index) => (
+              <article key={mode.title} className="rounded-2xl border border-white/10 bg-white/[0.045] p-5">
+                <div className="mb-5 grid h-12 w-12 place-items-center rounded-full border border-pot-green/35 bg-gradient-to-br from-pot-green/20 to-pot-accent/20 font-black text-pot-green">
+                  {index + 1}
+                </div>
+                <h3 className="mb-2 text-lg font-black text-white">{mode.title}</h3>
+                <p className="text-sm leading-relaxed text-white/70">{mode.desc}</p>
+              </article>
             ))}
           </div>
-
-          {/* Ask Claude — expanded into a real chat UI */}
-          <AskClaudeChat />
         </div>
       </section>
 
-      {/* ── Why PotBot, why now — full-width bg, two cards ── */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-black text-white mb-3">Why PotBot, why now</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-6 hover:border-pot-green/30 transition">
-              <div className="text-2xl mb-3">🔓</div>
-              <h3 className="font-bold text-white text-lg mb-2">Why onchain, not a database</h3>
-              <p className="text-white/80 text-base leading-relaxed">
-                Community custody without a trusted middleman. The vault <em>is</em> the
-                onchain account — every deposit, vote and trade is signed by the
-                program itself. A database can&apos;t enforce that without re-
-                introducing the operator we&apos;re removing.
+      {/* ── BOT / AI layer ── */}
+      <section className="px-4 py-20 sm:px-6 md:py-32">
+        <div className="mx-auto grid max-w-6xl items-stretch gap-8 lg:grid-cols-2">
+          <article className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.045] p-8 backdrop-blur-xl md:p-10">
+            <div className="absolute inset-x-[-20%] top-[-55%] h-[70%] rotate-[8deg] bg-gradient-to-r from-transparent via-pot-green/10 to-transparent" />
+            <div className="relative">
+              <p className="mb-5 text-xs font-black uppercase tracking-[0.24em] text-pot-accent">AI coordination</p>
+              <h2 className="mb-5 text-4xl font-black tracking-[-0.04em] md:text-5xl">BOT = AI orchestration layer</h2>
+              <p className="mb-8 max-w-[60ch] text-lg leading-relaxed text-white/75">
+                The bot translates vault activity into readable next actions. It helps communities move from noisy chat to structured governance.
               </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {BOT_ACTIONS.map((action) => (
+                  <div key={action} className="rounded-2xl border border-white/10 bg-white/[0.045] px-4 py-3 text-white/85">
+                    {action}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-6 hover:border-pot-accent/30 transition">
-              <div className="text-2xl mb-3">⏰</div>
-              <h3 className="font-bold text-white text-lg mb-2">Why now</h3>
-              <p className="text-white/80 text-base leading-relaxed">
-                MCP standardised how AI agents connect to real systems. Solana ships
-                the throughput, Jupiter the routing. The agent-driven
-                community coordination stack exists in 2026 — and the layer
-                hadn&apos;t shipped. We&apos;re shipping it.
-              </p>
-            </div>
-          </div>
+          </article>
+
+          <article className="rounded-[2rem] border border-white/10 bg-white/[0.045] p-8 backdrop-blur-xl md:p-10">
+            <p className="mb-5 text-xs font-black uppercase tracking-[0.24em] text-pot-green">Readable trust</p>
+            <h2 className="mb-5 text-4xl font-black tracking-[-0.04em] md:text-5xl">Protocol-grade without the cognitive overload.</h2>
+            <p className="mb-8 max-w-[58ch] text-lg leading-relaxed text-white/75">
+              PotBot keeps advanced rails available, but the main page explains the outcome first: ownership, coordination, and execution.
+            </p>
+            <ul className="space-y-3 text-white/85">
+              {TRUST_ITEMS.map((item) => (
+                <li key={item} className="flex items-start gap-3">
+                  <span className="mt-1 text-pot-green">●</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
         </div>
       </section>
 
-      {/* Two pot modes section was moved up to sit right after the
-          mission strip; nothing renders here. */}
-
-      {/* ── Final CTA — only one CTA section now; the Waitlist and final
-           CTA used to duplicate each other. ── */}
-      <section className="py-20 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="text-6xl mb-6 animate-float">🪴</div>
-          <h2 className="text-4xl font-black text-white mb-4">
-            Ready to tokenize your community?
-          </h2>
-          <p className="text-white/80 text-lg mb-8">
-            Spin up your treasury in under a minute. No coding required.
-            Open source and free to use on Solana devnet.
+      {/* ── Garden Mode ── */}
+      <section id="garden" className="border-y border-white/10 bg-[radial-gradient(circle_at_50%_0%,rgba(20,241,149,0.10),transparent_45%)] px-4 py-20 sm:px-6 md:py-32">
+        <div className="mx-auto max-w-6xl text-center">
+          <p className="mb-5 text-xs font-black uppercase tracking-[0.24em] text-pot-green">Garden Mode</p>
+          <h2 className="mb-5 text-4xl font-black tracking-[-0.04em] md:text-6xl">Duolingo streaks for finance.</h2>
+          <p className="mx-auto mb-12 max-w-[68ch] text-lg leading-relaxed text-white/75 md:text-xl">
+            Activity grows the POT. Participation unlocks evolution. Communities get identity, social flex, and a living signal of momentum.
           </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link href="/signup" className="btn-primary text-lg px-8 py-4 glow-green">
-              🚀 Get Early Access
-            </Link>
-            <Link href="/create" className="btn-secondary text-lg px-8 py-4">
-              🪴 Create Your Vault
-            </Link>
-            <a
-              href="https://github.com/YD811/potbot-v2"
-              target="_blank"
-              rel="noreferrer"
-              className="btn-secondary text-lg px-8 py-4"
-            >
-              ⭐ Star on GitHub
-            </a>
+
+          <div className="mb-10 overflow-x-auto rounded-[2rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-xl md:p-8">
+            <div className="flex min-w-max items-center justify-center gap-3 md:gap-5">
+              {GARDEN_STAGES.map((stage, index) => (
+                <div key={stage} className="flex items-center gap-3 md:gap-5">
+                  <span className="grid h-16 w-16 place-items-center rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_50%_10%,rgba(20,241,149,0.16),rgba(255,255,255,0.045))] text-4xl md:h-24 md:w-24 md:text-5xl">
+                    {stage}
+                  </span>
+                  {index < GARDEN_STAGES.length - 1 ? <i className="h-px w-8 bg-gradient-to-r from-pot-green/30 to-pot-accent/60 md:w-16" /> : null}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4 text-left md:grid-cols-3">
+            {['Contribute capital or ideas.', 'Vote, execute, and return.', 'Watch the community identity evolve.'].map((item) => (
+              <div key={item} className="rounded-2xl border border-white/10 bg-white/[0.045] p-5 text-lg text-white/85 backdrop-blur-xl">
+                {item}
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
+      {/* ── Use cases ── */}
+      <section id="use-cases" className="px-4 py-20 sm:px-6 md:py-32">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="mb-5 text-xs font-black uppercase tracking-[0.24em] text-pot-green">Use cases</p>
+              <h2 className="text-4xl font-black tracking-[-0.04em] md:text-6xl">What can a POT become?</h2>
+            </div>
+            <p className="max-w-[44ch] text-lg leading-relaxed text-white/75">
+              One primitive. Many internet-native community economies.
+            </p>
+          </div>
 
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {USE_CASES.map((useCase) => (
+              <article key={useCase.title} className="min-h-[190px] rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-6 backdrop-blur-xl transition hover:-translate-y-1 hover:border-pot-green/40 hover:shadow-[0_24px_80px_rgba(0,255,136,0.10)]">
+                <div className="mb-5 text-4xl">{useCase.icon}</div>
+                <h3 className="mb-2 text-lg font-black text-white">{useCase.title}</h3>
+                <p className="text-sm leading-relaxed text-white/70">{useCase.desc}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Final CTA ── */}
+      <section className="px-4 py-20 sm:px-6 md:py-32">
+        <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.045] p-8 text-center backdrop-blur-xl md:p-14">
+          <div className="pointer-events-none absolute inset-x-[-30%] top-[-20%] h-56 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          <div className="relative">
+            <div className="mb-6 text-5xl">🪴</div>
+            <h2 className="mb-5 text-4xl font-black tracking-[-0.04em] md:text-6xl">Tokenize your community.</h2>
+            <p className="mx-auto mb-10 max-w-[58ch] text-lg leading-relaxed text-white/75 md:text-xl">
+              Reserve a POT for the creator, group chat, DAO, club, or agent network you already coordinate with.
+            </p>
+            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Link href="/create" className="btn-primary glow-green w-full justify-center !rounded-full px-10 py-4 text-lg sm:w-auto">
+                Launch Your POT
+              </Link>
+              <Link href="/signup" className="btn-secondary w-full justify-center !rounded-full px-10 py-4 text-lg sm:w-auto">
+                Reserve Your POT
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
