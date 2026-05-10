@@ -456,11 +456,35 @@ export default function LandingPage() {
             <span className="text-pot-accent">Solana</span>.
           </h1>
 
-          <p className="text-xl text-pot-muted max-w-2xl mx-auto mb-8 leading-relaxed">
-            Drop any tokenized Solana asset into a shared vault with friends.
-            An AI agent suggests trades, the group votes, the program executes.
-            No custodian, no single signer.
+          <p className="text-xl text-pot-muted max-w-2xl mx-auto mb-6 leading-relaxed">
+            A shared on-chain container for any tokenized Solana asset, run by
+            a group and an AI agent. No custodian, no single signer.
           </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-3xl mx-auto mb-10 text-left">
+            <div className="bg-pot-card/60 border border-pot-green/25 rounded-2xl p-5">
+              <div className="flex items-baseline gap-2 mb-2">
+                <span className="text-2xl font-black text-pot-green">POT</span>
+                <span className="text-xs text-pot-muted uppercase tracking-wider">the container</span>
+              </div>
+              <p className="text-sm text-pot-muted leading-snug">
+                A program-controlled vault on Solana. Drop in SOL, USDC, LSTs,
+                LP positions, memecoins, anything tokenized. Members hold
+                shares, the vault holds the assets.
+              </p>
+            </div>
+            <div className="bg-pot-card/60 border border-pot-accent/25 rounded-2xl p-5">
+              <div className="flex items-baseline gap-2 mb-2">
+                <span className="text-2xl font-black text-pot-accent">BOT</span>
+                <span className="text-xs text-pot-muted uppercase tracking-wider">the AI agent</span>
+              </div>
+              <p className="text-sm text-pot-muted leading-snug">
+                Suggests trades, posts proposals, executes once the vote
+                passes. Delegate it to vote on your behalf based on rules
+                you set, or keep it advisory.
+              </p>
+            </div>
+          </div>
 
           <div className="flex flex-wrap gap-4 justify-center mb-12">
             <Link
@@ -513,18 +537,17 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Mission statement — sets the wider frame before the "How it
-           works" mechanics below. Placed right after the hero so it
-           reads as the why before the what. ── */}
-      <section className="bg-gradient-to-br from-pot-green/10 via-pot-card to-pot-accent/10 border-y border-pot-border py-14 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-pot-dark/60 border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-muted mb-5">
-            🎯 Our mission
+      {/* ── Mission statement — bigger, no badge framing, no emoji.
+           Sets the why before the what (Two pot modes + steps below). ── */}
+      <section className="bg-gradient-to-br from-pot-green/10 via-pot-card to-pot-accent/10 border-y border-pot-border py-20 px-4">
+        <div className="max-w-5xl mx-auto text-center">
+          <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-pot-muted mb-6">
+            Our mission
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-white leading-snug">
+          <p className="text-3xl sm:text-5xl font-black text-white leading-tight">
             Unite <span className="text-pot-green">people</span> and{' '}
             <span className="text-pot-green">capital</span> across every direction
-            Solana offers —
+            Solana offers,
             <br className="hidden sm:block" />
             as <span className="text-pot-accent">vault infrastructure</span> for
             tokenized funds,
@@ -534,18 +557,130 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS — actual 4-step pot lifecycle, no extra heading
-           on a separate section anymore (we collapsed the duplicate
-           below). Steps mirror the Pot detail page progress strip so
-           the user never has to learn a new mental model. ── */}
+      {/* ── Two pot modes — promoted up the page so it sits right after
+           the mission, before the step-by-step protocol mechanics. ── */}
+      <section className="bg-gradient-to-br from-pot-card via-pot-dark to-pot-card border-b border-pot-border py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 bg-pot-card border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-muted mb-4">
+              ⚖️ Two pot modes
+            </div>
+            <h2 className="text-3xl font-black text-white mb-3">
+              Social-Fi or Privacy. Pick per pot.
+            </h2>
+            <p className="text-pot-muted max-w-xl mx-auto">
+              Public pots compete on the leaderboard, share strategies, earn referrals.
+              Private pots wrap deposits in PrivacyCash ZK proofs so the wallet
+              to share link stays hidden. Same on-chain governance either way.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* PUBLIC / Social-Fi */}
+            <div
+              className="rounded-2xl p-6"
+              style={{
+                background: 'linear-gradient(135deg, rgba(20,241,149,0.08), rgba(20,241,149,0.02))',
+                border: '1px solid rgba(20,241,149,0.25)',
+              }}
+            >
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                  style={{ background: 'rgba(20,241,149,.12)', boxShadow: '0 0 24px rgba(20,241,149,.2)' }}
+                >
+                  🌐
+                </div>
+                <span
+                  className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full border"
+                  style={{ background: 'rgba(20,241,149,.12)', borderColor: 'rgba(20,241,149,.3)', color: '#14F195' }}
+                >
+                  Social-Fi
+                </span>
+              </div>
+              <div className="text-xl font-extrabold mb-1" style={{ color: '#14F195' }}>
+                Public POT
+              </div>
+              <p className="text-sm text-pot-muted leading-relaxed mb-4">
+                Open vault. Share strategy, earn referrals, compete on the leaderboard.
+                Community-powered alpha. Anyone can deposit, anyone can vote.
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {['🏆 Leaderboard', '⚔️ Duels', '🔗 Referrals', '📊 Strategy Share', '👥 Community'].map((f) => (
+                  <span
+                    key={f}
+                    className="text-xs font-semibold px-2 py-1 rounded-full border"
+                    style={{ background: 'rgba(20,241,149,.08)', borderColor: 'rgba(20,241,149,.2)', color: '#14F195' }}
+                  >
+                    {f}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* PRIVATE / Privacy layer */}
+            <div
+              className="rounded-2xl p-6"
+              style={{
+                background: 'linear-gradient(135deg, rgba(153,69,255,0.08), rgba(153,69,255,0.02))',
+                border: '1px solid rgba(153,69,255,0.25)',
+              }}
+            >
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                  style={{ background: 'rgba(153,69,255,.12)', boxShadow: '0 0 24px rgba(153,69,255,.25)' }}
+                >
+                  🥷
+                </div>
+                <span
+                  className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full border"
+                  style={{ background: 'rgba(153,69,255,.12)', borderColor: 'rgba(153,69,255,.3)', color: '#9945FF' }}
+                >
+                  Privacy layer
+                </span>
+              </div>
+              <div className="text-xl font-extrabold mb-1" style={{ color: '#9945FF' }}>
+                Private POT (STAMPPOT)
+              </div>
+              <p className="text-sm text-pot-muted leading-relaxed mb-4">
+                Deposits wrapped in PrivacyCash ZK proofs. Members prove shares
+                ownership without exposing their wallet. Governance and swaps still
+                settle on-chain publicly. Only the wallet to share link is hidden.
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {['🔐 ZK proofs', '🚫 No wallet doxxing', '🤝 Invite-only', '🛡 PrivacyCash', '📜 Auditor view'].map((f) => (
+                  <span
+                    key={f}
+                    className="text-xs font-semibold px-2 py-1 rounded-full border"
+                    style={{ background: 'rgba(153,69,255,.08)', borderColor: 'rgba(153,69,255,.2)', color: '#9945FF' }}
+                  >
+                    {f}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS — actual 4-step pot lifecycle. ── */}
       <section className="bg-pot-card border-y border-pot-border py-16 px-4">
         <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-pot-muted mb-3">
+              How it works
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-white">
+              Four steps. All on-chain.
+            </h2>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
               {
                 n: '1',
                 title: 'Deposit SOL',
-                desc: 'Pool funds with friends in a single program-controlled vault. Each member gets shares proportional to their deposit.',
+                desc: 'Pool capital with your group in a single program-controlled vault. Each member gets shares proportional to their deposit.',
                 color: 'text-pot-green',
                 border: 'border-pot-green/30',
               },
@@ -754,113 +889,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Two pot modes — same Social-Fi vs Privacy layer story as on
-           /create, presented here as side-by-side cards instead of the
-           old single STAMPPOT pitch. Full-width bg. ── */}
-      <section className="bg-gradient-to-br from-pot-card via-pot-dark to-pot-card border-b border-pot-border py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 bg-pot-card border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-muted mb-4">
-              ⚖️ Two pot modes
-            </div>
-            <h2 className="text-3xl font-black text-white mb-3">
-              Social-Fi or Privacy — pick per pot
-            </h2>
-            <p className="text-pot-muted max-w-xl mx-auto">
-              Public pots compete on the leaderboard, share strategies, earn referrals.
-              Private pots wrap deposits in PrivacyCash ZK proofs so the wallet→share
-              link stays hidden. Same on-chain governance either way.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* PUBLIC / Social-Fi */}
-            <div
-              className="rounded-2xl p-6"
-              style={{
-                background: 'linear-gradient(135deg, rgba(20,241,149,0.08), rgba(20,241,149,0.02))',
-                border: '1px solid rgba(20,241,149,0.25)',
-              }}
-            >
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                  style={{ background: 'rgba(20,241,149,.12)', boxShadow: '0 0 24px rgba(20,241,149,.2)' }}
-                >
-                  🌐
-                </div>
-                <span
-                  className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full border"
-                  style={{ background: 'rgba(20,241,149,.12)', borderColor: 'rgba(20,241,149,.3)', color: '#14F195' }}
-                >
-                  Social-Fi
-                </span>
-              </div>
-              <div className="text-xl font-extrabold mb-1" style={{ color: '#14F195' }}>
-                Public POT
-              </div>
-              <p className="text-sm text-pot-muted leading-relaxed mb-4">
-                Open vault. Share strategy, earn referrals, compete on the leaderboard.
-                Community-powered alpha — anyone can deposit, anyone can vote.
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {['🏆 Leaderboard', '⚔️ Duels', '🔗 Referrals', '📊 Strategy Share', '👥 Community'].map((f) => (
-                  <span
-                    key={f}
-                    className="text-xs font-semibold px-2 py-1 rounded-full border"
-                    style={{ background: 'rgba(20,241,149,.08)', borderColor: 'rgba(20,241,149,.2)', color: '#14F195' }}
-                  >
-                    {f}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* PRIVATE / Privacy layer */}
-            <div
-              className="rounded-2xl p-6"
-              style={{
-                background: 'linear-gradient(135deg, rgba(153,69,255,0.08), rgba(153,69,255,0.02))',
-                border: '1px solid rgba(153,69,255,0.25)',
-              }}
-            >
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                  style={{ background: 'rgba(153,69,255,.12)', boxShadow: '0 0 24px rgba(153,69,255,.25)' }}
-                >
-                  🥷
-                </div>
-                <span
-                  className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full border"
-                  style={{ background: 'rgba(153,69,255,.12)', borderColor: 'rgba(153,69,255,.3)', color: '#9945FF' }}
-                >
-                  Privacy layer
-                </span>
-              </div>
-              <div className="text-xl font-extrabold mb-1" style={{ color: '#9945FF' }}>
-                Private POT (STAMPPOT)
-              </div>
-              <p className="text-sm text-pot-muted leading-relaxed mb-4">
-                Deposits wrapped in PrivacyCash ZK proofs. Members prove shares ownership
-                without exposing their wallet. Governance and swaps still settle on-chain
-                publicly — only the wallet→share link is hidden.
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {['🔐 ZK proofs', '🚫 No wallet doxxing', '🤝 Invite-only', '🛡 PrivacyCash', '📜 Auditor view'].map((f) => (
-                  <span
-                    key={f}
-                    className="text-xs font-semibold px-2 py-1 rounded-full border"
-                    style={{ background: 'rgba(153,69,255,.08)', borderColor: 'rgba(153,69,255,.2)', color: '#9945FF' }}
-                  >
-                    {f}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Two pot modes section was moved up to sit right after the
+          mission strip; nothing renders here. */}
 
       {/* ── Final CTA — only one CTA section now; the Waitlist and final
            CTA used to duplicate each other. ── */}

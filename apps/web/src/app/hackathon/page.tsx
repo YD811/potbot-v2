@@ -144,7 +144,7 @@ const ARCHITECTURE: ArchLayer[] = [
 const WEDGE = [
   { who: 'Squads', does: 'Multisig custody. No trading UI.', why: 'Treasury, not strategy' },
   { who: 'Drift Vaults', does: 'Curator-run structured products.', why: 'No group governance per swap' },
-  { who: 'Kamino / Gauntlet', does: 'Institutional curators.', why: 'No primitive for friends pooling capital' },
+  { who: 'Kamino / Gauntlet', does: 'Institutional curators.', why: 'No primitive for groups pooling capital' },
   { who: 'PotBot', does: 'Group trading vault.', why: 'Deposit + vote + Jupiter CPI in one Anchor program', highlight: true },
 ]
 
@@ -413,8 +413,8 @@ export default function HackathonPage() {
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-5">90-second pitch</h2>
           <ol className="space-y-4 text-sm sm:text-base">
             <PitchStep range="0–15s" headline="Problem">
-              A group of friends wants to trade together as one fund. Today they share a
-              seed phrase or build a Squads multisig with no trading UI. Both suck.
+              A group wants to trade together as one fund. Today they share a seed
+              phrase or build a Squads multisig with no trading UI. Both suck.
             </PitchStep>
             <PitchStep range="15–30s" headline="Solution">
               PotBot is a group trading vault. Deposit, propose, vote, execute — all

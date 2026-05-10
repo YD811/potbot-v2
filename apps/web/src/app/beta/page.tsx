@@ -65,7 +65,7 @@ export default function BetaPage() {
               <div className="text-5xl mb-4">🏦</div>
               <h3 className="text-xl font-semibold text-white mb-2">Group Vaults</h3>
               <p className="text-pot-muted text-sm">
-                Pool SOL with friends or community members into shared trading vaults
+                Pool SOL with your group or community into shared trading vaults
               </p>
             </div>
             <div className="card p-6 text-center border border-pot-border hover:border-pot-accent/30 transition-all">
@@ -107,7 +107,7 @@ export default function BetaPage() {
               <span className="flex-shrink-0 w-8 h-8 rounded-full bg-pot-green text-black font-bold flex items-center justify-center">3</span>
               <div>
                 <p className="font-semibold text-white">Create or Join a Vault</p>
-                <p className="text-pot-muted text-sm">Start a new group vault or join an existing one with friends</p>
+                <p className="text-pot-muted text-sm">Start a new group vault or join an existing one with your crew</p>
               </div>
             </li>
             <li className="flex gap-4">

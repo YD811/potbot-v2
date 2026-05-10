@@ -77,7 +77,7 @@ export default function ReferralPanel({ potPubkey, potName }: Props) {
           <div>
             <h2 className="text-xl font-bold text-white mb-1">Referral Program</h2>
             <p className="text-sm text-pot-muted">
-              Invite friends to <span className="text-white font-semibold">{potName}</span> and earn a share of every entry fee — automatically, on-chain.
+              Invite members to <span className="text-white font-semibold">{potName}</span> and earn a share of every entry fee, automatically, on-chain.
             </p>
           </div>
         </div>
