@@ -447,9 +447,7 @@ export default function LandingPage() {
             Built for Solana Frontier 2026 · Open source
           </div>
 
-          {/* 🌱 renders consistently across Windows / macOS / iOS / Android.
-              The plant pot 🪴 was missing on older Windows fonts. */}
-          <div className="text-7xl mb-5 animate-float" aria-hidden="true">🌱</div>
+          <div className="text-7xl mb-5 animate-float" aria-hidden="true">🪴</div>
 
           <h1 className="text-5xl sm:text-6xl font-black text-white leading-tight mb-4">
             A vault for{' '}
@@ -486,7 +484,7 @@ export default function LandingPage() {
               href="/vaults"
               className="btn-secondary text-base px-6 py-3 flex items-center gap-2"
             >
-              🌱 Explore live vault
+              🪴 Explore live vault
             </Link>
           </div>
 
