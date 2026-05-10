@@ -27,6 +27,7 @@ import CreateProposalModal from '@/components/pot/CreateProposalModal'
 import { PublicKey } from '@solana/web3.js'
 import { useHumanText } from '@/hooks/useHumanText'
 import { SolPrice } from '@/components/SolPrice'
+import { isLikelyBase58Pubkey, tryPublicKey } from '@/lib/solana-validation'
 
 // Heavy panels that only render in their own tab or behind a <details>
 // disclosure. Defer their JS + initial fetches until the user actually
@@ -386,21 +387,31 @@ export default function PotPage() {
 
   const pubkey = params.pubkey as string
 
+  // Pre-validate the route pubkey. `new PublicKey()` can stack-
+  // overflow for some near-base58 strings (the decoder doesn't bound
+  // its recursion), and the crash isn't catchable inline. Filter via
+  // a length+charset regex first, then run the constructor inside a
+  // try/catch for the remaining edge cases.
+  const validRoutePubkey = isLikelyBase58Pubkey(pubkey) ? pubkey : null
+
   // Vault PDA — feeds VaultPortfolio (Dune SIM real-time data)
   const vaultPda = useMemo(() => {
+    if (!validRoutePubkey) return ''
+    const potPk = tryPublicKey(validRoutePubkey)
+    if (!potPk) return ''
     try {
       const programId = new PublicKey(
         process.env.NEXT_PUBLIC_PROGRAM_ID ?? 'GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK'
       )
       const [pda] = PublicKey.findProgramAddressSync(
-        [Buffer.from('vault'), new PublicKey(pubkey).toBuffer()],
+        [Buffer.from('vault'), potPk.toBuffer()],
         programId
       )
       return pda.toBase58()
     } catch {
       return ''
     }
-  }, [pubkey])
+  }, [validRoutePubkey])
 
   // (Referral tracking removed — `referrals` table isn't provisioned. Will
   //  be re-added when the protocol-economics phase ships its own table.)
@@ -873,7 +884,7 @@ export default function PotPage() {
             <TamagotchiBlock stats={tamaStats} />
 
             <PremiumFeatures
-              potPubkey={new PublicKey(pubkey)}
+              potPubkey={tryPublicKey(pubkey) ?? new PublicKey('11111111111111111111111111111111')}
               potName={pot.name}
               tamagotchiLevel={Math.max(1, Math.min(5, Math.floor(tamaStats.hp / 20) + 1))}
               isTokenized={!!potAny.isTokenized}

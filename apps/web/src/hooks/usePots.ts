@@ -21,6 +21,7 @@ import { useMockStore } from '@/lib/mock-store'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
 import { usePrivyAnchorWallet } from '@/hooks/usePrivyAnchorWallet'
+import { isLikelyBase58Pubkey, isValidPublicKey, tryPublicKey } from '@/lib/solana-validation'
 
 const TAMA_EMOJIS = ['🦚','🐓','🐔','🦅','🐉','👑']
 
@@ -317,8 +318,14 @@ export function usePot(pubkey?: string) {
       if (!pubkey) return null
 
       if (isLive && program) {
-        try {
-          const pk = new PublicKey(pubkey)
+        // Pre-filter: `new PublicKey()` can stack-overflow inside the
+        // base58 decoder for some 43–44 char near-valid strings (and
+        // that overflow is not catchable here). Bail before we touch
+        // the constructor so the page falls back to mock store.
+        const pk = tryPublicKey(pubkey)
+        if (!pk) {
+          // fall through to the mock-store branch below
+        } else try {
           const d: any = await withTimeout(
             (program.account as any).potAccount.fetch(pk),
             8_000,
@@ -389,7 +396,7 @@ export function usePot(pubkey?: string) {
         authority: p.pubkey,
       }
     },
-    enabled: !!pubkey,
+    enabled: !!pubkey && isLikelyBase58Pubkey(pubkey),
     // Pot state changes infrequently — only on deposit / withdraw / new
     // proposal. 30s avoids re-running 2 RPCs every time the user
     // navigates between tabs of the same pot.
@@ -421,8 +428,8 @@ export function useMembers(potPubkey?: string) {
       if (!potPubkey) return []
 
       if (isLive && program) {
-        try {
-          const potPk = new PublicKey(potPubkey)
+        const potPk = tryPublicKey(potPubkey)
+        if (potPk) try {
           const potAcc: any = await withTimeout(
             (program.account as any).potAccount.fetch(potPk),
             8_000,
@@ -464,7 +471,7 @@ export function useMembers(potPubkey?: string) {
         pnl: m.withdrawTotal - m.depositTotal,
       }))
     },
-    enabled: !!potPubkey,
+    enabled: !!potPubkey && isLikelyBase58Pubkey(potPubkey),
     // Members list refreshes only on deposit/withdraw — 30s is plenty
     // and saves a getProgramAccounts scan per page-nav.
     staleTime: 30_000,
@@ -484,7 +491,7 @@ export function useProposals(potPubkey?: string) {
     queryFn: async () => {
       if (!potPubkey) return []
 
-      if (isLive && program) {
+      if (isLive && program && isValidPublicKey(potPubkey)) {
         try {
           const accounts: any[] = await withTimeout(
             (program.account as any).proposalAccount.all([
@@ -529,7 +536,7 @@ export function useProposals(potPubkey?: string) {
         })
         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     },
-    enabled: !!potPubkey,
+    enabled: !!potPubkey && isLikelyBase58Pubkey(potPubkey),
     // Proposals are the most-changing data on the pot page (votes flip
     // tallies in real time). Keep relatively fresh but stop refetching
     // 3× per page nav — 15s is the new sweet spot.
