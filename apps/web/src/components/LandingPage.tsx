@@ -463,9 +463,14 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-3xl mx-auto mb-10 text-left">
             <div className="bg-pot-card/60 border border-pot-green/25 rounded-2xl p-5">
-              <div className="flex items-baseline gap-2 mb-2">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
                 <span className="text-2xl font-black text-pot-green">POT</span>
-                <span className="text-xs text-pot-muted uppercase tracking-wider">the container</span>
+                <span className="text-sm font-semibold text-white">
+                  Programmable On-chain Treasury
+                </span>
+              </div>
+              <div className="text-xs text-pot-muted uppercase tracking-wider mb-2">
+                the container
               </div>
               <p className="text-sm text-pot-muted leading-snug">
                 A program-controlled vault on Solana. Drop in SOL, USDC, LSTs,
@@ -474,9 +479,14 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="bg-pot-card/60 border border-pot-accent/25 rounded-2xl p-5">
-              <div className="flex items-baseline gap-2 mb-2">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
                 <span className="text-2xl font-black text-pot-accent">BOT</span>
-                <span className="text-xs text-pot-muted uppercase tracking-wider">the AI agent</span>
+                <span className="text-sm font-semibold text-white">
+                  Blockchain Orchestration Tool
+                </span>
+              </div>
+              <div className="text-xs text-pot-muted uppercase tracking-wider mb-2">
+                the AI agent
               </div>
               <p className="text-sm text-pot-muted leading-snug">
                 Suggests trades, posts proposals, executes once the vote
@@ -537,14 +547,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Mission statement — bigger, no badge framing, no emoji.
-           Sets the why before the what (Two pot modes + steps below). ── */}
+      {/* ── Mission statement — readable: white kicker, large body, no
+           italics, no decorative chrome. ── */}
       <section className="bg-gradient-to-br from-pot-green/10 via-pot-card to-pot-accent/10 border-y border-pot-border py-20 px-4">
         <div className="max-w-5xl mx-auto text-center">
-          <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-pot-muted mb-6">
+          <div className="text-xs font-bold uppercase tracking-[0.3em] text-pot-green mb-8">
             Our mission
           </div>
-          <p className="text-3xl sm:text-5xl font-black text-white leading-tight">
+          <p className="text-2xl sm:text-4xl md:text-5xl font-bold text-white leading-[1.25]">
             Unite <span className="text-pot-green">people</span> and{' '}
             <span className="text-pot-green">capital</span> across every direction
             Solana offers,
@@ -561,18 +571,14 @@ export default function LandingPage() {
            the mission, before the step-by-step protocol mechanics. ── */}
       <section className="bg-gradient-to-br from-pot-card via-pot-dark to-pot-card border-b border-pot-border py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 bg-pot-card border border-pot-border rounded-full px-4 py-1.5 text-xs text-pot-muted mb-4">
-              ⚖️ Two pot modes
+          <div className="text-center mb-10 max-w-4xl mx-auto">
+            <div className="text-xs font-bold uppercase tracking-[0.3em] text-pot-green mb-6">
+              Two pot modes
             </div>
-            <h2 className="text-3xl font-black text-white mb-3">
-              Social-Fi or Privacy. Pick per pot.
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white leading-[1.25] mb-4">
+              Social-Fi or Privacy.{' '}
+              <span className="text-pot-green">Pick per pot.</span>
             </h2>
-            <p className="text-pot-muted max-w-xl mx-auto">
-              Public pots compete on the leaderboard, share strategies, earn referrals.
-              Private pots wrap deposits in PrivacyCash ZK proofs so the wallet
-              to share link stays hidden. Same on-chain governance either way.
-            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -602,8 +608,9 @@ export default function LandingPage() {
                 Public POT
               </div>
               <p className="text-sm text-pot-muted leading-relaxed mb-4">
-                Open vault. Share strategy, earn referrals, compete on the leaderboard.
-                Community-powered alpha. Anyone can deposit, anyone can vote.
+                Open to anyone. Real members, real deposits, visible on the
+                leaderboard. The proof that people actually use it is the
+                thing that pulls more in.
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {['🏆 Leaderboard', '⚔️ Duels', '🔗 Referrals', '📊 Strategy Share', '👥 Community'].map((f) => (
@@ -644,9 +651,9 @@ export default function LandingPage() {
                 Private POT (STAMPPOT)
               </div>
               <p className="text-sm text-pot-muted leading-relaxed mb-4">
-                Deposits wrapped in PrivacyCash ZK proofs. Members prove shares
-                ownership without exposing their wallet. Governance and swaps still
-                settle on-chain publicly. Only the wallet to share link is hidden.
+                For groups that want their strategy to stay theirs. Deposits
+                and members are hidden behind ZK proofs, so the alpha
+                doesn't leak the moment you open the pot.
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {['🔐 ZK proofs', '🚫 No wallet doxxing', '🤝 Invite-only', '🛡 PrivacyCash', '📜 Auditor view'].map((f) => (
@@ -668,12 +675,9 @@ export default function LandingPage() {
       <section className="bg-pot-card border-y border-pot-border py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-10">
-            <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-pot-muted mb-3">
+            <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-pot-muted">
               How it works
             </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-white">
-              Four steps. All on-chain.
-            </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
