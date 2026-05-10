@@ -25,6 +25,8 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import SwapExecuteButton from '@/components/SwapExecuteButton'
 import CreateProposalModal from '@/components/pot/CreateProposalModal'
 import { PublicKey } from '@solana/web3.js'
+import { useHumanText } from '@/hooks/useHumanText'
+import { SolPrice } from '@/components/SolPrice'
 
 // Heavy panels that only render in their own tab or behind a <details>
 // disclosure. Defer their JS + initial fetches until the user actually
@@ -57,11 +59,20 @@ const WalletMultiButtonDynamic = dynamic(
 const TABS = ['proposal', 'community', 'ai', 'features'] as const
 type Tab = (typeof TABS)[number]
 
-const TAB_LABELS: Record<Tab, string> = {
-  proposal:  '🗳️ Proposal',
-  community: '👥 Community',
-  ai:        '🤖 AI',
-  features:  '🌟 Features',
+// Tab label *prefixes* — the user-facing word is translated at render
+// time via useHumanText so light (Normie) mode swaps DeFi terminology
+// to plain English (Proposal → Trade idea, etc.).
+const TAB_EMOJIS: Record<Tab, string> = {
+  proposal:  '🗳️',
+  community: '👥',
+  ai:        '🤖',
+  features:  '🌟',
+}
+const TAB_TERMS: Record<Tab, string> = {
+  proposal:  'Proposal',
+  community: 'Community',
+  ai:        'AI Agent',
+  features:  'Features',
 }
 
 /* Cluster — use NEXT_PUBLIC_SOLANA_CLUSTER if present, else default to devnet */
@@ -320,6 +331,7 @@ const YIELD_LABEL: Record<number, string> = {
 }
 
 function PotContextCard({ pot, yieldStrategy }: { pot: any; yieldStrategy: number }) {
+  const t = useHumanText()
   const totalValue = (pot.balance ?? 0) + (pot.meteoraLpBalance ?? 0)
   const yieldEarned = pot.totalYieldEarned ?? 0
   const navBps = pot.navPerShareBps ?? 10000
@@ -331,7 +343,7 @@ function PotContextCard({ pot, yieldStrategy }: { pot: any; yieldStrategy: numbe
     <div className="bg-pot-card/60 border border-pot-border rounded-2xl p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="space-y-1 min-w-0">
-          <div className="text-[10px] uppercase tracking-wider text-pot-muted font-bold">Strategy</div>
+          <div className="text-[10px] uppercase tracking-wider text-pot-muted font-bold">{t('Strategy')}</div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm text-white font-semibold">⚙️ {stratLabel}</span>
           </div>
@@ -341,17 +353,21 @@ function PotContextCard({ pot, yieldStrategy }: { pot: any; yieldStrategy: numbe
         </div>
         <div className="flex items-center gap-3 shrink-0 flex-wrap">
           <div className="text-center">
-            <div className="text-[9px] uppercase tracking-wide text-pot-muted">Total value</div>
-            <div className="text-base font-bold text-pot-green tabular-nums">{totalValue.toFixed(2)} ◎</div>
+            <div className="text-[9px] uppercase tracking-wide text-pot-muted">{t('TVL')}</div>
+            <div className="text-base font-bold text-pot-green tabular-nums">
+              <SolPrice sol={totalValue} compact />
+            </div>
           </div>
           {yieldEarned > 0 && (
             <div className="text-center">
-              <div className="text-[9px] uppercase tracking-wide text-pot-muted">Yield earned</div>
-              <div className="text-base font-bold text-pot-green tabular-nums">+{yieldEarned.toFixed(3)} ◎</div>
+              <div className="text-[9px] uppercase tracking-wide text-pot-muted">{t('Yield')}</div>
+              <div className="text-base font-bold text-pot-green tabular-nums">
+                <SolPrice sol={yieldEarned} compact />
+              </div>
             </div>
           )}
           <div className="text-center">
-            <div className="text-[9px] uppercase tracking-wide text-pot-muted">NAV/share</div>
+            <div className="text-[9px] uppercase tracking-wide text-pot-muted">{t('NAV')}/share</div>
             <div className={`text-base font-bold tabular-nums ${isPositive ? 'text-pot-green' : 'text-red-400'}`}>
               {isPositive ? '+' : ''}{navDisplay}%
             </div>
@@ -363,6 +379,7 @@ function PotContextCard({ pot, yieldStrategy }: { pot: any; yieldStrategy: numbe
 }
 
 export default function PotPage() {
+  const t = useHumanText()
   const params = useParams()
   const searchParams = useSearchParams()
   const { publicKey: userPubkey } = useWallet()
@@ -544,7 +561,7 @@ export default function PotPage() {
                   : 'text-pot-muted hover:text-white border-b-2 border-transparent'
               }`}
             >
-              {TAB_LABELS[tab]}
+              {TAB_EMOJIS[tab]} {t(TAB_TERMS[tab])}
             </button>
           ))}
         </div>
@@ -578,7 +595,7 @@ export default function PotPage() {
             {/* ── Deposit / Withdraw ── primary action */}
             <section id="deposit-section" className="space-y-3">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-white">💰 Deposit / Withdraw</h2>
+                <h2 className="text-lg font-bold text-white">💰 {t('Deposit')} / {t('Withdraw')}</h2>
                 <StatusBadge tier="live" compact />
               </div>
               <WalletGate
@@ -595,7 +612,7 @@ export default function PotPage() {
               <div className="lg:col-span-2 space-y-3">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold text-white">🗳️ Proposals</h2>
+                    <h2 className="text-lg font-bold text-white">🗳️ {t('Proposals')}</h2>
                     {activeProposalsCount > 0 && (
                       <span className="px-2 py-0.5 rounded-full bg-pot-accent/20 text-pot-accent text-[11px] font-bold animate-pulse">
                         {activeProposalsCount} active
@@ -733,7 +750,7 @@ export default function PotPage() {
             {canManage && (
               <details className="bg-pot-card/40 border border-pot-border rounded-2xl">
                 <summary className="cursor-pointer px-5 py-4 text-sm text-white font-semibold flex items-center justify-between">
-                  <span>📊 Your holdings &amp; portfolio</span>
+                  <span>📊 {t('Shares')} &amp; portfolio</span>
                   <span className="text-pot-muted text-xs">expand ▾</span>
                 </summary>
                 <div className="px-5 pb-5 space-y-4">
@@ -781,7 +798,7 @@ export default function PotPage() {
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold text-white">👥 Members</h2>
+                  <h2 className="text-lg font-bold text-white">👥 {t('Members')}</h2>
                   <span className="text-xs text-pot-muted">
                     {members.length} member{members.length === 1 ? '' : 's'}
                   </span>
@@ -798,7 +815,7 @@ export default function PotPage() {
 
             <section className="space-y-3">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-white">🏛️ Governance</h2>
+                <h2 className="text-lg font-bold text-white">🏛️ {t('Governance')}</h2>
                 {isLive && <StatusBadge tier="live" compact />}
               </div>
               <SquadsBanner potPubkey={pubkey} />

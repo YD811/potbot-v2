@@ -23,6 +23,10 @@ const config = {
       // Stub it to false so webpack doesn't emit a "Module not found"
       // warning during the production build.
       'pino-pretty': false,
+      // @privy-io/react-auth has an optional dynamic import for the
+      // Farcaster mini-app integration. We don't ship that surface, so
+      // stub it out to keep webpack from failing the build.
+      '@farcaster/mini-app-solana': false,
     }
     config.resolve.fallback = {
       ...config.resolve.fallback,

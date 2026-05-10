@@ -58,14 +58,19 @@ export const viewport: Viewport = {
   ],
 }
 
+// Inline boot script — runs before React hydrates so the page never
+// flashes the wrong theme. Reads the new `potbot-theme` key first, then
+// falls back to the legacy `pot-theme` key (so existing users keep their
+// preference), then to OS preference, then to dark.
 const THEME_BOOTSTRAP = `
 (function(){
   try {
-    var stored = localStorage.getItem('pot-theme');
+    var stored = localStorage.getItem('potbot-theme') || localStorage.getItem('pot-theme');
     var theme = stored === 'light' || stored === 'dark'
       ? stored
       : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
     document.documentElement.setAttribute('data-theme', theme);
+    if (theme === 'light') document.documentElement.classList.add('light-theme');
   } catch (e) {
     document.documentElement.setAttribute('data-theme', 'dark');
   }

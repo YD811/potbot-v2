@@ -109,28 +109,55 @@
   --c-surface-shadow: rgba(0, 0, 0, 0.45);
 }
 
-html[data-theme="light"] {
+html[data-theme="light"],
+html.light-theme {
   color-scheme: light;
-  --pot-ink: #0d1117;
-  /* point 8: bumped grey → near-black for WCAG-AA readability against white card bg */
+  /* Normie-mode palette: pure white bg, #111827 ink, #16A34A green,
+     #6D28D9 violet. Aimed at non-crypto users — flat, calm, banking. */
+  --pot-ink: #111827;
   --pot-ink-muted: #1f2937;
   --pot-ink-subtle: #374151;
-  --pot-bg: #f5f7fa;
-  --pot-bg-2: #ffffff;
+  --pot-bg: #ffffff;
+  --pot-bg-2: #f9fafb;
   --pot-border: #e5e7eb;
   --pot-border-strong: #d1d5db;
   /* Inline-style palette flips to light */
-  --c-bg: #f5f7fa;
+  --c-bg: #ffffff;
   --c-card: #ffffff;
   --c-card-2: #f9fafb;
   --c-border: #e5e7eb;
   --c-border-2: #d1d5db;
-  --c-text: #0d1117;
+  --c-text: #111827;
   --c-text-soft: #1f2937;
-  --c-muted: #1f2937;
-  --c-brand-green: #067a46;
+  --c-muted: #374151;
+  --c-brand-green: #16a34a;
   --c-brand-accent: #6d28d9;
-  --c-surface-shadow: rgba(15, 23, 42, 0.12);
+  --c-surface-shadow: rgba(15, 23, 42, 0.08);
+}
+
+/* Normie mode: kill every neon glow shadow Tailwind shorthand we ship.
+   The glows are a Web3-aesthetic that reads as wrong on a white surface. */
+html.light-theme .glow-green,
+html[data-theme="light"] .glow-green {
+  box-shadow: none !important;
+}
+html.light-theme [class*="shadow-[0_0_"],
+html[data-theme="light"] [class*="shadow-[0_0_"] {
+  box-shadow: none !important;
+}
+
+/* Brand green pill becomes WCAG-friendly emerald (#16A34A) on light bg */
+html.light-theme .bg-pot-green,
+html[data-theme="light"] .bg-pot-green {
+  background-color: #16a34a !important;
+}
+html.light-theme .text-pot-green,
+html[data-theme="light"] .text-pot-green {
+  color: #15803d !important;
+}
+html.light-theme .border-pot-green\/30,
+html[data-theme="light"] .border-pot-green\/30 {
+  border-color: rgba(22, 163, 74, 0.4) !important;
 }
 
 /* ── Body & scrollbar ── */

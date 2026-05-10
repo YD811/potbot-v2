@@ -10,6 +10,8 @@ import { reverseSNS } from '@/lib/sns'
 import { SeasonPrizeCard } from '@/components/SeasonPrizeCard'
 import { calculatePlantStats, plantInputFromMockPot } from '@/lib/tamagotchi/plant'
 import { seasonScoreFromMockPot, fmtSeasonScore } from '@/lib/season-score'
+import { useHumanText } from '@/hooks/useHumanText'
+import { SolPrice } from '@/components/SolPrice'
 
 type SortKey = 'tvl' | 'pnl' | 'apy' | 'trades' | 'members' | 'season'
 
@@ -76,6 +78,7 @@ function plantEmoji(pot: any, rank: number): string {
 }
 
 export default function LeaderboardPage() {
+  const t = useHumanText()
   const { data: pots = [], isLoading } = usePots()
   const { price: solUsd } = useSolPrice()
   const [sortBy, setSortBy] = useState<SortKey>('season')
@@ -246,9 +249,9 @@ export default function LeaderboardPage() {
 
       {/* Table header (desktop) */}
       <div className="hidden sm:grid grid-cols-[3rem_1fr_7rem_5rem_5rem_4rem_5rem_4rem] gap-2 px-4 py-2 text-[10px] font-medium text-pot-muted uppercase tracking-wider">
-        <div>#</div><div>Vault</div>
-        <div className="text-right">TVL</div>
-        <div className="text-right">PnL</div>
+        <div>#</div><div>{t('Vault')}</div>
+        <div className="text-right">{t('TVL')}</div>
+        <div className="text-right">{t('PnL')}</div>
         <div className="text-right">APY 30d</div>
         <div className="text-right">Trades</div>
         <div className="text-right">🌱 Score</div>
@@ -319,9 +322,8 @@ export default function LeaderboardPage() {
                   {/* TVL */}
                   <div>
                     <div className={`text-sm font-bold ${isTop3 ? 'text-pot-green' : 'text-white'}`}>
-                      {solUsd && pot.navUsd > 0 ? fmtUsd(pot.navUsd) : `${pot.balance.toFixed(2)} SOL`}
+                      <SolPrice sol={pot.balance ?? 0} compact />
                     </div>
-                    {solUsd && pot.navUsd > 0 && <div className="text-[10px] text-pot-muted">{pot.balance.toFixed(2)} SOL</div>}
                   </div>
                   {/* PnL */}
                   <div>

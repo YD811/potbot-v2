@@ -3,19 +3,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useQuery } from '@tanstack/react-query'
 import { useSolPrice } from '@/lib/prices'
 import { healthApi } from '@/lib/api-client'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { ConnectButton } from '@/components/ConnectButton'
 import { SeasonPrizePoolModal } from '@/components/SeasonPrizePoolModal'
-
-const WalletMultiButtonDynamic = dynamic(
-  async () =>
-    (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  { ssr: false }
-)
 
 function LivePriceTicker() {
   const { price: solPrice } = useSolPrice()
@@ -129,10 +123,9 @@ export function Navbar() {
             </Link>
           )}
 
-          {/* Wallet adapter button already shows the truncated address —
-              the second pubkey pill was redundant and forced the navbar
-              to wrap on medium widths. */}
-          <WalletMultiButtonDynamic />
+          {/* Wallet button — switches between Privy (light/Normie) and
+              wallet-adapter (dark/Crypto) via ConnectButton. */}
+          <ConnectButton />
           <button onClick={() => setMenuOpen((v) => !v)}
             className="sm:hidden ml-1 p-2 rounded-lg text-pot-muted hover:text-white hover:bg-pot-card transition" aria-label="Toggle menu">
             {menuOpen ? (

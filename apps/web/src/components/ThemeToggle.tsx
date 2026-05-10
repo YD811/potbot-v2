@@ -1,51 +1,44 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-
-type Theme = 'dark' | 'light'
+import { useTheme } from '@/contexts/ThemeContext'
 
 /**
- * Theme pill slider (58×30). Matches the v3 landing prototype.
- * The knob carries the current-mode emoji (🌙 dark, ☀️ light) — no background
- * emojis to avoid overlap when the knob slides.
- * Stores choice in localStorage under `pot-theme`, falls back to prefers-color-scheme.
- * Applies `data-theme` attribute on <html>.
+ * Top-navbar theme switch. Click to flip the entire app between
+ *   - 🌑 Crypto mode (dark, default — full DeFi terminology)
+ *   - ☀️ Normie mode (light theme + plain-English labels + USD-first prices)
+ *
+ * The button shows the *current* mode. Theme is persisted to localStorage
+ * via ThemeContext.
  */
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>('dark')
+  const { isLight, toggleTheme } = useTheme()
+  // Avoid mismatched-server/client text by deferring the label until after
+  // hydration. The button still works on first paint.
   const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
-  useEffect(() => {
-    const current = (document.documentElement.getAttribute('data-theme') as Theme) || 'dark'
-    setTheme(current)
-    setMounted(true)
-  }, [])
-
-  function toggle() {
-    const next: Theme = theme === 'dark' ? 'light' : 'dark'
-    setTheme(next)
-    document.documentElement.setAttribute('data-theme', next)
-    try {
-      localStorage.setItem('pot-theme', next)
-    } catch {}
-  }
+  const label = !mounted
+    ? '🌑 Crypto mode'
+    : isLight
+      ? '☀️ Normie mode'
+      : '🌑 Crypto mode'
 
   return (
     <button
       type="button"
-      onClick={toggle}
-      aria-label="Toggle theme"
-      title={mounted ? `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode` : 'Toggle theme'}
-      className="theme-slider relative h-[30px] w-[58px] shrink-0 rounded-full border border-pot-border bg-pot-card transition hover:border-pot-green"
+      onClick={toggleTheme}
+      aria-pressed={isLight}
+      aria-label={mounted && isLight ? 'Switch to Crypto mode (dark theme)' : 'Switch to Normie mode (light theme)'}
+      title={mounted && isLight ? 'Switch to Crypto mode' : 'Switch to Normie mode'}
+      className={
+        'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ' +
+        (isLight
+          ? 'border-pot-border bg-white text-gray-900 hover:border-pot-green'
+          : 'border-pot-border bg-pot-card text-white hover:border-pot-green')
+      }
     >
-      <span
-        className={`theme-slider-knob absolute top-[2px] flex h-[24px] w-[24px] items-center justify-center rounded-full text-[13px] leading-none shadow-[0_2px_8px_rgba(20,241,149,0.35)] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          theme === 'light' ? 'left-[calc(100%-26px)]' : 'left-[2px]'
-        }`}
-        style={{ background: 'linear-gradient(135deg,#14F195 0%,#9945FF 100%)' }}
-      >
-        {theme === 'dark' ? '🌙' : '☀️'}
-      </span>
+      {label}
     </button>
   )
 }

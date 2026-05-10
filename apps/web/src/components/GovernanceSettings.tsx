@@ -7,6 +7,7 @@ import { withTxToast } from '@/components/TxToast'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 import { buildSquadsTransactionUrl, getMultisigForCreator, isSquadsVault, proposeViaSquads } from '@/lib/squads'
+import { useHumanText } from '@/hooks/useHumanText'
 
 /* ── Types ── */
 
@@ -95,6 +96,7 @@ interface Props {
 }
 
 export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
+  const t = useHumanText()
   const { connection } = useConnection()
   const wallet = useWallet()
   const [settings, setSettingsState] = useState<GovSettings>(DEFAULT_SETTINGS)
@@ -213,7 +215,7 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
         <div className="flex items-center gap-3 mb-1">
           <span className="text-2xl">🏛️</span>
           <div>
-            <h2 className="text-lg font-bold text-white">Governance Settings</h2>
+            <h2 className="text-lg font-bold text-white">{t('Governance Settings')}</h2>
             <p className="text-xs text-pot-muted">
               {isAdmin
                 ? 'Configure voting rules and risk limits for this pot'
@@ -225,7 +227,7 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
         {/* Current snapshot */}
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="bg-pot-dark rounded-xl p-3">
-            <div className="text-[10px] text-pot-muted mb-1">Quorum</div>
+            <div className="text-[10px] text-pot-muted mb-1">{t('Quorum')}</div>
             <div className="text-lg font-bold text-white">{settings.quorumPct}%</div>
             <div className="text-[10px] text-pot-muted">of shares must vote</div>
           </div>
@@ -347,7 +349,7 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
             </div>
           </div>
           <div className="bg-pot-card border border-pot-border rounded-2xl p-5 space-y-5">
-            <h3 className="text-sm font-semibold text-white">Proposal Limits</h3>
+            <h3 className="text-sm font-semibold text-white">{t('Proposal')} Limits</h3>
             <Slider
               label="Max Single Swap"
               hint="of vault balance per proposal"
