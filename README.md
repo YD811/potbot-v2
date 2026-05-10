@@ -41,6 +41,10 @@ POTBOT is a Solana-native protocol for tokenized internet communities. Any group
 
 The vault is a Solana program account from day one — no custodian, no operator, no shared seed phrase. Every move is signed onchain.
 
+**Two front doors:**
+- **Crypto mode** — Phantom or Solflare via `@solana/wallet-adapter`, full DeFi terminology
+- **Normie mode** — sign in with email, Google, Twitter or LinkedIn (Privy-backed embedded Solana wallet); plain-English copy, USD-first prices. No Phantom required
+
 ---
 
 ## What is a POT
@@ -122,6 +126,9 @@ git clone https://github.com/YD811/potbot-v2.git
 cd potbot-v2
 npm install
 
+# Copy env template and fill in your own keys
+cp .env.example apps/web/.env.local
+
 # Run the DApp locally
 cd apps/web && npx next dev   # → http://localhost:3000
 
@@ -129,7 +136,7 @@ cd apps/web && npx next dev   # → http://localhost:3000
 npx @potbot/mcp
 ```
 
-Full local-dev setup (Anchor, devnet deploy, env vars): [`docs/operations/development.md`](docs/operations/development.md).
+Set `NEXT_PUBLIC_PRIVY_APP_ID` to enable email / Google / Twitter / LinkedIn login (Normie mode). Without it the app still boots — Crypto-mode Phantom flow always works. Full local-dev setup (Anchor, devnet deploy, all env vars): [`docs/operations/development.md`](docs/operations/development.md).
 
 ---
 
@@ -145,6 +152,9 @@ Full local-dev setup (Anchor, devnet deploy, env vars): [`docs/operations/develo
 | Helius RPC + webhook indexer | 🟡 Devnet live |
 | BOT — AI orchestration (proposal generation, execution) | 🟡 Devnet live |
 | PWA (Saga / Seeker installable) | 🟢 Live |
+| Normie mode — Privy email / Google / Twitter / LinkedIn + Solana embedded wallet | 🟢 Live |
+| Light theme + plain-English copy + USD-first prices | 🟢 Live |
+| Account dashboard (profile · live SOL balance · Add SOL airdrop · Quick Trade) | 🟢 Live |
 | Mainnet deploy | 🔵 Post security pass |
 | STAMPPOT privacy mode | 🟣 Phase 3 |
 
