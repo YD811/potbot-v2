@@ -19,16 +19,22 @@ export function PrivyClientProvider({ children }: { children: ReactNode }) {
     <PrivyProvider
       appId={APP_ID}
       config={{
-        // Normie-mode login surface: email + Google + injected wallet.
-        loginMethods: ['email', 'google', 'wallet'],
+        // Normie-mode login surface: email + Google + Twitter + LinkedIn,
+        // plus injected wallet for users who already have Phantom.
+        loginMethods: ['email', 'google', 'twitter', 'linkedin', 'wallet'],
         appearance: {
           theme: 'light',
-          accentColor: '#16a34a',
+          accentColor: '#15803d',
           logo: 'https://potbot.fun/og-image.png',
+          // Hide Ethereum-themed UI surfaces in the login modal — we
+          // only operate on Solana.
+          walletChainType: 'solana-only',
         },
         embeddedWallets: {
-          ethereum: { createOnLogin: 'users-without-wallets' },
-          solana:   { createOnLogin: 'users-without-wallets' },
+          // Solana embedded wallet only. Drop the Ethereum block so a
+          // new user doesn't have an EVM address attached to their POT
+          // account that we'd never use.
+          solana: { createOnLogin: 'users-without-wallets' },
         },
       }}
     >

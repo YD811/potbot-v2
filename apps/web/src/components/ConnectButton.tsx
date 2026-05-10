@@ -32,7 +32,7 @@ export function ConnectButton() {
 
   if (wallet.isConnected) {
     const accentClass = isLight
-      ? 'border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
+      ? 'border-slate-300 bg-white text-gray-900 hover:bg-slate-50 shadow-sm'
       : 'border-pot-border bg-pot-card text-white hover:border-pot-green/60'
     return (
       <div className="relative">
@@ -62,7 +62,7 @@ export function ConnectButton() {
               className={
                 'absolute right-0 mt-2 z-50 w-60 rounded-xl border shadow-2xl p-2 ' +
                 (isLight
-                  ? 'border-gray-200 bg-white text-gray-900'
+                  ? 'border-slate-300 bg-white text-gray-900'
                   : 'border-pot-border bg-pot-card text-white')
               }
             >
