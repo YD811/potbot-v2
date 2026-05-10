@@ -1,346 +1,191 @@
-# 🪴 PotBot v2
+<div align="center">
 
-**Group Treasury. AI execution. Money tree that grows.**
+# POTBOT
 
-**POT** = on-chain group treasury · **BOT** = AI execution through MCP · **🪴** = your wealth expanding.
+### Tokenize any internet community.
 
-PotBot is a Solana protocol for groups who prefer on-chain votes over chat-based arguments. It combines group governance, AI automation, creator monetization, and DeFi yield into a single primitive — the *pot*.
+**POTBOT is AI-native infrastructure for programmable onchain treasuries on Solana.**
 
-Built for [Solana Frontier 2026](https://colosseum.com/frontier) · [@PotBot_sol](https://twitter.com/PotBot_sol) · [@CryptoYDao](https://twitter.com/CryptoYDao) · Y-DAO Amsterdam
+`POT` = Programmable On-chain Treasury  ·  `BOT` = Blockchain Orchestration Tool
+
+[potbot.fun](https://potbot.fun) · [@PotBot_sol](https://twitter.com/PotBot_sol) · [Solana Frontier 2026](https://colosseum.com/frontier)
 
 [![CI](https://github.com/YD811/potbot-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/YD811/potbot-v2/actions/workflows/ci.yml)
 [![Solana](https://img.shields.io/badge/Solana-devnet-9945FF?style=flat-square)](https://solana.com)
 [![Anchor](https://img.shields.io/badge/Anchor-0.30.1-blue?style=flat-square)](https://anchor-lang.com)
-[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square)](https://nextjs.org)
-[![MCP](https://img.shields.io/badge/MCP-native-14F195?style=flat-square)](https://github.com/YD811/potbot-v2/tree/main/apps/potbot-mcp)
+[![MCP](https://img.shields.io/badge/MCP-native-14F195?style=flat-square)](https://www.npmjs.com/package/@potbot/mcp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+
+</div>
 
 ---
 
-## Links 🏠
+## Manifesto
+
+> The internet already coordinates capital.
+>
+> Friends invest together.
+> Communities speculate together.
+> Creators build economies together.
+>
+> But the infrastructure is still primitive.
+>
+> POTBOT gives every internet community:
+> **programmable ownership · liquid coordination · AI-native execution · onchain governance.**
+
+---
+
+## What is POTBOT
+
+POTBOT is a Solana-native protocol for tokenized internet communities. Any group can launch a programmable treasury (a **POT**), pool capital, receive tokenized shares, coordinate on-chain governance, and delegate execution to an AI agent (the **BOT**).
+
+The vault is a Solana program account from day one — no custodian, no operator, no shared seed phrase. Every move is signed onchain.
+
+---
+
+## What is a POT
+
+A POT is a program-controlled treasury on Solana. Members deposit SOL, USDC, LSTs, LP positions or any tokenized asset, and receive proportional shares (NAV-priced). Every change to the treasury — swap, withdrawal, settings update — is a proposal that members vote on. The vault PDA signs the execution.
+
+- **Programmable ownership** — SPL-tokenized shares, redeemable any time
+- **Onchain governance** — autocracy → advisory → majority → supermajority → consensus, plus optional risk caps
+- **AI orchestration** — the BOT proposes, executes once quorum is reached, and can be delegated to vote on rules you set
+- **Composable** — Jupiter v6 swaps, Squads v4 multisig authority, MCP for any AI agent, Solana Blinks for tweet-native deposits and votes
+- **Identity** — every POT can claim a `<name>.potbot.sol` SNS subdomain
+- **Optional privacy** — STAMPPOT mode wraps deposits in PrivacyCash ZK proofs
+
+---
+
+## What can a POT become?
 
 | | |
 |---|---|
-| 🌐 **DApp** | [potbot.fun](https://potbot.fun) |
-| 🔌 **MCP Server** | `apps/potbot-mcp` |
-| 📖 **Full Docs** | [docs/architecture/overview.md](docs/architecture/overview.md) |
-| 🤖 **Telegram** | separate v1 product |
-| 🌿 **SNS** | potbot.sol |
+| 🎨 **Creator Fund** | Fans co-own the next drop and split the upside. |
+| 🧠 **AI Vault** | An agent runs a strategy, the community sets the rules. |
+| 🚀 **Startup Syndicate** | Angel checks pooled, deployed, and tracked onchain. |
+| 🎟 **Event Treasury** | Conference floats, hackathon prizes, festival cash — transparent. |
+| 👥 **Friend Group ETF** | A shared basket your group actually agrees on. |
+| 🎲 **Meme Treasury** | Communities betting together, governed together. |
+| 💼 **Investment Club** | Quarterly proposals, monthly votes, zero spreadsheets. |
 
 ---
 
-## 🧑‍⚖️ For Judges — Try It in 60 Seconds
+## AI orchestration layer (BOT)
 
-**No wallet needed** — `potbot.fun` shows a live flagship pot in read-only mode at the top of `/vaults`.
+POTBOT is built for the coming agent economy. Every POT exposes a programmatic surface that an AI can read, propose against, and execute through.
 
-> Lifecycle legend used everywhere on this repo and the site:
-> 🟢 Live/verifiable · 🟡 Devnet · 🔵 Phase 2 Q3 2026 · 🟣 Phase 3 Q4 2026 · ⚪ Vision
-
-### Live now (devnet · Explorer-verifiable) 🟡
-
-- `pot_vault` Anchor program on devnet with 30+ instructions: deposit, propose, vote, `execute_swap` via Jupiter v6 CPI, withdraw.
-- Solana Blinks endpoints — `/api/actions/<potPubkey>/{deposit,vote}` — render as cards in Phantom / Backpack / X.
-- MCP server `@potbot/mcp@0.2.0` on npm — 18 tools, HTTP+SSE+stdio transports.
-- Squads v4 multisig path for the creator role on high-value pots.
-- Helius RPC + webhooks for realtime pot events.
-- PWA manifest installable on iOS / Android.
-
-### Try it
-
-```bash
-# 1. Open the live DApp
-open https://potbot.fun
-
-# 2. Connect to MCP server (Claude / any AI agent)
-npx @potbot/mcp
-
-# 3. Clone and run locally
-git clone https://github.com/YD811/potbot-v2.git
-cd potbot-v2 && npm install
-cd apps/web && npx next dev    # → http://localhost:3000
-```
-
-### Test MCP with Claude
-
-```
-list_vaults → get_vault_analytics → create_swap_proposal → vote_on_proposal
-```
-
-### Full roadmap with explicit status per feature
-
-→ [potbot.fun/roadmap](https://potbot.fun/roadmap) — every Live, Devnet, Phase 2, Phase 3, and Vision item, with chips.
+- **Proposal generation** — agent reads treasury state and live prices, then drafts the next move
+- **Automated execution** — once quorum is reached, the BOT submits the swap with the vault PDA as signer
+- **Governance coordination** — delegated votes, rule presets, weighted thresholds
+- **MCP-native** — Claude, Cursor, Cline can list, propose and vote on POTs over `npx @potbot/mcp`
+- **SDK + API** — TypeScript SDK and JSON RPC surface for any agent framework or backend
 
 ---
 
-## Quick Start
+## Architecture
+
+```
+                   ┌──────────────────────────────┐
+                   │     Internet community       │
+                   │  (humans · agents · creators)│
+                   └──────────────┬───────────────┘
+                                  │
+                       deposit · propose · vote
+                                  │
+                   ┌──────────────▼───────────────┐
+                   │      POTBOT DApp + MCP       │
+                   │   apps/web · apps/potbot-mcp │
+                   └──────────────┬───────────────┘
+                                  │
+                                  │ signed tx
+                                  │
+                   ┌──────────────▼───────────────┐
+                   │   pot_vault Anchor program   │
+                   │     (PDA-signed treasury)    │
+                   └──────┬───────────────┬───────┘
+                          │               │
+                  Jupiter v6 CPI    Squads v4 (opt.)
+                          │
+                   onchain settlement
+```
+
+Three layers: an Anchor program that owns the funds, a Next.js + MCP surface that any human or agent can drive, and Solana-native composability (Jupiter, Squads, Blinks, Helius, Pyth).
+
+Detailed system design: [`docs/architecture/architecture.md`](docs/architecture/architecture.md).
+
+---
+
+## Quick start
 
 ```bash
 git clone https://github.com/YD811/potbot-v2.git
 cd potbot-v2
 npm install
+
+# Run the DApp locally
 cd apps/web && npx next dev   # → http://localhost:3000
+
+# Or talk to the live MCP server from any AI client
+npx @potbot/mcp
 ```
 
-For full setup (Anchor, devnet deploy, API server): see [docs/operations/development.md](docs/operations/development.md)
+Full local-dev setup (Anchor, devnet deploy, env vars): [`docs/operations/development.md`](docs/operations/development.md).
 
 ---
 
-## What is PotBot?
+## Current status
 
-PotBot is infrastructure for group capital management on Solana — one primitive that works the same for a 3-friend investment club and a $100M family office.
+| Layer | Status |
+|---|---|
+| `pot_vault` Anchor program (deposit · propose · vote · execute_swap) | 🟡 Devnet live |
+| Jupiter v6 swap CPI (vault PDA signer) | 🟡 Devnet live |
+| MCP server `@potbot/mcp` on npm | 🟢 Live |
+| Solana Blinks (deposit + vote) | 🟡 Devnet live |
+| Squads v4 multisig authority (optional) | 🟡 Devnet live |
+| Helius RPC + webhook indexer | 🟡 Devnet live |
+| BOT — AI orchestration (proposal generation, execution) | 🟡 Devnet live |
+| PWA (Saga / Seeker installable) | 🟢 Live |
+| Mainnet deploy | 🔵 Post security pass |
+| STAMPPOT privacy mode | 🟣 Phase 3 |
 
-Governance, AI execution, best-of-breed DEX routing and DeFi yield, all inside a single programmable vault. Think on-chain copy-trading meets tokenized ETF meets Money Tree — configurable from autocratic solo vault up to timelocked institutional-grade treasury.
-
-### For different users
-
-| User | What PotBot does for them |
-|------|--------------------------| 
-| 👥 Group of friends | Trade together with shared governance — no one person holds the keys |
-| 👨‍💻 Trader | Create a Strategy Vault, monetize knowledge via entry/performance fees, no custody needed |
-| 📣 Influencer | Open a public vault, subscribers invest in your strategy, earn performance fees |
-| 🤖 AI Agent developer | Build autonomous trading agents via MCP server — 60+ on-chain actions |
-| 🏦 Investor | Browse Strategy Vaults, filter by PnL/APY/risk, join with one click |
-
----
-
-## What is a POT?
-
-A POT is a shared on-chain vault on Solana, governed by its members. Every SOL and SPL token lives in a program-owned PDA from day one — no custodian, no bot-held keys, no multisig operator. Only the PotBot program can move the funds, and only after a successful on-chain vote.
-
-- **Collective ownership** — deposit SOL/USDC, receive proportional shares (NAV-based, like an ETF)
-- **On-chain governance** — every trade, withdrawal or strategy change requires a vote (L0–L4 configurable)
-- **Personal AI Voters** — each member can delegate voting to their own AI agent, revocable and auditable on-chain
-- **AI Agent (BOT)** — set rules like "if SOL < $120, propose buying 10% more" — agent creates proposals, humans (or their personal voters) vote
-- **DeFi yield** — idle capital deployed via Kamino / Drift / MarginFi / JLP strategies
-- **Money Tree mascot** — evolves 🌱→🌿→🌳→🌺→🌸→🌴 through 6 stages based on AUM, members and trading volume
-- **SNS subdomain** — each POT gets `<name>.potbot.sol`
-- **Optional privacy (STAMPPOT)** — ZK proofs via PrivacyCash
+Every feature with its lifecycle chip: [potbot.fun/roadmap](https://potbot.fun/roadmap).
 
 ---
 
-## Strategy Vaults — Creator Economy
-
-Any trader, influencer, or AI agent can launch a Strategy Vault — a tokenized DeFi strategy open to external investors.
-
-1. Creator launches vault → sets entry/performance/management fees
-2. Investors buy in → receive Strategy Shares (SPL tokens, NAV-priced)
-3. AI Agent runs the strategy → proposes swaps based on rules
-4. Group votes → executes only if quorum reached
-5. Money Tree evolves → unlock perks (lower fees, Jupiter Limit Orders, NFT shares)
-
-### Fee model
-
-| Fee | Who gets it | Range |
-|-----|------------|-------|
-| Entry fee | 70% creator · 20% PotBot · 10% referrer | 0 – any |
-| Performance fee | Creator + PotBot (only on profit at exit) | 0–20% |
-| Management fee | Creator (annual on AUM) | 0–2% |
-| Protocol swap fee | PotBot | 0.30% (Money Tree-discounted) |
-
-**Referral system (on-chain, automatic)**
-- Level 1 referrer: 20% of entry fee at transaction time
-- Level 2 referrer: 5% of entry fee
-- No claiming needed — paid in the same transaction
-
----
-
-## AI Agent — Autonomous Proposals
-
-Every POT can have an AI Agent that monitors prices and creates governance proposals automatically.
-
-You set the rules:
-- `"If SOL drops below $120 → propose buying 10% more"`
-- `"Every Monday 9am → DCA 5% into $JUP"`
-- `"If portfolio PnL > +20% → propose taking 30% profit"`
-
-**AI suggests. Humans decide. Nothing executes without votes.**
-
-- Supported triggers: `price_above`, `price_below`, `time_interval` (cron), `balance_above`, `balance_below`, `pnl_above`, `pnl_below`
-- Supported actions: `propose_swap`, `propose_dca`, `propose_yield_deposit`, `vote_yes`, `alert`
-
----
-
-## MCP Server — AI-Native Infrastructure
-
-PotBot is MCP-native. Any AI agent (Claude, GPT, custom LLM) can interact with every vault via the PotBot MCP server.
-
-```typescript
-// Any AI agent can:
-await mcp.call('list_pots')                              // browse all public vaults
-await mcp.call('get_pot_analytics', { pubkey })          // PnL, NAV, APY, Sharpe
-await mcp.call('create_proposal', { pot, swap })         // propose a trade
-await mcp.call('vote_on_proposal', { proposal, approve: true })
-await mcp.call('get_yield_rates')                        // Kamino/Drift/JLP live APY
-await mcp.call('join_vault', { vault, referrer })        // enter a Strategy Vault
-```
-
-Built on [solana-agent-kit](https://github.com/sendaifun/solana-agent-kit) — extends 60+ native Solana actions with PotBot-specific vault management.
-
-Integrates **x402 micropayments** — agents pay per API call (0.001 USDC/request), enabling fully autonomous fee-based agent economies.
-
----
-
-## DeFi Integrations
-
-| Protocol | What we use it for |
-|----------|-------------------|
-| Jupiter v6 | All swaps (best route, min slippage), Limit Orders (Bud+), DCA (Bloom+) |
-| Kamino | Yield strategies (lending APY up to 15%), RWA-backed vaults |
-| Drift | Perps exposure + lending rates |
-| MarginFi | Lending/borrowing yield |
-| Metaplex Core | NFT Strategy Shares for Full Bloom+ vaults |
-| MagicBlock | Private USDC referral payouts (confidential transfers via MCP) |
-| Privy | Phase 2: embedded wallet — join vaults by email, no Phantom needed |
-| MoonPay | Fiat on-ramp on vault join page |
-| Pyth / Switchboard | Price oracle fallback |
-
----
-
-## Backend & Analytics
-
-The `apps/api` service provides real-time analytics powering all PnL/ROI/APY calculations:
-
-- **Price Oracle** → Jupiter Price API v2 (5-second polling, Redis cache)
-- **PnL Engine** → entry_price × current_price × shares → unrealized/realized PnL
-- **APY Engine** → annualized from 30d performance: `(1 + pnl_30d)^(365/30) - 1`
-- **Yield Aggreg.** → Kamino + Drift + JLP APY pulled every 15 minutes
-- **Agent Cron** → evaluates all AI rules every 60s, creates on-chain proposals
-- **Crank Service** → management fees, AUM snapshots, Money Tree evolution, NFT burns on death
-
-Per-vault metrics: NAV, PnL 24h/7d/30d/all-time, APY estimated, Sharpe ratio, max drawdown, win rate, total volume USD.
-
----
-
-## Monorepo Structure
+## Repository layout
 
 ```
 potbot-v2/
 ├── apps/
-│   ├── web/           # Next.js 14 DApp — main product
-│   ├── api/           # Hono.js backend API
-│   ├── potbot-mcp/    # MCP Server (solana-agent-kit based)
-│   ├── bot/           # Telegram bot (grammy)
-│   ├── keeper/        # Executor / crank service
-│   └── landing/       # Marketing landing page
+│   ├── web/              Next.js 14 DApp + API routes (production surface)
+│   └── potbot-mcp/       MCP server published as @potbot/mcp
 ├── packages/
-│   ├── program/       # Anchor programs (Rust)
-│   │   └── programs/
-│   │       ├── pot_vault/  # Core: vault, governance, strategy, referral
-│   │       └── pot_duel/   # 1v1 duel vaults (Bloom+ unlock)
-│   ├── sdk/           # TypeScript SDK
-│   └── ui/            # Shared React components
-└── docs/
-    ├── OVERVIEW.md
-    ├── ARCHITECTURE.md
-    ├── DEVELOPMENT.md
-    ├── PROGRAM.md
-    ├── GOVERNANCE.md
-    ├── MOCK_MODE.md
-    └── MCP.md
+│   ├── program/          Anchor programs (Rust) — pot_vault, pot_duel
+│   ├── sdk/              TypeScript SDK
+│   └── ui/               Shared React components
+├── docs/                 Architecture, operations, integrations, hackathon
+├── scripts/              Devnet utilities (demo pots, seeding)
+└── supabase/             Off-chain index migrations
 ```
-
----
-
-## On-chain Program — Instructions
-
-### Core Vault
-
-| Instruction | Description |
-|-------------|-------------|
-| `create_pot` | Create a group vault with governance settings |
-| `deposit` | Deposit SOL → receive proportional shares |
-| `withdraw` | Burn shares → receive proportional SOL |
-| `create_proposal` | Create governance proposal (swap/withdraw/settings) |
-| `vote` | Vote yes/no weighted by shares |
-| `execute_proposal` | Execute passed proposal |
-| `execute_swap` | Execute Jupiter swap from vault |
-| `update_tamagotchi` | Permissionless crank to evolve Money Tree |
-| `init_token_mint` | Initialize SPL mint for strategy shares |
-
-### Strategy Vault
-
-| Instruction | Description |
-|-------------|-------------|
-| `create_strategy_vault` | Create tokenized strategy vault with fee config |
-| `join_strategy_vault` | Join vault, pay entry fee, register referral |
-| `exit_strategy_vault` | Exit vault, pay performance fee on profit |
-| `evolve_tamagotchi` | Permissionless: evolve if thresholds met |
-
----
-
-## Current Status (April 2026)
-
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Anchor `pot_vault` core | ✅ Complete | All instructions written |
-| Strategy Vault on-chain | ✅ Complete | create/join/exit/evolve + referral |
-| TypeScript SDK | ✅ Complete | PDAs, IDL, client helpers |
-| Next.js DApp | ✅ Complete | Full UI — demo mode + on-chain |
-| `/vaults` discovery page | ✅ Complete | Live analytics, USD TVL, sort/filter |
-| `/vaults/create` wizard | ✅ Complete | 5-step wizard |
-| AI Agent UI + API sync | ✅ Complete | Rules engine, server sync, 24/7 cron |
-| Governance + proposals | ✅ Complete | Shares-weighted voting |
-| Leaderboard | ✅ Complete | USD TVL, PnL%, APY30d |
-| Backend API (`apps/api`) | ✅ Complete | Price oracle, PnL, analytics, agent cron |
-| MCP Server (`apps/potbot-mcp`) | ✅ Complete | 15+ tools, solana-agent-kit based |
-| Devnet deploy | ✅ Complete | Program live on devnet |
-| x402 micropayments | ✅ Complete | USDC gate on `/analytics/*` |
-| Pitch deck | ✅ Complete | 11 slides — Solana Frontier 2026 |
-| Jupiter swap CPI | 🔴 Blocker | Executor wallet needs funding + deploy |
-| E2E test on devnet | 🟡 Next | Script ready — needs live program |
-| Kamino/Drift yield (live) | 🟢 Planned | Post-hackathon |
-| pot_duel program | 🟢 Planned | 1v1 duels post-MVP |
-| Demo video | 🟢 Planned | May 6–8 |
-| **Hackathon submission** | 📅 May 11 | [colosseum.com/frontier](https://colosseum.com/frontier) |
-
----
-
-## Tech Stack
-
-| Layer | Tech |
-|-------|------|
-| Blockchain | Solana · Anchor 0.30.1 · SPL Token |
-| Smart Contracts | Rust · Anchor · CPI (Jupiter, SPL) |
-| Price Oracle | Jupiter Price API v2 · Pyth Network |
-| DEX / Swaps | Jupiter v6 (Swap + Limit Orders + DCA) |
-| DeFi Yield | Kamino · Drift · MarginFi |
-| NFT | Metaplex Core (Strategy Shares) |
-| Frontend | Next.js 14 · TypeScript · Tailwind CSS |
-| State | Zustand · TanStack Query v5 |
-| Wallets | Phantom today · Privy embedded wallets in Phase 2 |
-| Backend | Hono.js · Node.js · PostgreSQL · Redis |
-| MCP | solana-agent-kit · @modelcontextprotocol/sdk |
-| Payments | x402 (AI micropayments) · MagicBlock (private) |
-| Fiat On-ramp | MoonPay |
-| Monorepo | Turborepo · npm workspaces |
-| Deploy | Vercel (web + api) · GitHub Actions |
 
 ---
 
 ## Documentation
 
-| Doc | Description |
-|-----|-------------|
-| [OVERVIEW.md](docs/architecture/overview.md) | Full project documentation — start here |
-| [ARCHITECTURE.md](docs/architecture/architecture.md) | System design, data flow, key decisions |
-| [DEVELOPMENT.md](docs/operations/development.md) | Local setup, commands, troubleshooting |
-| [PROGRAM.md](docs/architecture/program.md) | Solana program: accounts, instructions, PDAs |
-| [GOVERNANCE.md](docs/architecture/governance.md) | Governance levels, voting mechanics |
-| [MOCK_MODE.md](docs/operations/mock-mode.md) | Demo mode architecture |
-| [MCP.md](docs/integrations/mcp.md) | MCP server guide for AI agent developers |
-| [DEPLOY.md](docs/operations/deploy.md) | Devnet → mainnet deployment procedure |
-
----
-
-## Hackathon
-
-**Solana Frontier 2026 · Colosseum · April 6 – May 11, 2026**
-
-> "PotBot Strategy Vaults: tokenized DeFi strategies for everyone. Any trader, influencer, or AI agent creates their Strategy Vault on Solana. Investors buy shares — and participate in the strategy without trading themselves. Tamagotchi mechanics gamify growth: the bigger the AUM and members, the cheaper to trade. Everything on-chain, everything transparent, everything on Solana."
+| | |
+|---|---|
+| [Architecture overview](docs/architecture/overview.md) | System design, on-chain accounts, data flow |
+| [Program reference](docs/architecture/program.md) | Instructions, PDAs, governance accounts |
+| [Governance model](docs/architecture/governance.md) | L0–L4 levels, quorum, risk caps |
+| [Local development](docs/operations/development.md) | Setup, commands, troubleshooting |
+| [Deployment](docs/operations/deploy.md) | Devnet → mainnet procedure |
+| [MCP integration](docs/integrations/mcp.md) | AI-agent integration guide |
+| [Hackathon submission](docs/hackathon/README.md) | Solana Frontier 2026 judge sheet |
+| [Security policy](SECURITY.md) | Responsible disclosure |
+| [Contributing](CONTRIBUTING.md) | How to propose changes |
 
 ---
 
 ## License
 
-MIT © 2026 Y-DAO Amsterdam — Built with ❤️ for Solana Frontier
-
-📖 **Full Documentation** → [docs/architecture/overview.md](docs/architecture/overview.md)
+MIT © 2026 Y-DAO Amsterdam.

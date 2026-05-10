@@ -1,64 +1,67 @@
+# ── Dependencies & build artifacts ────────────────────────────────
 node_modules/
 .pnp
 .pnp.js
 coverage/
 build/
 dist/
-.vol/
 out/
+.vol/
+.turbo/
+target/
+.anchor/
+*.tsbuildinfo
+
+# ── Editor / OS noise ─────────────────────────────────────────────
 .DS_Store
-*.pem
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── Logs ──────────────────────────────────────────────────────────
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-.idea/
-.vscode/
-*.
-swp
-*.swo
- *
+
+# ── Environment files (NEVER commit) ──────────────────────────────
 .env
 .env.local
 .env.*.local
 .env.development.local
 .env.test.local
 .env.production.local
-target/
-.anchor/
-.turbo/
-# Solana wallet keypairs — NEVER commit
+!.env.example
+
+# ── Secrets, keypairs, certificates (NEVER commit) ────────────────
+*.pem
+*.key
+*.secret
 *keypair.json
 *wallet.json
 *deployer.json
 deploy-keypair.json
 id.json
+secrets/
 
-# Next.js build
-apps/web/.next/
-apps/web/next-env.d.ts
-
-# Anchor deploy artifacts (contain program keys)
+# Anchor deploy artifacts contain program keys
 packages/program/target/deploy/*.json
 packages/program/.anchor/
 
-# Local secrets
-secrets/
-*.secret
-*.key
-*.tsbuildinfo
+# ── App-specific build outputs ────────────────────────────────────
+apps/web/.next/
+apps/web/next-env.d.ts
 
-# Local-only strategy memos and deploy bundles
+# ── Local-only scratch / per-machine state ────────────────────────
 _local/
 _deploy/
 POTBOT_OPUS/
 .claude/worktrees/
+.claire/
 
-# Demo script JSON logs (keep .gitkeep)
+# Demo script logs (the .gitkeep itself is tracked)
 logs/*.json
 
-# create-frontier-demo-pot.ts persisted state — env-specific, do not share
+# create-frontier-demo-pot.ts persisted state — env-specific
 scripts/.demo-pot.json
-
-# Local agent worktrees / scratch
-.claire/
