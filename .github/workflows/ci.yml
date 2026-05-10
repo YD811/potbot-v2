@@ -26,7 +26,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
           NEXT_PUBLIC_API_URL: https://api.potbot.fun
-          NEXT_PUBLIC_PRIVY_APP_ID: placeholder-privy-id
+          NEXT_PUBLIC_PRIVY_APP_ID: cmo7w4ycz00oi0cjuypf7pjuf
 
   sdk-typecheck:
     name: sdk — tsc
