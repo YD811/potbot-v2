@@ -11,4 +11,4 @@ create index if not exists idx_pot_notifications_pot on public.pot_notifications
 
 alter table public.pot_notifications enable row level security;
 
-create policy 'public_read_public_pots' on public.pot_notifications for select using (true);
+create policy "public_read_public_pots" on public.pot_notifications for select using (true);
