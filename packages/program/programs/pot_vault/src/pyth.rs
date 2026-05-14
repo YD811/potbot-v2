@@ -59,6 +59,17 @@ pub fn read_price_update(account: &UncheckedAccount) -> Result<(i64, i32, i64)> 
         return Ok((0, 0, 0));
     }
 
+    // SECURITY: verify the account is owned by the Pyth push oracle program.
+    // Without this check, an attacker could craft a fake account with a matching
+    // byte layout and PYTH_MAGIC value, causing the program to trust spoofed
+    // price data. Placed after the sentinel early-return so AdminDirect /
+    // Proposal swap modes (which pass an arbitrary sentinel) keep working.
+    require!(
+        account.owner == &crate::constants::PYTH_PROGRAM_MAINNET
+            || account.owner == &crate::constants::PYTH_PROGRAM_DEVNET,
+        PotError::PriceFeedMismatch
+    );
+
     let magic = read_u32_le(&data, OFFSET_MAGIC);
     if magic != PYTH_MAGIC {
         return Err(error!(PotError::PriceFeedMismatch));

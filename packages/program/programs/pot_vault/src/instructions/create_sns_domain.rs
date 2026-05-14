@@ -64,8 +64,19 @@ pub fn handler(ctx: Context<CreateSnsDomain>, domain_name: String) -> Result<()>
     let treasury_info = ctx.accounts.treasury.to_account_info();
     let authority_info = ctx.accounts.authority.to_account_info();
 
-    **authority_info.try_borrow_mut_lamports()? -= sns_fee;
-    **treasury_info.try_borrow_mut_lamports()? += sns_fee;
+    // SECURITY: use checked arithmetic for lamport transfers. The previous
+    // `-=` / `+=` operators on u64 silently wrap on overflow/underflow in
+    // release builds, which would let a malformed authority balance or an
+    // already-saturated treasury fail silently instead of erroring out.
+    **authority_info.try_borrow_mut_lamports()? = authority_info
+        .lamports()
+        .checked_sub(sns_fee)
+        .ok_or(ErrorCode::ArithmeticOverflow)?;
+
+    **treasury_info.try_borrow_mut_lamports()? = treasury_info
+        .lamports()
+        .checked_add(sns_fee)
+        .ok_or(ErrorCode::ArithmeticOverflow)?;
 
     // Initialize SNS account
     sns_account.pot = pot_info.key();
