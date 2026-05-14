@@ -52,11 +52,11 @@ The vault is a Solana program account from day one — no custodian, no operator
 A POT is a program-controlled treasury on Solana. Members deposit SOL, USDC, LSTs, LP positions or any tokenized asset, and receive proportional shares (NAV-priced). Every change to the treasury — swap, withdrawal, settings update — is a proposal that members vote on. The vault PDA signs the execution.
 
 - **Programmable ownership** — SPL-tokenized shares, redeemable any time
-- **Onchain governance** — autocracy → advisory → majority → supermajority → consensus, plus optional risk caps
+- **Onchain governance** — five levels from Autocracy (L0) to Consensus (L4), plus optional risk caps (`max_swap_pct`, `max_budget_grant_pct`, `require_admin_cosign`, `timelock_seconds`)
 - **AI orchestration** — the BOT proposes, executes once quorum is reached, and can be delegated to vote on rules you set
-- **Composable** — Jupiter v6 swaps, Squads v4 multisig authority, MCP for any AI agent, Solana Blinks for tweet-native deposits and votes
+- **Composable** — Jupiter v6 / Ultra swaps, Squads v4 multisig authority, MCP for any AI agent, Solana Blinks for tweet-native deposits and votes
 - **Identity** — every POT can claim a `<name>.potbot.sol` SNS subdomain
-- **Optional privacy** — STAMPPOT mode wraps deposits in PrivacyCash ZK proofs
+- **Optional privacy** — STAMPPOT mode wraps deposits in PrivacyCash ZK proofs (Phase 3)
 
 ---
 
@@ -74,15 +74,64 @@ A POT is a program-controlled treasury on Solana. Members deposit SOL, USDC, LST
 
 ---
 
+## POT Lifecycle — Money Tree 🌱
+
+Every POT is a living organism. As AUM grows, members join, and trades execute, the pot advances through six stages — each unlocking new capabilities.
+
+| Stage | Emoji | Unlock |
+|---|---|---|
+| Seedling | 🌱 | Launch, deposit, governance |
+| Sprout | 🌿 | Strategy slots, keeper automation |
+| Bud | 🌳 | Pot Duels (1v1 vault challenges) |
+| Bloom | 🌺 | NFT Strategy Shares mint |
+| Full Bloom | 🌸 | SNS subdomain, share tokenization |
+| Mature Tree | 🌴 | Squads multisig authority, mainnet prereq |
+
+**Health (HP):** every pot has 0–100 HP, computed as `clamp(0, 100, 100 × current_balance / peak_balance)`. At 0 HP a pot dies — trading locks, Strategy Share NFTs burn, and a `resurrect_pot` call with a fresh deposit is required (stage resets). Low HP automatically triggers defensive-only mode at the program level.
+
+---
+
 ## AI orchestration layer (BOT)
 
 POTBOT is built for the coming agent economy. Every POT exposes a programmatic surface that an AI can read, propose against, and execute through.
 
-- **Proposal generation** — agent reads treasury state and live prices, then drafts the next move
-- **Automated execution** — once quorum is reached, the BOT submits the swap with the vault PDA as signer
-- **Governance coordination** — delegated votes, rule presets, weighted thresholds
-- **MCP-native** — Claude, Cursor, Cline can list, propose and vote on POTs over `npx @potbot/mcp`
-- **SDK + API** — TypeScript SDK and JSON RPC surface for any agent framework or backend
+**Two-tier AI architecture:**
+- **Base BOT** — reads treasury state and live prices, surfaces candidate swap proposals as decision-support for the community
+- **Personal AI Voter** — every member can register an AI agent wallet as their voting delegate (`MemberDelegate` + `vote_as_delegate`). Delegation is per-pot, revocable onchain; every delegated vote is signed with a reason string. Rules live in `rules_uri` (IPFS / Arweave / HTTPS)
+
+**Keeper automation:**
+- Anchored worker evaluates stop-loss, take-profit, and trailing-stop strategy slots on-chain
+- Once a trigger fires, the keeper submits `execute_swap` with `StrategyTrigger` mode — no member needs to be online
+- DLQ retries on exponential backoff (2s / 5s / 13s / 34s / 89s)
+
+**MCP-native:**
+- `@potbot/mcp@0.2.0` on npm — 18 tools (free + paid via x402 protocol)
+- Claude, Cursor, Cline can list, propose and vote on POTs over `npx @potbot/mcp`
+- HTTP/SSE and stdio transports both supported
+
+---
+
+## Solana Blinks
+
+Every POT proposal becomes a shareable Blink — a vote-able URL that renders directly in X (Twitter), Farcaster, or any Blinks-compatible client. No wallet app required to act on it.
+
+```
+https://potbot.fun/api/actions/<potPubkey>/deposit
+https://potbot.fun/api/actions/<potPubkey>/vote
+```
+
+"Share as Blink" button lives on every pot detail page.
+
+---
+
+## Revenue model
+
+| Stream | Rate | Status |
+|---|---|---|
+| Swap fee | 0.30% on every trade routed through a pot | 🟢 Live |
+| Performance fee | 10% on Strategy Vault returns, split with strategy creator | 🟡 Devnet |
+
+No token, no airdrop farming.
 
 ---
 
@@ -94,16 +143,16 @@ POTBOT is built for the coming agent economy. Every POT exposes a programmatic s
                    │  (humans · agents · creators)│
                    └──────────────┬───────────────┘
                                   │
-                       deposit · propose · vote
+                       deposit · propose · vote · blink
                                   │
                    ┌──────────────▼───────────────┐
                    │      POTBOT DApp + MCP       │
-                   │   apps/web · apps/potbot-mcp │
-                   └──────────────┬───────────────┘
-                                  │
-                                  │ signed tx
-                                  │
-                   ┌──────────────▼───────────────┐
+                   │  apps/web · apps/potbot-mcp  │
+                   └──────┬───────────────┬───────┘
+                          │               │
+                    keeper cron      agent delegate
+                          │               │
+                   ┌──────▼───────────────▼───────┐
                    │   pot_vault Anchor program   │
                    │     (PDA-signed treasury)    │
                    └──────┬───────────────┬───────┘
@@ -116,6 +165,16 @@ POTBOT is built for the coming agent economy. Every POT exposes a programmatic s
 Three layers: an Anchor program that owns the funds, a Next.js + MCP surface that any human or agent can drive, and Solana-native composability (Jupiter, Squads, Blinks, Helius, Pyth).
 
 Detailed system design: [`docs/architecture/architecture.md`](docs/architecture/architecture.md).
+
+---
+
+## What makes POTBOT different
+
+Three things only POTBOT ships together:
+
+1. **Onchain group governance baked into the swap instruction** — not a generic multisig queue. `execute_swap` enforces `AdminDirect`, `Proposal`, or `StrategyTrigger` mode at the program level with strict mode-source matching.
+2. **MCP-native treasury** — `@potbot/mcp` exposes 18 tools so any LLM can list, propose, vote on, and execute swaps in a pot over a single `npx` command.
+3. **Solana Blinks** — a governance proposal becomes a vote-able tweet. Anyone can act on it without leaving X.
 
 ---
 
@@ -144,21 +203,30 @@ Set `NEXT_PUBLIC_PRIVY_APP_ID` to enable email / Google / Twitter / LinkedIn log
 
 | Layer | Status |
 |---|---|
-| `pot_vault` Anchor program (deposit · propose · vote · execute_swap) | 🟡 Devnet live |
-| Jupiter v6 swap CPI (vault PDA signer) | 🟡 Devnet live |
-| MCP server `@potbot/mcp` on npm | 🟢 Live |
-| Solana Blinks (deposit + vote) | 🟡 Devnet live |
-| Squads v4 multisig authority (optional) | 🟡 Devnet live |
-| Helius RPC + webhook indexer | 🟡 Devnet live |
-| BOT — AI orchestration (proposal generation, execution) | 🟡 Devnet live |
+| `pot_vault` Anchor program (30+ instructions: deposit · propose · vote · execute_swap) | 🟡 Devnet live |
+| Jupiter v6 / Ultra swap CPI (vault PDA signer) | 🟡 Devnet live |
+| Solana Blinks (deposit + vote endpoints) | 🟢 Live |
+| MCP server `@potbot/mcp@0.2.0` on npm (18 tools, x402 paid tier) | 🟢 Live |
+| Squads v4 multisig authority (optional, UI + lib) | 🟢 Live |
+| Helius RPC + webhook indexer | 🟢 Live |
+| Keeper — stop-loss / take-profit / trailing-stop cranks | 🟡 Devnet live |
+| BOT base layer — AI proposal suggestions | 🟡 Devnet live |
+| Personal AI Voters (`MemberDelegate` + `vote_as_delegate`) | 🟡 Devnet live |
+| Money Tree lifecycle (6 stages, HP health system) | 🟡 Devnet live |
+| Strategy slot accounts (`create_strategy` / `close_strategy`) | 🟡 Devnet live |
 | PWA (Saga / Seeker installable) | 🟢 Live |
-| Normie mode — Privy email / Google / Twitter / LinkedIn + Solana embedded wallet | 🟢 Live |
+| Normie mode — Privy email / Google / Twitter / LinkedIn + embedded Solana wallet | 🟢 Live |
 | Light theme + plain-English copy + USD-first prices | 🟢 Live |
 | Account dashboard (profile · live SOL balance · Add SOL airdrop · Quick Trade) | 🟢 Live |
+| `pot_duel` program — 1v1 vault challenges (unlocks at Bud stage) | 🟡 Devnet live |
+| Pyth in-program oracle guard (re-reads price feeds inside `execute_swap`) | 🔵 Phase 2 |
+| Meteora DLMM + Kamino yield strategies | 🔵 Phase 2 |
+| Light Protocol ZK-compressed audit log | 🔵 Phase 2 |
+| Tamagotchi NFT mint (Bloom unlock, Metaplex) | 🟣 Phase 3 |
+| STAMPPOT privacy mode (PrivacyCash ZK proofs) | 🟣 Phase 3 |
 | Mainnet deploy | 🔵 Post security pass |
-| STAMPPOT privacy mode | 🟣 Phase 3 |
 
-Every feature with its lifecycle chip: [potbot.fun/roadmap](https://potbot.fun/roadmap).
+Every feature with its lifecycle chip: [potbot.fun/roadmap](https://potbot.fun/roadmap)
 
 ---
 
@@ -167,15 +235,15 @@ Every feature with its lifecycle chip: [potbot.fun/roadmap](https://potbot.fun/r
 ```
 potbot-v2/
 ├── apps/
-│   ├── web/              Next.js 14 DApp + API routes (production surface)
+│   ├── web/              Next.js 14 DApp + API routes + Vercel Functions
 │   └── potbot-mcp/       MCP server published as @potbot/mcp
 ├── packages/
 │   ├── program/          Anchor programs (Rust) — pot_vault, pot_duel
-│   ├── sdk/              TypeScript SDK
-│   └── ui/               Shared React components
+│   ├── sdk/              TypeScript SDK (@potbot/sdk)
+│   └── ui/               Shared React components (@potbot/ui)
 ├── docs/                 Architecture, operations, integrations, hackathon
 ├── scripts/              Devnet utilities (demo pots, seeding)
-└── supabase/             Off-chain index migrations
+└── supabase/             Off-chain index migrations (NAV snapshots, swap metadata)
 ```
 
 ---
