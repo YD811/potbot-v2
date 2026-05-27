@@ -8,18 +8,15 @@ export const metadata: Metadata = {
   description: 'Your on-chain identity in the PotBot ecosystem. Grab a human-readable .potbot.sol name that resolves to your wallet.',
 }
 
-const GREEN = '#14F195'
-const MUTED = '#6B7280'
-
 export default function NamePage({ searchParams }: { searchParams?: { name?: string; pot?: string } }) {
   const initialName = typeof searchParams?.name === 'string' ? searchParams.name : ''
   const potPubkey = typeof searchParams?.pot === 'string' ? searchParams.pot : undefined
   return (
-    <main style={{ minHeight: '100vh', background: '#0D1117', color: '#fff', padding: '64px 20px 96px' }}>
+    <main className="min-h-screen bg-pot-dark text-white" style={{ padding: '64px 20px 96px' }}>
       <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 999, border: '1px solid #1A2332', background: '#111827', color: GREEN, fontSize: 13, marginBottom: 20 }}>{'🌿'} Powered by Solana Name Service</div>
-        <h1 style={{ fontSize: 40, lineHeight: 1.1, fontWeight: 800, margin: '0 0 14px', letterSpacing: -0.5 }}>Claim your <span style={{ color: GREEN }}>.potbot.sol</span></h1>
-        <p style={{ fontSize: 17, color: MUTED, maxWidth: 520, margin: '0 auto 36px' }}>One human-readable name for the whole PotBot ecosystem. It resolves to your wallet today — and to your pots tomorrow.</p>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pot-border bg-pot-card text-pot-green text-xs" style={{ marginBottom: 20 }}>{'🌿'} Powered by Solana Name Service</div>
+        <h1 className="text-4xl font-extrabold" style={{ lineHeight: 1.1, margin: '0 0 14px', letterSpacing: -0.5 }}>Claim your <span className="text-pot-green">.potbot.sol</span></h1>
+        <p className="text-pot-muted" style={{ fontSize: 17, maxWidth: 520, margin: '0 auto 36px' }}>One human-readable name for the whole PotBot ecosystem. It resolves to your wallet today — and to your pots tomorrow.</p>
       </div>
       <ClaimWidget initialName={initialName} potPubkey={potPubkey} />
       <MyNames />
@@ -36,9 +33,9 @@ export default function NamePage({ searchParams }: { searchParams?: { name?: str
 
 function Feature({ title, body }: { title: string; body: string }) {
   return (
-    <div style={{ padding: '16px', background: '#111827', border: '1px solid #1A2332', borderRadius: 12, textAlign: 'left' }}>
-      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{title}</div>
-      <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.45 }}>{body}</div>
+    <div className="bg-pot-card border border-pot-border rounded-xl p-4 text-left">
+      <div className="font-bold text-sm mb-1.5">{title}</div>
+      <div className="text-pot-muted text-xs" style={{ lineHeight: 1.45 }}>{body}</div>
     </div>
   )
 }
@@ -51,16 +48,16 @@ function PricingTable() {
   ]
   return (
     <div style={{ maxWidth: 560, margin: '48px auto 0', width: '100%' }}>
-      <div style={{ fontSize: 13, color: MUTED, marginBottom: 10 }}>Pricing</div>
-      <div style={{ background: '#111827', border: '1px solid #1A2332', borderRadius: 12, overflow: 'hidden' }}>
+      <div className="text-pot-muted text-xs mb-2.5">Pricing</div>
+      <div className="bg-pot-card border border-pot-border rounded-xl overflow-hidden">
         {rows.map((r, i) => (
-          <div key={r.len} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderTop: i === 0 ? 'none' : '1px solid #1A2332' }}>
-            <span style={{ color: '#fff', fontSize: 14 }}>{r.len}</span>
-            <span style={{ color: GREEN, fontSize: 14, fontWeight: 600 }}>{r.p.sol} SOL · {r.p.usdc} USDC</span>
+          <div key={r.len} className={`flex justify-between px-4 py-3 text-sm ${i > 0 ? 'border-t border-pot-border' : ''}`}>
+            <span>{r.len}</span>
+            <span className="text-pot-green font-semibold">{r.p.sol} SOL · {r.p.usdc} USDC</span>
           </div>
         ))}
       </div>
-      <div style={{ fontSize: 12, color: MUTED, marginTop: 8 }}>Shorter names are scarcer, so they cost more. You pay once — no renewals.</div>
+      <div className="text-pot-muted text-xs mt-2">Shorter names are scarcer, so they cost more. You pay once — no renewals.</div>
     </div>
   )
 }
@@ -68,7 +65,7 @@ function PricingTable() {
 function Faq() {
   return (
     <div style={{ maxWidth: 560, margin: '40px auto 0', width: '100%' }}>
-      <div style={{ fontSize: 13, color: MUTED, marginBottom: 10 }}>FAQ</div>
+      <div className="text-pot-muted text-xs mb-2.5">FAQ</div>
       <FaqItem q="What is a .potbot.sol name?" a="A Solana Name Service subdomain under potbot.sol. A human-readable handle that resolves to your wallet across Solana apps." />
       <FaqItem q="Do I actually own it?" a="Yes — it's minted directly to your wallet on-chain. Non-custodial. PotBot only authorizes the creation." />
       <FaqItem q="Which wallets work?" a="Any Solana wallet supported in PotBot — Phantom/Backpack via the adapter, or a Privy embedded wallet." />
@@ -79,9 +76,9 @@ function Faq() {
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   return (
-    <div style={{ padding: '14px 16px', background: '#0D1117', border: '1px solid #1A2332', borderRadius: 12, marginBottom: 8, textAlign: 'left' }}>
-      <div style={{ fontWeight: 600, fontSize: 14, color: '#fff', marginBottom: 4 }}>{q}</div>
-      <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.45 }}>{a}</div>
+    <div className="bg-pot-card/60 border border-pot-border rounded-xl mb-2 p-4 text-left">
+      <div className="font-semibold text-sm mb-1">{q}</div>
+      <div className="text-pot-muted text-xs" style={{ lineHeight: 1.45 }}>{a}</div>
     </div>
   )
 }

@@ -2,9 +2,6 @@
 
 import { normalizeLabel, validateLabel } from '@/lib/sns'
 
-const GREEN = '#14F195'
-const MUTED = '#6B7280'
-
 export default function PotSnsUpsell({ variant = 'member', potPubkey, potName }:
   { variant?: 'creator' | 'member'; potPubkey: string; potName?: string }) {
   const suggested = potName ? normalizeLabel(potName) : ''
@@ -21,13 +18,13 @@ export default function PotSnsUpsell({ variant = 'member', potPubkey, potName }:
   const cta = isCreator && suggestedValid ? `Claim ${suggested}.potbot.sol` : 'Browse names'
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', background: '#111827', border: `1px solid ${GREEN}33`, borderRadius: 14, backgroundImage: 'linear-gradient(90deg, rgba(20,241,149,0.06), rgba(153,69,255,0.06))' }}>
-      <div style={{ fontSize: 28, lineHeight: 1 }}>{'🌿'}</div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{title}</div>
-        <div style={{ fontSize: 13, color: MUTED, marginTop: 2 }}>{body}</div>
+    <div className="flex items-center gap-3.5 p-4 bg-pot-card border border-pot-green/20 rounded-2xl" style={{ backgroundImage: 'linear-gradient(90deg, rgba(20,241,149,0.06), rgba(153,69,255,0.06))' }}>
+      <div className="text-3xl leading-none">{'🌿'}</div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-bold">{title}</div>
+        <div className="text-pot-muted text-xs mt-0.5">{body}</div>
       </div>
-      <a href={href} style={{ flexShrink: 0, padding: '10px 16px', borderRadius: 10, background: GREEN, color: '#04150C', fontSize: 14, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>{cta}</a>
+      <a href={href} className="shrink-0 px-4 py-2.5 rounded-lg bg-pot-green text-pot-dark text-sm font-bold no-underline whitespace-nowrap">{cta}</a>
     </div>
   )
 }

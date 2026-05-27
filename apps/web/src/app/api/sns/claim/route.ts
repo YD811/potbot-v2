@@ -28,6 +28,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'not_available', reason: availability.reason }, { status: 409 })
   }
 
+  if (!process.env.POTBOT_SNS_OWNER_SECRET) {
+    return NextResponse.json({ error: 'owner_key_missing', message: 'POTBOT_SNS_OWNER_SECRET is not configured' }, { status: 503 })
+  }
+
   try {
     const { transaction, amount, treasury } = await buildClaimTransaction({ label, buyer, currency })
     const res: ClaimResponse = { transaction, fqdn: toFqdn(label), currency, amount, treasury }
