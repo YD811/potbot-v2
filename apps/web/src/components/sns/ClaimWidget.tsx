@@ -62,7 +62,7 @@ export default function ClaimWidget({ initialName = '', potPubkey }:
   async function handleClaim() {
     if (!available) return
     setError(null)
-    if (!wallet.connected) { wallet.login(); return }
+    if (!wallet.connected) { setError('Connect your wallet first (use the button in the top bar)'); return }
     try {
       setClaimState('building')
       const res = await fetch('/api/sns/claim', {
