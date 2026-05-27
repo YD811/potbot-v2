@@ -21,6 +21,7 @@ import { StatusBadge } from '@/components/StatusBadge'
 import { PotHeroStrip } from '@/components/PotHeroStrip'
 import { PotActivityFeed } from '@/components/PotActivityFeed'
 import { reverseSNS } from '@/lib/sns'
+import PotSnsUpsell from '@/components/sns/PotSnsUpsell'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import SwapExecuteButton from '@/components/SwapExecuteButton'
 import CreateProposalModal from '@/components/pot/CreateProposalModal'
@@ -823,6 +824,13 @@ export default function PotPage() {
                 cluster={CLUSTER}
               />
             </section>
+
+            {isOwner && (
+              <PotSnsUpsell variant="creator" potPubkey={pubkey} potName={pot.name} />
+            )}
+            {isMember && !isOwner && (
+              <PotSnsUpsell variant="member" potPubkey={pubkey} />
+            )}
 
             <section className="space-y-3">
               <div className="flex items-center gap-2">

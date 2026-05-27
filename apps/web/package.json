@@ -18,6 +18,7 @@
     "@solana-program/system": "^0.12.0",
     "@solana-program/token": "^0.13.0",
     "@solana/kit": "^6.9.0",
+    "@solana/spl-token": "^0.4.14",
     "@solana/wallet-adapter-base": "^0.9.23",
     "@solana/wallet-adapter-react": "^0.15.35",
     "@solana/wallet-adapter-react-ui": "^0.9.35",
@@ -38,6 +39,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.4.1",
+    "server-only": "^0.0.1",
     "tailwindcss": "^3.4.4",
     "zustand": "^4.5.4"
   },
