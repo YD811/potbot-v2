@@ -24,12 +24,6 @@
 
 > The internet already coordinates capital.
 >
-> Friends invest together.
-> Communities speculate together.
-> Creators build economies together.
->
-> But the infrastructure is still primitive.
->
 > POTBOT gives every internet community:
 > **programmable ownership · liquid coordination · AI-native execution · onchain governance.**
 
