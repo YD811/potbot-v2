@@ -326,3 +326,105 @@ export function getPotShareText(potName: string, snsName?: string): string {
 export function formatSNSBadge(snsName: string): string {
   return snsName
 }
+
+// ─── Subdomain Sales (.potbot.sol) ─────────────────────────────────────────
+
+export const PARENT_LABEL = 'potbot'
+export const PARENT_FQDN = 'potbot.sol'
+export const LABEL_MIN_LEN = 1
+export const LABEL_MAX_LEN = 63
+
+export const RESERVED_LABELS = new Set<string>([
+  'www', 'api', 'app', 'admin', 'root', 'potbot', 'support', 'help', 'mail',
+  'vault', 'vaults', 'pot', 'team', 'ydao', 'y-dao', 'stamppot', 'peace',
+])
+
+export type Currency = 'SOL' | 'USDC'
+
+export interface PriceConfig {
+  sol: number
+  usdc: number
+}
+
+export const PRICE_TIERS: Record<number, PriceConfig> = {
+  1: { sol: 2, usdc: 200 },
+  2: { sol: 1, usdc: 100 },
+  3: { sol: 0.5, usdc: 50 },
+  4: { sol: 0.15, usdc: 15 },
+}
+
+export const DEFAULT_PRICING: PriceConfig = { sol: 0.05, usdc: 5 }
+
+export function priceForLabel(
+  label: string,
+  standard: PriceConfig = DEFAULT_PRICING,
+): PriceConfig {
+  return PRICE_TIERS[label.length] ?? standard
+}
+
+export function tierName(label: string): string {
+  if (label.length <= 4) return `${label.length}-char premium`
+  return 'standard'
+}
+
+export interface AvailabilityResult {
+  label: string
+  fqdn: string
+  available: boolean
+  owner?: string
+  reason?: 'invalid' | 'reserved' | 'taken' | 'too_short' | 'too_long'
+  pricing: PriceConfig
+}
+
+export interface ClaimRequest {
+  label: string
+  buyer: string
+  currency: Currency
+  potPubkey?: string
+}
+
+export interface ClaimResponse {
+  transaction: string
+  fqdn: string
+  currency: Currency
+  amount: number
+  treasury: string
+}
+
+export interface OwnedName {
+  label: string
+  fqdn: string
+  boundPot?: string
+}
+
+export function normalizeLabel(input: string): string {
+  let s = (input ?? '').trim().toLowerCase()
+  s = s.replace(/\.potbot\.sol$/, '')
+  s = s.replace(/\.potbot$/, '')
+  s = s.replace(/\.sol$/, '')
+  return s.trim()
+}
+
+export function validateLabel(label: string): AvailabilityResult['reason'] | null {
+  if (!label || label.length < LABEL_MIN_LEN) return 'too_short'
+  if (label.length > LABEL_MAX_LEN) return 'too_long'
+  if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(label)) return 'invalid'
+  if (RESERVED_LABELS.has(label)) return 'reserved'
+  return null
+}
+
+export function isValidLabel(label: string): boolean {
+  return validateLabel(label) === null
+}
+
+export function toFqdn(label: string): string {
+  return `${label}.${PARENT_FQDN}`
+}
+
+export function formatPrice(amount: number, currency: Currency): string {
+  const n = currency === 'SOL' ? amount : Math.round(amount * 100) / 100
+  return `${n} ${currency}`
+}
+
+export const USDC_DECIMALS = 6
+export const LAMPORTS_PER_SOL_SNS = 1_000_000_000

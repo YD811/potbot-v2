@@ -73,6 +73,7 @@ const NAV_LINKS: { href: string; emoji: string; term: string }[] = [
   { href: '/leaderboard', emoji: '🏆',   term: 'Leaderboard' },
   { href: '/hackathon',   emoji: '⚒️',   term: 'Hackathon' },
   { href: '/create',      emoji: '+',    term: 'Create' },
+  { href: '/name',        emoji: '🌿',   term: 'Get a name' },
 ]
 
 export function Navbar() {
@@ -112,9 +113,6 @@ export function Navbar() {
               isActive('/dashboard') ? 'text-pot-accent bg-pot-accent/10 border border-pot-accent/30' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
             }`}>{t('My Dashboard')}</Link>
           )}
-          <Link href="/faq" className={`px-3 py-1.5 rounded-lg transition ${
-            isActive('/faq') ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
-          }`}>FAQ</Link>
         </div>
 
         <div className="flex items-center gap-2">
@@ -171,10 +169,6 @@ export function Navbar() {
                 isActive('/dashboard') ? 'text-pot-accent bg-pot-accent/10 border border-pot-accent/30' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
               }`}>{t('My Dashboard')}</Link>
           )}
-          <Link href="/faq" onClick={() => setMenuOpen(false)}
-            className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
-              isActive('/faq') ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
-            }`}>FAQ</Link>
           <div className="pt-2 border-t border-pot-border/50">
             <Link href="/for-agents" onClick={() => setMenuOpen(false)}
               className="block px-4 py-2 text-sm text-pot-muted hover:text-pot-green transition">
