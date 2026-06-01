@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import Link from 'next/link'
+import { Analytics } from '@vercel/analytics/next'
 import { AppProviders } from './providers'
 import { Navbar } from '@/components/Navbar'
 import { OnboardingTutorial } from '@/components/OnboardingTutorial'
@@ -155,6 +156,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </footer>
         </AppProviders>
+        <Analytics />
       </body>
     </html>
   )
