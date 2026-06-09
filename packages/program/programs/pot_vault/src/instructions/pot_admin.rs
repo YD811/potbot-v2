@@ -6,7 +6,7 @@
 // fund_fee_reserve           — deposit SOL into pot.fee_reserve for keeper gas
 
 use anchor_lang::prelude::*;
-use crate::state::pot::PotAccount;
+use crate::state::pot::{PendingRiskParams, PotAccount};
 use crate::errors::PotError;
 
 // ─── Pause / Unpause ────────────────────────────────────────────────────────
@@ -98,8 +98,144 @@ pub fn set_spending_policy(
         args: SetSpendingPolicyArgs,
     ) -> Result<()> {
         let pot = &mut ctx.accounts.pot;
-        pot.single_swap_cap_bps = args.single_swap_cap_bps;
-        pot.daily_budget_lamports = args.daily_budget_lamports;
+        let now = Clock::get()?.unix_timestamp;
+        // Risky-param change: tightening applies now, loosening waits out
+        // risk_param_timelock_secs via pending_params.
+        let target = PendingRiskParams {
+                is_pending: false,
+                effective_at: 0,
+                trade_level: pot.governance.trade_level,
+                withdraw_level: pot.governance.withdraw_level,
+                max_trade_size_bps: pot.config.max_trade_size_bps,
+                single_swap_cap_bps: args.single_swap_cap_bps,
+                daily_budget_lamports: args.daily_budget_lamports,
+                risk_param_timelock_secs: pot.risk_param_timelock_secs,
+        };
+        let staged = pot.stage_or_apply_risk_params(target, now)?;
+        msg!(
+                "spending policy cap={}bps daily={} — {}",
+                args.single_swap_cap_bps,
+                args.daily_budget_lamports,
+                if staged { "staged (risk-param timelock)" } else { "applied" }
+        );
+        Ok(())
+}
+
+// ─── Set allowed programs (protocol allowlist) ──────────────────────────────
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub struct SetAllowedProgramsArgs {
+        /// Up to 8 program ids. Pass empty slice to clear (open mode).
+    pub programs: Vec<Pubkey>,
+}
+
+#[derive(Accounts)]
+pub struct SetAllowedPrograms<'info> {
+        #[account(
+                    mut,
+                    constraint = authority.key() == pot.authority @ PotError::StrategyNotAdmin,
+                )]
+        pub pot: Account<'info, PotAccount>,
+        pub authority: Signer<'info>,
+}
+
+pub fn set_allowed_programs(
+        ctx: Context<SetAllowedPrograms>,
+        args: SetAllowedProgramsArgs,
+    ) -> Result<()> {
+        require!(args.programs.len() <= 8, PotError::InvalidStrategyConfig);
+        let pot = &mut ctx.accounts.pot;
+        pot.allowed_programs = [Pubkey::default(); 8];
+        for (i, program) in args.programs.iter().enumerate() {
+                    pot.allowed_programs[i] = *program;
+        }
+        pot.allowed_programs_count = args.programs.len() as u8;
+        emit!(AllowedProgramsUpdated {
+                    pot: pot.key(),
+                    count: pot.allowed_programs_count,
+        });
+        Ok(())
+}
+
+// ─── Risk-param timelock config + asset exposure cap ────────────────────────
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub struct SetRiskTimelockArgs {
+        /// Seconds a loosening param change must wait. 0 = disabled.
+        /// Raising the timelock applies instantly; lowering it is itself a
+        /// loosening change and waits out the CURRENT timelock.
+    pub risk_param_timelock_secs: i64,
+        /// Max daily spend toward one asset, bps of vault. 0 = unlimited.
+        /// Tightening (lower, or from 0 to bounded) applies instantly;
+        /// loosening waits out the timelock together with the rest.
+        pub max_asset_exposure_bps: u16,
+}
+
+#[derive(Accounts)]
+pub struct SetRiskTimelock<'info> {
+        #[account(
+                    mut,
+                    constraint = authority.key() == pot.authority @ PotError::StrategyNotAdmin,
+                )]
+        pub pot: Account<'info, PotAccount>,
+        pub authority: Signer<'info>,
+}
+
+pub fn set_risk_timelock(
+        ctx: Context<SetRiskTimelock>,
+        args: SetRiskTimelockArgs,
+    ) -> Result<()> {
+        let pot = &mut ctx.accounts.pot;
+        let now = Clock::get()?.unix_timestamp;
+
+        // Exposure cap: apply tightening instantly; loosening only when no
+        // timelock is configured (otherwise keep the tighter current value —
+        // loosening exposure caps goes through governance, not admin).
+        let old_exposure = pot.max_asset_exposure_bps;
+        let tightening = args.max_asset_exposure_bps != 0
+                && (old_exposure == 0 || args.max_asset_exposure_bps < old_exposure);
+        if tightening || pot.risk_param_timelock_secs <= 0 {
+                    pot.max_asset_exposure_bps = args.max_asset_exposure_bps;
+        }
+
+        let target = PendingRiskParams {
+                is_pending: false,
+                effective_at: 0,
+                trade_level: pot.governance.trade_level,
+                withdraw_level: pot.governance.withdraw_level,
+                max_trade_size_bps: pot.config.max_trade_size_bps,
+                single_swap_cap_bps: pot.single_swap_cap_bps,
+                daily_budget_lamports: pot.daily_budget_lamports,
+                risk_param_timelock_secs: args.risk_param_timelock_secs,
+        };
+        let staged = pot.stage_or_apply_risk_params(target, now)?;
+        msg!(
+                "risk timelock={}s exposure_cap={}bps — {}",
+                args.risk_param_timelock_secs,
+                args.max_asset_exposure_bps,
+                if staged { "staged (risk-param timelock)" } else { "applied" }
+        );
+        Ok(())
+}
+
+// ─── Apply pending params (permissionless crank) ────────────────────────────
+
+#[derive(Accounts)]
+pub struct ApplyPendingParams<'info> {
+        #[account(mut)]
+        pub pot: Account<'info, PotAccount>,
+        pub cranker: Signer<'info>,
+}
+
+pub fn apply_pending_params(ctx: Context<ApplyPendingParams>) -> Result<()> {
+        let pot = &mut ctx.accounts.pot;
+        let now = Clock::get()?.unix_timestamp;
+        pot.apply_pending(now)?;
+        emit!(PendingParamsApplied {
+                    pot: pot.key(),
+                    applied_at: now,
+        });
+        msg!("pending risk params applied for pot {}", pot.key());
         Ok(())
 }
 
@@ -176,4 +312,16 @@ pub struct FeeReserveFunded {
         pub pot: Pubkey,
         pub amount: u64,
         pub total: u64,
+}
+
+#[event]
+pub struct AllowedProgramsUpdated {
+        pub pot: Pubkey,
+        pub count: u8,
+}
+
+#[event]
+pub struct PendingParamsApplied {
+        pub pot: Pubkey,
+        pub applied_at: i64,
 }
