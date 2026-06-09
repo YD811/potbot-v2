@@ -34,6 +34,9 @@ pub struct Deposit<'info> {
 pub fn handler(ctx: Context<Deposit>, lamports: u64) -> Result<()> {
     let pot = &ctx.accounts.pot;
 
+    // Frozen pot accepts no new capital (members can still withdraw).
+    require!(!pot.paused, PotError::PotFrozen);
+
     // Validate minimum deposit
     require!(lamports >= pot.config.min_deposit, PotError::DepositTooSmall);
 

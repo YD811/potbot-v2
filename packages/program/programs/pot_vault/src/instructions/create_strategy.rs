@@ -68,6 +68,10 @@ pub struct CreateStrategy<'info> {
 }
 
 pub fn handler(ctx: Context<CreateStrategy>, args: CreateStrategyArgs) -> Result<()> {
+    require!(
+        !ctx.accounts.pot.paused,
+        crate::errors::PotError::PotFrozen
+    );
     validate_bps(&args)?;
     validate_triggers_need_feed(&args)?;
 

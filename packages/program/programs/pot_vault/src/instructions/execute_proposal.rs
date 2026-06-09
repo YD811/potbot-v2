@@ -4,7 +4,10 @@ use crate::errors::PotError;
 
 #[derive(Accounts)]
 pub struct ExecuteProposal<'info> {
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = !pot.paused @ PotError::PotFrozen,
+    )]
     pub pot: Account<'info, PotAccount>,
 
     /// CHECK: PDA vault
@@ -23,6 +26,13 @@ pub struct ExecuteProposal<'info> {
 
     #[account(mut)]
     pub executor: Signer<'info>,
+
+    /// Destination for fund-moving proposals (Withdraw / TransferFunds).
+    /// MUST equal the beneficiary recorded in the proposal — the executor
+    /// only cranks the instruction, funds never flow to the executor.
+    /// CHECK: validated in the handler against the proposal payload.
+    #[account(mut)]
+    pub recipient: Option<UncheckedAccount<'info>>,
 
     pub system_program: Program<'info, System>,
 }
@@ -73,6 +83,12 @@ pub fn handler(ctx: Context<ExecuteProposal>) -> Result<()> {
         }
 
         ProposalType::Withdraw { beneficiary, amount } => {
+            let recipient = ctx
+                .accounts
+                .recipient
+                .as_ref()
+                .ok_or(PotError::RecipientMissing)?;
+            require_keys_eq!(recipient.key(), *beneficiary, PotError::RecipientMismatch);
             let vault_lamports = ctx.accounts.vault.lamports();
             let rent = Rent::get()?;
             let min_balance = rent.minimum_balance(0);
@@ -81,11 +97,17 @@ pub fn handler(ctx: Context<ExecuteProposal>) -> Result<()> {
                 PotError::InsufficientVaultBalance
             );
             **ctx.accounts.vault.to_account_info().try_borrow_mut_lamports()? -= amount;
-            **ctx.accounts.executor.to_account_info().try_borrow_mut_lamports()? += amount;
+            **recipient.to_account_info().try_borrow_mut_lamports()? += amount;
             msg!("Governance withdrawal: {} lamports to {}", amount, beneficiary);
         }
 
         ProposalType::TransferFunds { to, amount, purpose } => {
+            let recipient = ctx
+                .accounts
+                .recipient
+                .as_ref()
+                .ok_or(PotError::RecipientMissing)?;
+            require_keys_eq!(recipient.key(), *to, PotError::RecipientMismatch);
             let vault_lamports = ctx.accounts.vault.lamports();
             let rent = Rent::get()?;
             let min_balance = rent.minimum_balance(0);
@@ -94,14 +116,29 @@ pub fn handler(ctx: Context<ExecuteProposal>) -> Result<()> {
                 PotError::InsufficientVaultBalance
             );
             **ctx.accounts.vault.to_account_info().try_borrow_mut_lamports()? -= amount;
-            **ctx.accounts.executor.to_account_info().try_borrow_mut_lamports()? += amount;
+            **recipient.to_account_info().try_borrow_mut_lamports()? += amount;
             msg!("Transfer {} lamports to {} - purpose: {}", amount, to, purpose);
         }
 
         ProposalType::ChangeSettings { new_trade_level, new_withdraw_level } => {
-            pot.governance.trade_level    = *new_trade_level;
-            pot.governance.withdraw_level = *new_withdraw_level;
-            msg!("Governance updated: trade={}, withdraw={}", new_trade_level, new_withdraw_level);
+            // Risky-param change: tightening applies now, loosening waits
+            // out risk_param_timelock_secs via pending_params.
+            let target = PendingRiskParams {
+                is_pending: false,
+                effective_at: 0,
+                trade_level: *new_trade_level,
+                withdraw_level: *new_withdraw_level,
+                max_trade_size_bps: pot.config.max_trade_size_bps,
+                single_swap_cap_bps: pot.single_swap_cap_bps,
+                daily_budget_lamports: pot.daily_budget_lamports,
+                risk_param_timelock_secs: pot.risk_param_timelock_secs,
+            };
+            let staged = pot.stage_or_apply_risk_params(target, clock.unix_timestamp)?;
+            msg!(
+                "Governance change trade={}, withdraw={} — {}",
+                new_trade_level, new_withdraw_level,
+                if staged { "staged (risk-param timelock)" } else { "applied" }
+            );
         }
 
         ProposalType::ChangeYield { new_strategy } => {
@@ -116,9 +153,24 @@ pub fn handler(ctx: Context<ExecuteProposal>) -> Result<()> {
         }
 
         ProposalType::UpdateRiskConfig { max_trade_size_bps, max_members } => {
-            pot.config.max_trade_size_bps = *max_trade_size_bps;
-            pot.config.max_members        = *max_members;
-            msg!("Risk config updated: max_trade_bps={}, max_members={}", max_trade_size_bps, max_members);
+            // max_members is not a fund-risk parameter — applies immediately.
+            pot.config.max_members = *max_members;
+            let target = PendingRiskParams {
+                is_pending: false,
+                effective_at: 0,
+                trade_level: pot.governance.trade_level,
+                withdraw_level: pot.governance.withdraw_level,
+                max_trade_size_bps: *max_trade_size_bps,
+                single_swap_cap_bps: pot.single_swap_cap_bps,
+                daily_budget_lamports: pot.daily_budget_lamports,
+                risk_param_timelock_secs: pot.risk_param_timelock_secs,
+            };
+            let staged = pot.stage_or_apply_risk_params(target, clock.unix_timestamp)?;
+            msg!(
+                "Risk config max_trade_bps={}, max_members={} — {}",
+                max_trade_size_bps, max_members,
+                if staged { "staged (risk-param timelock)" } else { "applied" }
+            );
         }
 
         ProposalType::AddMember { wallet }   => { msg!("Member invited: {}", wallet); }
