@@ -1,6 +1,33 @@
 use anchor_lang::prelude::*;
+use anchor_lang::system_program;
 use crate::state::*;
 use crate::errors::PotError;
+
+/// Move `amount` lamports out of the vault PDA via a seeds-signed system
+/// transfer. Direct lamport debits are rejected by the runtime because the
+/// vault is owned by the System program, not by this program.
+fn vault_transfer<'info>(
+    vault: &SystemAccount<'info>,
+    recipient: &UncheckedAccount<'info>,
+    system_program: &Program<'info, System>,
+    pot_key: &Pubkey,
+    vault_bump: u8,
+    amount: u64,
+) -> Result<()> {
+    let bump = [vault_bump];
+    let signer_seeds: &[&[u8]] = &[b"vault", pot_key.as_ref(), &bump];
+    system_program::transfer(
+        CpiContext::new_with_signer(
+            system_program.to_account_info(),
+            system_program::Transfer {
+                from: vault.to_account_info(),
+                to: recipient.to_account_info(),
+            },
+            &[signer_seeds],
+        ),
+        amount,
+    )
+}
 
 #[derive(Accounts)]
 pub struct ExecuteProposal<'info> {
@@ -8,7 +35,7 @@ pub struct ExecuteProposal<'info> {
         mut,
         constraint = !pot.paused @ PotError::PotFrozen,
     )]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     /// CHECK: PDA vault
     #[account(
@@ -96,8 +123,14 @@ pub fn handler(ctx: Context<ExecuteProposal>) -> Result<()> {
                 vault_lamports.saturating_sub(*amount) >= min_balance,
                 PotError::InsufficientVaultBalance
             );
-            **ctx.accounts.vault.to_account_info().try_borrow_mut_lamports()? -= amount;
-            **recipient.to_account_info().try_borrow_mut_lamports()? += amount;
+            vault_transfer(
+                &ctx.accounts.vault,
+                recipient,
+                &ctx.accounts.system_program,
+                &pot.key(),
+                pot.vault_bump,
+                *amount,
+            )?;
             msg!("Governance withdrawal: {} lamports to {}", amount, beneficiary);
         }
 
@@ -115,8 +148,14 @@ pub fn handler(ctx: Context<ExecuteProposal>) -> Result<()> {
                 vault_lamports.saturating_sub(*amount) >= min_balance,
                 PotError::InsufficientVaultBalance
             );
-            **ctx.accounts.vault.to_account_info().try_borrow_mut_lamports()? -= amount;
-            **recipient.to_account_info().try_borrow_mut_lamports()? += amount;
+            vault_transfer(
+                &ctx.accounts.vault,
+                recipient,
+                &ctx.accounts.system_program,
+                &pot.key(),
+                pot.vault_bump,
+                *amount,
+            )?;
             msg!("Transfer {} lamports to {} - purpose: {}", amount, to, purpose);
         }
 

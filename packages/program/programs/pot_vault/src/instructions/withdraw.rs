@@ -1,11 +1,12 @@
 use anchor_lang::prelude::*;
+use anchor_lang::system_program;
 use crate::state::*;
 use crate::errors::PotError;
 
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
     #[account(mut)]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     /// CHECK: PDA vault that holds SOL
     #[account(
@@ -54,8 +55,23 @@ pub fn handler(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
         PotError::InsufficientVaultBalance
     );
 
-    **ctx.accounts.vault.to_account_info().try_borrow_mut_lamports()? -= lamports_out;
-    **ctx.accounts.withdrawer.to_account_info().try_borrow_mut_lamports()? += lamports_out;
+    // Vault is a System-owned PDA: lamports must leave via a system-program
+    // transfer signed with the vault seeds (direct lamport debits are
+    // rejected by the runtime for accounts this program does not own).
+    let pot_key = ctx.accounts.pot.key();
+    let vault_bump = ctx.accounts.pot.vault_bump;
+    let signer_seeds: &[&[u8]] = &[b"vault", pot_key.as_ref(), core::slice::from_ref(&vault_bump)];
+    system_program::transfer(
+        CpiContext::new_with_signer(
+            ctx.accounts.system_program.to_account_info(),
+            system_program::Transfer {
+                from: ctx.accounts.vault.to_account_info(),
+                to: ctx.accounts.withdrawer.to_account_info(),
+            },
+            &[signer_seeds],
+        ),
+        lamports_out,
+    )?;
 
     let member = &mut ctx.accounts.member;
     member.shares = member.shares.checked_sub(shares).ok_or(PotError::ArithmeticOverflow)?;
