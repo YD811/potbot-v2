@@ -48,19 +48,31 @@ pub struct TokenizeShares<'info> {
 }
 
 pub fn handler(ctx: Context<TokenizeShares>) -> Result<()> {
-    let pot = &mut ctx.accounts.pot;
-    
     // Check if already tokenized
-    require!(pot.token_mint == Pubkey::default(), ErrorCode::AlreadyTokenized);
-    
+    require!(
+        ctx.accounts.pot.token_mint == Pubkey::default(),
+        ErrorCode::AlreadyTokenized
+    );
+
     // Tokenization fee: 0.1 SOL
     let tokenization_fee = 100_000_000; // 0.1 SOL in lamports
-    
-    // Transfer fee to YD's treasury
-    **ctx.accounts.authority.lamports.borrow_mut() -= tokenization_fee;
-    **ctx.accounts.treasury.lamports.borrow_mut() += tokenization_fee;
-    
+
+    // Transfer fee to the treasury. authority is System-owned, so the fee
+    // must move via a system-program CPI — direct lamport debits of
+    // accounts this program does not own are rejected by the runtime.
+    anchor_lang::system_program::transfer(
+        CpiContext::new(
+            ctx.accounts.system_program.to_account_info(),
+            anchor_lang::system_program::Transfer {
+                from: ctx.accounts.authority.to_account_info(),
+                to: ctx.accounts.treasury.to_account_info(),
+            },
+        ),
+        tokenization_fee,
+    )?;
+
     // Set the token mint in pot account
+    let pot = &mut ctx.accounts.pot;
     pot.token_mint = ctx.accounts.token_mint.key();
     pot.shares_per_sol = 1000; // 1000 tokens per 1 SOL for better UX
     

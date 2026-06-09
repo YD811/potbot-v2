@@ -55,7 +55,11 @@ pub struct RedeemTokens<'info> {
 
 pub fn handler(ctx: Context<RedeemTokens>, token_amount: u64) -> Result<()> {
     require!(token_amount > 0, PotError::InvalidAmount);
-    require!(!ctx.accounts.pot.paused, PotError::PotPaused);
+    // NOTE: deliberately NOT gated on pot.paused. Redemption is the
+    // canonical member exit for tokenized pots — non-custodial exit must
+    // never be blockable by the authority or the sentinel (the same reason
+    // withdraw.rs has no pause check). Freeze stops capital coming IN and
+    // funds moving OUT to third parties, never a member's pro-rata exit.
 
     // Convert SPL token units → internal share units. The mint side
     // (`mint_tokens_to_member`) emits `internal_shares * shares_per_sol`

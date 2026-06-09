@@ -64,6 +64,10 @@ pub fn set_allowed_mints(
                     pot.allowed_mints[i] = *mint;
         }
         pot.allowed_mints_count = args.mints.len() as u8;
+        // Exposure counters are slot-aligned with allowed_mints — reordering
+        // or replacing the list would re-attach accumulated spend to a
+        // different mint (cap bypass / false block). Reset on every change.
+        pot.per_mint_daily_spent = [0u64; 16];
         pot.agent_authority = args.agent_authority;
         emit!(AllowedMintsUpdated {
                     pot: pot.key(),
@@ -126,6 +130,9 @@ pub fn set_spending_policy(
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct SetAllowedProgramsArgs {
         /// Up to 8 program ids. Pass empty slice to clear (open mode).
+        /// FOOTGUN: once non-empty, EVERY CPI target must be listed —
+        /// including Jupiter v6, or every swap reverts with
+        /// ProgramNotAllowed. Clients should auto-include Jupiter.
     pub programs: Vec<Pubkey>,
 }
 

@@ -397,6 +397,11 @@ impl PotAccount {
     /// stays within max_asset_exposure_bps of the vault balance.
     /// No-op when the cap is 0 or the mint allowlist is open (no slots to
     /// track against). Does NOT mutate — call register_asset_spend after.
+    ///
+    /// LIMITATION: `amount` is in INPUT-mint base units, the cap in
+    /// lamports — the comparison is only meaningful for wSOL-denominated
+    /// entries (like the daily budget and single-swap caps). Token→token
+    /// strategies need oracle normalization (Phase 2) for a faithful cap.
     pub fn check_asset_exposure(
         &self,
         mint: &Pubkey,
