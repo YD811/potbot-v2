@@ -17,7 +17,7 @@ pub struct PausePot<'info> {
                     mut,
                     constraint = authority.key() == pot.authority @ PotError::StrategyNotAdmin,
                 )]
-        pub pot: Account<'info, PotAccount>,
+        pub pot: Box<Account<'info, PotAccount>>,
         pub authority: Signer<'info>,
 }
 
@@ -49,7 +49,7 @@ pub struct SetAllowedMints<'info> {
                     mut,
                     constraint = authority.key() == pot.authority @ PotError::StrategyNotAdmin,
                 )]
-        pub pot: Account<'info, PotAccount>,
+        pub pot: Box<Account<'info, PotAccount>>,
         pub authority: Signer<'info>,
 }
 
@@ -89,7 +89,7 @@ pub struct SetSpendingPolicy<'info> {
                     mut,
                     constraint = authority.key() == pot.authority @ PotError::StrategyNotAdmin,
                 )]
-        pub pot: Account<'info, PotAccount>,
+        pub pot: Box<Account<'info, PotAccount>>,
         pub authority: Signer<'info>,
 }
 
@@ -135,7 +135,7 @@ pub struct SetAllowedPrograms<'info> {
                     mut,
                     constraint = authority.key() == pot.authority @ PotError::StrategyNotAdmin,
                 )]
-        pub pot: Account<'info, PotAccount>,
+        pub pot: Box<Account<'info, PotAccount>>,
         pub authority: Signer<'info>,
 }
 
@@ -177,7 +177,7 @@ pub struct SetRiskTimelock<'info> {
                     mut,
                     constraint = authority.key() == pot.authority @ PotError::StrategyNotAdmin,
                 )]
-        pub pot: Account<'info, PotAccount>,
+        pub pot: Box<Account<'info, PotAccount>>,
         pub authority: Signer<'info>,
 }
 
@@ -223,7 +223,7 @@ pub fn set_risk_timelock(
 #[derive(Accounts)]
 pub struct ApplyPendingParams<'info> {
         #[account(mut)]
-        pub pot: Account<'info, PotAccount>,
+        pub pot: Box<Account<'info, PotAccount>>,
         pub cranker: Signer<'info>,
 }
 
@@ -258,7 +258,7 @@ pub struct FundFeeReserve<'info> {
                     mut,
                     constraint = authority.key() == pot.authority @ PotError::StrategyNotAdmin,
                 )]
-        pub pot: Account<'info, PotAccount>,
+        pub pot: Box<Account<'info, PotAccount>>,
         #[account(mut)]
         pub authority: Signer<'info>,
         pub system_program: Program<'info, System>,

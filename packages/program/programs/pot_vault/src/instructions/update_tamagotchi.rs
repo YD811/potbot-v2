@@ -4,7 +4,7 @@ use crate::state::*;
 #[derive(Accounts)]
 pub struct UpdateTamagotchi<'info> {
     #[account(mut)]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 }
 
 pub fn handler(ctx: Context<UpdateTamagotchi>) -> Result<()> {

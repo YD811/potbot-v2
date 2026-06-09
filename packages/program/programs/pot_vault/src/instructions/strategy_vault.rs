@@ -15,7 +15,7 @@ pub struct CreateStrategyVault<'info> {
         seeds = [b"pot", creator.key().as_ref(), pot_name.as_bytes()],
         bump = pot.pot_bump,
     )]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     #[account(
         init,
@@ -223,7 +223,7 @@ pub struct EvolveTamagotchi<'info> {
     #[account(mut)]
     pub strategy_vault: Account<'info, StrategyVaultAccount>,
 
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 }
 
 pub fn evolve_tamagotchi(ctx: Context<EvolveTamagotchi>) -> Result<()> {

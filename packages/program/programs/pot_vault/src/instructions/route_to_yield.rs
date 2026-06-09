@@ -49,7 +49,7 @@ pub struct RouteToYield<'info> {
         constraint = !pot.paused @ PotError::StrategyInactive,
         has_one = authority @ PotError::StrategyNotAdmin,
     )]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     /// CHECK: vault PDA. Read-only here — the stub doesn't move SOL yet.
     #[account(

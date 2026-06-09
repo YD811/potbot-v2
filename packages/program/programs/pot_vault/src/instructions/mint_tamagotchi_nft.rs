@@ -14,7 +14,7 @@ use crate::errors::ErrorCode;
 #[derive(Accounts)]
 pub struct MintTamagotchiNft<'info> {
     #[account(mut)]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     #[account(
         init,
@@ -23,7 +23,7 @@ pub struct MintTamagotchiNft<'info> {
         seeds = [b"tamagotchi_nft", pot.key().as_ref()],
         bump
     )]
-    pub tamagotchi_nft_account: Account<'info, TamagotchiNftAccount>,
+    pub tamagotchi_nft_account: Box<Account<'info, TamagotchiNftAccount>>,
 
     #[account(
         init,
@@ -34,7 +34,7 @@ pub struct MintTamagotchiNft<'info> {
         seeds = [b"tamagotchi_mint", pot.key().as_ref()],
         bump
     )]
-    pub tamagotchi_mint: Account<'info, Mint>,
+    pub tamagotchi_mint: Box<Account<'info, Mint>>,
 
     #[account(
         init,
@@ -42,7 +42,7 @@ pub struct MintTamagotchiNft<'info> {
         associated_token::mint = tamagotchi_mint,
         associated_token::authority = authority
     )]
-    pub tamagotchi_token_account: Account<'info, TokenAccount>,
+    pub tamagotchi_token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: Metadata account, checked by Metaplex
     #[account(

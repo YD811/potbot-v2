@@ -18,7 +18,7 @@ pub struct CloseStrategy<'info> {
         mut,
         constraint = pot.key() == strategy.pot @ PotError::StrategyPotMismatch,
     )]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     #[account(
         mut,

@@ -12,7 +12,7 @@ pub struct JoinPrivatePot<'info> {
         mut,
         constraint = !pot.config.is_public @ ErrorCode::NotPrivatePot
     )]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     #[account(
         mut,

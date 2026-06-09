@@ -22,7 +22,7 @@ pub struct SetSentinel<'info> {
         mut,
         constraint = authority.key() == pot.authority @ PotError::UnauthorizedAccess,
     )]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
     pub authority: Signer<'info>,
 }
 
@@ -46,7 +46,7 @@ pub struct FreezePot<'info> {
         constraint = pot.is_sentinel_or_authority(&signer.key())
             @ PotError::NotSentinelOrAuthority,
     )]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
     pub signer: Signer<'info>,
 }
 
@@ -68,7 +68,7 @@ pub struct UnfreezePot<'info> {
         mut,
         constraint = signer.key() == pot.authority @ PotError::SentinelCannotUnfreeze,
     )]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
     pub signer: Signer<'info>,
 }
 
@@ -89,7 +89,7 @@ pub fn unfreeze_pot(ctx: Context<UnfreezePot>) -> Result<()> {
 #[derive(Accounts)]
 pub struct CancelProposal<'info> {
     #[account(mut)]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     #[account(
         mut,

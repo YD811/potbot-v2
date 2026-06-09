@@ -6,7 +6,7 @@ use crate::errors::PotError;
 #[derive(Accounts)]
 pub struct Deposit<'info> {
     #[account(mut)]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     /// CHECK: PDA vault that holds SOL
     #[account(

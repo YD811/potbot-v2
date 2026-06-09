@@ -12,7 +12,7 @@ use crate::state::tamagotchi_nft::TamagotchiNftAccount;
 #[derive(Accounts)]
 pub struct UpdateTamagotchiMetadata<'info> {
     #[account(mut)]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     #[account(
         mut,

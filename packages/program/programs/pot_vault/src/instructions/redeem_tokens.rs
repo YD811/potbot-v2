@@ -21,7 +21,7 @@ const MAX_EXIT_BPS: u128 = 8_000;
 #[derive(Accounts)]
 pub struct RedeemTokens<'info> {
     #[account(mut)]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     /// Vault PDA holding the pot's SOL.
     #[account(

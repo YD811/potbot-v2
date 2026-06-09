@@ -8,7 +8,7 @@ use crate::errors::ErrorCode;
 #[derive(Accounts)]
 pub struct TokenizeShares<'info> {
     #[account(mut)]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
     
     #[account(
         mut,
@@ -81,7 +81,7 @@ pub struct MintTokensToMember<'info> {
     #[account(
         constraint = pot.token_mint != Pubkey::default() @ ErrorCode::NotTokenized
     )]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
     
     #[account(
         mut,

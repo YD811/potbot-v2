@@ -88,7 +88,7 @@ pub struct ExecuteSwap<'info> {
         mut,
         constraint = !pot.paused @ crate::errors::PotError::StrategyInactive,
     )]
-    pub pot: Account<'info, crate::state::pot::PotAccount>,
+    pub pot: Box<Account<'info, crate::state::pot::PotAccount>>,
 
     #[account(
         mut,
@@ -96,7 +96,7 @@ pub struct ExecuteSwap<'info> {
         bump = strategy.bump,
         has_one = pot,
     )]
-    pub strategy: Account<'info, StrategyAccount>,
+    pub strategy: Box<Account<'info, StrategyAccount>>,
 
     /// CHECK: vault PDA. Signs Jupiter CPI via invoke_signed with canonical bump.
     /// Asset ownership is validated via source_ata / destination_ata.owner below.
@@ -113,7 +113,7 @@ pub struct ExecuteSwap<'info> {
         constraint = (args.is_entry && source_ata.mint == strategy.input_mint) || (!args.is_entry && source_ata.mint == strategy.output_mint)
             @ crate::errors::PotError::MintNotAllowlisted,
     )]
-    pub source_ata: Account<'info, TokenAccount>,
+    pub source_ata: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
@@ -122,7 +122,7 @@ pub struct ExecuteSwap<'info> {
         constraint = (args.is_entry && destination_ata.mint == strategy.output_mint) || (!args.is_entry && destination_ata.mint == strategy.input_mint)
             @ crate::errors::PotError::MintNotAllowlisted,
     )]
-    pub destination_ata: Account<'info, TokenAccount>,
+    pub destination_ata: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: Jupiter v6. Pinned by pubkey.
     #[account(
@@ -146,7 +146,7 @@ pub struct ExecuteSwap<'info> {
         bump = proposal_swap_spec.bump,
         has_one = pot @ crate::errors::PotError::ProposalMismatch,
     )]
-    pub proposal_swap_spec: Option<Account<'info, ProposalSwapSpec>>,
+    pub proposal_swap_spec: Option<Box<Account<'info, ProposalSwapSpec>>>,
 
     /// Signer interpretation:
     ///   AdminDirect      → must equal pot.authority

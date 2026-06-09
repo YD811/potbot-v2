@@ -44,7 +44,7 @@ pub struct CreateStrategyArgs {
 pub struct CreateStrategy<'info> {
     /// Parent pot. Must match `args.source` (e.g. pot.authority for AdminDirect).
     #[account(mut)]
-    pub pot: Account<'info, crate::state::pot::PotAccount>,
+    pub pot: Box<Account<'info, crate::state::pot::PotAccount>>,
 
     #[account(
         init,

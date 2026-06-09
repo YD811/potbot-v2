@@ -39,7 +39,7 @@ pub struct CreatePot<'info> {
         seeds = [b"pot", authority.key().as_ref(), params.name.as_bytes()],
         bump
     )]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     /// CHECK: PDA vault that holds SOL
     #[account(

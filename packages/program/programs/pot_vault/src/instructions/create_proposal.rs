@@ -12,7 +12,7 @@ pub struct CreateProposalParams {
 #[instruction(params: CreateProposalParams)]
 pub struct CreateProposal<'info> {
     #[account(mut)]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     #[account(
         init,
