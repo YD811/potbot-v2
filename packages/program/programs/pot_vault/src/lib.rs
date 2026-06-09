@@ -207,12 +207,71 @@ pub mod pot_vault {
         instructions::pot_admin::set_allowed_mints(ctx, args)
     }
 
-    /// Configure per-swap size cap and daily budget.
+    /// Configure per-swap size cap and daily budget. When a risk-param
+    /// timelock is configured, loosening changes are staged and only take
+    /// effect after the delay (see apply_pending_params).
     pub fn set_spending_policy(
         ctx: Context<SetSpendingPolicy>,
         args: SetSpendingPolicyArgs,
     ) -> Result<()> {
         instructions::pot_admin::set_spending_policy(ctx, args)
+    }
+
+    /// Fund the pot's keeper-gas reserve.
+    pub fn fund_fee_reserve(
+        ctx: Context<FundFeeReserve>,
+        args: FundFeeReserveArgs,
+    ) -> Result<()> {
+        instructions::pot_admin::fund_fee_reserve(ctx, args)
+    }
+
+    // ─── Security hardening (Phase A) ─────────────────────────────────────
+
+    /// Assign or clear the sentinel/guardian wallet. The sentinel can
+    /// freeze the pot and cancel proposals but can NEVER move funds.
+    pub fn set_sentinel(
+        ctx: Context<SetSentinel>,
+        new_sentinel: Option<Pubkey>,
+    ) -> Result<()> {
+        instructions::sentinel::set_sentinel(ctx, new_sentinel)
+    }
+
+    /// Freeze the pot (sentinel or authority). Blocks deposits, proposal
+    /// execution, swaps and strategy creation. Member withdrawals stay open.
+    pub fn freeze_pot(ctx: Context<FreezePot>) -> Result<()> {
+        instructions::sentinel::freeze_pot(ctx)
+    }
+
+    /// Unfreeze the pot — authority only.
+    pub fn unfreeze_pot(ctx: Context<UnfreezePot>) -> Result<()> {
+        instructions::sentinel::unfreeze_pot(ctx)
+    }
+
+    /// Cancel an Active or Passed proposal (sentinel, authority or proposer).
+    pub fn cancel_proposal(ctx: Context<CancelProposal>) -> Result<()> {
+        instructions::sentinel::cancel_proposal(ctx)
+    }
+
+    /// Set the program-id allowlist for external CPI targets.
+    pub fn set_allowed_programs(
+        ctx: Context<SetAllowedPrograms>,
+        args: SetAllowedProgramsArgs,
+    ) -> Result<()> {
+        instructions::pot_admin::set_allowed_programs(ctx, args)
+    }
+
+    /// Configure the risk-param timelock and per-asset exposure cap.
+    pub fn set_risk_timelock(
+        ctx: Context<SetRiskTimelock>,
+        args: SetRiskTimelockArgs,
+    ) -> Result<()> {
+        instructions::pot_admin::set_risk_timelock(ctx, args)
+    }
+
+    /// Permissionless crank: apply a staged risky-param change once its
+    /// timelock has elapsed.
+    pub fn apply_pending_params(ctx: Context<ApplyPendingParams>) -> Result<()> {
+        instructions::pot_admin::apply_pending_params(ctx)
     }
 
     // ─── Yield routing (Phase 4 stub — emit-only) ─────────────────────────

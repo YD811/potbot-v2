@@ -104,6 +104,15 @@ pub fn handler(ctx: Context<CreatePot>, params: CreatePotParams) -> Result<()> {
     pot.token_mint = Pubkey::default();
     pot.shares_per_sol = 100;
 
+    // Security hardening (Phase A) — safe defaults, all opt-in.
+    pot.sentinel                 = None;
+    pot.risk_param_timelock_secs = 0;
+    pot.pending_params           = PendingRiskParams::default();
+    pot.allowed_programs         = [Pubkey::default(); 8];
+    pot.allowed_programs_count   = 0;
+    pot.max_asset_exposure_bps   = 0;
+    pot.per_mint_daily_spent     = [0u64; 16];
+
     pot.config = PotConfig {
         is_public: params.is_public,
         min_deposit: params.min_deposit,
