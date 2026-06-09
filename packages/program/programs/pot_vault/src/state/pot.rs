@@ -87,6 +87,36 @@ pub struct PotAccount {
 
     /// Keeper gas reserve (lamports). Keeper draws from this for trigger gas.
     pub fee_reserve: u64,
+
+    // ─── Security hardening (Phase A) ─────────────────────────────────────
+
+    /// Optional sentinel/guardian wallet. Can freeze the pot and cancel
+    /// proposals; has NO instruction that can move funds. None = unset.
+    pub sentinel: Option<Pubkey>,
+
+    /// Timelock (seconds) applied when a risky governance parameter is
+    /// LOOSENED (caps raised, approval levels lowered). Tightening changes
+    /// apply immediately. 0 = disabled — all changes apply immediately.
+    pub risk_param_timelock_secs: i64,
+
+    /// Staged loosening change awaiting its timelock. Applied via the
+    /// permissionless `apply_pending_params` instruction once
+    /// `effective_at` has passed. A new staged change replaces this one.
+    pub pending_params: PendingRiskParams,
+
+    /// Program-id allowlist for external CPI targets (Jupiter, yield
+    /// protocols). Zeroed entries = unused slots. count == 0 = open mode.
+    pub allowed_programs: [Pubkey; 8],
+    pub allowed_programs_count: u8,
+
+    /// Max cumulative daily spend toward any single output mint, as bps of
+    /// vault balance. Tracked per allowed_mints slot. 0 = unlimited.
+    /// Only enforceable when the mint allowlist is configured.
+    pub max_asset_exposure_bps: u16,
+
+    /// Daily spend (input lamport-equivalents) per allowed_mints slot.
+    /// Resets together with daily_spend_day.
+    pub per_mint_daily_spent: [u64; 16],
 }
 
 // ─── Config structs ───────────────────────────────────────────────────────
@@ -112,6 +142,23 @@ pub struct GovSettings {
     pub vote_timeout_seconds: i64,
     pub quorum_bps: u16,
     pub timelock_seconds: i64,
+}
+
+/// A staged change to risky governance parameters, waiting out the
+/// risk-param timelock. Stores the FULL target value set: fields that were
+/// tightened are applied immediately at staging time, so re-applying them
+/// here is a no-op; loosened fields take effect only at `effective_at`.
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace, Default)]
+pub struct PendingRiskParams {
+    pub is_pending: bool,
+    /// Unix timestamp after which apply_pending_params may apply this change.
+    pub effective_at: i64,
+    pub trade_level: u8,
+    pub withdraw_level: u8,
+    pub max_trade_size_bps: u16,
+    pub single_swap_cap_bps: u16,
+    pub daily_budget_lamports: u64,
+    pub risk_param_timelock_secs: i64,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace, PartialEq)]
@@ -311,6 +358,8 @@ impl PotAccount {
         if current_day > self.daily_spend_day {
             self.daily_spent_lamports = 0;
             self.daily_spend_day = current_day;
+            // Per-mint exposure counters share the same UTC-day window.
+            self.per_mint_daily_spent = [0u64; 16];
         }
         self.daily_spent_lamports = self
             .daily_spent_lamports
@@ -318,4 +367,195 @@ impl PotAccount {
             .ok_or(error!(PotError::MathOverflow))?;
         Ok(())
     }
+
+    // ─── Security hardening (Phase A) methods ────────────────────────────
+
+    /// True if `signer` is the pot authority or the configured sentinel.
+    pub fn is_sentinel_or_authority(&self, signer: &Pubkey) -> bool {
+        *signer == self.authority || self.sentinel.as_ref() == Some(signer)
+    }
+
+    /// Returns true if `program_id` may be CPI'd into from execute paths.
+    /// count == 0 = open mode (any program) for backward compatibility.
+    pub fn is_program_allowed(&self, program_id: &Pubkey) -> bool {
+        if self.allowed_programs_count == 0 {
+            return true;
+        }
+        self.allowed_programs[..self.allowed_programs_count as usize]
+            .iter()
+            .any(|p| p == program_id)
+    }
+
+    /// Slot index of `mint` in allowed_mints, if listed.
+    fn mint_slot(&self, mint: &Pubkey) -> Option<usize> {
+        self.allowed_mints[..self.allowed_mints_count as usize]
+            .iter()
+            .position(|m| m == mint)
+    }
+
+    /// Check that spending `amount` more input lamports toward `mint` today
+    /// stays within max_asset_exposure_bps of the vault balance.
+    /// No-op when the cap is 0 or the mint allowlist is open (no slots to
+    /// track against). Does NOT mutate — call register_asset_spend after.
+    pub fn check_asset_exposure(
+        &self,
+        mint: &Pubkey,
+        amount: u64,
+        vault_lamports: u64,
+        now: i64,
+    ) -> Result<()> {
+        if self.max_asset_exposure_bps == 0 {
+            return Ok(());
+        }
+        let Some(slot) = self.mint_slot(mint) else {
+            return Ok(()); // open mode / unlisted mint — allowlist guard handles it
+        };
+        let spent_today = if now / 86400 > self.daily_spend_day {
+            0u64
+        } else {
+            self.per_mint_daily_spent[slot]
+        };
+        let cap = (vault_lamports as u128)
+            .checked_mul(self.max_asset_exposure_bps as u128)
+            .ok_or(error!(PotError::MathOverflow))?
+            / 10_000u128;
+        let new_total = (spent_today as u128)
+            .checked_add(amount as u128)
+            .ok_or(error!(PotError::MathOverflow))?;
+        require!(new_total <= cap, PotError::AssetExposureExceeded);
+        Ok(())
+    }
+
+    /// Record spend toward `mint` for the per-asset daily exposure cap.
+    /// Call AFTER register_spend (which handles the day rollover).
+    pub fn register_asset_spend(&mut self, mint: &Pubkey, amount: u64) -> Result<()> {
+        if let Some(slot) = self.mint_slot(mint) {
+            self.per_mint_daily_spent[slot] = self.per_mint_daily_spent[slot]
+                .checked_add(amount)
+                .ok_or(error!(PotError::MathOverflow))?;
+        }
+        Ok(())
+    }
+
+    /// Stage-or-apply a risky-parameter change.
+    ///
+    /// `target` carries the FULL desired value set. Per field: if the new
+    /// value is tighter-or-equal it is applied immediately; if ANY field is
+    /// looser and a risk-param timelock is configured, the full target set
+    /// is staged into pending_params (replacing any prior staged change)
+    /// and takes effect via apply_pending_params after the delay.
+    /// Returns true if a change was staged (caller may emit/log).
+    pub fn stage_or_apply_risk_params(
+        &mut self,
+        mut target: PendingRiskParams,
+        now: i64,
+    ) -> Result<bool> {
+        let mut any_loosening = false;
+
+        // Approval levels: HIGHER = tighter. Apply raises now; delay lowers.
+        if target.trade_level >= self.governance.trade_level {
+            self.governance.trade_level = target.trade_level;
+        } else {
+            any_loosening = true;
+        }
+        if target.withdraw_level >= self.governance.withdraw_level {
+            self.governance.withdraw_level = target.withdraw_level;
+        } else {
+            any_loosening = true;
+        }
+
+        // Caps: 0 = unlimited (loosest); otherwise lower = tighter.
+        if !cap_is_looser(self.config.max_trade_size_bps as u64, target.max_trade_size_bps as u64) {
+            self.config.max_trade_size_bps = target.max_trade_size_bps;
+        } else {
+            any_loosening = true;
+        }
+        if !cap_is_looser(self.single_swap_cap_bps as u64, target.single_swap_cap_bps as u64) {
+            self.single_swap_cap_bps = target.single_swap_cap_bps;
+        } else {
+            any_loosening = true;
+        }
+        if !cap_is_looser(self.daily_budget_lamports, target.daily_budget_lamports) {
+            self.daily_budget_lamports = target.daily_budget_lamports;
+        } else {
+            any_loosening = true;
+        }
+
+        // Timelock itself: HIGHER = tighter; 0 = disabled (loosest).
+        if !timelock_is_looser(self.risk_param_timelock_secs, target.risk_param_timelock_secs) {
+            self.risk_param_timelock_secs = target.risk_param_timelock_secs;
+        } else {
+            any_loosening = true;
+        }
+
+        if any_loosening {
+            if self.risk_param_timelock_secs <= 0 {
+                // No timelock configured — loosening applies immediately too.
+                self.apply_params(&target);
+                self.pending_params = PendingRiskParams::default();
+                return Ok(false);
+            }
+            target.is_pending = true;
+            target.effective_at = now
+                .checked_add(self.risk_param_timelock_secs)
+                .ok_or(error!(PotError::MathOverflow))?;
+            self.pending_params = target;
+            return Ok(true);
+        }
+
+        // Fully-tightening change: clear any stale staged loosening so it
+        // cannot later override the new, tighter values.
+        self.pending_params = PendingRiskParams::default();
+        Ok(false)
+    }
+
+    /// Apply the staged change (permissionless once effective_at passed).
+    pub fn apply_pending(&mut self, now: i64) -> Result<()> {
+        require!(self.pending_params.is_pending, PotError::NoPendingChange);
+        require!(
+            now >= self.pending_params.effective_at,
+            PotError::PendingChangeNotReady
+        );
+        let staged = self.pending_params.clone();
+        self.apply_params(&staged);
+        self.pending_params = PendingRiskParams::default();
+        Ok(())
+    }
+
+    fn apply_params(&mut self, p: &PendingRiskParams) {
+        self.governance.trade_level = p.trade_level;
+        self.governance.withdraw_level = p.withdraw_level;
+        self.config.max_trade_size_bps = p.max_trade_size_bps;
+        self.single_swap_cap_bps = p.single_swap_cap_bps;
+        self.daily_budget_lamports = p.daily_budget_lamports;
+        self.risk_param_timelock_secs = p.risk_param_timelock_secs;
+    }
+}
+
+/// 0 = unlimited (loosest). Otherwise a higher cap is looser.
+fn cap_is_looser(old: u64, new: u64) -> bool {
+    if old == new {
+        return false;
+    }
+    if new == 0 {
+        return true; // bounded → unlimited
+    }
+    if old == 0 {
+        return false; // unlimited → bounded = tightening
+    }
+    new > old
+}
+
+/// 0 = disabled (loosest). Otherwise a shorter timelock is looser.
+fn timelock_is_looser(old: i64, new: i64) -> bool {
+    if old == new {
+        return false;
+    }
+    if new <= 0 {
+        return true;
+    }
+    if old <= 0 {
+        return false;
+    }
+    new < old
 }
