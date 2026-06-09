@@ -67,14 +67,47 @@ function LivePriceTicker() {
 
 // Static keys; visible labels are computed at render so the human-text
 // translator can swap "Vaults" → "POTs" etc. in light mode.
+// Home ⇄ Vaults is handled by the pill toggle below. Leaderboard now lives
+// as a tab inside /pots. FAQ lives in the footer only.
 const NAV_LINKS: { href: string; emoji: string; term: string }[] = [
-  { href: '/',            emoji: '',     term: 'Home' },
-  { href: '/vaults',      emoji: '⚡',   term: 'Vaults' },
-  { href: '/leaderboard', emoji: '🏆',   term: 'Leaderboard' },
+  { href: '/pricing',     emoji: '💎',   term: 'Pricing' },
   { href: '/hackathon',   emoji: '⚒️',   term: 'Hackathon' },
   { href: '/create',      emoji: '+',    term: 'Create' },
   { href: '/name',        emoji: '🌿',   term: 'Get a name' },
 ]
+
+/** Segmented Home ⇄ Vaults control. Always visible (logged in or not).
+ *  Home → landing page "/". Vaults → the /pots dashboard (pot list,
+ *  leaderboard, my pots). */
+function HomeVaultsToggle({ pathname }: { pathname: string }) {
+  // "Vaults" view = the /pots dashboard (and individual pot pages, /vaults).
+  const onVaults =
+    pathname.startsWith('/pots') ||
+    pathname.startsWith('/vaults') ||
+    pathname.startsWith('/leaderboard') ||
+    pathname.startsWith('/my-pots') ||
+    pathname.startsWith('/dashboard')
+  return (
+    <div className="flex items-center rounded-lg border border-pot-border bg-pot-card p-0.5 text-sm font-medium">
+      <Link
+        href="/"
+        className={`px-3 py-1 rounded-md transition ${
+          !onVaults ? 'bg-pot-green text-pot-dark' : 'text-gray-400 hover:text-white'
+        }`}
+      >
+        Home
+      </Link>
+      <Link
+        href="/pots"
+        className={`px-3 py-1 rounded-md transition ${
+          onVaults ? 'bg-pot-green text-pot-dark' : 'text-gray-400 hover:text-white'
+        }`}
+      >
+        Vaults
+      </Link>
+    </div>
+  )
+}
 
 export function Navbar() {
   const t = useHumanText()
@@ -103,16 +136,13 @@ export function Navbar() {
         </Link>
 
         <div className="hidden sm:flex items-center gap-1 text-sm font-medium">
+          {/* Home ⇄ Vaults pill toggle — always visible */}
+          <HomeVaultsToggle pathname={pathname} />
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className={`px-3 py-1.5 rounded-lg transition ${
               isActive(link.href) ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
             }`}>{navLabel(link)}</Link>
           ))}
-          {publicKey && (
-            <Link href="/dashboard" className={`px-3 py-1.5 rounded-lg transition ${
-              isActive('/dashboard') ? 'text-pot-accent bg-pot-accent/10 border border-pot-accent/30' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
-            }`}>{t('My Dashboard')}</Link>
-          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -157,18 +187,21 @@ export function Navbar() {
             </Link>
           )}
 
+          <Link href="/" onClick={() => setMenuOpen(false)}
+            className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+              isActive('/') ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
+            }`}>Home</Link>
+          <Link href="/pots" onClick={() => setMenuOpen(false)}
+            className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+              pathname.startsWith('/pots') || pathname.startsWith('/vaults') || pathname.startsWith('/leaderboard') || pathname.startsWith('/my-pots')
+                ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
+            }`}>⚡ Vaults</Link>
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}
               className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
                 isActive(link.href) ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
               }`}>{navLabel(link)}</Link>
           ))}
-          {publicKey && (
-            <Link href="/dashboard" onClick={() => setMenuOpen(false)}
-              className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
-                isActive('/dashboard') ? 'text-pot-accent bg-pot-accent/10 border border-pot-accent/30' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
-              }`}>{t('My Dashboard')}</Link>
-          )}
           <div className="pt-2 border-t border-pot-border/50">
             <Link href="/for-agents" onClick={() => setMenuOpen(false)}
               className="block px-4 py-2 text-sm text-pot-muted hover:text-pot-green transition">

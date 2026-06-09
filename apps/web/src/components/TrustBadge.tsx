@@ -8,6 +8,9 @@ interface TrustBadgeProps {
   auditUrl?: string | null
   size?: 'sm' | 'md' | 'lg'
   showLabel?: boolean
+  /** When provided, the badge becomes a button that calls this instead of
+   *  linking to `auditUrl` — used to open the VerifiedModal. */
+  onClick?: (e: React.MouseEvent) => void
 }
 
 const TRUST_CONFIG: Record<TrustLevel, {
@@ -58,6 +61,7 @@ export function TrustBadge({
   auditUrl,
   size = 'sm',
   showLabel = true,
+  onClick,
 }: TrustBadgeProps) {
   if (level === 'unverified') return null
 
@@ -78,6 +82,16 @@ export function TrustBadge({
       {showLabel && <span>{cfg.label}</span>}
     </span>
   )
+
+  // An explicit onClick (e.g. open VerifiedModal) takes priority over the
+  // audit-report link.
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className="hover:opacity-80 transition cursor-pointer">
+        {badge}
+      </button>
+    )
+  }
 
   if (auditUrl) {
     return (

@@ -79,6 +79,9 @@ export interface MockPot {
   trustLevel?: 'unverified' | 'community' | 'audited' | 'institutional'
   verifiedBy?: string
   auditUrl?: string
+
+  // ── Subscription plan (gates premium pot features) ───────────────────────
+  subscriptionTier?: 'free' | 'early' | 'pro' | 'pro_plus'
 }
 
 export interface MockMember {
@@ -332,6 +335,110 @@ const SEED_POTS: MockPot[] = [
     trustLevel: 'institutional',
     verifiedBy: 'Halborn',
     auditUrl: 'https://github.com/YD811/potbot-v2',
+  },
+
+  // ── Featured by PotBot — institutional-grade vaults managed by PotBot AI ──
+  // Flagged trustLevel:'institutional' + verifiedBy:'PotBot' so the /vaults
+  // "Featured by PotBot" section can source them. One per Autopilot strategy
+  // (Safe=1 / Balanced=2 / Aggressive=3).
+  {
+    pubkey: 'PotBotFeatSafe111111111111111111111111111111',
+    name: 'PotBot Safe Index',
+    emoji: '🛡️',
+    balance: 480.0,
+    totalShares: 480000,
+    memberCount: 142,
+    tradeCount: 9,
+    totalVolume: 210.4,
+    tamagotchiLevel: 4,
+    tamagotchiXp: 9800,
+    isPublic: true,
+    yieldStrategy: 1,
+    tradeLevel: 3,
+    withdrawLevel: 3,
+    authority: 'PotBotAuthSafe1111111111111111111111111111',
+    createdAt: Date.now() - 60 * 86400000,
+    nextProposalId: 4,
+    holdings: [
+      { mint: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn', symbol: 'JitoSOL', icon: '🔥', amount: 240.0, decimals: 9 },
+      { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', symbol: 'USDC',    icon: '💵', amount: 18000, decimals: 6 },
+    ],
+    meteoraLpBalance: 144.0,
+    totalYieldEarned: 6.42,
+    lastYieldAccrualAt: Date.now(),
+    mode: 'tokenized',
+    tokenTicker: 'PBSAFE',
+    navPerShareBps: 10620,
+    trustLevel: 'institutional',
+    verifiedBy: 'PotBot',
+    auditUrl: 'https://github.com/YD811/potbot-v2',
+    subscriptionTier: 'pro_plus',
+  },
+  {
+    pubkey: 'PotBotFeatBal11111111111111111111111111111111',
+    name: 'PotBot Balanced Index',
+    emoji: '⚖️',
+    balance: 320.0,
+    totalShares: 320000,
+    memberCount: 208,
+    tradeCount: 34,
+    totalVolume: 1240.8,
+    tamagotchiLevel: 5,
+    tamagotchiXp: 16400,
+    isPublic: true,
+    yieldStrategy: 2,
+    tradeLevel: 2,
+    withdrawLevel: 2,
+    authority: 'PotBotAuthBal11111111111111111111111111111',
+    createdAt: Date.now() - 75 * 86400000,
+    nextProposalId: 11,
+    holdings: [
+      { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', symbol: 'USDC', icon: '💵', amount: 9000,  decimals: 6 },
+      { mint: 'JUPyiwrYJFskUPiHa7hkeR8NqtwybKv5LqYjTrsixO7', symbol: 'JUP',  icon: '🪐', amount: 14000, decimals: 6 },
+    ],
+    meteoraLpBalance: 192.0,
+    totalYieldEarned: 11.8,
+    lastYieldAccrualAt: Date.now(),
+    mode: 'tokenized',
+    tokenTicker: 'PBBAL',
+    navPerShareBps: 11240,
+    trustLevel: 'institutional',
+    verifiedBy: 'PotBot',
+    auditUrl: 'https://github.com/YD811/potbot-v2',
+    subscriptionTier: 'pro_plus',
+  },
+  {
+    pubkey: 'PotBotFeatAggr1111111111111111111111111111111',
+    name: 'PotBot Alpha Index',
+    emoji: '⚡',
+    balance: 175.0,
+    totalShares: 175000,
+    memberCount: 96,
+    tradeCount: 87,
+    totalVolume: 2980.5,
+    tamagotchiLevel: 5,
+    tamagotchiXp: 19800,
+    isPublic: true,
+    yieldStrategy: 3,
+    tradeLevel: 1,
+    withdrawLevel: 2,
+    authority: 'PotBotAuthAggr1111111111111111111111111111',
+    createdAt: Date.now() - 40 * 86400000,
+    nextProposalId: 24,
+    holdings: [
+      { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixVrtVZvWr8Alfred89u', symbol: 'BONK', icon: '🐕', amount: 1_200_000_000, decimals: 5 },
+      { mint: 'EKpQGSKe94Fp3gWQrW1zYvbwDiQMqFEuer5pVUeX3mQ', symbol: 'WIF',  icon: '🐶', amount: 3400,          decimals: 6 },
+    ],
+    meteoraLpBalance: 140.0,
+    totalYieldEarned: 18.6,
+    lastYieldAccrualAt: Date.now(),
+    mode: 'tokenized',
+    tokenTicker: 'PBALPHA',
+    navPerShareBps: 12880,
+    trustLevel: 'institutional',
+    verifiedBy: 'PotBot',
+    auditUrl: 'https://github.com/YD811/potbot-v2',
+    subscriptionTier: 'pro_plus',
   },
 ]
 
@@ -643,6 +750,7 @@ export const useMockStore = create<MockState>((set, get) => ({
       mode: 'virtual',
       tokenTicker: '',
       navPerShareBps: 10000,
+      subscriptionTier: 'free',
     }
     const creatorMember: MockMember = {
       potPubkey: pubkey,
