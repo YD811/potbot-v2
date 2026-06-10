@@ -46,7 +46,8 @@ The vault is a Solana program account from day one — no custodian, no operator
 A POT is a program-controlled treasury on Solana. Members deposit SOL, USDC, LSTs, LP positions or any tokenized asset, and receive proportional shares (NAV-priced). Every change to the treasury — swap, withdrawal, settings update — is a proposal that members vote on. The vault PDA signs the execution.
 
 - **Programmable ownership** — SPL-tokenized shares, redeemable any time
-- **Onchain governance** — five levels from Autocracy (L0) to Consensus (L4), plus optional risk caps (`max_swap_pct`, `max_budget_grant_pct`, `require_admin_cosign`, `timelock_seconds`)
+- **Onchain governance** — five levels from Autocracy (L0) to Consensus (L4), plus optional risk caps (`max_swap_pct`, `max_budget_grant_pct`, `require_admin_cosign`, `timelock_seconds`) and one-click presets (😎 Chill · ⚖️ Balanced · 🏛 Institutional)
+- **Security layer** — optional sentinel/guardian wallet (can freeze a pot and cancel proposals, can never move funds), risk-param timelock (loosening changes wait, tightening is instant), per-protocol CPI allowlist, per-asset daily exposure caps. Member exits are never blockable — withdraw and share redemption stay open even while frozen
 - **AI orchestration** — the BOT proposes, executes once quorum is reached, and can be delegated to vote on rules you set
 - **Composable** — Jupiter v6 / Ultra swaps, Squads v4 multisig authority, MCP for any AI agent, Solana Blinks for tweet-native deposits and votes
 - **Identity** — every POT can claim a `<name>.potbot.sol` SNS subdomain
@@ -118,12 +119,26 @@ https://potbot.fun/api/actions/<potPubkey>/vote
 
 ---
 
-## Revenue model
+## Monetization
+
+**Subscriptions** — [potbot.fun/pricing](https://potbot.fun/pricing):
+
+| Tier | Price | Highlights |
+|---|---|---|
+| 🌱 Early Supporter | Free during beta | Unlimited pots & members, manual proposals, basic governance |
+| ⚡ Pro | $29/mo | AI Agent automation, Strategy Autopilot, visual customization, priority support |
+| 🏆 Pro+ | $99/mo | Everything in Pro, unlimited members, custom governance, white-label, dedicated RPC |
+
+Stripe checkout is wired behind `NEXT_PUBLIC_STRIPE_KEY`; paid billing activates alongside the mainnet launch.
+
+**Protocol fees** — accrue to the PotBot treasury (not to validators or the network):
 
 | Stream | Rate | Status |
 |---|---|---|
-| Swap fee | 0.30% on every trade routed through a pot | 🟢 Live |
-| Performance fee | 10% on Strategy Vault returns, split with strategy creator | 🟡 Devnet |
+| Pot creation fee | 0.01 SOL, charged onchain in `create_pot` | 🟡 Devnet |
+| Swap fee | 0.30% on every trade routed through a pot | 🟡 Devnet |
+| Strategy Vault entry fee | 20% protocol share (70% to the strategy creator, 10% to the referrer) | 🟡 Devnet |
+| Performance fee | 25% protocol share — the creator sets the rate per vault (capped at 50%) | 🟡 Devnet |
 
 No token, no airdrop farming.
 
@@ -195,9 +210,14 @@ Set `NEXT_PUBLIC_PRIVY_APP_ID` to enable email / Google / Twitter / LinkedIn log
 
 ## Current status
 
+🟢 live · 🟡 devnet · 🔵 Phase 2 Q3'26 · 🟣 Phase 3 Q4'26 · ⚪ vision
+
 | Layer | Status |
 |---|---|
 | `pot_vault` Anchor program (30+ instructions: deposit · propose · vote · execute_swap) | 🟡 Devnet live |
+| Sentinel/guardian role — `freeze_pot` / `cancel_proposal`; member exits never blocked | 🟡 Devnet (pending redeploy) |
+| Risk-param timelock — loosening staged, applied via permissionless `apply_pending_params` | 🟡 Devnet (pending redeploy) |
+| Per-protocol CPI allowlist (8 slots) + per-asset daily exposure caps | 🟡 Devnet (pending redeploy) |
 | Jupiter v6 / Ultra swap CPI (vault PDA signer) | 🟡 Devnet live |
 | Solana Blinks (deposit + vote endpoints) | 🟢 Live |
 | MCP server `@potbot/mcp@0.2.0` on npm (18 tools, x402 paid tier) | 🟢 Live |
@@ -212,13 +232,18 @@ Set `NEXT_PUBLIC_PRIVY_APP_ID` to enable email / Google / Twitter / LinkedIn log
 | Normie mode — Privy email / Google / Twitter / LinkedIn + embedded Solana wallet | 🟢 Live |
 | Light theme + plain-English copy + USD-first prices | 🟢 Live |
 | Account dashboard (profile · live SOL balance · Add SOL airdrop · Quick Trade) | 🟢 Live |
+| `/learn` education page + `/pricing` (Free beta · Pro $29 · Pro+ $99) | 🟢 Live |
+| Governance presets — 😎 Chill / ⚖️ Balanced / 🏛 Institutional | 🟢 Live |
+| Proposal card v2 (risk check · quorum bar · countdown) + trust surfaces (vault PDA + explorer, frozen/sentinel chips) | 🟢 Live |
 | `pot_duel` program — 1v1 vault challenges (unlocks at Bud stage) | 🟡 Devnet live |
 | Pyth in-program oracle guard (re-reads price feeds inside `execute_swap`) | 🔵 Phase 2 |
 | Meteora DLMM + Kamino yield strategies | 🔵 Phase 2 |
 | Light Protocol ZK-compressed audit log | 🔵 Phase 2 |
 | Tamagotchi NFT mint (Bloom unlock, Metaplex) | 🟣 Phase 3 |
 | STAMPPOT privacy mode (PrivacyCash ZK proofs) | 🟣 Phase 3 |
-| Mainnet deploy | 🔵 Post security pass |
+| Mainnet deploy | 🔵 Security pass done (14 localnet tests green, 7 security scenarios) — blocked on deployer + executor wallet funding |
+
+Devnet program: `GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK`. Devnet pots were recreated after the security hardening grew the `PotAccount` layout.
 
 Every feature with its lifecycle chip: [potbot.fun/roadmap](https://potbot.fun/roadmap)
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-PotBot is a **group trading vault platform** on Solana. Members pool SOL, govern collective trades via on-chain proposals, and earn yield together. A Tamagotchi mascot evolves with the vault's performance.
+PotBot is a **group trading vault platform** on Solana. Members pool SOL, govern collective trades via on-chain proposals, and earn yield together. A Money Tree mascot (Season 1) evolves with the vault's performance.
 
 The system is designed in three layers:
 
@@ -13,9 +13,9 @@ The system is designed in three layers:
                  │ browser / Telegram
 ┌────────────────▼─────────────────────────────┐
 │          Application Layer                    │
-│  Next.js DApp (app.potbot.fun)               │
-│  Telegram Bot (grammy)                        │
-│  Landing Page (potbot.fun)                   │
+│  Next.js DApp + API (potbot.fun)             │
+│  MCP server (@potbot/mcp — AI agents)        │
+│  Solana Blinks (deposit / vote in-tweet)     │
 └────────────────┬─────────────────────────────┘
                  │ Anchor SDK / @solana/web3.js
 ┌────────────────▼─────────────────────────────┐
@@ -66,7 +66,7 @@ When a vote tips past the required threshold (configurable per governance level)
 
 The DApp auto-detects whether the on-chain program is deployed by checking if the program account is executable. If not, it falls back to a Zustand in-memory store with realistic seed data. This means the UI is always usable — even before devnet deploy.
 
-See [MOCK_MODE.md](MOCK_MODE.md) for details.
+Implementation: `apps/web/src/lib/mock-store.ts` (auto-switch lives in `apps/web/src/hooks/usePots.ts`).
 
 ---
 
@@ -146,9 +146,9 @@ apps/web/src/
 
 ---
 
-## Tamagotchi XP System
+## Money Tree XP System
 
-XP is calculated off-chain from on-chain stats and displayed in the UI. It will be persisted on-chain via the `update_tamagotchi` instruction (permissionless crank).
+XP is calculated off-chain from on-chain stats and displayed in the UI. It will be persisted on-chain via the `update_tamagotchi` instruction (permissionless crank — the historical instruction/field names keep the Tamagotchi prefix for ABI stability).
 
 ```
 totalXP = volumeXP + memberXP + winXP + yieldXP + ageXP
@@ -160,13 +160,13 @@ where:
   yieldXP   = annualYieldPct * 100
   ageXP     = daysAlive * 5
 
-Evolution stages:
-  Egg    🥚  [0, 100)
-  Chick  🐣  [100, 500)
-  Baby   🐤  [500, 2000)
-  Eagle  🦅  [2000, 8000)
-  Dragon 🐉  [8000, 25000)
-  Legend 👑  [25000, ∞)
+Evolution stages (Season 1 — Plants):
+  Seedling    🌱  [0, 100)
+  Sprout      🌿  [100, 500)
+  Bud         🌳  [500, 2000)
+  Bloom       🌺  [2000, 8000)
+  Full Bloom  🌸  [8000, 25000)
+  Mature Tree 🌴  [25000, ∞)
 ```
 
 ---
@@ -176,14 +176,20 @@ Evolution stages:
 - **Re-entrancy**: Not possible in Solana's account model (no recursive CPIs in v1)
 - **Signer checks**: Every instruction verifies `authority` or `member.wallet` is a signer
 - **PDA ownership**: All accounts are `init`-ed with `seeds` — cannot be spoofed
-- **Slippage on swaps**: Proposal includes `min_out_amount`; CPI reverts if unmet
+- **Vault transfers**: lamports leave the vault PDA only via seeds-signed system-program transfers; fund-moving proposals pay the recorded beneficiary, never the executor
+- **Slippage on swaps**: Proposal includes `min_out_amount`; CPI reverts if unmet — plus a program-wide 5% slippage ceiling
 - **Governance bypass**: `execute_proposal` checks `status == Passed` on-chain
+- **Sentinel circuit-breaker**: optional guardian wallet can freeze the pot and cancel proposals but can never move funds; member exits (`withdraw`, `redeem_tokens`) stay open even while frozen
+- **Risk-param timelock**: loosening governance/risk parameters is staged and applied only after a delay via permissionless `apply_pending_params`; tightening applies instantly
+- **CPI + asset guards**: per-pot program-id allowlist (8 slots) for external CPI targets, mint allowlist, per-swap size cap, daily budget, and per-asset daily exposure caps
+
+Details: [`program.md` § Security layer](program.md#security-layer-sentinel--freeze--timelocks--allowlists).
 
 ---
 
-## Future: POT Duels
+## POT Duels
 
-A separate `pot_duel` program (planned Week 2) introduces:
+A separate `pot_duel` program (devnet; unlocks at the Bud stage) introduces:
 - Two vaults stake a % of their SOL into an escrow PDA
 - Both vaults trade freely for N hours
 - A Pyth oracle CPI determines final P&L
