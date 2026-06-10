@@ -3,8 +3,11 @@ import { NextRequest, NextResponse } from 'next/server'
 /**
  * GET /api/vaults/[pubkey]/analytics
  *
- * Returns NAV, PnL, APY, Sharpe, win rate, member count, trade count
+ * Returns NAV, PnL, APY, Sharpe, member count, trade count
  * for a given vault public key.
+ *
+ * win_rate is always `null` until it can be derived from real executed
+ * trade history — we never fabricate it.
  *
  * Data sources:
  *   - Solana RPC: vault balance (lamports → SOL)
@@ -89,7 +92,6 @@ export async function GET(
     // In demo/devnet — synthetic PnL derived from pubkey hash for determinism
     const seed = pubkey.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
     const pnl30d   = ((seed % 30) - 10) / 100          // -10% to +20%
-    const winRate  = 0.4 + (seed % 40) / 100            // 40%–80%
     const tradeCount = 10 + (seed % 200)
     const memberCount = 2 + (seed % 30)
 
@@ -112,7 +114,9 @@ export async function GET(
       // Performance
       pnl_30d_pct:  parseFloat((pnl30d * 100).toFixed(2)),
       apy_pct:      apy,
-      win_rate:     parseFloat(winRate.toFixed(3)),
+      // Honest analytics: win_rate stays null until it is computed from
+      // real executed trade history. Never synthesize it.
+      win_rate:     null as number | null,
       sharpe_ratio: sharpe,
       // Activity
       trade_count:  tradeCount,

@@ -25,17 +25,25 @@ function isFeatured(p: any): boolean {
   return p?.trustLevel === 'institutional' && p?.verifiedBy === 'PotBot'
 }
 
-type VaultFilter = 'all' | 'safe' | 'balanced' | 'aggressive' | 'verified'
+type VaultFilter = 'all' | 'conservative' | 'balanced' | 'aggressive' | 'verified'
 
 const FILTERS: { key: VaultFilter; label: string }[] = [
-  { key: 'all',        label: 'All' },
-  { key: 'safe',       label: '🛡️ Safe' },
-  { key: 'balanced',   label: '⚖️ Balanced' },
-  { key: 'aggressive', label: '⚡ Aggressive' },
-  { key: 'verified',   label: '✅ Verified' },
+  { key: 'all',          label: 'All' },
+  { key: 'conservative', label: '🛡️ Conservative' },
+  { key: 'balanced',     label: '⚖️ Balanced' },
+  { key: 'aggressive',   label: '⚡ Aggressive' },
+  { key: 'verified',     label: '✅ Verified' },
 ]
 
-const FILTER_STRATEGY: Record<string, number> = { safe: 1, balanced: 2, aggressive: 3 }
+// Risk buckets by yieldStrategy number (matches Strategy Autopilot presets):
+// 1 Safe + 5 Exponent PT (fixed-rate) → conservative
+// 2 Balanced + 6 JLP Hedge (delta-neutral) → balanced
+// 3 Aggressive + 4 JLP (levered LP) → aggressive
+const FILTER_STRATEGY: Record<string, number[]> = {
+  conservative: [1, 5],
+  balanced:     [2, 6],
+  aggressive:   [3, 4],
+}
 
 /** Deterministic upward-trending sparkline derived from the pot pubkey. */
 function Sparkline({ seed, className = '' }: { seed: string; className?: string }) {
@@ -75,6 +83,7 @@ export default function VaultsPage() {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState<'tvl' | 'members' | 'recent'>('tvl')
   const [filter, setFilter] = useState<VaultFilter>('all')
+  const [profitableOnly, setProfitableOnly] = useState(false)
   const [verifiedOpen, setVerifiedOpen] = useState(false)
 
   const openVerified = (e: React.MouseEvent) => {
@@ -97,7 +106,12 @@ export default function VaultsPage() {
       .filter((p: any) => {
         if (filter === 'all') return true
         if (filter === 'verified') return p.trustLevel && p.trustLevel !== 'unverified'
-        return p.yieldStrategy === FILTER_STRATEGY[filter]
+        return FILTER_STRATEGY[filter]?.includes(p.yieldStrategy)
+      })
+      .filter((p: any) => {
+        if (!profitableOnly) return true
+        const pnl = analyticsMap[p.pubkey]?.pnlPct
+        return pnl != null && pnl >= 0
       })
       .filter((p: any) => p.name?.toLowerCase().includes(search.toLowerCase()) ||
                           p.pubkey.toLowerCase().includes(search.toLowerCase()))
@@ -106,7 +120,15 @@ export default function VaultsPage() {
         if (sortBy === 'members') return (b.memberCount ?? 0) - (a.memberCount ?? 0)
         return (b.createdAt ?? 0) - (a.createdAt ?? 0)
       })
-  }, [pots, search, sortBy, filter])
+  }, [pots, search, sortBy, filter, profitableOnly, analyticsMap])
+
+  const hasActiveFilters = filter !== 'all' || profitableOnly || search.trim() !== ''
+
+  const clearFilters = () => {
+    setFilter('all')
+    setProfitableOnly(false)
+    setSearch('')
+  }
 
   return (
     <div className="min-h-screen">
@@ -209,6 +231,19 @@ export default function VaultsPage() {
                 </button>
               )
             })}
+            <div className="shrink-0 w-px h-5 bg-pot-border mx-1" />
+            <button
+              type="button"
+              onClick={() => setProfitableOnly((v) => !v)}
+              title="Only show vaults with 30-day PnL ≥ 0"
+              className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-semibold transition ${
+                profitableOnly
+                  ? 'bg-pot-green text-pot-dark'
+                  : 'border border-pot-border text-pot-muted hover:text-white hover:border-pot-muted'
+              }`}
+            >
+              📈 Profitable
+            </button>
           </div>
         </div>
 
@@ -246,17 +281,32 @@ export default function VaultsPage() {
             ))}
           </div>
         ) : otherVaults.length === 0 ? (
-          <div className="bg-pot-card border border-pot-border rounded-2xl p-8 text-center">
-            <div className="text-3xl mb-2">🌱</div>
-            <p className="text-white font-semibold mb-1">No public pots yet</p>
-            <p className="text-pot-muted text-sm mb-4">Be first — create one in 30 seconds.</p>
-            <Link
-              href="/create"
-              className="inline-block px-4 py-2 rounded-xl bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold text-sm transition"
-            >
-              + {t('Create Vault')}
-            </Link>
-          </div>
+          hasActiveFilters ? (
+            <div className="bg-pot-card border border-pot-border rounded-2xl p-8 text-center">
+              <div className="text-3xl mb-2">🔍</div>
+              <p className="text-white font-semibold mb-1">No pots match these filters</p>
+              <p className="text-pot-muted text-sm mb-4">Try widening your search — or clear everything and browse all pots.</p>
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="inline-block px-4 py-2 rounded-xl border border-pot-border text-white hover:border-pot-green hover:text-pot-green font-bold text-sm transition"
+              >
+                Clear filters
+              </button>
+            </div>
+          ) : (
+            <div className="bg-pot-card border border-pot-border rounded-2xl p-8 text-center">
+              <div className="text-3xl mb-2">🌱</div>
+              <p className="text-white font-semibold mb-1">No public pots yet</p>
+              <p className="text-pot-muted text-sm mb-4">Be first — create one in 30 seconds.</p>
+              <Link
+                href="/create"
+                className="inline-block px-4 py-2 rounded-xl bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold text-sm transition"
+              >
+                + {t('Create Vault')}
+              </Link>
+            </div>
+          )
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {otherVaults.map((p: any) => {

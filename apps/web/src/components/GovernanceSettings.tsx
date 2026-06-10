@@ -48,6 +48,69 @@ const RISK_PROFILES: Record<RiskLevel, { label: string; icon: string; desc: stri
   },
 }
 
+/* ── One-click governance presets ──
+ *
+ * Each preset maps the product bundles (trade level / withdraw level /
+ * quorum / timelock / max swap) onto the fields this component actually
+ * manages — percent integers and hours:
+ *
+ *   - withdraw level → approvalPct  (this UI has a single approval
+ *     threshold gating all binding proposals, so the stricter withdraw
+ *     level wins; L4 Consensus = 100% is clamped to the slider max 90%)
+ *   - quorum         → quorumPct    (percent, as-is)
+ *   - timelock       → votingWindowHours = 24h base + timelock (0/24/48h)
+ *     (no dedicated timelock field exists in this UI yet — the on-chain
+ *     `timelock_seconds` risk cap is documented in
+ *     docs/product/governance-presets.md)
+ *   - trade level    → riskLevel profile (advisory→aggressive,
+ *     majority→moderate, supermajority→conservative)
+ *   - max swap       → maxSwapPct   (percent, as-is)
+ */
+type GovPresetKey = 'chill' | 'balanced' | 'institutional'
+
+interface GovPreset {
+  key: GovPresetKey
+  icon: string
+  label: string
+  desc: string
+  values: Pick<GovSettings, 'quorumPct' | 'approvalPct' | 'votingWindowHours' | 'maxSwapPct' | 'riskLevel'>
+}
+
+const GOV_PRESETS: GovPreset[] = [
+  {
+    key: 'chill',
+    icon: '😎',
+    label: 'Chill',
+    desc: 'Friends & small groups — fast, high trust',
+    // trade L1 Advisory · withdraw L2 Majority · quorum 30% · timelock 0 · max swap 50%
+    values: { quorumPct: 30, approvalPct: 51, votingWindowHours: 24, maxSwapPct: 50, riskLevel: 'aggressive' },
+  },
+  {
+    key: 'balanced',
+    icon: '⚖️',
+    label: 'Balanced',
+    desc: 'Default for most communities',
+    // trade L2 Majority · withdraw L3 Supermajority · quorum 50% · timelock 24h · max swap 20%
+    values: { quorumPct: 50, approvalPct: 66, votingWindowHours: 48, maxSwapPct: 20, riskLevel: 'moderate' },
+  },
+  {
+    key: 'institutional',
+    icon: '🏛',
+    label: 'Institutional',
+    desc: 'Serious capital — strict controls',
+    // trade L3 Supermajority · withdraw L4 Consensus (UI max 90%) · quorum 66% · timelock 48h · max swap 10%
+    values: { quorumPct: 66, approvalPct: 90, votingWindowHours: 72, maxSwapPct: 10, riskLevel: 'conservative' },
+  },
+]
+
+function matchingPreset(s: GovSettings): GovPresetKey | null {
+  for (const p of GOV_PRESETS) {
+    const keys = Object.keys(p.values) as (keyof GovPreset['values'])[]
+    if (keys.every((k) => s[k] === p.values[k])) return p.key
+  }
+  return null
+}
+
 const DEFAULT_SETTINGS: GovSettings = {
   quorumPct: 33,
   approvalPct: 51,
@@ -199,6 +262,7 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
   }
 
   const readOnly = !isAdmin
+  const activePreset = matchingPreset(settings)
 
   if (loading) {
     return (
@@ -243,6 +307,52 @@ export function GovernanceSettings({ isAdmin, potPubkey }: Props) {
             </div>
             <div className="text-[10px] text-pot-muted">profile</div>
           </div>
+        </div>
+      </div>
+
+      {/* One-click presets */}
+      <div className="bg-pot-card border border-pot-border rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-semibold text-white">Quick Setup</h3>
+            <p className="text-[11px] text-pot-muted mt-0.5">
+              One click applies a full governance bundle. Fine-tune below anytime.
+            </p>
+          </div>
+          {activePreset === null && (
+            <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full border border-pot-border text-pot-muted">
+              ✏️ Custom
+            </span>
+          )}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {GOV_PRESETS.map((p) => {
+            const active = activePreset === p.key
+            return (
+              <button
+                key={p.key}
+                disabled={readOnly}
+                onClick={() => !readOnly && setSettings({ ...settings, ...p.values })}
+                className={`p-3.5 rounded-xl border text-left transition ${
+                  active
+                    ? 'border-pot-accent bg-pot-accent/10'
+                    : 'border-pot-border bg-pot-dark hover:border-pot-accent/50'
+                } ${readOnly ? 'cursor-default' : ''}`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{p.icon}</span>
+                  <span className="text-sm font-semibold text-white">{p.label}</span>
+                  {active && <span className="text-pot-accent text-sm ml-auto">✓</span>}
+                </div>
+                <div className="text-[11px] text-pot-muted mt-1">{p.desc}</div>
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2 text-[10px] text-pot-muted">
+                  <span>Quorum <span className="text-pot-accent">{p.values.quorumPct}%</span></span>
+                  <span>Approval <span className="text-pot-accent">{p.values.approvalPct}%</span></span>
+                  <span>Max swap <span className="text-pot-accent">{p.values.maxSwapPct}%</span></span>
+                </div>
+              </button>
+            )
+          })}
         </div>
       </div>
 

@@ -35,7 +35,7 @@ const TIERS: Tier[] = [
       'Unlimited members',
       'Manual trading proposals',
       'Basic governance',
-      'On-chain pot creation fee: ~0.1 SOL',
+      'On-chain pot creation fee: ~0.01 SOL',
     ],
     cta: 'Create Your Pot →',
     ctaHref: '/create',
@@ -164,8 +164,8 @@ export default function PricingPage() {
       {/* Footer note */}
       <div className="mt-8 mx-auto max-w-2xl rounded-xl border border-pot-border bg-pot-card/50 p-4 text-center">
         <p className="text-xs text-pot-muted leading-relaxed">
-          ⓘ Pot creation requires a small on-chain fee (~0.1 SOL) to cover Solana account rent.
-          This goes to the Solana network, not PotBot.
+          ⓘ Pot creation charges a one-time 0.01 SOL protocol fee (goes to the PotBot treasury)
+          plus regular Solana network rent for the on-chain accounts.
         </p>
       </div>
     </div>
