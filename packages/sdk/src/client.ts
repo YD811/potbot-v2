@@ -247,6 +247,106 @@ export async function fetchAllStrategyVaults(
   return accounts
 }
 
+// ── Security hardening (Phase A) helpers ─────────────────────────────────────
+//
+// Sentinel role, freeze/unfreeze, proposal cancellation, protocol allowlist
+// and the risk-param timelock. The sentinel can stop things but can never
+// move funds — there is no fund-moving instruction it is authorized for.
+
+/** Assign or clear the pot's sentinel/guardian wallet (authority only). */
+export async function buildSetSentinelTx(
+  program: Program<any>,
+  pot: PublicKey,
+  authority: PublicKey,
+  newSentinel: PublicKey | null,
+): Promise<Transaction> {
+  return await (program as any).methods
+    .setSentinel(newSentinel)
+    .accounts({ pot, authority })
+    .transaction()
+}
+
+/** Freeze the pot — sentinel or authority. Blocks deposits, proposal
+ *  execution, swaps and new strategies. Member withdrawals stay open. */
+export async function buildFreezePotTx(
+  program: Program<any>,
+  pot: PublicKey,
+  signer: PublicKey,
+): Promise<Transaction> {
+  return await (program as any).methods
+    .freezePot()
+    .accounts({ pot, signer })
+    .transaction()
+}
+
+/** Unfreeze the pot — authority ONLY (the sentinel cannot self-serve). */
+export async function buildUnfreezePotTx(
+  program: Program<any>,
+  pot: PublicKey,
+  authority: PublicKey,
+): Promise<Transaction> {
+  return await (program as any).methods
+    .unfreezePot()
+    .accounts({ pot, signer: authority })
+    .transaction()
+}
+
+/** Cancel an Active/Passed proposal — sentinel, authority or proposer. */
+export async function buildCancelProposalTx(
+  program: Program<any>,
+  pot: PublicKey,
+  proposal: PublicKey,
+  signer: PublicKey,
+): Promise<Transaction> {
+  return await (program as any).methods
+    .cancelProposal()
+    .accounts({ pot, proposal, signer })
+    .transaction()
+}
+
+/** Set the program-id allowlist for external CPI targets (max 8). */
+export async function buildSetAllowedProgramsTx(
+  program: Program<any>,
+  pot: PublicKey,
+  authority: PublicKey,
+  programs: PublicKey[],
+): Promise<Transaction> {
+  return await (program as any).methods
+    .setAllowedPrograms({ programs })
+    .accounts({ pot, authority })
+    .transaction()
+}
+
+/** Configure the risk-param timelock + per-asset exposure cap.
+ *  Tightening applies instantly; loosening waits out the current timelock. */
+export async function buildSetRiskTimelockTx(
+  program: Program<any>,
+  pot: PublicKey,
+  authority: PublicKey,
+  riskParamTimelockSecs: number,
+  maxAssetExposureBps: number,
+): Promise<Transaction> {
+  return await (program as any).methods
+    .setRiskTimelock({
+      riskParamTimelockSecs: new BN(riskParamTimelockSecs),
+      maxAssetExposureBps,
+    })
+    .accounts({ pot, authority })
+    .transaction()
+}
+
+/** Permissionless crank: apply a staged risky-param change after its delay. */
+export async function buildApplyPendingParamsTx(
+  program: Program<any>,
+  pot: PublicKey,
+  cranker: PublicKey,
+): Promise<Transaction> {
+  return await (program as any).methods
+    .applyPendingParams()
+    .accounts({ pot, cranker })
+    .transaction()
+}
+
 // ── Analytics helpers ─────────────────────────────────────────────────────────
 
 export interface VaultAnalytics {

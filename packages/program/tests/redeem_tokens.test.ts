@@ -208,12 +208,12 @@ describe('redeem_tokens', () => {
   })
 
   it('rejects redemption that exceeds 80% liquidity reserve', async () => {
-    // Mint enough tokens that one redemption would breach 80% of vault. We
-    // already burned 5000 above, so member has 5000 remaining; redeeming
-    // those would only be ~50% of the remaining ~0.5 SOL vault — within
-    // the cap. Mint another batch so the request crosses 80%.
+    // Mint enough tokens that one redemption would breach 80% of vault.
+    // deposit() granted ~1e9 internal shares (1 share : 1 lamport on first
+    // deposit), so to cross the 80% reserve the member must tokenize and
+    // redeem a true majority of total_shares — 0.9e9 internal ≈ 90% of vault.
     await (program.methods as any)
-      .mintTokensToMember(new BN(900)) // +90_000 SPL tokens = 900 internal
+      .mintTokensToMember(new BN(900_000_000)) // 0.9e9 internal ≈ 90% of shares
       .accounts({
         pot: potPda,
         tokenMint,

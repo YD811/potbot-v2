@@ -11,7 +11,7 @@ use crate::errors::PotError;
 
 #[derive(Accounts)]
 pub struct RegisterDelegate<'info> {
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     /// The caller must be a member of this pot with non-zero shares.
     #[account(
@@ -72,7 +72,7 @@ pub fn register_handler(
 
 #[derive(Accounts)]
 pub struct RevokeDelegate<'info> {
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     #[account(
         mut,

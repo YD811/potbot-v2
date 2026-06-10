@@ -44,7 +44,7 @@ pub struct CreateStrategyArgs {
 pub struct CreateStrategy<'info> {
     /// Parent pot. Must match `args.source` (e.g. pot.authority for AdminDirect).
     #[account(mut)]
-    pub pot: Account<'info, crate::state::pot::PotAccount>,
+    pub pot: Box<Account<'info, crate::state::pot::PotAccount>>,
 
     #[account(
         init,
@@ -68,6 +68,10 @@ pub struct CreateStrategy<'info> {
 }
 
 pub fn handler(ctx: Context<CreateStrategy>, args: CreateStrategyArgs) -> Result<()> {
+    require!(
+        !ctx.accounts.pot.paused,
+        crate::errors::PotError::PotFrozen
+    );
     validate_bps(&args)?;
     validate_triggers_need_feed(&args)?;
 

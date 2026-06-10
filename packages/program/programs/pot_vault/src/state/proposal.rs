@@ -80,6 +80,9 @@ pub enum ProposalStatus {
     Rejected,
     Executed,
     Expired,
+    /// Cancelled by the sentinel, the pot authority, or the proposer
+    /// before execution. Terminal state.
+    Cancelled,
 }
 
 impl ProposalAccount {

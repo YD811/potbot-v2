@@ -13,7 +13,7 @@ pub struct InitTokenMint<'info> {
         bump = pot.pot_bump,
         has_one = authority,
     )]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     #[account(
         init,

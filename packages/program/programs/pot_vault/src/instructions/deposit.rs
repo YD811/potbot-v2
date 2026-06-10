@@ -6,7 +6,7 @@ use crate::errors::PotError;
 #[derive(Accounts)]
 pub struct Deposit<'info> {
     #[account(mut)]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     /// CHECK: PDA vault that holds SOL
     #[account(
@@ -33,6 +33,9 @@ pub struct Deposit<'info> {
 
 pub fn handler(ctx: Context<Deposit>, lamports: u64) -> Result<()> {
     let pot = &ctx.accounts.pot;
+
+    // Frozen pot accepts no new capital (members can still withdraw).
+    require!(!pot.paused, PotError::PotFrozen);
 
     // Validate minimum deposit
     require!(lamports >= pot.config.min_deposit, PotError::DepositTooSmall);

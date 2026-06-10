@@ -22,7 +22,7 @@ pub struct CreatePrivatePot<'info> {
         seeds = [b"pot", name.as_bytes(), authority.key().as_ref()],
         bump
     )]
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     #[account(
         init,

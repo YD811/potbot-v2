@@ -30,6 +30,9 @@ pub mod close_strategy;
 pub mod mark_proposal_passed;
 pub mod pot_admin;
 
+// Security hardening (Phase A)
+pub mod sentinel;
+
 pub use create_pot::{CreatePot, CreatePotParams};
 pub(crate) use create_pot::__client_accounts_create_pot;
 pub use deposit::Deposit;
@@ -82,11 +85,24 @@ pub(crate) use close_strategy::__client_accounts_close_strategy;
 pub use mark_proposal_passed::{MarkProposalPassed, ProposalMarkedPassed};
 pub(crate) use mark_proposal_passed::__client_accounts_mark_proposal_passed;
 pub use pot_admin::{
-    fund_fee_reserve, pause_pot, set_allowed_mints, set_spending_policy, unpause_pot,
-    AllowedMintsUpdated, FeeReserveFunded, FundFeeReserve, FundFeeReserveArgs, PausePot,
-    SetAllowedMints, SetAllowedMintsArgs, SetSpendingPolicy, SetSpendingPolicyArgs,
+    apply_pending_params, fund_fee_reserve, pause_pot, set_allowed_mints,
+    set_allowed_programs, set_risk_timelock, set_spending_policy, unpause_pot,
+    AllowedMintsUpdated, AllowedProgramsUpdated, ApplyPendingParams, FeeReserveFunded,
+    FundFeeReserve, FundFeeReserveArgs, PausePot, PendingParamsApplied, SetAllowedMints,
+    SetAllowedMintsArgs, SetAllowedPrograms, SetAllowedProgramsArgs, SetRiskTimelock,
+    SetRiskTimelockArgs, SetSpendingPolicy, SetSpendingPolicyArgs,
 };
 pub(crate) use pot_admin::{
-    __client_accounts_fund_fee_reserve, __client_accounts_pause_pot,
-    __client_accounts_set_allowed_mints, __client_accounts_set_spending_policy,
+    __client_accounts_apply_pending_params, __client_accounts_fund_fee_reserve,
+    __client_accounts_pause_pot, __client_accounts_set_allowed_mints,
+    __client_accounts_set_allowed_programs, __client_accounts_set_risk_timelock,
+    __client_accounts_set_spending_policy,
+};
+pub use sentinel::{
+    cancel_proposal, freeze_pot, set_sentinel, unfreeze_pot, CancelProposal, FreezePot,
+    PotFrozenEvent, ProposalCancelled, SentinelUpdated, SetSentinel, UnfreezePot,
+};
+pub(crate) use sentinel::{
+    __client_accounts_cancel_proposal, __client_accounts_freeze_pot,
+    __client_accounts_set_sentinel, __client_accounts_unfreeze_pot,
 };

@@ -9,7 +9,7 @@ use crate::errors::PotError;
 /// same proposal.
 #[derive(Accounts)]
 pub struct VoteAsDelegate<'info> {
-    pub pot: Account<'info, PotAccount>,
+    pub pot: Box<Account<'info, PotAccount>>,
 
     #[account(
         mut,

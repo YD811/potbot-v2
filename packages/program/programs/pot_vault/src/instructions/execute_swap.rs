@@ -88,7 +88,7 @@ pub struct ExecuteSwap<'info> {
         mut,
         constraint = !pot.paused @ crate::errors::PotError::StrategyInactive,
     )]
-    pub pot: Account<'info, crate::state::pot::PotAccount>,
+    pub pot: Box<Account<'info, crate::state::pot::PotAccount>>,
 
     #[account(
         mut,
@@ -96,7 +96,7 @@ pub struct ExecuteSwap<'info> {
         bump = strategy.bump,
         has_one = pot,
     )]
-    pub strategy: Account<'info, StrategyAccount>,
+    pub strategy: Box<Account<'info, StrategyAccount>>,
 
     /// CHECK: vault PDA. Signs Jupiter CPI via invoke_signed with canonical bump.
     /// Asset ownership is validated via source_ata / destination_ata.owner below.
@@ -113,7 +113,7 @@ pub struct ExecuteSwap<'info> {
         constraint = (args.is_entry && source_ata.mint == strategy.input_mint) || (!args.is_entry && source_ata.mint == strategy.output_mint)
             @ crate::errors::PotError::MintNotAllowlisted,
     )]
-    pub source_ata: Account<'info, TokenAccount>,
+    pub source_ata: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
@@ -122,7 +122,7 @@ pub struct ExecuteSwap<'info> {
         constraint = (args.is_entry && destination_ata.mint == strategy.output_mint) || (!args.is_entry && destination_ata.mint == strategy.input_mint)
             @ crate::errors::PotError::MintNotAllowlisted,
     )]
-    pub destination_ata: Account<'info, TokenAccount>,
+    pub destination_ata: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: Jupiter v6. Pinned by pubkey.
     #[account(
@@ -146,7 +146,7 @@ pub struct ExecuteSwap<'info> {
         bump = proposal_swap_spec.bump,
         has_one = pot @ crate::errors::PotError::ProposalMismatch,
     )]
-    pub proposal_swap_spec: Option<Account<'info, ProposalSwapSpec>>,
+    pub proposal_swap_spec: Option<Box<Account<'info, ProposalSwapSpec>>>,
 
     /// Signer interpretation:
     ///   AdminDirect      → must equal pot.authority
@@ -338,6 +338,7 @@ pub fn handler<'info>(
     // --- 8. update strategy state machine ---------------------------------
     let now = Clock::get()?.unix_timestamp;
     let strategy = &mut ctx.accounts.strategy;
+    let strategy_output_mint = strategy.output_mint;
     let trigger_reason = match &args.mode {
         SwapMode::StrategyTrigger { reason } => *reason,
         _ => TriggerReason::Manual,
@@ -374,6 +375,9 @@ pub fn handler<'info>(
 
     // --- 9. register spend against the pot daily budget -------------------
     ctx.accounts.pot.register_spend(spent, now)?;
+    if args.is_entry {
+        ctx.accounts.pot.register_asset_spend(&strategy_output_mint, spent)?;
+    }
 
     emit!(SwapExecuted {
         pot: pot_key,
@@ -504,6 +508,12 @@ fn enforce_spending_policy<'info>(
     let pot = &ctx.accounts.pot;
     let strategy = &ctx.accounts.strategy;
 
+    // Per-protocol allowlist: the CPI target must be sanctioned by the pot.
+    require!(
+        pot.is_program_allowed(&ctx.accounts.jupiter_program.key()),
+        crate::errors::PotError::ProgramNotAllowed
+    );
+
     require!(
         pot.is_mint_allowed(&strategy.input_mint),
         crate::errors::PotError::MintNotAllowlisted
@@ -516,8 +526,15 @@ fn enforce_spending_policy<'info>(
     // Use real vault SOL balance for the per-swap size cap. This replaces the
     // legacy fee_reserve proxy and gives a faithful "% of vault" semantics.
     let vault_lamports = ctx.accounts.vault.lamports();
+    let now = Clock::get()?.unix_timestamp;
     pot.check_single_swap_cap_against_vault(args.max_in, vault_lamports)?;
-    pot.check_daily_budget(args.max_in, Clock::get()?.unix_timestamp)?;
+    pot.check_daily_budget(args.max_in, now)?;
+
+    // Per-asset daily exposure cap — entries only (buying builds exposure;
+    // exits reduce it and are never blocked by this cap).
+    if args.is_entry {
+        pot.check_asset_exposure(&strategy.output_mint, args.max_in, vault_lamports, now)?;
+    }
 
     Ok(())
 }

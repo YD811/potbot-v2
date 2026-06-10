@@ -163,6 +163,28 @@ pub enum ErrorCode {
     PotPaused,
     #[msg("Amount must be greater than zero")]
     InvalidAmount,
+
+    // ─── Security hardening (Phase A) ─────────────────────────────────────
+    #[msg("Signer is neither the pot authority nor the sentinel")]
+    NotSentinelOrAuthority,
+    #[msg("Pot is frozen — this action is blocked until unfreeze")]
+    PotFrozen,
+    #[msg("Only the pot authority can unfreeze the pot")]
+    SentinelCannotUnfreeze,
+    #[msg("Proposal is not in a cancellable state")]
+    ProposalNotCancellable,
+    #[msg("Recipient account does not match the proposal beneficiary")]
+    RecipientMismatch,
+    #[msg("Recipient account is required for this proposal type")]
+    RecipientMissing,
+    #[msg("Pending parameter change has not reached effective_at yet")]
+    PendingChangeNotReady,
+    #[msg("No pending parameter change staged for this pot")]
+    NoPendingChange,
+    #[msg("Program is not in the pot's protocol allowlist")]
+    ProgramNotAllowed,
+    #[msg("Daily exposure cap for this asset exceeded")]
+    AssetExposureExceeded,
 }
 
 /// Alias used throughout instruction handlers.
