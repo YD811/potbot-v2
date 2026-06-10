@@ -242,7 +242,7 @@ export function BudgetGrantPanel({ potPubkey, pot, currentUserPubkey, maxBudgetG
 
           {/* Recipient — members use .wallet field */}
           <div>
-            <label className="block text-xs text-pot-muted mb-2">Recipient</label>
+            <label className="block text-xs text-pot-muted mb-2">Recipient wallet or label</label>
             {members.length > 0 ? (
               <div className="grid grid-cols-2 gap-2">
                 {members.slice(0, 6).map((m: any) => {
@@ -286,8 +286,10 @@ export function BudgetGrantPanel({ potPubkey, pot, currentUserPubkey, maxBudgetG
           {/* Amount */}
           <div>
             <div className="flex justify-between mb-1.5">
-              <label className="text-xs text-pot-muted">Grant Amount (SOL)</label>
-              <span className="text-xs text-amber-400">{grant.amountSol} SOL \u00b7 max {maxGrantSol.toFixed(2)}</span>
+              <label className="text-xs text-pot-muted">Amount (SOL)</label>
+              <span className="text-xs text-amber-400">
+                {grant.amountSol} SOL \u00b7 vault {vaultBalanceSol.toFixed(2)} \u00b7 max {maxGrantSol.toFixed(2)}
+              </span>
             </div>
             <input
               type="range"
@@ -342,6 +344,10 @@ export function BudgetGrantPanel({ potPubkey, pot, currentUserPubkey, maxBudgetG
               className="w-full bg-pot-dark border border-pot-border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-pot-muted outline-none focus:border-pot-accent resize-none"
             />
           </div>
+
+          <p className="text-[11px] text-pot-muted">
+            This will create a proposal to send SOL from the vault to the recipient.
+          </p>
 
           <button
             onClick={() => setStep('confirm')}

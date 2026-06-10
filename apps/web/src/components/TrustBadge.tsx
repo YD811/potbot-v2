@@ -2,12 +2,20 @@
 
 export type TrustLevel = 'unverified' | 'community' | 'audited' | 'institutional'
 
+/** Honest, current state of protocol security review — no fake claims. */
+export const AUDIT_STATUS_LINE = 'AI security review passed · formal audit planned'
+
 interface TrustBadgeProps {
   level: TrustLevel
   verifiedBy?: string | null
   auditUrl?: string | null
   size?: 'sm' | 'md' | 'lg'
   showLabel?: boolean
+  /** Append the honest audit status to the badge tooltip. */
+  showAuditStatus?: boolean
+  /** When provided, the badge becomes a button that calls this instead of
+   *  linking to `auditUrl` — used to open the VerifiedModal. */
+  onClick?: (e: React.MouseEvent) => void
 }
 
 const TRUST_CONFIG: Record<TrustLevel, {
@@ -58,6 +66,8 @@ export function TrustBadge({
   auditUrl,
   size = 'sm',
   showLabel = true,
+  showAuditStatus = false,
+  onClick,
 }: TrustBadgeProps) {
   if (level === 'unverified') return null
 
@@ -69,15 +79,29 @@ export function TrustBadge({
     lg: 'text-sm px-3 py-1.5 gap-2',
   }[size]
 
+  const titleParts = [cfg.description]
+  if (verifiedBy) titleParts.push(verifiedBy)
+  if (showAuditStatus) titleParts.push(AUDIT_STATUS_LINE)
+
   const badge = (
     <span
       className={`inline-flex items-center font-semibold rounded-full border ${cfg.bg} ${cfg.border} ${cfg.color} ${sizeClass}`}
-      title={verifiedBy ? `${cfg.description} · ${verifiedBy}` : cfg.description}
+      title={titleParts.join(' · ')}
     >
       <span>{cfg.icon}</span>
       {showLabel && <span>{cfg.label}</span>}
     </span>
   )
+
+  // An explicit onClick (e.g. open VerifiedModal) takes priority over the
+  // audit-report link.
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className="hover:opacity-80 transition cursor-pointer">
+        {badge}
+      </button>
+    )
+  }
 
   if (auditUrl) {
     return (
@@ -97,12 +121,16 @@ export function TrustCard({
   verifiedAt,
   auditUrl,
   trustNote,
+  auditStatusLine = AUDIT_STATUS_LINE,
 }: {
   level: TrustLevel
   verifiedBy?: string | null
   verifiedAt?: string | null
   auditUrl?: string | null
   trustNote?: string | null
+  /** Honest audit status footer. Defaults to the protocol-wide truth
+   *  ("AI security review passed · formal audit planned"); pass null to hide. */
+  auditStatusLine?: string | null
 }) {
   const cfg = TRUST_CONFIG[level]
 
@@ -147,6 +175,13 @@ export function TrustCard({
           </span>
         )}
       </div>
+
+      {auditStatusLine && (
+        <p className="mt-3 pt-2 border-t border-pot-border/60 text-[11px] text-pot-muted flex items-center gap-1.5">
+          <span aria-hidden>🔍</span>
+          <span>{auditStatusLine}</span>
+        </p>
+      )}
     </div>
   )
 }

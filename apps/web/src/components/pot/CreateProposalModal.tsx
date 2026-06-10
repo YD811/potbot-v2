@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { PublicKey } from '@solana/web3.js'
 import { JupiterSwapPanel } from '@/components/JupiterSwapPanel'
 import { BudgetGrantPanel } from '@/components/BudgetGrantPanel'
@@ -28,9 +28,9 @@ type Category =
   | 'shares' | 'nft' | 'custom'
 
 const CATEGORIES: Array<{ id: Category; emoji: string; label: string; desc: string }> = [
-  { id: 'trading', emoji: '🔄', label: 'Trading', desc: 'Swap, AI agent, yield' },
+  { id: 'trading', emoji: '🔄', label: 'Trading', desc: 'Swap, DCA, staking, liquidity' },
   { id: 'treasury', emoji: '💰', label: 'Treasury', desc: 'Budget grants & withdraws' },
-  { id: 'governance', emoji: '⚖️', label: 'Governance', desc: 'Levels, risk, members' },
+  { id: 'governance', emoji: '⚖️', label: 'Governance', desc: 'Change governance rules' },
   { id: 'shares', emoji: '🪙', label: 'Shares', desc: 'Tokenize POT to SPL' },
   { id: 'nft', emoji: '🎨', label: 'NFT & Domain', desc: 'Tamagotchi, SNS (Phase 3)' },
   { id: 'custom', emoji: '✍️', label: 'Custom', desc: 'Propose your own change' },
@@ -41,20 +41,19 @@ type Opt = { key: string; label: string; emoji: string; soon?: boolean }
 const OPTIONS: Record<Category, Opt[]> = {
   trading: [
     { key: 'swap', label: 'Jupiter Swap', emoji: '🔁' },
+    { key: 'dca', label: 'DCA Schedule', emoji: '🗓️' },
+    { key: 'staking', label: 'Staking (mSOL / jitoSOL)', emoji: '🥩' },
+    { key: 'liquidity', label: 'Provide Liquidity (Orca / Raydium)', emoji: '💧' },
     { key: 'setAgent', label: 'Set AI Agent', emoji: '🤖' },
     { key: 'yieldStrategy', label: 'Change Yield Strategy', emoji: '📈' },
     { key: 'limit', label: 'Limit Order', emoji: '🎯', soon: true },
-    { key: 'dca', label: 'DCA Schedule', emoji: '🗓️', soon: true },
   ],
   treasury: [
     { key: 'grant', label: 'Budget Grant', emoji: '💸' },
     { key: 'withdraw', label: 'Beneficiary Withdraw', emoji: '🏦' },
   ],
   governance: [
-    { key: 'settings', label: 'Trade / Withdraw Level', emoji: '🎛️' },
-    { key: 'risk', label: 'Risk Config', emoji: '🛡️' },
-    { key: 'addMember', label: 'Add Member', emoji: '➕' },
-    { key: 'removeMember', label: 'Remove Member', emoji: '➖' },
+    { key: 'settings', label: 'Change governance rules', emoji: '⚖️' },
   ],
   shares: [
     { key: 'tokenize', label: 'Tokenize POT (SPL)', emoji: '🪙' },
@@ -76,19 +75,34 @@ type Props = {
   vaultBalance: number
   potForBudgetGrant: any
   currentUserPubkey?: string
+  /** Deep-link the wizard straight to a category/option (e.g. from the
+   *  Holdings "Propose Staking" quick action). */
+  initialCategory?: Category | null
+  initialOption?: string | null
+  /** Pre-fill the amount (SOL) for the deep-linked form. */
+  prefillAmount?: number
 }
 
 export default function CreateProposalModal({
   open, onClose,
   potPubkey, nextProposalId, vaultBalance,
   potForBudgetGrant, currentUserPubkey,
+  initialCategory = null, initialOption = null, prefillAmount,
 }: Props) {
   const t = useHumanText()
   const createProposal = useCreateProposal()
-  const [category, setCategory] = useState<Category | null>(null)
-  const [option, setOption] = useState<string | null>(null)
+  const [category, setCategory] = useState<Category | null>(initialCategory)
+  const [option, setOption] = useState<string | null>(initialOption)
 
-  function reset() { setCategory(null); setOption(null) }
+  // Sync deep-link selection whenever the modal is (re)opened.
+  useEffect(() => {
+    if (open) {
+      setCategory(initialCategory)
+      setOption(initialOption)
+    }
+  }, [open, initialCategory, initialOption])
+
+  function reset() { setCategory(initialCategory); setOption(initialOption) }
   function handleClose() { reset(); onClose() }
 
   if (!open) return null
@@ -213,9 +227,30 @@ export default function CreateProposalModal({
               />
             )}
 
+            {/* Structured "smart" forms — auto-generate the description */}
+            {category === 'trading' && (option === 'staking' || option === 'liquidity' || option === 'dca') && (
+              <SmartTradingForm
+                kind={option}
+                potPubkey={potPubkey}
+                nextProposalId={nextProposalId}
+                vaultBalance={vaultBalance}
+                prefillAmount={prefillAmount}
+                createProposal={createProposal}
+                onDone={handleClose}
+              />
+            )}
+
+            {category === 'governance' && (
+              <GovernanceProposalForm
+                potPubkey={potPubkey}
+                nextProposalId={nextProposalId}
+                createProposal={createProposal}
+                onDone={handleClose}
+              />
+            )}
+
             {((category === 'trading' && (option === 'setAgent' || option === 'yieldStrategy'))
               || (category === 'treasury' && option === 'withdraw')
-              || (category === 'governance')
               || (category === 'shares' && option === 'tokenize')
               || (category === 'custom' && option === 'freeform')) && (
               <GenericProposalForm
@@ -275,6 +310,11 @@ function GenericProposalForm({
         proposalType = { setAgent: { agent: pk, maxTradeBps: Number(maxTradeBps) } }
       } else if (kind.cat === 'trading' && kind.key === 'yieldStrategy') {
         proposalType = { changeYield: { newStrategy: Number(strategy) } }
+      } else if (kind.cat === 'trading' && (kind.key === 'staking' || kind.key === 'liquidity')) {
+        // Not executed on-chain yet — create a signal proposal carrying the
+        // intent in its purpose/description so members can vote on it.
+        const tag = kind.key === 'staking' ? 'stake' : 'liquidity'
+        proposalType = { transferFunds: { to: new PublicKey(potPubkey), amount: 0, purpose: tag } }
       } else if (kind.cat === 'treasury' && kind.key === 'withdraw') {
         const pk = parsePubkey(wallet)
         if (!pk) throw new Error('Invalid beneficiary pubkey')
@@ -332,6 +372,18 @@ function GenericProposalForm({
           <Input value={strategy} onChange={setStrategy} inputMode="numeric" />
         </Field>
       )}
+      {kind.cat === 'trading' && kind.key === 'staking' && (
+        <div className="rounded-xl border border-pot-border bg-pot-dark/50 p-3 text-xs text-pot-muted">
+          🥩 Proposes staking vault SOL via a liquid staking protocol (mSOL / jitoSOL).
+          Describe the amount and protocol below — execution is added in a later phase.
+        </div>
+      )}
+      {kind.cat === 'trading' && kind.key === 'liquidity' && (
+        <div className="rounded-xl border border-pot-border bg-pot-dark/50 p-3 text-xs text-pot-muted">
+          💧 Proposes providing liquidity on Orca or Raydium. Describe the pair and amount
+          below — execution is added in a later phase.
+        </div>
+      )}
       {kind.cat === 'treasury' && kind.key === 'withdraw' && (
         <>
           <Field label="Beneficiary pubkey">
@@ -343,14 +395,20 @@ function GenericProposalForm({
         </>
       )}
       {kind.cat === 'governance' && kind.key === 'settings' && (
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="New trade level (1-4)">
-            <Input value={tradeLevel} onChange={setTradeLevel} inputMode="numeric" />
-          </Field>
-          <Field label="New withdraw level (1-4)">
-            <Input value={withdrawLevel} onChange={setWithdrawLevel} inputMode="numeric" />
-          </Field>
-        </div>
+        <>
+          <div className="rounded-xl border border-pot-border bg-pot-dark/50 p-3 text-xs text-pot-muted">
+            ⚖️ Change governance rules — voting thresholds, quorum, or admin settings.
+            Levels: 1 = Advisory · 2 = Majority · 3 = Supermajority · 4 = Consensus.
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="New trade level (1-4)">
+              <Input value={tradeLevel} onChange={setTradeLevel} inputMode="numeric" />
+            </Field>
+            <Field label="New withdraw level (1-4)">
+              <Input value={withdrawLevel} onChange={setWithdrawLevel} inputMode="numeric" />
+            </Field>
+          </div>
+        </>
       )}
       {kind.cat === 'governance' && kind.key === 'risk' && (
         <div className="grid grid-cols-2 gap-3">
@@ -439,12 +497,294 @@ function defaultDescription(kind: { cat: Category; key: string }): string {
     'trading.setAgent': 'Authorize AI agent to trade within max bps',
     'trading.yieldStrategy': 'Change vault yield strategy',
     'treasury.withdraw': 'Withdraw SOL to beneficiary',
-    'governance.settings': 'Change trade / withdraw level',
-    'governance.risk': 'Update risk config',
-    'governance.addMember': 'Add member to vault',
-    'governance.removeMember': 'Remove member from vault',
     'shares.tokenize': 'Tokenize POT shares as SPL token',
     'custom.freeform': 'Freeform proposal',
   }
   return map[`${kind.cat}.${kind.key}`] ?? 'Proposal'
+}
+
+/* ───────── Shared token list for the structured forms ───────── */
+const TOKENS = ['SOL', 'USDC', 'mSOL', 'jitoSOL', 'BONK', 'WIF'] as const
+
+/* ───────── Staking / Liquidity / DCA structured forms ───────── */
+
+const STAKING_PROTOCOLS = [
+  { id: 'Marinade', token: 'mSOL', apy: '~7%' },
+  { id: 'Jito', token: 'jitoSOL', apy: '~8%' },
+  { id: 'Sanctum', token: 'various', apy: '~6-9%' },
+]
+
+function Select({
+  value, onChange, options,
+}: {
+  value: string
+  onChange: (v: string) => void
+  options: readonly string[]
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full bg-pot-dark border border-pot-border text-white rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pot-accent"
+    >
+      {options.map((o) => <option key={o} value={o}>{o}</option>)}
+    </select>
+  )
+}
+
+function SmartTradingForm({
+  kind, potPubkey, nextProposalId, vaultBalance, prefillAmount, createProposal, onDone,
+}: {
+  kind: 'staking' | 'liquidity' | 'dca'
+  potPubkey: string
+  nextProposalId: number
+  vaultBalance: number
+  prefillAmount?: number
+  createProposal: ReturnType<typeof useCreateProposal>
+  onDone: () => void
+}) {
+  const [amount, setAmount] = useState(prefillAmount ? String(prefillAmount) : '')
+  // staking
+  const [stakeProtocol, setStakeProtocol] = useState(STAKING_PROTOCOLS[0].id)
+  // liquidity
+  const [lpProtocol, setLpProtocol] = useState('Orca')
+  const [tokenA, setTokenA] = useState('SOL')
+  const [tokenB, setTokenB] = useState('USDC')
+  // dca
+  const [buyToken, setBuyToken] = useState('USDC')
+  const [frequency, setFrequency] = useState('Daily')
+  const [periods, setPeriods] = useState('7')
+
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  const amt = parseFloat(amount)
+  const amtOk = Number.isFinite(amt) && amt > 0
+  const pctOfVault = vaultBalance > 0 && amtOk ? (amt / vaultBalance) * 100 : 0
+
+  function buildDescription(): string {
+    if (kind === 'staking') {
+      const p = STAKING_PROTOCOLS.find((x) => x.id === stakeProtocol)!
+      return `Stake ${amt} SOL via ${p.id} → ${p.token}`
+    }
+    if (kind === 'liquidity') {
+      return `Provide liquidity: ${amt} SOL in ${lpProtocol} ${tokenA}/${tokenB} pool`
+    }
+    // dca
+    return `DCA: Buy ${buyToken} with ${amt} SOL ${frequency.toLowerCase()} for ${periods} periods`
+  }
+
+  async function submit() {
+    setErr(null); setBusy(true)
+    try {
+      if (!amtOk) throw new Error('Amount must be greater than 0')
+      // Signal-only proposal (not executed on-chain yet) — the structured
+      // intent lives in the auto-generated description.
+      await createProposal.mutateAsync({
+        potAddress: potPubkey,
+        nextProposalId,
+        proposalType: { transferFunds: { to: new PublicKey(potPubkey), amount: 0, purpose: kind } },
+        description: buildDescription(),
+      })
+      onDone()
+    } catch (e: any) {
+      setErr(e?.message ?? String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4 w-full">
+      {kind === 'staking' && (
+        <>
+          <Field label="Asset to stake">
+            <Select value="SOL" onChange={() => {}} options={['SOL']} />
+          </Field>
+          <Field label="Protocol">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {STAKING_PROTOCOLS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setStakeProtocol(p.id)}
+                  className={`rounded-xl border p-3 text-left transition ${
+                    stakeProtocol === p.id
+                      ? 'border-pot-green bg-pot-green/10 text-white'
+                      : 'border-pot-border bg-pot-dark text-gray-400 hover:border-pot-muted'
+                  }`}
+                >
+                  <div className="text-sm font-bold">{p.id}</div>
+                  <div className="text-[11px] text-pot-muted">{p.token} · {p.apy} APY</div>
+                </button>
+              ))}
+            </div>
+          </Field>
+        </>
+      )}
+
+      {kind === 'liquidity' && (
+        <>
+          <Field label="Protocol">
+            <div className="grid grid-cols-2 gap-2">
+              {['Orca', 'Raydium'].map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setLpProtocol(p)}
+                  className={`rounded-xl border p-3 text-sm font-bold transition ${
+                    lpProtocol === p
+                      ? 'border-pot-green bg-pot-green/10 text-white'
+                      : 'border-pot-border bg-pot-dark text-gray-400 hover:border-pot-muted'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Pool token A"><Select value={tokenA} onChange={setTokenA} options={TOKENS} /></Field>
+            <Field label="Pool token B"><Select value={tokenB} onChange={setTokenB} options={TOKENS} /></Field>
+          </div>
+        </>
+      )}
+
+      {kind === 'dca' && (
+        <>
+          <Field label="Buy token"><Select value={buyToken} onChange={setBuyToken} options={TOKENS} /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Frequency"><Select value={frequency} onChange={setFrequency} options={['Daily', 'Weekly', 'Custom']} /></Field>
+            <Field label="Duration (periods)"><Input value={periods} onChange={setPeriods} inputMode="numeric" /></Field>
+          </div>
+        </>
+      )}
+
+      <Field label={kind === 'dca' ? 'Total amount (SOL)' : 'Amount (SOL)'}>
+        <Input value={amount} onChange={setAmount} inputMode="decimal" placeholder="0.00" />
+      </Field>
+      <div className="text-[11px] text-pot-muted -mt-2">
+        Vault balance: {vaultBalance.toFixed(2)} SOL
+        {amtOk && pctOfVault > 0 && <span> · {pctOfVault.toFixed(1)}% of vault</span>}
+      </div>
+
+      {/* Auto-generated description preview */}
+      <div className="rounded-xl border border-pot-border bg-pot-dark/50 p-3">
+        <div className="text-[10px] uppercase tracking-wider text-pot-muted mb-1">Proposal description (auto)</div>
+        <div className="text-sm text-white">{amtOk ? buildDescription() : '— enter an amount —'}</div>
+      </div>
+
+      {err && (
+        <div className="bg-pot-red/10 border border-pot-red/30 text-pot-red text-sm rounded-xl px-4 py-3">{err}</div>
+      )}
+
+      <button
+        onClick={submit}
+        disabled={busy || !amtOk}
+        className="w-full py-3 bg-pot-accent hover:bg-pot-accent/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition"
+      >
+        {busy ? 'Submitting…' : 'Create Proposal'}
+      </button>
+    </div>
+  )
+}
+
+/* ───────── Governance structured form ───────── */
+
+const GOV_SETTINGS = [
+  { key: 'quorum', label: 'Quorum %', suffix: '%', kind: 'number' as const },
+  { key: 'approval', label: 'Approval %', suffix: '%', kind: 'number' as const },
+  { key: 'window', label: 'Voting window', suffix: 'h', kind: 'number' as const },
+  { key: 'risk', label: 'Risk level', suffix: '', kind: 'risk' as const },
+]
+
+function GovernanceProposalForm({
+  potPubkey, nextProposalId, createProposal, onDone,
+}: {
+  potPubkey: string
+  nextProposalId: number
+  createProposal: ReturnType<typeof useCreateProposal>
+  onDone: () => void
+}) {
+  const [setting, setSetting] = useState('quorum')
+  const [numValue, setNumValue] = useState('50')
+  const [riskValue, setRiskValue] = useState('moderate')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  const cfg = GOV_SETTINGS.find((s) => s.key === setting)!
+  const displayValue = cfg.kind === 'risk' ? riskValue : `${numValue}${cfg.suffix}`
+
+  function buildDescription(): string {
+    return `Governance: change ${cfg.label} to ${displayValue}`
+  }
+
+  async function submit() {
+    setErr(null); setBusy(true)
+    try {
+      await createProposal.mutateAsync({
+        potAddress: potPubkey,
+        nextProposalId,
+        proposalType: { transferFunds: { to: new PublicKey(potPubkey), amount: 0, purpose: 'governance' } },
+        description: buildDescription(),
+      })
+      onDone()
+    } catch (e: any) {
+      setErr(e?.message ?? String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4 w-full">
+      <div className="rounded-xl border border-pot-border bg-pot-dark/50 p-3 text-xs text-pot-muted">
+        ⚖️ Change governance rules — voting thresholds, quorum, or admin settings.
+      </div>
+
+      <Field label="What to change">
+        <div className="grid grid-cols-2 gap-2">
+          {GOV_SETTINGS.map((s) => (
+            <button
+              key={s.key}
+              type="button"
+              onClick={() => setSetting(s.key)}
+              className={`rounded-xl border p-2.5 text-sm font-semibold transition ${
+                setting === s.key
+                  ? 'border-pot-green bg-pot-green/10 text-white'
+                  : 'border-pot-border bg-pot-dark text-gray-400 hover:border-pot-muted'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </Field>
+
+      <Field label="New value">
+        {cfg.kind === 'risk' ? (
+          <Select value={riskValue} onChange={setRiskValue} options={['conservative', 'moderate', 'aggressive']} />
+        ) : (
+          <Input value={numValue} onChange={setNumValue} inputMode="numeric" />
+        )}
+      </Field>
+
+      <div className="rounded-xl border border-pot-border bg-pot-dark/50 p-3">
+        <div className="text-[10px] uppercase tracking-wider text-pot-muted mb-1">Proposal description (auto)</div>
+        <div className="text-sm text-white">{buildDescription()}</div>
+      </div>
+
+      {err && (
+        <div className="bg-pot-red/10 border border-pot-red/30 text-pot-red text-sm rounded-xl px-4 py-3">{err}</div>
+      )}
+
+      <button
+        onClick={submit}
+        disabled={busy}
+        className="w-full py-3 bg-pot-accent hover:bg-pot-accent/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition"
+      >
+        {busy ? 'Submitting…' : 'Create Proposal'}
+      </button>
+    </div>
+  )
 }

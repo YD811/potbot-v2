@@ -9,7 +9,6 @@ import {
   usePot,
   useMembers,
   useProposals,
-  useVote,
 } from '@/hooks/usePots'
 import { usePotRole } from '@/hooks/usePotRole'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
@@ -23,8 +22,14 @@ import { PotActivityFeed } from '@/components/PotActivityFeed'
 import { reverseSNS } from '@/lib/sns'
 import PotSnsUpsell from '@/components/sns/PotSnsUpsell'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
-import SwapExecuteButton from '@/components/SwapExecuteButton'
 import CreateProposalModal from '@/components/pot/CreateProposalModal'
+import {
+  ProposalCard,
+  ProposalCardSkeleton,
+  ProposalsEmptyState,
+  ProposalsErrorState,
+} from '@/components/pot/ProposalCard'
+import { SubscriptionModal } from '@/components/SubscriptionModal'
 import { PublicKey } from '@solana/web3.js'
 import { useHumanText } from '@/hooks/useHumanText'
 import { SolPrice } from '@/components/SolPrice'
@@ -58,7 +63,7 @@ const WalletMultiButtonDynamic = dynamic(
    - Community → who's in this pot, governance, referrals
    - AI      → PotBot AI base layer + your AI delegate
    - Features → roadmap stuff: tamagotchi, premium, privacy preview */
-const TABS = ['proposal', 'community', 'ai', 'features'] as const
+const TABS = ['proposal', 'members', 'ai', 'features'] as const
 type Tab = (typeof TABS)[number]
 
 // Tab label *prefixes* — the user-facing word is translated at render
@@ -66,13 +71,13 @@ type Tab = (typeof TABS)[number]
 // to plain English (Proposal → Trade idea, etc.).
 const TAB_EMOJIS: Record<Tab, string> = {
   proposal:  '🗳️',
-  community: '👥',
+  members:   '👥',
   ai:        '🤖',
   features:  '🌟',
 }
 const TAB_TERMS: Record<Tab, string> = {
   proposal:  'Proposal',
-  community: 'Community',
+  members:   'Members',
   ai:        'AI Agent',
   features:  'Features',
 }
@@ -80,22 +85,6 @@ const TAB_TERMS: Record<Tab, string> = {
 /* Cluster — use NEXT_PUBLIC_SOLANA_CLUSTER if present, else default to devnet */
 const CLUSTER: 'mainnet-beta' | 'devnet' =
   (process.env.NEXT_PUBLIC_SOLANA_CLUSTER as 'mainnet-beta' | 'devnet') ?? 'devnet'
-
-/* ── Proposal status helpers ── */
-const STATUS_COLORS: Record<string, string> = {
-  active:   'bg-pot-accent/20 text-pot-accent',
-  passed:   'bg-pot-green/20 text-pot-green',
-  rejected: 'bg-red-500/20 text-red-400',
-  executed: 'bg-blue-500/20 text-blue-400',
-  pending:  'bg-yellow-500/20 text-yellow-400',
-}
-const STATUS_LABELS: Record<string, string> = {
-  active:   '⏳ Active',
-  passed:   '✅ Passed',
-  rejected: '❌ Rejected',
-  executed: '🚀 Executed',
-  pending:  '🕐 Pending',
-}
 
 /* Inline wallet gate */
 function WalletGate({
@@ -116,97 +105,6 @@ function WalletGate({
       {title && <p className="text-white font-semibold">{title}</p>}
       {subtitle && <p className="text-pot-muted text-sm max-w-md">{subtitle}</p>}
       <div className="mt-2"><WalletMultiButtonDynamic /></div>
-    </div>
-  )
-}
-
-function ProposalCard({
-  proposal,
-  potAddress,
-  canVote,
-  canExecute,
-}: {
-  proposal: any
-  potAddress: string
-  canVote: boolean
-  canExecute: boolean
-}) {
-  const vote = useVote()
-  const [expanded, setExpanded] = useState(false)
-  const statusClass = STATUS_COLORS[proposal.status] ?? 'bg-pot-muted/20 text-pot-muted'
-  const statusLabel = STATUS_LABELS[proposal.status] ?? proposal.status
-
-  return (
-    <div
-      className="bg-pot-card border border-pot-border hover:border-pot-accent/30 rounded-2xl p-5 space-y-4 w-full transition cursor-pointer"
-      onClick={() => setExpanded((v) => !v)}
-      role="button"
-      aria-expanded={expanded}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <p className="text-white font-semibold text-sm leading-snug break-words">{proposal.description}</p>
-          <p className="text-xs text-pot-muted mt-1">
-            #{proposal.proposalId ?? '?'} · {new Date(proposal.createdAt).toLocaleDateString()}
-          </p>
-        </div>
-        <span className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold ${statusClass}`}>
-          {statusLabel}
-        </span>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-pot-muted w-8">YES</span>
-          <div className="flex-1 h-2 bg-pot-dark rounded-full overflow-hidden">
-            <div className="h-full bg-pot-green rounded-full transition-all" style={{ width: `${proposal.yesPercent ?? 0}%` }} />
-          </div>
-          <span className="text-xs text-pot-green font-mono w-10 text-right">{proposal.yesPercent ?? 0}%</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-pot-muted w-8">NO</span>
-          <div className="flex-1 h-2 bg-pot-dark rounded-full overflow-hidden">
-            <div className="h-full bg-red-400 rounded-full transition-all" style={{ width: `${proposal.noPercent ?? 0}%` }} />
-          </div>
-          <span className="text-xs text-red-400 font-mono w-10 text-right">{proposal.noPercent ?? 0}%</span>
-        </div>
-      </div>
-
-      {expanded && (
-        <div className="border-t border-pot-border/50 pt-3 text-xs text-pot-muted space-y-1">
-          <div><span className="text-pot-muted">Pubkey:</span> <span className="font-mono text-pot-green break-all">{proposal.pubkey}</span></div>
-          {proposal.totalSharesSnapshot != null && (
-            <div><span className="text-pot-muted">Total shares snapshot:</span> <span className="text-white">{proposal.totalSharesSnapshot.toLocaleString()}</span></div>
-          )}
-          {Array.isArray(proposal.voters) && (
-            <div><span className="text-pot-muted">Voters so far:</span> <span className="text-white">{proposal.voters.length}</span></div>
-          )}
-        </div>
-      )}
-
-      {canVote && proposal.status === 'active' && (
-        <div className="flex gap-3 pt-1" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={() => vote.mutate({ potAddress, proposalAddress: proposal.pubkey, approve: true })}
-            disabled={vote.isPending}
-            className="flex-1 py-2 rounded-xl text-sm font-bold bg-pot-green/20 hover:bg-pot-green/40 text-pot-green border border-pot-green/30 transition disabled:opacity-50"
-          >
-            👍 Vote Yes
-          </button>
-          <button
-            onClick={() => vote.mutate({ potAddress, proposalAddress: proposal.pubkey, approve: false })}
-            disabled={vote.isPending}
-            className="flex-1 py-2 rounded-xl text-sm font-bold bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition disabled:opacity-50"
-          >
-            👎 Vote No
-          </button>
-        </div>
-      )}
-      {canExecute && proposal.status === 'passed' && (
-        <div className="pt-1" onClick={(e) => e.stopPropagation()}>
-          <SwapExecuteButton proposalPubkey={proposal.pubkey} potAddress={potAddress} />
-        </div>
-      )}
     </div>
   )
 }
@@ -380,6 +278,49 @@ function PotContextCard({ pot, yieldStrategy }: { pot: any; yieldStrategy: numbe
   )
 }
 
+/* ── Subscription lock gate ──
+   Blurs + locks premium content behind a subscription tier. Clicking the
+   overlay opens the SubscriptionModal ("Upgrade your Pot Plan" flow). When
+   `locked` is false the children render normally. */
+function LockGate({
+  locked,
+  title,
+  requiredTier,
+  onUpgrade,
+  children,
+}: {
+  locked: boolean
+  title: string
+  requiredTier: 'Pro' | 'Pro+'
+  onUpgrade: () => void
+  children: ReactNode
+}) {
+  if (!locked) return <>{children}</>
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-pot-border">
+      {/* Blurred preview */}
+      <div className="pointer-events-none select-none blur-sm opacity-50 p-5">
+        {children}
+      </div>
+      {/* Lock overlay */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-pot-dark/70 backdrop-blur-[2px] p-6 text-center">
+        <div className="text-3xl">🔒</div>
+        <p className="text-white font-bold">{title}</p>
+        <p className="text-xs text-pot-muted">
+          Unlock with <span className="text-pot-green font-semibold">{requiredTier}</span>
+        </p>
+        <button
+          type="button"
+          onClick={onUpgrade}
+          className="mt-2 rounded-xl bg-pot-green px-4 py-2 text-sm font-bold text-pot-dark transition hover:brightness-110"
+        >
+          Upgrade your Pot Plan
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function PotPage() {
   const t = useHumanText()
   const params = useParams()
@@ -419,7 +360,12 @@ export default function PotPage() {
 
   const { data: pot, isLoading: isPotLoading } = usePot(pubkey)
   const { data: members = [] } = useMembers(pubkey)
-  const { data: proposals = [] } = useProposals(pubkey)
+  const {
+    data: proposals = [],
+    isLoading: proposalsLoading,
+    isError: proposalsError,
+    refetch: refetchProposals,
+  } = useProposals(pubkey)
   const { role } = usePotRole(pubkey)
 
   const [activeTab, setActiveTab] = useState<Tab>('proposal')
@@ -428,6 +374,14 @@ export default function PotPage() {
   const [isMember, setIsMember] = useState(false)
   const [proposalModalOpen, setProposalModalOpen] = useState(false)
   const [showHowItWorks, setShowHowItWorks] = useState(false)
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
+  // Deep-link into a specific proposal form (e.g. Holdings → Propose Staking).
+  const [proposalInit, setProposalInit] = useState<{ category: any; option: string | null; amount?: number } | null>(null)
+
+  const openStakingProposal = (amountSol: number) => {
+    setProposalInit({ category: 'trading', option: 'staking', amount: amountSol })
+    setProposalModalOpen(true)
+  }
 
   useEffect(() => {
     (async () => {
@@ -511,6 +465,11 @@ export default function PotPage() {
   const lastSwapTx = potAny.lastSwapTx ?? potAny.lastSwapSignature
   const squadsManaged = potAny.isSquadsVault === true
 
+  // Subscription gating — which premium features this pot has unlocked.
+  const subscriptionTier = (potAny.subscriptionTier as string) ?? 'free'
+  const hasPro = subscriptionTier === 'pro' || subscriptionTier === 'pro_plus'
+  const hasProPlus = subscriptionTier === 'pro_plus'
+
   const goToDeposit = () => {
     setActiveTab('proposal')
     requestAnimationFrame(() => {
@@ -554,9 +513,17 @@ export default function PotPage() {
         yourSharePct={yourSharePct}
         activeProposals={activeProposalsCount}
         tamaHp={tamaStats.hp}
+        trustLevel={potAny.trustLevel}
+        verifiedBy={potAny.verifiedBy}
+        strategy={potAny.yieldStrategy}
+        paused={potAny.paused}
+        sentinel={potAny.sentinel}
+        maxSwapPct={potAny.maxSwapPct}
         onDepositClick={goToDeposit}
         onProposeClick={goToPropose}
         canPropose={canManage}
+        onMembersClick={() => setActiveTab('members')}
+        onTamaClick={() => setActiveTab('features')}
       />
 
       {/* Sponsor rail */}
@@ -602,6 +569,7 @@ export default function PotPage() {
             <VaultPortfolioDisplay
               totalSol={pot.balance}
               totalUsd={undefined}
+              onProposeStaking={canManage ? openStakingProposal : undefined}
             />
 
             {/* ── Deposit / Withdraw ── primary action */}
@@ -712,16 +680,18 @@ export default function PotPage() {
                   </div>
                 )}
 
-                {proposals.length === 0 ? (
-                  <div className="text-center py-12 bg-pot-card border border-pot-border rounded-2xl">
-                    <div className="text-4xl mb-3">🗳️</div>
-                    <p className="text-white font-semibold mb-1">No proposals yet</p>
-                    <p className="text-pot-muted text-xs">
-                      {canManage
-                        ? 'Use the proposal builder below to draft your first swap.'
-                        : 'Join the vault to create proposals.'}
-                    </p>
+                {proposalsLoading ? (
+                  <div className="space-y-3">
+                    <ProposalCardSkeleton />
+                    <ProposalCardSkeleton />
                   </div>
+                ) : proposalsError ? (
+                  <ProposalsErrorState onRetry={() => refetchProposals()} />
+                ) : proposals.length === 0 ? (
+                  <ProposalsEmptyState
+                    canCreate={!!userPubkey && canManage}
+                    onCreate={() => setProposalModalOpen(true)}
+                  />
                 ) : (
                   <div className="space-y-3">
                     {proposals
@@ -732,8 +702,14 @@ export default function PotPage() {
                           key={p.pubkey}
                           proposal={p}
                           potAddress={pubkey}
+                          potBalance={(pot.balance ?? 0) + (potAny.meteoraLpBalance ?? 0)}
                           canVote={canVote}
                           canExecute={canExecute}
+                          governance={{
+                            quorumPct: potAny.quorumPct,
+                            maxSwapPct: potAny.maxSwapPct,
+                            voteTimeoutHours: potAny.votingWindowHours,
+                          }}
                         />
                       ))}
                   </div>
@@ -794,20 +770,28 @@ export default function PotPage() {
 
             <CreateProposalModal
               open={proposalModalOpen}
-              onClose={() => setProposalModalOpen(false)}
+              onClose={() => { setProposalModalOpen(false); setProposalInit(null) }}
               potPubkey={pubkey}
               nextProposalId={nextProposalId}
               vaultBalance={pot.balance}
               potForBudgetGrant={potAny}
               currentUserPubkey={userPubkey?.toString()}
+              initialCategory={proposalInit?.category ?? null}
+              initialOption={proposalInit?.option ?? null}
+              prefillAmount={proposalInit?.amount}
             />
           </div>
         )}
 
-        {/* ════════════════════ COMMUNITY TAB ════════════════════ */}
-        {activeTab === 'community' && (
+        {/* ════════════════════ MEMBERS TAB ════════════════════
+            Renders the member roster inline (wallet, share %, deposit) from
+            the same React-Query data the Community tab used to embed. */}
+        {/* ════════════════════ MEMBERS TAB (= community view) ════════════════════
+            Member roster + governance + referral, unified. There is no separate
+            Community tab — Members IS the community view. */}
+        {activeTab === 'members' && (
           <div className="space-y-8 w-full">
-            <section className="space-y-3">
+            <section className="space-y-4">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg font-bold text-white">👥 {t('Members')}</h2>
@@ -874,6 +858,31 @@ export default function PotPage() {
               </p>
               <AIAgentPanel potPubkey={pubkey} pot={pot} />
             </div>
+
+            {/* AI Rebalancing — Pro feature, gated */}
+            <LockGate
+              locked={!hasPro}
+              title="AI Rebalancing Alerts"
+              requiredTier="Pro"
+              onUpgrade={() => setUpgradeOpen(true)}
+            >
+              <div className="bg-pot-card/50 border border-pot-border rounded-2xl p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">⚖️</span>
+                  <h3 className="font-bold text-white text-lg">AI Rebalancing Alerts</h3>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-pot-green/15 text-pot-green uppercase tracking-wide">Pro</span>
+                </div>
+                {[
+                  '⚖️ Drift detected: SOL allocation 12% above target — rebalance suggested',
+                  '📉 USDC reserve below 15% floor — AI proposes trimming JUP',
+                  '🔔 Weekly digest: NAV +3.2%, 2 rebalances executed',
+                ].map((a) => (
+                  <div key={a} className="rounded-lg border border-pot-border bg-pot-dark px-3 py-2 text-sm text-pot-muted">
+                    {a}
+                  </div>
+                ))}
+              </div>
+            </LockGate>
           </div>
         )}
 
@@ -900,9 +909,43 @@ export default function PotPage() {
               hasTamagotchiNft={!!potAny.hasTamagotchiNft}
               snsAddress={snsName || undefined}
             />
+
+            {/* Pro+ curated strategies — gated */}
+            <LockGate
+              locked={!hasProPlus}
+              title="Curated Strategies & Alpha Vault"
+              requiredTier="Pro+"
+              onUpgrade={() => setUpgradeOpen(true)}
+            >
+              <div className="bg-pot-card border border-pot-accent/30 rounded-2xl p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">💎</span>
+                  <h3 className="font-bold text-white text-lg">Curated Strategies</h3>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-pot-accent/15 text-pot-accent uppercase tracking-wide">Pro+</span>
+                </div>
+                <p className="text-sm text-pot-muted">
+                  Hand-picked, risk-managed strategies from the PotBot research desk, plus
+                  early access to the Alpha Vault.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { name: 'Delta-Neutral JLP', apy: '~35% APY', tag: 'Market-neutral' },
+                    { name: 'Blue-chip Momentum', apy: '~48% APY', tag: 'Trend-following' },
+                  ].map((s) => (
+                    <div key={s.name} className="rounded-xl border border-pot-border bg-pot-dark p-3">
+                      <p className="text-sm font-bold text-white">{s.name}</p>
+                      <p className="text-xs text-pot-green mt-0.5">{s.apy}</p>
+                      <p className="text-[10px] text-pot-muted mt-1">{s.tag}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </LockGate>
           </div>
         )}
       </div>
+
+      <SubscriptionModal isOpen={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
     </div>
   )
 }

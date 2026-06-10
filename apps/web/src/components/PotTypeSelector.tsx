@@ -55,7 +55,12 @@ export function PotTypeSelector({ value, onChange }: PotTypeSelectorProps) {
         <button
           type="button"
           onClick={() => onChange('public')}
-          className="relative z-10 rounded-xl p-5 text-left transition-transform hover:-translate-y-0.5 cursor-pointer"
+          className="relative z-10 rounded-xl p-5 text-left transition-all hover:-translate-y-0.5 cursor-pointer border"
+          style={{
+            borderColor: value === 'public' ? 'rgba(20,241,149,.45)' : 'transparent',
+            background: value === 'public' ? 'rgba(20,241,149,.06)' : 'transparent',
+            transition: 'border-color .3s, background .3s, transform .2s',
+          }}
         >
           <div className="flex items-start justify-between gap-3 mb-3">
             <div
@@ -134,7 +139,12 @@ export function PotTypeSelector({ value, onChange }: PotTypeSelectorProps) {
         <button
           type="button"
           onClick={() => onChange('private')}
-          className="relative z-10 rounded-xl p-5 text-left transition-transform hover:-translate-y-0.5 cursor-pointer"
+          className="relative z-10 rounded-xl p-5 text-left transition-all hover:-translate-y-0.5 cursor-pointer border"
+          style={{
+            borderColor: value === 'private' ? 'rgba(153,69,255,.45)' : 'transparent',
+            background: value === 'private' ? 'rgba(153,69,255,.06)' : 'transparent',
+            transition: 'border-color .3s, background .3s, transform .2s',
+          }}
         >
           <div className="flex items-start justify-between gap-3 mb-3">
             <div
