@@ -171,6 +171,7 @@ pub fn handler(ctx: Context<ExecuteProposal>) -> Result<()> {
                 single_swap_cap_bps: pot.single_swap_cap_bps,
                 daily_budget_lamports: pot.daily_budget_lamports,
                 risk_param_timelock_secs: pot.risk_param_timelock_secs,
+                max_asset_exposure_bps: pot.max_asset_exposure_bps,
             };
             let staged = pot.stage_or_apply_risk_params(target, clock.unix_timestamp)?;
             msg!(
@@ -203,6 +204,7 @@ pub fn handler(ctx: Context<ExecuteProposal>) -> Result<()> {
                 single_swap_cap_bps: pot.single_swap_cap_bps,
                 daily_budget_lamports: pot.daily_budget_lamports,
                 risk_param_timelock_secs: pot.risk_param_timelock_secs,
+                max_asset_exposure_bps: pot.max_asset_exposure_bps,
             };
             let staged = pot.stage_or_apply_risk_params(target, clock.unix_timestamp)?;
             msg!(

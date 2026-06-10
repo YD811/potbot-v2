@@ -124,7 +124,16 @@ def add_type(name, fields):
         return
     idl["types"].append({"name": name, "type": {"kind": "struct", "fields": fields}})
 
-add_type("PendingRiskParams", [
+def upsert_type(name, fields):
+    """Replace the struct definition if present (keeps re-runs idempotent
+    when a type gains fields), else append it."""
+    for t in idl["types"]:
+        if t["name"] == name:
+            t["type"]["fields"] = fields
+            return
+    idl["types"].append({"name": name, "type": {"kind": "struct", "fields": fields}})
+
+upsert_type("PendingRiskParams", [
     {"name": "is_pending", "type": "bool"},
     {"name": "effective_at", "type": "i64"},
     {"name": "trade_level", "type": "u8"},
@@ -133,6 +142,7 @@ add_type("PendingRiskParams", [
     {"name": "single_swap_cap_bps", "type": "u16"},
     {"name": "daily_budget_lamports", "type": "u64"},
     {"name": "risk_param_timelock_secs", "type": "i64"},
+    {"name": "max_asset_exposure_bps", "type": "u16"},
 ])
 add_type("SetAllowedProgramsArgs", [
     {"name": "programs", "type": {"vec": "pubkey"}},

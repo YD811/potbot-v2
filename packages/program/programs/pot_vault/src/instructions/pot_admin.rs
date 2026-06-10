@@ -114,6 +114,7 @@ pub fn set_spending_policy(
                 single_swap_cap_bps: args.single_swap_cap_bps,
                 daily_budget_lamports: args.daily_budget_lamports,
                 risk_param_timelock_secs: pot.risk_param_timelock_secs,
+                max_asset_exposure_bps: pot.max_asset_exposure_bps,
         };
         let staged = pot.stage_or_apply_risk_params(target, now)?;
         msg!(
@@ -195,16 +196,9 @@ pub fn set_risk_timelock(
         let pot = &mut ctx.accounts.pot;
         let now = Clock::get()?.unix_timestamp;
 
-        // Exposure cap: apply tightening instantly; loosening only when no
-        // timelock is configured (otherwise keep the tighter current value —
-        // loosening exposure caps goes through governance, not admin).
-        let old_exposure = pot.max_asset_exposure_bps;
-        let tightening = args.max_asset_exposure_bps != 0
-                && (old_exposure == 0 || args.max_asset_exposure_bps < old_exposure);
-        if tightening || pot.risk_param_timelock_secs <= 0 {
-                    pot.max_asset_exposure_bps = args.max_asset_exposure_bps;
-        }
-
+        // Both the timelock and the exposure cap go through the standard
+        // stage-or-apply path: tightening lands instantly, loosening is
+        // staged into pending_params and applied after the delay.
         let target = PendingRiskParams {
                 is_pending: false,
                 effective_at: 0,
@@ -214,6 +208,7 @@ pub fn set_risk_timelock(
                 single_swap_cap_bps: pot.single_swap_cap_bps,
                 daily_budget_lamports: pot.daily_budget_lamports,
                 risk_param_timelock_secs: args.risk_param_timelock_secs,
+                max_asset_exposure_bps: args.max_asset_exposure_bps,
         };
         let staged = pot.stage_or_apply_risk_params(target, now)?;
         msg!(

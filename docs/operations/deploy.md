@@ -114,11 +114,20 @@ Open Solana Explorer (mainnet) and confirm the program id, authority, and recent
 
 `apps/web/.env.local`:
 ```
+NEXT_PUBLIC_SOLANA_NETWORK=mainnet-beta   # REQUIRED — defaults to devnet; drives explorer
+                                          # links, cluster labels and health checks
 NEXT_PUBLIC_RPC_URL=https://mainnet.helius-rpc.com/?api-key=<KEY>
 NEXT_PUBLIC_PROGRAM_ID=<PROGRAM_ID>
 ```
-Set the same `RPC_URL` + `PROGRAM_ID` for `apps/api` and `apps/keeper`, and the executor key as a
-secret (never in git). `useIsProgramLive()` should now flip the DApp to on-chain mode.
+
+`apps/keeper` reads DIFFERENT env names (with devnet fallbacks — if you skip
+these, the keeper silently keeps polling devnet while mainnet looks wired):
+```
+SOLANA_RPC_URL=https://mainnet.helius-rpc.com/?api-key=<KEY>
+POTBOT_PROGRAM_ID=<PROGRAM_ID>
+```
+Set the equivalent vars for `apps/api`, and the executor key as a secret
+(never in git). `useIsProgramLive()` should now flip the DApp to on-chain mode.
 
 Restart api + keeper; confirm the agent cron / crank point at mainnet.
 

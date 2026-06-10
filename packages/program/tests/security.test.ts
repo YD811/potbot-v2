@@ -305,6 +305,24 @@ describe('security hardening (Phase A)', () => {
     potState = await (program.account as any).potAccount.fetch(pot)
     expect(potState.singleSwapCapBps).to.equal(1000)
     expect(potState.pendingParams.isPending).to.equal(false)
+
+    // Exposure-cap loosening (3000 → 6000) is staged too — not silently
+    // dropped (codex review finding) — and applies after the delay.
+    await (program.methods as any)
+      .setRiskTimelock({ riskParamTimelockSecs: new BN(2), maxAssetExposureBps: 6000 })
+      .accounts({ pot, authority })
+      .rpc()
+    potState = await (program.account as any).potAccount.fetch(pot)
+    expect(potState.maxAssetExposureBps).to.equal(3000) // unchanged yet
+    expect(potState.pendingParams.isPending).to.equal(true)
+    expect(potState.pendingParams.maxAssetExposureBps).to.equal(6000)
+    await new Promise((r) => setTimeout(r, 3000))
+    await (program.methods as any)
+      .applyPendingParams()
+      .accounts({ pot, cranker: authority })
+      .rpc()
+    potState = await (program.account as any).potAccount.fetch(pot)
+    expect(potState.maxAssetExposureBps).to.equal(6000)
   })
 
   // ── 5. cap breach ────────────────────────────────────────────────────────

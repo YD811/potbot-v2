@@ -45,6 +45,15 @@ const FILTER_STRATEGY: Record<string, number[]> = {
   aggressive:   [3, 4],
 }
 
+/** Mock pots carry numeric yieldStrategy ids; live on-chain pots are mapped
+ *  by usePots() to the anchor enum KEY string ('conservative' | 'balanced' |
+ *  'aggressive' | 'none'). Normalize both shapes to the filter bucket. */
+function strategyMatchesFilter(value: unknown, bucket: string): boolean {
+  if (typeof value === 'number') return FILTER_STRATEGY[bucket]?.includes(value) ?? false
+  if (typeof value === 'string') return value.toLowerCase() === bucket
+  return false
+}
+
 /** Deterministic upward-trending sparkline derived from the pot pubkey. */
 function Sparkline({ seed, className = '' }: { seed: string; className?: string }) {
   const points = useMemo(() => {
@@ -106,7 +115,7 @@ export default function VaultsPage() {
       .filter((p: any) => {
         if (filter === 'all') return true
         if (filter === 'verified') return p.trustLevel && p.trustLevel !== 'unverified'
-        return FILTER_STRATEGY[filter]?.includes(p.yieldStrategy)
+        return strategyMatchesFilter(p.yieldStrategy, filter)
       })
       .filter((p: any) => {
         if (!profitableOnly) return true

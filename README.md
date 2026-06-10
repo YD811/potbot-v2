@@ -136,9 +136,9 @@ Stripe checkout is wired behind `NEXT_PUBLIC_STRIPE_KEY`; paid billing activates
 | Stream | Rate | Status |
 |---|---|---|
 | Pot creation fee | 0.01 SOL, charged onchain in `create_pot` | 🟡 Devnet |
-| Swap fee | 0.30% on every trade routed through a pot | 🟡 Devnet |
-| Strategy Vault entry fee | 20% protocol share (70% to the strategy creator, 10% to the referrer) | 🟡 Devnet |
-| Performance fee | 25% protocol share — the creator sets the rate per vault (capped at 50%) | 🟡 Devnet |
+| Swap fee | 0.30% on every trade routed through a pot — fee switch ships with the mainnet program iteration | 🔵 Planned |
+| Strategy Vault entry fee | 20% protocol share (70% creator / 10% referrer split is live onchain; the treasury leg is not collected yet) | 🔵 Planned |
+| Performance fee | 25% protocol share — creator-set rate (capped at 50%) currently pays out 100% to the creator | 🔵 Planned |
 
 No token, no airdrop farming.
 
