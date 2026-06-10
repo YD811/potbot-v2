@@ -80,6 +80,15 @@ export interface MockPot {
   verifiedBy?: string
   auditUrl?: string
 
+  // ── Trust surfaces: freeze / sentinel / risk caps ─────────────────────────
+  /** Frozen state — deposits & execution paused, exits remain open. */
+  paused?: boolean
+  /** Independent guardian wallet that can freeze the pot in an emergency.
+   *  It can never move funds. null/undefined = no sentinel. */
+  sentinel?: string | null
+  /** Risk cap: max % of vault value a single swap proposal may move. */
+  maxSwapPct?: number
+
   // ── Subscription plan (gates premium pot features) ───────────────────────
   subscriptionTier?: 'free' | 'early' | 'pro' | 'pro_plus'
 }
@@ -152,6 +161,8 @@ const SEED_POTS: MockPot[] = [
     navPerShareBps: 10098,
     trustLevel: 'community',
     verifiedBy: 'PotBot Community',
+    paused: false,
+    sentinel: null,
   },
   {
     pubkey: 'DemoPoT2222222222222222222222222222222222222',
@@ -181,6 +192,8 @@ const SEED_POTS: MockPot[] = [
     mode: 'virtual',
     tokenTicker: '',
     navPerShareBps: 10150,
+    paused: false,
+    sentinel: null,
   },
   {
     pubkey: 'DemoPoT3333333333333333333333333333333333333',
@@ -210,6 +223,9 @@ const SEED_POTS: MockPot[] = [
     mode: 'virtual',
     tokenTicker: '',
     navPerShareBps: 10019,
+    paused: false,
+    sentinel: null,
+    maxSwapPct: 10,
   },
   {
     pubkey: 'DemoPoT4444444444444444444444444444444444444',
@@ -243,6 +259,8 @@ const SEED_POTS: MockPot[] = [
     trustLevel: 'audited',
     verifiedBy: 'OtterSec',
     auditUrl: 'https://github.com/YD811/potbot-v2',
+    paused: false,
+    sentinel: null,
   },
   {
     pubkey: 'DemoPoT5555555555555555555555555555555555555',
@@ -272,6 +290,8 @@ const SEED_POTS: MockPot[] = [
     mode: 'virtual',
     tokenTicker: '',
     navPerShareBps: 10278,
+    paused: false,
+    sentinel: null,
   },
   {
     pubkey: 'DemoPoT6666666666666666666666666666666666666',
@@ -302,6 +322,8 @@ const SEED_POTS: MockPot[] = [
     mode: 'virtual',
     tokenTicker: '',
     navPerShareBps: 10110,
+    paused: false,
+    sentinel: null,
   },
   {
     pubkey: 'DemoPoT7777777777777777777777777777777777777',
@@ -335,6 +357,10 @@ const SEED_POTS: MockPot[] = [
     trustLevel: 'institutional',
     verifiedBy: 'Halborn',
     auditUrl: 'https://github.com/YD811/potbot-v2',
+    // Demo: independent sentinel guardian enabled (can freeze, never move funds)
+    paused: false,
+    sentinel: 'Sentine1Guard111111111111111111111111111111',
+    maxSwapPct: 20,
   },
 
   // ── Featured by PotBot — institutional-grade vaults managed by PotBot AI ──
@@ -373,6 +399,9 @@ const SEED_POTS: MockPot[] = [
     verifiedBy: 'PotBot',
     auditUrl: 'https://github.com/YD811/potbot-v2',
     subscriptionTier: 'pro_plus',
+    paused: false,
+    sentinel: null,
+    maxSwapPct: 5,
   },
   {
     pubkey: 'PotBotFeatBal11111111111111111111111111111111',
@@ -406,6 +435,8 @@ const SEED_POTS: MockPot[] = [
     verifiedBy: 'PotBot',
     auditUrl: 'https://github.com/YD811/potbot-v2',
     subscriptionTier: 'pro_plus',
+    paused: false,
+    sentinel: null,
   },
   {
     pubkey: 'PotBotFeatAggr1111111111111111111111111111111',
@@ -439,6 +470,8 @@ const SEED_POTS: MockPot[] = [
     verifiedBy: 'PotBot',
     auditUrl: 'https://github.com/YD811/potbot-v2',
     subscriptionTier: 'pro_plus',
+    paused: false,
+    sentinel: null,
   },
 ]
 
@@ -751,6 +784,9 @@ export const useMockStore = create<MockState>((set, get) => ({
       tokenTicker: '',
       navPerShareBps: 10000,
       subscriptionTier: 'free',
+      paused: false,
+      sentinel: null,
+      maxSwapPct: params.maxTradeSizeBps != null ? params.maxTradeSizeBps / 100 : undefined,
     }
     const creatorMember: MockMember = {
       potPubkey: pubkey,
