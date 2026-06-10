@@ -9,8 +9,6 @@ import {
   usePot,
   useMembers,
   useProposals,
-  useVote,
-  useExecuteProposal,
 } from '@/hooks/usePots'
 import { usePotRole } from '@/hooks/usePotRole'
 import { calculateTamaStats } from '@/lib/tamagotchi/stats'
@@ -24,8 +22,13 @@ import { PotActivityFeed } from '@/components/PotActivityFeed'
 import { reverseSNS } from '@/lib/sns'
 import PotSnsUpsell from '@/components/sns/PotSnsUpsell'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
-import SwapExecuteButton from '@/components/SwapExecuteButton'
 import CreateProposalModal from '@/components/pot/CreateProposalModal'
+import {
+  ProposalCard,
+  ProposalCardSkeleton,
+  ProposalsEmptyState,
+  ProposalsErrorState,
+} from '@/components/pot/ProposalCard'
 import { SubscriptionModal } from '@/components/SubscriptionModal'
 import { PublicKey } from '@solana/web3.js'
 import { useHumanText } from '@/hooks/useHumanText'
@@ -83,22 +86,6 @@ const TAB_TERMS: Record<Tab, string> = {
 const CLUSTER: 'mainnet-beta' | 'devnet' =
   (process.env.NEXT_PUBLIC_SOLANA_CLUSTER as 'mainnet-beta' | 'devnet') ?? 'devnet'
 
-/* ── Proposal status helpers ── */
-const STATUS_COLORS: Record<string, string> = {
-  active:   'bg-pot-accent/20 text-pot-accent',
-  passed:   'bg-pot-green/20 text-pot-green',
-  rejected: 'bg-red-500/20 text-red-400',
-  executed: 'bg-blue-500/20 text-blue-400',
-  pending:  'bg-yellow-500/20 text-yellow-400',
-}
-const STATUS_LABELS: Record<string, string> = {
-  active:   '⏳ Active',
-  passed:   '✅ Passed',
-  rejected: '❌ Rejected',
-  executed: '🚀 Executed',
-  pending:  '🕐 Pending',
-}
-
 /* Inline wallet gate */
 function WalletGate({
   connected,
@@ -118,111 +105,6 @@ function WalletGate({
       {title && <p className="text-white font-semibold">{title}</p>}
       {subtitle && <p className="text-pot-muted text-sm max-w-md">{subtitle}</p>}
       <div className="mt-2"><WalletMultiButtonDynamic /></div>
-    </div>
-  )
-}
-
-function ProposalCard({
-  proposal,
-  potAddress,
-  canVote,
-  canExecute,
-}: {
-  proposal: any
-  potAddress: string
-  canVote: boolean
-  canExecute: boolean
-}) {
-  const vote = useVote()
-  const execute = useExecuteProposal()
-  const [expanded, setExpanded] = useState(false)
-  const statusClass = STATUS_COLORS[proposal.status] ?? 'bg-pot-muted/20 text-pot-muted'
-  const statusLabel = STATUS_LABELS[proposal.status] ?? proposal.status
-
-  return (
-    <div
-      className="bg-pot-card border border-pot-border hover:border-pot-accent/30 rounded-2xl p-5 space-y-4 w-full transition cursor-pointer"
-      onClick={() => setExpanded((v) => !v)}
-      role="button"
-      aria-expanded={expanded}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <p className="text-white font-semibold text-sm leading-snug break-words">{proposal.description}</p>
-          <p className="text-xs text-pot-muted mt-1">
-            #{proposal.proposalId ?? '?'} · {new Date(proposal.createdAt).toLocaleDateString()}
-          </p>
-        </div>
-        <span className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold ${statusClass}`}>
-          {statusLabel}
-        </span>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-pot-muted w-8">YES</span>
-          <div className="flex-1 h-2 bg-pot-dark rounded-full overflow-hidden">
-            <div className="h-full bg-pot-green rounded-full transition-all" style={{ width: `${proposal.yesPercent ?? 0}%` }} />
-          </div>
-          <span className="text-xs text-pot-green font-mono w-10 text-right">{proposal.yesPercent ?? 0}%</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-pot-muted w-8">NO</span>
-          <div className="flex-1 h-2 bg-pot-dark rounded-full overflow-hidden">
-            <div className="h-full bg-red-400 rounded-full transition-all" style={{ width: `${proposal.noPercent ?? 0}%` }} />
-          </div>
-          <span className="text-xs text-red-400 font-mono w-10 text-right">{proposal.noPercent ?? 0}%</span>
-        </div>
-      </div>
-
-      {expanded && (
-        <div className="border-t border-pot-border/50 pt-3 text-xs text-pot-muted space-y-1">
-          <div><span className="text-pot-muted">Pubkey:</span> <span className="font-mono text-pot-green break-all">{proposal.pubkey}</span></div>
-          {proposal.totalSharesSnapshot != null && (
-            <div><span className="text-pot-muted">Total shares snapshot:</span> <span className="text-white">{proposal.totalSharesSnapshot.toLocaleString()}</span></div>
-          )}
-          {Array.isArray(proposal.voters) && (
-            <div><span className="text-pot-muted">Voters so far:</span> <span className="text-white">{proposal.voters.length}</span></div>
-          )}
-        </div>
-      )}
-
-      {canVote && proposal.status === 'active' && (
-        <div className="flex gap-3 pt-1" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={() => vote.mutate({ potAddress, proposalAddress: proposal.pubkey, approve: true })}
-            disabled={vote.isPending}
-            className="flex-1 py-2 rounded-xl text-sm font-bold bg-pot-green/20 hover:bg-pot-green/40 text-pot-green border border-pot-green/30 transition disabled:opacity-50"
-          >
-            👍 Vote Yes
-          </button>
-          <button
-            onClick={() => vote.mutate({ potAddress, proposalAddress: proposal.pubkey, approve: false })}
-            disabled={vote.isPending}
-            className="flex-1 py-2 rounded-xl text-sm font-bold bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition disabled:opacity-50"
-          >
-            👎 Vote No
-          </button>
-        </div>
-      )}
-      {/* Execute — owner / authority only. Swaps route through Jupiter via
-          SwapExecuteButton; everything else uses a generic execute. Members
-          never see this — they can only vote / propose. */}
-      {canExecute && proposal.status === 'passed' && (
-        <div className="pt-1" onClick={(e) => e.stopPropagation()}>
-          {proposal.type === 'swap' ? (
-            <SwapExecuteButton proposalPubkey={proposal.pubkey} potAddress={potAddress} />
-          ) : (
-            <button
-              onClick={() => execute.mutate({ potAddress, proposalAddress: proposal.pubkey })}
-              disabled={execute.isPending}
-              className="btn-primary w-full disabled:opacity-50"
-            >
-              {execute.isPending ? 'Executing…' : '✓ Execute'}
-            </button>
-          )}
-        </div>
-      )}
     </div>
   )
 }
@@ -478,7 +360,12 @@ export default function PotPage() {
 
   const { data: pot, isLoading: isPotLoading } = usePot(pubkey)
   const { data: members = [] } = useMembers(pubkey)
-  const { data: proposals = [] } = useProposals(pubkey)
+  const {
+    data: proposals = [],
+    isLoading: proposalsLoading,
+    isError: proposalsError,
+    refetch: refetchProposals,
+  } = useProposals(pubkey)
   const { role } = usePotRole(pubkey)
 
   const [activeTab, setActiveTab] = useState<Tab>('proposal')
@@ -629,6 +516,9 @@ export default function PotPage() {
         trustLevel={potAny.trustLevel}
         verifiedBy={potAny.verifiedBy}
         strategy={potAny.yieldStrategy}
+        paused={potAny.paused}
+        sentinel={potAny.sentinel}
+        maxSwapPct={potAny.maxSwapPct}
         onDepositClick={goToDeposit}
         onProposeClick={goToPropose}
         canPropose={canManage}
@@ -790,16 +680,18 @@ export default function PotPage() {
                   </div>
                 )}
 
-                {proposals.length === 0 ? (
-                  <div className="text-center py-12 bg-pot-card border border-pot-border rounded-2xl">
-                    <div className="text-4xl mb-3">🗳️</div>
-                    <p className="text-white font-semibold mb-1">No proposals yet</p>
-                    <p className="text-pot-muted text-xs">
-                      {canManage
-                        ? 'Use the proposal builder below to draft your first swap.'
-                        : 'Join the vault to create proposals.'}
-                    </p>
+                {proposalsLoading ? (
+                  <div className="space-y-3">
+                    <ProposalCardSkeleton />
+                    <ProposalCardSkeleton />
                   </div>
+                ) : proposalsError ? (
+                  <ProposalsErrorState onRetry={() => refetchProposals()} />
+                ) : proposals.length === 0 ? (
+                  <ProposalsEmptyState
+                    canCreate={!!userPubkey && canManage}
+                    onCreate={() => setProposalModalOpen(true)}
+                  />
                 ) : (
                   <div className="space-y-3">
                     {proposals
@@ -810,8 +702,14 @@ export default function PotPage() {
                           key={p.pubkey}
                           proposal={p}
                           potAddress={pubkey}
+                          potBalance={(pot.balance ?? 0) + (potAny.meteoraLpBalance ?? 0)}
                           canVote={canVote}
                           canExecute={canExecute}
+                          governance={{
+                            quorumPct: potAny.quorumPct,
+                            maxSwapPct: potAny.maxSwapPct,
+                            voteTimeoutHours: potAny.votingWindowHours,
+                          }}
                         />
                       ))}
                   </div>
