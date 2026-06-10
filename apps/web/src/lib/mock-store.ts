@@ -404,7 +404,7 @@ const SEED_POTS: MockPot[] = [
     maxSwapPct: 5,
   },
   {
-    pubkey: 'PotBotFeatBal11111111111111111111111111111111',
+    pubkey: 'PotBotFeatBa1111111111111111111111111111111',
     name: 'PotBot Balanced Index',
     emoji: '⚖️',
     balance: 320.0,
