@@ -159,6 +159,7 @@ pub struct PendingRiskParams {
     pub single_swap_cap_bps: u16,
     pub daily_budget_lamports: u64,
     pub risk_param_timelock_secs: i64,
+    pub max_asset_exposure_bps: u16,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace, PartialEq)]
@@ -486,6 +487,13 @@ impl PotAccount {
             any_loosening = true;
         }
 
+        // Per-asset exposure cap: 0 = unlimited (loosest); lower = tighter.
+        if !cap_is_looser(self.max_asset_exposure_bps as u64, target.max_asset_exposure_bps as u64) {
+            self.max_asset_exposure_bps = target.max_asset_exposure_bps;
+        } else {
+            any_loosening = true;
+        }
+
         // Timelock itself: HIGHER = tighter; 0 = disabled (loosest).
         if !timelock_is_looser(self.risk_param_timelock_secs, target.risk_param_timelock_secs) {
             self.risk_param_timelock_secs = target.risk_param_timelock_secs;
@@ -534,6 +542,7 @@ impl PotAccount {
         self.single_swap_cap_bps = p.single_swap_cap_bps;
         self.daily_budget_lamports = p.daily_budget_lamports;
         self.risk_param_timelock_secs = p.risk_param_timelock_secs;
+        self.max_asset_exposure_bps = p.max_asset_exposure_bps;
     }
 }
 

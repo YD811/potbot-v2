@@ -5803,6 +5803,10 @@
           {
             "name": "risk_param_timelock_secs",
             "type": "i64"
+          },
+          {
+            "name": "max_asset_exposure_bps",
+            "type": "u16"
           }
         ]
       }
