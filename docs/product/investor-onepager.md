@@ -33,7 +33,7 @@ Consumer-grade onboarding: email login (Privy), no seed phrase, join a pot in un
 
 Solana DEX volume routinely exceeds $3–5B/day; trading bots/terminals (Axiom, Trojan, Photon, BullX) capture hundreds of millions in annualized fees from *single-player* flows. PotBot targets the unserved multiplayer slice: trading group chats, KOL communities, DAOs/Superteam circles, and AI-agent operators — plus the next cohort that needs email-grade onboarding.
 
-## Business model (gross protocol revenue)
+## Business model (gross protocol revenue — fee switch ships with mainnet)
 
 | Stream | Take |
 |---|---|
@@ -42,6 +42,8 @@ Solana DEX volume routinely exceeds $3–5B/day; trading bots/terminals (Axiom, 
 | Performance fee share | 25% of creator perf fee (on profit) |
 | Premium subscriptions (Pro $29 / Pro+ $99) | 100% |
 | Pot creation fee | 0.01 SOL flat |
+
+*Today only the 0.01 SOL creation fee is collected onchain; the swap/entry/perf protocol shares below are the designed fee switch, activating with the mainnet program iteration.*
 
 **Scenarios (monthly run-rate):** Conservative — 50 pots, $150k TVL → ~$0.4k/mo. **Base — 250 pots, $2M TVL → ~$8k/mo (~$95k/yr).** Aggressive — 1,200 pots, $24M TVL → ~$170k/mo (~$2M/yr). Lean cost base: ~$430/mo opex (solo founder + AI tooling).
 
