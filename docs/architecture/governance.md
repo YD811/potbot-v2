@@ -22,6 +22,8 @@ Each POT configures two independent governance levels at creation:
 
 Most vaults will use **L2 Majority** as a balance of speed and democracy. Institutional pots and family offices typically pick **L3 Supermajority** + the optional timelock.
 
+The create flow ships three one-click presets — 😎 **Chill**, ⚖️ **Balanced**, 🏛 **Institutional** — that bundle trade/withdraw levels, quorum, timelock and max-swap caps. Full mapping in [`docs/product/governance-presets.md`](../product/governance-presets.md).
+
 ### Optional risk caps (stackable on any level)
 
 Set in `GovernanceConfig` at pot creation, changeable later by governance proposal:
@@ -30,6 +32,19 @@ Set in `GovernanceConfig` at pot creation, changeable later by governance propos
 - `max_budget_grant_pct` — no budget grant may exceed X% of vault balance
 - `require_admin_cosign` — proposals above a configurable threshold require the authority to co-sign before execution (does not override the vote; just adds a second signature gate)
 - `timelock_seconds` — after a proposal passes, execution is delayed by N seconds (cooling-off / unwind window)
+
+### Risk-param timelock (asymmetric)
+
+On top of the per-proposal timelock, the pot can configure `risk_param_timelock_secs` — a delay that applies to changes of the risk parameters themselves (approval levels, swap-size caps, daily budget, the timelock itself):
+
+- **Tightening applies instantly** — raising approval levels or lowering caps never waits.
+- **Loosening is staged** in `pot.pending_params` and only takes effect after the delay, via the **permissionless** `apply_pending_params` instruction. Anyone can crank it; nobody can fast-track it.
+
+This closes the "vote once to remove the guardrails, then drain" pattern: members always get the full timelock window to exit before looser rules take effect. Semantics in [`program.md` § Security layer](program.md#security-layer-sentinel--freeze--timelocks--allowlists).
+
+### Sentinel / guardian
+
+The pot authority can register one **sentinel** wallet (`set_sentinel`) — a circuit-breaker that can `freeze_pot` (sentinel or authority; only the authority can unfreeze) and `cancel_proposal` (sentinel, authority, or the proposer), but has **no instruction that can move funds**. A frozen pot blocks deposits, proposal execution, swaps and strategy creation — while member `withdraw` and `redeem_tokens` stay open unconditionally. Cancelled proposals land in the terminal `Cancelled` status.
 
 ---
 
@@ -68,7 +83,10 @@ create_proposal()
     │                               │
     │                           Rejected
     │
-    └─── expires_at reached ──▶ Rejected (permissionless close)
+    ├─── expires_at reached ──▶ Rejected (permissionless close)
+    │
+    └─── cancel_proposal() ───▶ Cancelled (terminal — sentinel, authority, or proposer;
+                                 also possible from Passed, before execution)
 ```
 
 ---
@@ -182,7 +200,7 @@ Proposal: "[BUDGET GRANT] 5 SOL → wallet.sol for 30d · marketing campaign"
   purpose:   "Marketing Q3 2026"
 ```
 
-Subject to `max_budget_grant_pct` cap if set.
+Subject to `max_budget_grant_pct` cap if set. On execution the payout goes to the **beneficiary recorded in the proposal** via a seeds-signed vault transfer — the executor only cranks the instruction and must pass a `recipient` account matching the beneficiary (`RecipientMismatch` otherwise).
 
 ### Custom
 

@@ -1,9 +1,13 @@
 # Solana Program Reference — `pot_vault`
 
-Program ID (devnet, placeholder — update after mainnet deploy):
+Program ID (devnet — a fresh keypair will be generated for mainnet):
 ```
-Hyi1PNxPMUqwdDukhB2a4fvcBxQHmbXy3CZ95mgyFHA3
+GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK
 ```
+
+> **Account-layout note (June 2026):** the security hardening pass added new fields to `PotAccount` (sentinel, risk-param timelock, pending params, program allowlist, exposure counters — see [Security layer](#security-layer-sentinel--freeze--timelocks--allowlists)). The account grew, so pre-existing devnet pots were incompatible and have been recreated against the new layout.
+>
+> **IDL workflow:** Anchor's IDL generation is broken on modern toolchains for this program — build with `anchor build --no-idl`, then run `scripts/patch_idl.py` to produce the client IDL.
 
 > This file documents **`packages/program/programs/pot_vault`** — the core Anchor program that owns every POT vault. A companion program `pot_duel` covers 1v1 duel vaults (not fully documented here yet; unlocks at Bloom+). See [OVERVIEW.md](OVERVIEW.md) for the full product context.
 
@@ -36,6 +40,19 @@ Stores the full configuration, stats and Money Tree state of a vault.
 | `created_at` | `i64` | Unix timestamp |
 | `bump` | `u8` | PDA bump seed |
 
+**Security-hardening fields** (added June 2026 — see [Security layer](#security-layer-sentinel--freeze--timelocks--allowlists)):
+
+| Field | Type | Description |
+|---|---|---|
+| `paused` | `bool` | Frozen flag. Set by `freeze_pot` (sentinel or authority), cleared by `unfreeze_pot` (authority only) |
+| `sentinel` | `Option<Pubkey>` | Optional guardian wallet. Can freeze the pot and cancel proposals; has **no** instruction that can move funds |
+| `risk_param_timelock_secs` | `i64` | Delay applied when a risky governance parameter is *loosened*. Tightening applies instantly. `0` = disabled |
+| `pending_params` | `PendingRiskParams` | Staged loosening change awaiting its timelock; applied by the permissionless `apply_pending_params` |
+| `allowed_programs` | `[Pubkey; 8]` | Program-id allowlist for external CPI targets (Jupiter, yield protocols). `allowed_programs_count == 0` = open mode |
+| `allowed_programs_count` | `u8` | Number of used allowlist slots |
+| `max_asset_exposure_bps` | `u16` | Max cumulative *daily* spend toward any single output mint, as bps of vault balance. `0` = unlimited |
+| `per_mint_daily_spent` | `[u64; 16]` | Daily spend tracked per `allowed_mints` slot; resets with the UTC-day window |
+
 ### `MemberAccount`
 
 One per (POT × wallet) pair.
@@ -64,7 +81,7 @@ One per governance proposal.
 | `description` | `String` | Human-readable description |
 | `yes_votes` | `u64` | Share-weighted yes votes |
 | `no_votes` | `u64` | Share-weighted no votes |
-| `status` | `ProposalStatus` | Active / Passed / Rejected / Executed |
+| `status` | `ProposalStatus` | Active / Passed / Rejected / Executed / Expired / Cancelled (terminal — set by `cancel_proposal`) |
 | `risk_class` | `u8` | 0 = normal, 1 = defensive-only (set automatically when pot is in low-HP risk mode) |
 | `created_at` | `i64` | Unix timestamp |
 | `expires_at` | `i64` | Auto-reject deadline |
@@ -90,7 +107,7 @@ Records a member's decision to let an AI agent wallet vote on their behalf in a 
 
 ```typescript
 import { PublicKey } from '@solana/web3.js'
-const PROGRAM_ID = new PublicKey('Hyi1PNxPMUqwdDukhB2a4fvcBxQHmbXy3CZ95mgyFHA3')
+const PROGRAM_ID = new PublicKey('GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK')
 
 // POT config account
 const [potPDA] = PublicKey.findProgramAddressSync(
@@ -197,6 +214,8 @@ else:
 ```
 
 Side effects: updates `peak_balance`, recomputes `health_hp` via the crank-style inline update, resets `is_dead = false` if it was true (for resurrection path).
+
+Blocked while the pot is frozen (`PotFrozen`) — a frozen pot accepts no new capital. `withdraw` (below) deliberately has **no** freeze check: member exit is never blockable.
 
 ---
 
@@ -353,6 +372,10 @@ Execute a `Passed` proposal. For `ExecuteSwap`, this performs a Jupiter CPI from
 
 Side effects: increments `trade_count`, updates `peak_balance` if post-swap valuation is higher, recomputes `health_hp`.
 
+**Fund-moving proposals pay the beneficiary, never the executor.** For `Withdraw` / `TransferFunds` actions the caller must pass a `recipient` account that exactly matches the beneficiary recorded in the proposal (`RecipientMismatch` otherwise); lamports leave the vault via a seeds-signed system-program transfer. (Earlier builds paid the executor and used a direct lamport debit that the runtime rejects for System-owned PDAs — both fixed in the June 2026 hardening pass.)
+
+Blocked while the pot is frozen (`PotFrozen`).
+
 ---
 
 ### `update_tamagotchi` — 🟡 planned Q2 2026
@@ -402,6 +425,59 @@ Implemented in a sibling sub-module `strategy_vault/` inside `pot_vault`. Full s
 - `join_strategy_vault` — ✅ implemented (with on-chain 2-level referral)
 - `exit_strategy_vault` — ✅ implemented (with performance fee on profit)
 - `evolve_tamagotchi` — 🟡 planned (same crank semantics as `update_tamagotchi` but evaluates Strategy-specific thresholds)
+
+---
+
+## Security layer (sentinel · freeze · timelocks · allowlists)
+
+Added in the June 2026 hardening pass — ✅ implemented, 14 tests green on localnet (7 dedicated security scenarios). Devnet redeploy pending.
+
+### Sentinel / guardian role
+
+A pot's authority can assign one optional **sentinel** wallet. The sentinel is a pure circuit-breaker: it can stop things, but there is *no* instruction through which it can move funds.
+
+| Instruction | Who can call | Effect |
+|---|---|---|
+| `set_sentinel(Option<Pubkey>)` | authority | Assign or clear the sentinel wallet |
+| `freeze_pot` | sentinel **or** authority | Sets `pot.paused = true` |
+| `unfreeze_pot` | authority **only** (`SentinelCannotUnfreeze`) | Clears `pot.paused` |
+| `cancel_proposal` | sentinel, authority, or the proposer | Moves an `Active`/`Passed` proposal to `Cancelled` (terminal) |
+
+### Freeze surface — what's blocked vs always open
+
+| While frozen | Status |
+|---|---|
+| `deposit` (new capital in) | ❌ blocked (`PotFrozen`) |
+| `execute_proposal` (incl. payouts to third parties) | ❌ blocked |
+| `execute_swap` | ❌ blocked |
+| `create_strategy` | ❌ blocked |
+| `withdraw` (member pro-rata exit) | ✅ **always open** |
+| `redeem_tokens` (tokenized-share exit) | ✅ **always open** |
+
+Non-custodial exit is the invariant: neither the authority nor the sentinel can ever trap a member's funds. Freeze stops capital coming *in* and funds moving *out to third parties* — never a member's own exit.
+
+### Risk-param timelock
+
+`risk_param_timelock_secs` (configured via `set_risk_timelock`) governs changes to the risky parameters: `trade_level`, `withdraw_level`, `max_trade_size_bps`, `single_swap_cap_bps`, `daily_budget_lamports`, and the timelock itself.
+
+- **Tightening applies instantly** (raising approval levels, lowering caps, raising the timelock).
+- **Loosening is staged** into `pot.pending_params` with `effective_at = now + timelock`, replacing any previously staged change. A fully-tightening change clears any stale staged loosening.
+- **`apply_pending_params`** is a permissionless crank — anyone can apply the staged change once `effective_at` has passed (`PendingChangeNotReady` before that, `NoPendingChange` if nothing is staged).
+- With timelock `0` (disabled) everything applies immediately. Lowering the timelock is itself a loosening change and waits out the *current* timelock.
+
+The same stage-or-apply path is used whether the change comes from admin instructions (`set_spending_policy`, `set_risk_timelock`) or from governance proposals (`ChangeSettings`, `UpdateRiskConfig`).
+
+### Per-protocol program allowlist
+
+`set_allowed_programs` (authority) stores up to **8 program ids** that execute paths may CPI into. An empty list = open mode (backward compatible). Once non-empty, *every* CPI target must be listed — including Jupiter v6, or every swap reverts with `ProgramNotAllowed`; clients should auto-include Jupiter.
+
+### Per-asset daily exposure caps
+
+`max_asset_exposure_bps` (set via `set_risk_timelock`) caps the cumulative *daily* spend toward any single output mint at X bps of the vault balance, tracked per `allowed_mints` slot in `per_mint_daily_spent` (shared UTC-day window with the daily budget). Enforced on strategy **entries only** — exits reduce exposure and are never blocked. Requires the mint allowlist to be configured; counters reset whenever the mint list changes. Known limitation: amounts are compared in input-mint base units vs a lamport-denominated cap, so the cap is faithful for wSOL-denominated entries; token→token strategies need oracle normalization (Phase 2).
+
+### New error codes
+
+`NotSentinelOrAuthority` · `PotFrozen` · `SentinelCannotUnfreeze` · `ProposalNotCancellable` · `RecipientMismatch` · `RecipientMissing` · `PendingChangeNotReady` · `NoPendingChange` · `ProgramNotAllowed` · `AssetExposureExceeded`
 
 ---
 
