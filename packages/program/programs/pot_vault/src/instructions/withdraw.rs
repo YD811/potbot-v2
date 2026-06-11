@@ -35,6 +35,14 @@ pub fn handler(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
     let pot = &ctx.accounts.pot;
     let clock = Clock::get()?;
 
+    // CRITICAL: a tokenized pot's fund claim is the SPL share-token, not
+    // member.shares. Liquid deposit credits BOTH (member.shares for vote
+    // weight + SPL for redemption); allowing the member.shares-based withdraw
+    // here too would let a holder exit twice (redeem the SPL AND withdraw the
+    // shares) and drain other members. For a tokenized pot the only exit is
+    // redeem_tokens / the redemption queue.
+    require!(pot.token_mint == Pubkey::default(), PotError::TokenizedUseRedeem);
+
     require!(shares > 0 && shares <= member.shares, PotError::InsufficientShares);
     require!(shares <= pot.total_shares, PotError::InsufficientShares);
 
@@ -44,14 +52,17 @@ pub fn handler(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
     );
 
     let vault_lamports = ctx.accounts.vault.lamports();
-    let lamports_out = pot.shares_to_lamports(shares, vault_lamports);
-    require!(lamports_out > 0, PotError::ArithmeticOverflow);
-
     let rent = Rent::get()?;
     let min_balance = rent.minimum_balance(0);
+    // Price + pay against distributable (raw − rent − queued-owed) so an
+    // internal-shares exit can't drain SOL earmarked for the redemption queue.
+    let distributable = pot.distributable_lamports(vault_lamports, min_balance);
+    let lamports_out = pot.shares_to_lamports(shares, distributable);
+    require!(lamports_out > 0, PotError::ArithmeticOverflow);
+
     let remaining_lamports = vault_lamports.checked_sub(lamports_out).ok_or(PotError::InsufficientVaultBalance)?;
     require!(
-        remaining_lamports >= min_balance,
+        remaining_lamports >= min_balance.saturating_add(pot.pending_redemption_lamports),
         PotError::InsufficientVaultBalance
     );
 

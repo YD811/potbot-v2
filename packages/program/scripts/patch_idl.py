@@ -31,14 +31,17 @@ for acc in idl["accounts"]:
     assert acc["discriminator"] == disc("account", acc["name"]), f"acct disc mismatch: {acc['name']}"
 print(f"self-check OK: {len(idl['instructions'])} ix, {len(idl['events'])} events, {len(idl['accounts'])} accounts")
 
-names = {i["name"] for i in idl["instructions"]}
-
 def add_ix(name, accounts, args, docs=None):
-    if name in names:
-        return
+    # Idempotent upsert: every add_ix target is an instruction THIS script
+    # owns (new, or one anchor's broken IDL-gen drops). Replace any existing
+    # copy so account-list changes (e.g. dropping member_account) re-apply when
+    # patching from an already-patched base. Real IDL-gen instructions
+    # (create_pot, deposit, vote, …) are never added here, only modified in
+    # place, so replacing managed names is safe.
     entry = {"name": name, "discriminator": disc("global", name), "accounts": accounts, "args": args}
     if docs:
         entry["docs"] = docs
+    idl["instructions"] = [i for i in idl["instructions"] if i["name"] != name]
     idl["instructions"].append(entry)
 
 POT_W = {"name": "pot", "writable": True}
@@ -72,6 +75,51 @@ add_ix("fund_fee_reserve",
 add_ix("set_oracle_config", [POT_W, AUTH_S],
        [{"name": "args", "type": {"defined": {"name": "SetOracleConfigArgs"}}}],
        ["Configure the pot's oracle source, confidence bound, and swap deviation guard."])
+add_ix("set_liquid_config", [POT_W, AUTH_S],
+       [{"name": "args", "type": {"defined": {"name": "SetLiquidConfigArgs"}}}],
+       ["Enable liquid mode (deposit auto-mints SPL shares at NAV) + reserve target."])
+
+# ── redemption queue (Phase B B3) ───────────────────────────────────────────
+_TOKEN_PROG = {"name": "token_program", "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"}
+_SYS = {"name": "system_program", "address": "11111111111111111111111111111111"}
+add_ix("request_redemption",
+       [POT_W, {"name": "vault"},
+        {"name": "request", "writable": True},
+        {"name": "token_mint", "writable": True},
+        {"name": "member_token_ata", "writable": True},
+        {"name": "member", "writable": True, "signer": True},
+        _TOKEN_PROG, _SYS],
+       [{"name": "token_amount", "type": "u64"}],
+       ["Queue a redemption: burn SPL shares, fix SOL owed at request-time NAV."])
+add_ix("fulfill_redemption",
+       [POT_W, {"name": "vault", "writable": True},
+        {"name": "request", "writable": True},
+        {"name": "member", "writable": True},
+        {"name": "cranker", "signer": True}, _SYS],
+       [],
+       ["Permissionless crank: pay a queued redemption to its recorded member."])
+add_ix("cancel_redemption",
+       [POT_W,
+        {"name": "request", "writable": True},
+        {"name": "token_mint", "writable": True},
+        {"name": "member_token_ata", "writable": True},
+        {"name": "member", "writable": True, "signer": True},
+        _TOKEN_PROG],
+       [],
+       ["Cancel a Pending redemption — re-mint the member's SPL shares."])
+
+# ── deposit: optional liquid-mode SPL accounts (Phase B) ────────────────────
+for ins in idl["instructions"]:
+    if ins["name"] == "deposit":
+        acc_names = [a["name"] for a in ins["accounts"]]
+        if "token_mint" not in acc_names:
+            at = acc_names.index("system_program")
+            ins["accounts"][at:at] = [
+                {"name": "token_mint", "writable": True, "optional": True},
+                {"name": "depositor_ata", "writable": True, "optional": True},
+                {"name": "token_program", "optional": True,
+                 "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"},
+            ]
 
 # ── instructions missing from the stale May-2026 IDL ────────────────────────
 add_ix("redeem_tokens",
@@ -111,14 +159,22 @@ NEW_POT_FIELDS = [
     {"name": "oracle_kind", "docs": ["Oracle source: 0 = Pyth, 1 = Switchboard."], "type": "u8"},
     {"name": "max_oracle_conf_bps", "docs": ["Max accepted oracle confidence interval, bps. 0 = source default."], "type": "u16"},
     {"name": "max_oracle_deviation_bps", "docs": ["Max swap-vs-oracle deviation, bps. 0 = guard disabled."], "type": "u16"},
-    {"name": "reserved", "docs": ["Forward-compat tail — carve new fields from here, never insert."], "type": {"array": ["u8", 128]}},
+    # ── Liquid Vaults (Phase B) — carved from reserved (128 → 117) ──
+    {"name": "liquid_mode", "docs": ["deposit auto-mints SPL shares at NAV when true."], "type": "bool"},
+    {"name": "withdrawal_reserve_bps", "docs": ["Target % of NAV kept liquid in SOL for instant redemptions."], "type": "u16"},
+    {"name": "next_redemption_id", "docs": ["Monotonic id for RedemptionRequest PDAs."], "type": "u64"},
+    {"name": "pending_redemption_lamports", "docs": ["SOL owed to queued redemptions; subtracted from distributable everywhere."], "type": "u64"},
+    {"name": "reserved", "docs": ["Forward-compat tail — carve new fields from here, never insert."], "type": {"array": ["u8", 109]}},
 ]
+_managed = {f["name"] for f in NEW_POT_FIELDS}
 for t in idl["types"]:
     if t["name"] == "PotAccount":
-        existing = {f["name"] for f in t["type"]["fields"]}
-        for f in NEW_POT_FIELDS:
-            if f["name"] not in existing:
-                t["type"]["fields"].append(f)
+        # Idempotent: drop any managed fields already present (so a changed
+        # size like reserved[128]→[117] is corrected on re-run), then append
+        # the managed set in canonical order after the base fields.
+        t["type"]["fields"] = [
+            f for f in t["type"]["fields"] if f["name"] not in _managed
+        ] + NEW_POT_FIELDS
     if t["name"] == "ProposalStatus":
         if not any(v["name"] == "Cancelled" for v in t["type"]["variants"]):
             t["type"]["variants"].append({"name": "Cancelled"})
@@ -165,6 +221,45 @@ add_type("SetOracleConfigArgs", [
     {"name": "oracle_kind", "type": "u8"},
     {"name": "max_oracle_conf_bps", "type": "u16"},
     {"name": "max_oracle_deviation_bps", "type": "u16"},
+])
+add_type("SetLiquidConfigArgs", [
+    {"name": "liquid_mode", "type": "bool"},
+    {"name": "withdrawal_reserve_bps", "type": "u16"},
+])
+# RedemptionRequest account (Phase B B3) — register account + its struct type.
+if not any(a["name"] == "RedemptionRequest" for a in idl["accounts"]):
+    idl["accounts"].append({"name": "RedemptionRequest", "discriminator": disc("account", "RedemptionRequest")})
+add_type("RedemptionRequest", [
+    {"name": "pot", "type": "pubkey"},
+    {"name": "member", "type": "pubkey"},
+    {"name": "redemption_id", "type": "u64"},
+    {"name": "internal_shares", "type": "u64"},
+    {"name": "owed_lamports", "type": "u64"},
+    {"name": "nav_snapshot", "type": "u64"},
+    {"name": "requested_at", "type": "i64"},
+    {"name": "status", "type": {"defined": {"name": "RedemptionStatus"}}},
+    {"name": "bump", "type": "u8"},
+])
+if not any(t["name"] == "RedemptionStatus" for t in idl["types"]):
+    idl["types"].append({"name": "RedemptionStatus", "type": {"kind": "enum", "variants": [
+        {"name": "Pending"}, {"name": "Fulfilled"}, {"name": "Cancelled"}]}})
+add_type("RedemptionRequested", [
+    {"name": "pot", "type": "pubkey"}, {"name": "request", "type": "pubkey"},
+    {"name": "member", "type": "pubkey"}, {"name": "redemption_id", "type": "u64"},
+    {"name": "internal_shares", "type": "u64"}, {"name": "owed_lamports", "type": "u64"},
+])
+add_type("RedemptionFulfilled", [
+    {"name": "pot", "type": "pubkey"}, {"name": "request", "type": "pubkey"},
+    {"name": "member", "type": "pubkey"}, {"name": "owed_lamports", "type": "u64"},
+])
+add_type("RedemptionCancelled", [
+    {"name": "pot", "type": "pubkey"}, {"name": "request", "type": "pubkey"},
+    {"name": "member", "type": "pubkey"}, {"name": "internal_shares", "type": "u64"},
+])
+add_type("LiquidConfigUpdated", [
+    {"name": "pot", "type": "pubkey"},
+    {"name": "liquid_mode", "type": "bool"},
+    {"name": "withdrawal_reserve_bps", "type": "u16"},
 ])
 add_type("OracleConfigUpdated", [
     {"name": "pot", "type": "pubkey"},
@@ -216,7 +311,8 @@ add_type("YieldRouted", [
 event_names = {e["name"] for e in idl["events"]}
 for ev in ["SentinelUpdated", "PotFrozenEvent", "ProposalCancelled",
            "AllowedProgramsUpdated", "PendingParamsApplied", "YieldRouted",
-           "OracleConfigUpdated"]:
+           "OracleConfigUpdated", "LiquidConfigUpdated",
+           "RedemptionRequested", "RedemptionFulfilled", "RedemptionCancelled"]:
     if ev not in event_names:
         idl["events"].append({"name": ev, "discriminator": disc("event", ev)})
 
@@ -247,6 +343,13 @@ TAIL_ERRORS = [
     ("OracleKindUnsupported", "Configured oracle source is not supported"),
     ("OracleAccountMissing", "Oracle price account required for this guarded action"),
     ("OracleGuardUnavailable", "Oracle deviation guard needs two-feed pricing (Phase B); not enableable yet"),
+    ("NotLiquidMode", "Pot is not in liquid (SPL share) mode"),
+    ("NavLegAccountInvalid", "A required token-leg account or its oracle feed is missing/mismatched"),
+    ("RedemptionNotQueued", "Redemption can be paid instantly — use redeem_tokens, not the queue"),
+    ("RedemptionNotPending", "Redemption request is not in a Pending state"),
+    ("RedemptionStillIlliquid", "Liquid vault still lacks the SOL to fulfil this redemption"),
+    ("InvalidReserveBps", "Withdrawal reserve bps must be <= 10000"),
+    ("TokenizedUseRedeem", "Tokenized pot — exit via redeem_tokens / the redemption queue, not withdraw"),
 ]
 have = {e["name"] for e in idl["errors"]}
 next_code = max(e["code"] for e in idl["errors"]) + 1

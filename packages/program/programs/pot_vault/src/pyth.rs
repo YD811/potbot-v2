@@ -50,11 +50,15 @@ const STALENESS_SECONDS: i64 = 60;
 /// means the oracle is unsure — reject rather than trade on a fuzzy price.
 pub const DEFAULT_MAX_CONF_BPS: u16 = 200;
 
-/// A validated oracle reading: price as Q64.64, the confidence interval
-/// expressed in bps of price, and the publish timestamp.
+/// A validated oracle reading: price as Q64.64 plus the raw Pyth mantissa /
+/// exponent (kept so leg valuation can use clean integer math without the
+/// 2^64 fixed-point round-trip), the confidence interval in bps, and the
+/// publish timestamp.
 #[derive(Clone, Copy, Debug)]
 pub struct OraclePrice {
     pub price_x64: u128,
+    pub mantissa: i64,
+    pub expo: i32,
     pub conf_bps: u16,
     pub publish_time: i64,
 }
@@ -180,6 +184,8 @@ pub fn read_price_checked(account: &UncheckedAccount, max_conf_bps: u16) -> Resu
 
     Ok(OraclePrice {
         price_x64: price_to_q64(price, expo)?,
+        mantissa: price,
+        expo,
         conf_bps: conf_bps.min(u16::MAX as u64) as u16,
         publish_time,
     })

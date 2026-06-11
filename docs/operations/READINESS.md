@@ -29,6 +29,17 @@
 - [ ] **Devnet re-deploy + pot recreation**: PotAccount layout grew in PR #69 — existing devnet pots are unreadable. `anchor deploy --provider.cluster devnet`, recreate seed/demo pots.
 - [ ] Re-run `npm run build` + `anchor test` on merged main (CI covers this).
 
+## Hard code gate — Pyth receiver decode (added Phase A/B)
+
+- [ ] **Mainnet Pyth = `PriceUpdateV2` (receiver), not the legacy layout the
+  program currently decodes.** The oracle reader (`pyth.rs::decode_legacy`) and
+  the multi-asset NAV path (Phase B B4) parse the legacy pythnet `PriceAccount`
+  format, which matches the **devnet** Pyth program but NOT mainnet's receiver.
+  Before mainnet: add `pyth-solana-receiver-sdk`, decode `PriceUpdateV2`
+  (`get_price_no_older_than` + feed-id check), keep `decode_legacy` only for
+  localnet test fixtures. Until done, oracle-priced NAV and the (currently
+  gated-off) deviation guard do not function on mainnet. Owner: YD / next oracle session.
+
 ## Launch-day security tasks
 
 - [ ] **Rotate Supabase keys** (service_role + anon) — they were exposed in a chat on 2026-04-26; rotation was deliberately deferred to release. Do it the same hour as launch.

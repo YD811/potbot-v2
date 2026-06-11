@@ -197,6 +197,22 @@ pub enum ErrorCode {
     OracleAccountMissing,
     #[msg("Oracle deviation guard needs two-feed pricing (Phase B); not enableable yet")]
     OracleGuardUnavailable,
+
+    // ─── Liquid Vaults (Phase B) ──────────────────────────────────────────
+    #[msg("Pot is not in liquid (SPL share) mode")]
+    NotLiquidMode,
+    #[msg("A required token-leg account or its oracle feed is missing/mismatched")]
+    NavLegAccountInvalid,
+    #[msg("Redemption can be paid instantly — use redeem_tokens, not the queue")]
+    RedemptionNotQueued,
+    #[msg("Redemption request is not in a Pending state")]
+    RedemptionNotPending,
+    #[msg("Liquid vault still lacks the SOL to fulfil this redemption")]
+    RedemptionStillIlliquid,
+    #[msg("Withdrawal reserve bps must be <= 10000")]
+    InvalidReserveBps,
+    #[msg("Tokenized pot — exit via redeem_tokens / the redemption queue, not withdraw")]
+    TokenizedUseRedeem,
 }
 
 /// Alias used throughout instruction handlers.

@@ -220,6 +220,50 @@ pub fn set_risk_timelock(
         Ok(())
 }
 
+// ─── Set liquid config (Phase B) ────────────────────────────────────────────
+//
+// Turn on liquid mode (deposit auto-mints SPL shares at NAV) and set the
+// withdrawal reserve target. Liquid mode requires the pot to be tokenized
+// first (token_mint set via init_token_mint / tokenize_shares). Authority-only.
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub struct SetLiquidConfigArgs {
+    pub liquid_mode: bool,
+    /// Target % of NAV kept liquid in SOL for instant redemptions (<= 10000).
+    pub withdrawal_reserve_bps: u16,
+}
+
+#[derive(Accounts)]
+pub struct SetLiquidConfig<'info> {
+    #[account(
+        mut,
+        constraint = authority.key() == pot.authority @ PotError::StrategyNotAdmin,
+    )]
+    pub pot: Box<Account<'info, PotAccount>>,
+    pub authority: Signer<'info>,
+}
+
+pub fn set_liquid_config(
+    ctx: Context<SetLiquidConfig>,
+    args: SetLiquidConfigArgs,
+) -> Result<()> {
+    require!(args.withdrawal_reserve_bps <= 10_000, PotError::InvalidReserveBps);
+    let pot = &mut ctx.accounts.pot;
+    // Can only enable liquid mode on a tokenized pot — otherwise deposit has
+    // no SPL mint to mint shares from.
+    if args.liquid_mode {
+        require!(pot.token_mint != Pubkey::default(), PotError::NotTokenized);
+    }
+    pot.liquid_mode = args.liquid_mode;
+    pot.withdrawal_reserve_bps = args.withdrawal_reserve_bps;
+    emit!(LiquidConfigUpdated {
+        pot: pot.key(),
+        liquid_mode: pot.liquid_mode,
+        withdrawal_reserve_bps: pot.withdrawal_reserve_bps,
+    });
+    Ok(())
+}
+
 // ─── Apply pending params (permissionless crank) ────────────────────────────
 
 #[derive(Accounts)]
@@ -392,4 +436,11 @@ pub struct OracleConfigUpdated {
         pub oracle_kind: u8,
         pub max_oracle_conf_bps: u16,
         pub max_oracle_deviation_bps: u16,
+}
+
+#[event]
+pub struct LiquidConfigUpdated {
+        pub pot: Pubkey,
+        pub liquid_mode: bool,
+        pub withdrawal_reserve_bps: u16,
 }

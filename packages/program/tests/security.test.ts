@@ -97,6 +97,7 @@ describe('security hardening (Phase A)', () => {
         pot, vault,
         member: memberPda(pot, authority),
         depositor: authority,
+        tokenMint: null, depositorAta: null, tokenProgram: null,
         systemProgram: SystemProgram.programId,
       })
       .rpc()

@@ -83,11 +83,13 @@ pub fn handler(ctx: Context<RedeemTokens>, token_amount: u64) -> Result<()> {
     let rent = Rent::get()?;
     let rent_min = rent.minimum_balance(0);
     let raw = ctx.accounts.vault.lamports();
-    let liquid = raw.saturating_sub(rent_min);
+    // Distributable = raw − rent − SOL earmarked for queued redemptions, so an
+    // instant exit can never dip into funds already owed to the queue.
+    let pot = &ctx.accounts.pot;
+    let liquid = pot.distributable_lamports(raw, rent_min);
     require!(liquid > 0, PotError::InsufficientVaultBalance);
 
     // NAV: lamports_out = internal_shares * liquid / total_shares.
-    let pot = &ctx.accounts.pot;
     let sol_out = pot.shares_to_lamports(internal_shares, liquid);
     require!(sol_out > 0, PotError::InvalidAmount);
 

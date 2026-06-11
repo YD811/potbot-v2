@@ -104,6 +104,7 @@ describe('redeem_tokens', () => {
         vault: vaultPda,
         member: memberPda,
         depositor: provider.wallet.publicKey,
+        tokenMint: null, depositorAta: null, tokenProgram: null,
         systemProgram: SystemProgram.programId,
       })
       .rpc()

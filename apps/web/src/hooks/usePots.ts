@@ -630,6 +630,7 @@ export function useCreatePot() {
                 vault: vaultPda,
                 member: memberPda,
                 depositor: publicKey,
+                tokenMint: null, depositorAta: null, tokenProgram: null,
                 systemProgram: SystemProgram.programId,
               })
               .rpc()
@@ -702,6 +703,7 @@ export function useDeposit() {
               vault: vaultPda,
               member: memberPda,
               depositor: publicKey,
+              tokenMint: null, depositorAta: null, tokenProgram: null,
               systemProgram: SystemProgram.programId,
             })
             .rpc()
