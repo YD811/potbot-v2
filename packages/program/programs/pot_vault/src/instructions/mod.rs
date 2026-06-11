@@ -86,17 +86,20 @@ pub use mark_proposal_passed::{MarkProposalPassed, ProposalMarkedPassed};
 pub(crate) use mark_proposal_passed::__client_accounts_mark_proposal_passed;
 pub use pot_admin::{
     apply_pending_params, fund_fee_reserve, pause_pot, set_allowed_mints,
-    set_allowed_programs, set_oracle_config, set_risk_timelock, set_spending_policy, unpause_pot,
+    set_allowed_programs, set_liquid_config, set_oracle_config, set_risk_timelock,
+    set_spending_policy, unpause_pot,
     AllowedMintsUpdated, AllowedProgramsUpdated, ApplyPendingParams, FeeReserveFunded,
-    FundFeeReserve, FundFeeReserveArgs, OracleConfigUpdated, PausePot, PendingParamsApplied,
-    SetAllowedMints, SetAllowedMintsArgs, SetAllowedPrograms, SetAllowedProgramsArgs,
-    SetOracleConfig, SetOracleConfigArgs, SetRiskTimelock,
+    FundFeeReserve, FundFeeReserveArgs, LiquidConfigUpdated, OracleConfigUpdated, PausePot,
+    PendingParamsApplied, SetAllowedMints, SetAllowedMintsArgs, SetAllowedPrograms,
+    SetAllowedProgramsArgs, SetLiquidConfig, SetLiquidConfigArgs, SetOracleConfig,
+    SetOracleConfigArgs, SetRiskTimelock,
     SetRiskTimelockArgs, SetSpendingPolicy, SetSpendingPolicyArgs,
 };
 pub(crate) use pot_admin::{
     __client_accounts_apply_pending_params, __client_accounts_fund_fee_reserve,
     __client_accounts_pause_pot, __client_accounts_set_allowed_mints,
-    __client_accounts_set_allowed_programs, __client_accounts_set_oracle_config,
+    __client_accounts_set_allowed_programs, __client_accounts_set_liquid_config,
+    __client_accounts_set_oracle_config,
     __client_accounts_set_risk_timelock, __client_accounts_set_spending_policy,
 };
 pub use sentinel::{

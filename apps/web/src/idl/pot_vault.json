@@ -600,6 +600,21 @@
           "signer": true
         },
         {
+          "name": "token_mint",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "depositor_ata",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "token_program",
+          "optional": true,
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -2891,6 +2906,42 @@
       "docs": [
         "Configure the pot's oracle source, confidence bound, and swap deviation guard."
       ]
+    },
+    {
+      "name": "set_liquid_config",
+      "discriminator": [
+        226,
+        61,
+        203,
+        209,
+        107,
+        28,
+        77,
+        178
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "SetLiquidConfigArgs"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Enable liquid mode (deposit auto-mints SPL shares at NAV) + reserve target."
+      ]
     }
   ],
   "accounts": [
@@ -3245,6 +3296,19 @@
         155,
         34,
         68
+      ]
+    },
+    {
+      "name": "LiquidConfigUpdated",
+      "discriminator": [
+        144,
+        70,
+        46,
+        226,
+        62,
+        26,
+        39,
+        123
       ]
     }
   ],
@@ -6213,6 +6277,42 @@
           },
           {
             "name": "max_oracle_deviation_bps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SetLiquidConfigArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "liquid_mode",
+            "type": "bool"
+          },
+          {
+            "name": "withdrawal_reserve_bps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LiquidConfigUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "liquid_mode",
+            "type": "bool"
+          },
+          {
+            "name": "withdrawal_reserve_bps",
             "type": "u16"
           }
         ]

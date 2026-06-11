@@ -284,6 +284,16 @@ pub mod pot_vault {
         instructions::pot_admin::set_oracle_config(ctx, args)
     }
 
+    /// Enable liquid mode (deposit auto-mints SPL shares at NAV) and set the
+    /// withdrawal reserve target (Phase B). Authority-only; pot must be
+    /// tokenized first.
+    pub fn set_liquid_config(
+        ctx: Context<SetLiquidConfig>,
+        args: SetLiquidConfigArgs,
+    ) -> Result<()> {
+        instructions::pot_admin::set_liquid_config(ctx, args)
+    }
+
     // ─── Yield routing (Phase 4 stub — emit-only) ─────────────────────────
 
     /// Route idle vault SOL to a yield protocol (Kamino / Meteora).

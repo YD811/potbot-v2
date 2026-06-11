@@ -144,6 +144,7 @@ export class PotSDK {
         privatePotAccount: privatePot,
         memberAccount,
         member,
+        tokenMint: null, depositorAta: null, tokenProgram: null,
         systemProgram: SystemProgram.programId,
       })
       .instruction();
@@ -362,6 +363,7 @@ export class PotSDK {
         vault,
         memberAccount,
         member,
+        tokenMint: null, depositorAta: null, tokenProgram: null,
         systemProgram: SystemProgram.programId,
       })
       .instruction();

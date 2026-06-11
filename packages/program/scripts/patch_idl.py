@@ -72,6 +72,22 @@ add_ix("fund_fee_reserve",
 add_ix("set_oracle_config", [POT_W, AUTH_S],
        [{"name": "args", "type": {"defined": {"name": "SetOracleConfigArgs"}}}],
        ["Configure the pot's oracle source, confidence bound, and swap deviation guard."])
+add_ix("set_liquid_config", [POT_W, AUTH_S],
+       [{"name": "args", "type": {"defined": {"name": "SetLiquidConfigArgs"}}}],
+       ["Enable liquid mode (deposit auto-mints SPL shares at NAV) + reserve target."])
+
+# ── deposit: optional liquid-mode SPL accounts (Phase B) ────────────────────
+for ins in idl["instructions"]:
+    if ins["name"] == "deposit":
+        acc_names = [a["name"] for a in ins["accounts"]]
+        if "token_mint" not in acc_names:
+            at = acc_names.index("system_program")
+            ins["accounts"][at:at] = [
+                {"name": "token_mint", "writable": True, "optional": True},
+                {"name": "depositor_ata", "writable": True, "optional": True},
+                {"name": "token_program", "optional": True,
+                 "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"},
+            ]
 
 # ── instructions missing from the stale May-2026 IDL ────────────────────────
 add_ix("redeem_tokens",
@@ -173,6 +189,15 @@ add_type("SetOracleConfigArgs", [
     {"name": "max_oracle_conf_bps", "type": "u16"},
     {"name": "max_oracle_deviation_bps", "type": "u16"},
 ])
+add_type("SetLiquidConfigArgs", [
+    {"name": "liquid_mode", "type": "bool"},
+    {"name": "withdrawal_reserve_bps", "type": "u16"},
+])
+add_type("LiquidConfigUpdated", [
+    {"name": "pot", "type": "pubkey"},
+    {"name": "liquid_mode", "type": "bool"},
+    {"name": "withdrawal_reserve_bps", "type": "u16"},
+])
 add_type("OracleConfigUpdated", [
     {"name": "pot", "type": "pubkey"},
     {"name": "oracle_kind", "type": "u8"},
@@ -223,7 +248,7 @@ add_type("YieldRouted", [
 event_names = {e["name"] for e in idl["events"]}
 for ev in ["SentinelUpdated", "PotFrozenEvent", "ProposalCancelled",
            "AllowedProgramsUpdated", "PendingParamsApplied", "YieldRouted",
-           "OracleConfigUpdated"]:
+           "OracleConfigUpdated", "LiquidConfigUpdated"]:
     if ev not in event_names:
         idl["events"].append({"name": ev, "discriminator": disc("event", ev)})
 

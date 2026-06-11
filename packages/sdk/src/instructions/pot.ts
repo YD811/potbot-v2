@@ -94,6 +94,7 @@ export async function depositToPot(
       vault: vaultPda,
       member: memberPda,
       depositor,
+      tokenMint: null, depositorAta: null, tokenProgram: null,
       systemProgram: SystemProgram.programId,
     })
     .rpc()
