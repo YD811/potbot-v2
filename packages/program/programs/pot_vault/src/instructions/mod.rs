@@ -33,6 +33,9 @@ pub mod pot_admin;
 // Security hardening (Phase A)
 pub mod sentinel;
 
+// Liquid Vaults (Phase B) — redemption queue
+pub mod redemption;
+
 pub use create_pot::{CreatePot, CreatePotParams};
 pub(crate) use create_pot::__client_accounts_create_pot;
 pub use deposit::Deposit;
@@ -109,4 +112,13 @@ pub use sentinel::{
 pub(crate) use sentinel::{
     __client_accounts_cancel_proposal, __client_accounts_freeze_pot,
     __client_accounts_set_sentinel, __client_accounts_unfreeze_pot,
+};
+pub use redemption::{
+    cancel_redemption, fulfill_redemption, request_redemption,
+    CancelRedemption, FulfillRedemption, RequestRedemption,
+    RedemptionRequested, RedemptionFulfilled, RedemptionCancelled,
+};
+pub(crate) use redemption::{
+    __client_accounts_cancel_redemption, __client_accounts_fulfill_redemption,
+    __client_accounts_request_redemption,
 };

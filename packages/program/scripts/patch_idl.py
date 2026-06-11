@@ -76,6 +76,37 @@ add_ix("set_liquid_config", [POT_W, AUTH_S],
        [{"name": "args", "type": {"defined": {"name": "SetLiquidConfigArgs"}}}],
        ["Enable liquid mode (deposit auto-mints SPL shares at NAV) + reserve target."])
 
+# ── redemption queue (Phase B B3) ───────────────────────────────────────────
+_TOKEN_PROG = {"name": "token_program", "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"}
+_SYS = {"name": "system_program", "address": "11111111111111111111111111111111"}
+add_ix("request_redemption",
+       [POT_W, {"name": "vault"},
+        {"name": "member_account", "writable": True},
+        {"name": "request", "writable": True},
+        {"name": "token_mint", "writable": True},
+        {"name": "member_token_ata", "writable": True},
+        {"name": "member", "writable": True, "signer": True},
+        _TOKEN_PROG, _SYS],
+       [{"name": "token_amount", "type": "u64"}],
+       ["Queue a redemption: burn SPL shares, fix SOL owed at request-time NAV."])
+add_ix("fulfill_redemption",
+       [POT_W, {"name": "vault", "writable": True},
+        {"name": "request", "writable": True},
+        {"name": "member", "writable": True},
+        {"name": "cranker", "signer": True}, _SYS],
+       [],
+       ["Permissionless crank: pay a queued redemption to its recorded member."])
+add_ix("cancel_redemption",
+       [POT_W,
+        {"name": "request", "writable": True},
+        {"name": "member_account", "writable": True},
+        {"name": "token_mint", "writable": True},
+        {"name": "member_token_ata", "writable": True},
+        {"name": "member", "writable": True, "signer": True},
+        _TOKEN_PROG],
+       [],
+       ["Cancel a Pending redemption — re-mint the member's shares."])
+
 # ── deposit: optional liquid-mode SPL accounts (Phase B) ────────────────────
 for ins in idl["instructions"]:
     if ins["name"] == "deposit":
@@ -131,7 +162,8 @@ NEW_POT_FIELDS = [
     {"name": "liquid_mode", "docs": ["deposit auto-mints SPL shares at NAV when true."], "type": "bool"},
     {"name": "withdrawal_reserve_bps", "docs": ["Target % of NAV kept liquid in SOL for instant redemptions."], "type": "u16"},
     {"name": "next_redemption_id", "docs": ["Monotonic id for RedemptionRequest PDAs."], "type": "u64"},
-    {"name": "reserved", "docs": ["Forward-compat tail — carve new fields from here, never insert."], "type": {"array": ["u8", 117]}},
+    {"name": "pending_redemption_lamports", "docs": ["SOL owed to queued redemptions; subtracted from distributable everywhere."], "type": "u64"},
+    {"name": "reserved", "docs": ["Forward-compat tail — carve new fields from here, never insert."], "type": {"array": ["u8", 109]}},
 ]
 _managed = {f["name"] for f in NEW_POT_FIELDS}
 for t in idl["types"]:
@@ -193,6 +225,36 @@ add_type("SetLiquidConfigArgs", [
     {"name": "liquid_mode", "type": "bool"},
     {"name": "withdrawal_reserve_bps", "type": "u16"},
 ])
+# RedemptionRequest account (Phase B B3) — register account + its struct type.
+if not any(a["name"] == "RedemptionRequest" for a in idl["accounts"]):
+    idl["accounts"].append({"name": "RedemptionRequest", "discriminator": disc("account", "RedemptionRequest")})
+add_type("RedemptionRequest", [
+    {"name": "pot", "type": "pubkey"},
+    {"name": "member", "type": "pubkey"},
+    {"name": "redemption_id", "type": "u64"},
+    {"name": "internal_shares", "type": "u64"},
+    {"name": "owed_lamports", "type": "u64"},
+    {"name": "nav_snapshot", "type": "u64"},
+    {"name": "requested_at", "type": "i64"},
+    {"name": "status", "type": {"defined": {"name": "RedemptionStatus"}}},
+    {"name": "bump", "type": "u8"},
+])
+if not any(t["name"] == "RedemptionStatus" for t in idl["types"]):
+    idl["types"].append({"name": "RedemptionStatus", "type": {"kind": "enum", "variants": [
+        {"name": "Pending"}, {"name": "Fulfilled"}, {"name": "Cancelled"}]}})
+add_type("RedemptionRequested", [
+    {"name": "pot", "type": "pubkey"}, {"name": "request", "type": "pubkey"},
+    {"name": "member", "type": "pubkey"}, {"name": "redemption_id", "type": "u64"},
+    {"name": "internal_shares", "type": "u64"}, {"name": "owed_lamports", "type": "u64"},
+])
+add_type("RedemptionFulfilled", [
+    {"name": "pot", "type": "pubkey"}, {"name": "request", "type": "pubkey"},
+    {"name": "member", "type": "pubkey"}, {"name": "owed_lamports", "type": "u64"},
+])
+add_type("RedemptionCancelled", [
+    {"name": "pot", "type": "pubkey"}, {"name": "request", "type": "pubkey"},
+    {"name": "member", "type": "pubkey"}, {"name": "internal_shares", "type": "u64"},
+])
 add_type("LiquidConfigUpdated", [
     {"name": "pot", "type": "pubkey"},
     {"name": "liquid_mode", "type": "bool"},
@@ -248,7 +310,8 @@ add_type("YieldRouted", [
 event_names = {e["name"] for e in idl["events"]}
 for ev in ["SentinelUpdated", "PotFrozenEvent", "ProposalCancelled",
            "AllowedProgramsUpdated", "PendingParamsApplied", "YieldRouted",
-           "OracleConfigUpdated", "LiquidConfigUpdated"]:
+           "OracleConfigUpdated", "LiquidConfigUpdated",
+           "RedemptionRequested", "RedemptionFulfilled", "RedemptionCancelled"]:
     if ev not in event_names:
         idl["events"].append({"name": ev, "discriminator": disc("event", ev)})
 

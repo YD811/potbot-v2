@@ -20,11 +20,13 @@ pub struct RedemptionRequest {
     pub member: Pubkey,
     /// Monotonic id within the pot (pot.next_redemption_id at creation).
     pub redemption_id: u64,
-    /// Internal share units owed (already burned from the member's SPL ATA).
+    /// Internal share units owed (already burned from the member's SPL ATA
+    /// and removed from total_shares at request time).
     pub internal_shares: u64,
-    /// NAV-per-share (×10^9) snapshotted at request time, for transparency /
-    /// UI. Payout is recomputed at fulfillment against live liquidity so the
-    /// member is never paid more than their pro-rata of the vault.
+    /// Lamports owed, FIXED at request-time NAV (Variant α). Fulfillment pays
+    /// exactly this; it is earmarked in pot.pending_redemption_lamports.
+    pub owed_lamports: u64,
+    /// NAV-per-share (×10^9) snapshotted at request time, for UI/transparency.
     pub nav_snapshot: u64,
     pub requested_at: i64,
     pub status: RedemptionStatus,

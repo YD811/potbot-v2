@@ -71,11 +71,16 @@ pub fn handler(ctx: Context<Deposit>, lamports: u64) -> Result<()> {
         );
     }
 
-    // Get current vault balance BEFORE transfer (critical for correct share math)
+    // Get current vault balance BEFORE transfer (critical for correct share math).
+    // Price against the balance that backs LIVE shares: subtract SOL already
+    // earmarked for queued redemptions so a new depositor isn't credited for
+    // funds that are owed out (pending == 0 for every non-queued pot, so this
+    // is a no-op for the common path).
     let vault_lamports = ctx.accounts.vault.lamports();
+    let nav_base = vault_lamports.saturating_sub(pot.pending_redemption_lamports);
 
     // Calculate shares
-    let shares = pot.lamports_to_shares(lamports, vault_lamports);
+    let shares = pot.lamports_to_shares(lamports, nav_base);
     require!(shares > 0, PotError::ArithmeticOverflow);
 
     // Transfer SOL: depositor → vault

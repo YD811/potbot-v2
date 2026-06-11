@@ -2942,6 +2942,157 @@
       "docs": [
         "Enable liquid mode (deposit auto-mints SPL shares at NAV) + reserve target."
       ]
+    },
+    {
+      "name": "request_redemption",
+      "discriminator": [
+        14,
+        62,
+        182,
+        237,
+        59,
+        79,
+        149,
+        22
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "member_account",
+          "writable": true
+        },
+        {
+          "name": "request",
+          "writable": true
+        },
+        {
+          "name": "token_mint",
+          "writable": true
+        },
+        {
+          "name": "member_token_ata",
+          "writable": true
+        },
+        {
+          "name": "member",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "token_amount",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Queue a redemption: burn SPL shares, fix SOL owed at request-time NAV."
+      ]
+    },
+    {
+      "name": "fulfill_redemption",
+      "discriminator": [
+        135,
+        55,
+        160,
+        245,
+        203,
+        83,
+        197,
+        146
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "request",
+          "writable": true
+        },
+        {
+          "name": "member",
+          "writable": true
+        },
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [],
+      "docs": [
+        "Permissionless crank: pay a queued redemption to its recorded member."
+      ]
+    },
+    {
+      "name": "cancel_redemption",
+      "discriminator": [
+        197,
+        243,
+        101,
+        86,
+        2,
+        37,
+        105,
+        106
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "request",
+          "writable": true
+        },
+        {
+          "name": "member_account",
+          "writable": true
+        },
+        {
+          "name": "token_mint",
+          "writable": true
+        },
+        {
+          "name": "member_token_ata",
+          "writable": true
+        },
+        {
+          "name": "member",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [],
+      "docs": [
+        "Cancel a Pending redemption \u2014 re-mint the member's shares."
+      ]
     }
   ],
   "accounts": [
@@ -3073,6 +3224,19 @@
         202,
         115,
         33
+      ]
+    },
+    {
+      "name": "RedemptionRequest",
+      "discriminator": [
+        117,
+        157,
+        214,
+        214,
+        64,
+        160,
+        31,
+        58
       ]
     }
   ],
@@ -3309,6 +3473,45 @@
         26,
         39,
         123
+      ]
+    },
+    {
+      "name": "RedemptionRequested",
+      "discriminator": [
+        245,
+        155,
+        98,
+        131,
+        210,
+        25,
+        137,
+        146
+      ]
+    },
+    {
+      "name": "RedemptionFulfilled",
+      "discriminator": [
+        73,
+        134,
+        70,
+        2,
+        131,
+        17,
+        134,
+        141
+      ]
+    },
+    {
+      "name": "RedemptionCancelled",
+      "discriminator": [
+        22,
+        106,
+        118,
+        26,
+        83,
+        110,
+        71,
+        174
       ]
     }
   ],
@@ -4563,6 +4766,13 @@
             "type": "u64"
           },
           {
+            "name": "pending_redemption_lamports",
+            "docs": [
+              "SOL owed to queued redemptions; subtracted from distributable everywhere."
+            ],
+            "type": "u64"
+          },
+          {
             "name": "reserved",
             "docs": [
               "Forward-compat tail \u2014 carve new fields from here, never insert."
@@ -4570,7 +4780,7 @@
             "type": {
               "array": [
                 "u8",
-                117
+                109
               ]
             }
           }
@@ -6314,6 +6524,151 @@
           {
             "name": "withdrawal_reserve_bps",
             "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedemptionRequest",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "member",
+            "type": "pubkey"
+          },
+          {
+            "name": "redemption_id",
+            "type": "u64"
+          },
+          {
+            "name": "internal_shares",
+            "type": "u64"
+          },
+          {
+            "name": "owed_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "nav_snapshot",
+            "type": "u64"
+          },
+          {
+            "name": "requested_at",
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "RedemptionStatus"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedemptionStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pending"
+          },
+          {
+            "name": "Fulfilled"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedemptionRequested",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "request",
+            "type": "pubkey"
+          },
+          {
+            "name": "member",
+            "type": "pubkey"
+          },
+          {
+            "name": "redemption_id",
+            "type": "u64"
+          },
+          {
+            "name": "internal_shares",
+            "type": "u64"
+          },
+          {
+            "name": "owed_lamports",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedemptionFulfilled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "request",
+            "type": "pubkey"
+          },
+          {
+            "name": "member",
+            "type": "pubkey"
+          },
+          {
+            "name": "owed_lamports",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedemptionCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "request",
+            "type": "pubkey"
+          },
+          {
+            "name": "member",
+            "type": "pubkey"
+          },
+          {
+            "name": "internal_shares",
+            "type": "u64"
           }
         ]
       }

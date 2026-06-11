@@ -147,11 +147,18 @@ pub struct PotAccount {
     /// Monotonic id for RedemptionRequest PDAs under this pot.
     pub next_redemption_id: u64,
 
+    /// SOL owed to queued (Pending) redemptions, fixed at request-time NAV.
+    /// Earmarked in the vault: it is SUBTRACTED from distributable value
+    /// everywhere shares are priced or paid (deposit, redeem, withdraw), so
+    /// instant exits and new deposits can never touch funds owed to the queue
+    /// and remaining holders' NAV/share is unaffected by a pending exit.
+    pub pending_redemption_lamports: u64,
+
     /// Forward-compatibility tail. New fields are carved from here so the
     /// serialized layout never shifts and old accounts stay readable.
     /// Reduce this array by exactly the InitSpace of any field you add.
-    /// Phase B consumed 11 bytes (bool 1 + u16 2 + u64 8): 128 → 117.
-    pub reserved: [u8; 117],
+    /// Phase B consumed 19 bytes (bool 1 + u16 2 + u64 8 + u64 8): 128 → 109.
+    pub reserved: [u8; 109],
 }
 
 // ─── Config structs ───────────────────────────────────────────────────────
@@ -229,6 +236,16 @@ impl PotAccount {
                 acc.saturating_add(leg.lamport_value as u128)
             });
         nav_per_share_raw(self.total_shares, total_value)
+    }
+
+    /// Lamports in the vault that actually back live shares: raw balance minus
+    /// the rent-exempt minimum minus SOL already earmarked for the redemption
+    /// queue. This is the canonical base for pricing deposits and paying
+    /// instant exits — never let either dip into queued-owed funds.
+    pub fn distributable_lamports(&self, vault_lamports: u64, rent_min: u64) -> u64 {
+        vault_lamports
+            .saturating_sub(rent_min)
+            .saturating_sub(self.pending_redemption_lamports)
     }
 
     /// Calculate the share price: vault_lamports / total_shares (scaled ×10^9).

@@ -44,14 +44,17 @@ pub fn handler(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
     );
 
     let vault_lamports = ctx.accounts.vault.lamports();
-    let lamports_out = pot.shares_to_lamports(shares, vault_lamports);
-    require!(lamports_out > 0, PotError::ArithmeticOverflow);
-
     let rent = Rent::get()?;
     let min_balance = rent.minimum_balance(0);
+    // Price + pay against distributable (raw − rent − queued-owed) so an
+    // internal-shares exit can't drain SOL earmarked for the redemption queue.
+    let distributable = pot.distributable_lamports(vault_lamports, min_balance);
+    let lamports_out = pot.shares_to_lamports(shares, distributable);
+    require!(lamports_out > 0, PotError::ArithmeticOverflow);
+
     let remaining_lamports = vault_lamports.checked_sub(lamports_out).ok_or(PotError::InsufficientVaultBalance)?;
     require!(
-        remaining_lamports >= min_balance,
+        remaining_lamports >= min_balance.saturating_add(pot.pending_redemption_lamports),
         PotError::InsufficientVaultBalance
     );
 

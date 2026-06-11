@@ -294,6 +294,23 @@ pub mod pot_vault {
         instructions::pot_admin::set_liquid_config(ctx, args)
     }
 
+    /// Queue a redemption: burn SPL shares, fix the SOL owed at request-time
+    /// NAV, earmark it. Used when the liquid reserve can't pay instantly.
+    pub fn request_redemption(ctx: Context<RequestRedemption>, token_amount: u64) -> Result<()> {
+        instructions::redemption::request_redemption(ctx, token_amount)
+    }
+
+    /// Permissionless crank: pay a queued redemption to its recorded member
+    /// once the vault holds the SOL. The cranker can never redirect funds.
+    pub fn fulfill_redemption(ctx: Context<FulfillRedemption>) -> Result<()> {
+        instructions::redemption::fulfill_redemption(ctx)
+    }
+
+    /// Cancel a Pending redemption — re-mint the member's shares.
+    pub fn cancel_redemption(ctx: Context<CancelRedemption>) -> Result<()> {
+        instructions::redemption::cancel_redemption(ctx)
+    }
+
     // ─── Yield routing (Phase 4 stub — emit-only) ─────────────────────────
 
     /// Route idle vault SOL to a yield protocol (Kamino / Meteora).

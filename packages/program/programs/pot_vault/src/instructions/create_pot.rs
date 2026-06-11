@@ -123,7 +123,8 @@ pub fn handler(ctx: Context<CreatePot>, params: CreatePotParams) -> Result<()> {
     pot.liquid_mode              = false;
     pot.withdrawal_reserve_bps   = 0;
     pot.next_redemption_id       = 0;
-    pot.reserved                 = [0u8; 117];
+    pot.pending_redemption_lamports = 0;
+    pot.reserved                 = [0u8; 109];
 
     pot.config = PotConfig {
         is_public: params.is_public,
