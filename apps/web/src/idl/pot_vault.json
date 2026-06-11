@@ -3673,6 +3673,11 @@
       "code": 6084,
       "name": "OracleAccountMissing",
       "msg": "Oracle price account required for this guarded action"
+    },
+    {
+      "code": 6085,
+      "name": "OracleGuardUnavailable",
+      "msg": "Oracle deviation guard needs two-feed pricing (Phase B); not enableable yet"
     }
   ],
   "types": [

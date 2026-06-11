@@ -68,23 +68,22 @@ describe('oracle config (Phase A)', () => {
     expect(s.reserved.length).to.equal(128)
   })
 
-  it('stores and round-trips an oracle config', async () => {
+  it('stores and round-trips the confidence bound', async () => {
     const pot = await createPot(`orc-set-${Date.now() % 1e6}`)
     await (program.methods as any)
-      .setOracleConfig({ oracleKind: 0, maxOracleConfBps: 150, maxOracleDeviationBps: 100 })
+      .setOracleConfig({ oracleKind: 0, maxOracleConfBps: 150, maxOracleDeviationBps: 0 })
       .accounts({ pot, authority })
       .rpc()
     let s: any = await (program.account as any).potAccount.fetch(pot)
     expect(s.maxOracleConfBps).to.equal(150)
-    expect(s.maxOracleDeviationBps).to.equal(100)
 
-    // Not risk-param-timelocked: a looser deviation cap applies immediately.
+    // Not risk-param-timelocked: a different bound applies immediately.
     await (program.methods as any)
-      .setOracleConfig({ oracleKind: 0, maxOracleConfBps: 200, maxOracleDeviationBps: 300 })
+      .setOracleConfig({ oracleKind: 0, maxOracleConfBps: 250, maxOracleDeviationBps: 0 })
       .accounts({ pot, authority })
       .rpc()
     s = await (program.account as any).potAccount.fetch(pot)
-    expect(s.maxOracleDeviationBps).to.equal(300)
+    expect(s.maxOracleConfBps).to.equal(250)
   })
 
   it('rejects an unsupported oracle_kind', async () => {
@@ -95,6 +94,17 @@ describe('oracle config (Phase A)', () => {
         .accounts({ pot, authority })
         .rpc(),
       'OracleKindUnsupported',
+    )
+  })
+
+  it('refuses to enable the deviation guard until Phase B two-feed pricing', async () => {
+    const pot = await createPot(`orc-dev-${Date.now() % 1e6}`)
+    await expectError(
+      (program.methods as any)
+        .setOracleConfig({ oracleKind: 0, maxOracleConfBps: 0, maxOracleDeviationBps: 100 })
+        .accounts({ pot, authority })
+        .rpc(),
+      'OracleGuardUnavailable',
     )
   })
 })

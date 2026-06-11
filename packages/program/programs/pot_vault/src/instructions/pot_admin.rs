@@ -275,6 +275,17 @@ pub fn set_oracle_config(
         // Validate the selector now so a bad value can't be stored and only
         // blow up later inside execute_swap.
         crate::oracle::OracleKind::from_u8(args.oracle_kind)?;
+
+        // The deviation guard compares output-per-input (realised) against a
+        // single oracle feed price; that is only dimensionally correct with
+        // two USD feeds normalized by decimals (Phase B). Refuse to enable a
+        // guard that would not enforce a meaningful bound — a fake guard is
+        // worse than none. The confidence filter (max_oracle_conf_bps) IS
+        // meaningful today and stays enableable.
+        require!(
+                args.max_oracle_deviation_bps == 0,
+                PotError::OracleGuardUnavailable
+        );
         let pot = &mut ctx.accounts.pot;
         pot.oracle_kind              = args.oracle_kind;
         pot.max_oracle_conf_bps      = args.max_oracle_conf_bps;

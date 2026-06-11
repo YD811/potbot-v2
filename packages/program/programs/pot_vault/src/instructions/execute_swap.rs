@@ -336,15 +336,17 @@ pub fn handler<'info>(
     }
 
     // --- 7b. oracle deviation guard (anti-sandwich) -----------------------
-    // Independent of the strategy entry-price slippage ceiling above: this
-    // compares the REALISED execution price against a live oracle reading, so
-    // a manipulated pool / sandwich that still clears `min_out` is rejected
-    // when it strays too far from fair value. Opt-in: 0 = disabled.
+    // Compares the REALISED execution price against a live oracle reading so a
+    // manipulated pool / sandwich that still clears `min_out` is rejected when
+    // it strays too far from fair value. Fail-closed: a sentinel/short oracle
+    // account reverts rather than executing unguarded.
     //
-    // Phase A unit convention: the passed feed must quote output-per-input in
-    // the same orientation as `received/spent` (e.g. a direct pair feed).
-    // General two-feed (input-USD ÷ output-USD) normalization is a documented
-    // Phase-B follow-up — same staged approach as the wSOL-denominated caps.
+    // GATED OFF in Phase A: `set_oracle_config` rejects max_oracle_deviation_bps
+    // > 0, so this block is dormant until Phase B adds two-feed (input-USD ÷
+    // output-USD, decimals-normalized) pricing — the single-feed comparison
+    // here is only dimensionally correct for a direct pair feed and must not be
+    // advertised as a guarantee. The plumbing + fail-closed semantics are kept
+    // and unit-tested so Phase B only swaps in correct pricing.
     if ctx.accounts.pot.max_oracle_deviation_bps > 0 {
         let kind = crate::oracle::OracleKind::from_u8(ctx.accounts.pot.oracle_kind)?;
         let oracle = crate::oracle::read_price(

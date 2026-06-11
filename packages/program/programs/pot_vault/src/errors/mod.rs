@@ -195,6 +195,8 @@ pub enum ErrorCode {
     OracleKindUnsupported,
     #[msg("Oracle price account required for this guarded action")]
     OracleAccountMissing,
+    #[msg("Oracle deviation guard needs two-feed pricing (Phase B); not enableable yet")]
+    OracleGuardUnavailable,
 }
 
 /// Alias used throughout instruction handlers.

@@ -246,6 +246,7 @@ TAIL_ERRORS = [
     ("OracleDeviationExceeded", "Realised swap price deviates from the oracle mid beyond the cap"),
     ("OracleKindUnsupported", "Configured oracle source is not supported"),
     ("OracleAccountMissing", "Oracle price account required for this guarded action"),
+    ("OracleGuardUnavailable", "Oracle deviation guard needs two-feed pricing (Phase B); not enableable yet"),
 ]
 have = {e["name"] for e in idl["errors"]}
 next_code = max(e["code"] for e in idl["errors"]) + 1
