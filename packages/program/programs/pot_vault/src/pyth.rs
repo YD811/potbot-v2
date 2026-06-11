@@ -40,10 +40,24 @@ const MIN_ACCOUNT_LEN: usize = 152;
 const OFFSET_MAGIC: usize = 0;
 const OFFSET_EXPO: usize = 20;
 const OFFSET_PRICE: usize = 112;
+const OFFSET_CONF: usize = 120;
 const OFFSET_TIMESTAMP: usize = 144;
 
 /// Price feed staleness window: 60 seconds.
 const STALENESS_SECONDS: i64 = 60;
+
+/// Default max confidence interval as bps of price (2%). A wider interval
+/// means the oracle is unsure — reject rather than trade on a fuzzy price.
+pub const DEFAULT_MAX_CONF_BPS: u16 = 200;
+
+/// A validated oracle reading: price as Q64.64, the confidence interval
+/// expressed in bps of price, and the publish timestamp.
+#[derive(Clone, Copy, Debug)]
+pub struct OraclePrice {
+    pub price_x64: u128,
+    pub conf_bps: u16,
+    pub publish_time: i64,
+}
 
 /// Read (price_mantissa, exponent, publish_time) from a Pyth push oracle
 /// price feed account. Returns (0, 0, 0) when called in keeper-trusted mode
@@ -116,6 +130,39 @@ pub fn price_to_q64(price: i64, expo: i32) -> Result<u128> {
     Ok(result)
 }
 
+/// Read a Pyth feed AND enforce the confidence bound, returning a validated
+/// OraclePrice (price as Q64.64). Used by NAV, the swap deviation guard and
+/// value-based caps — anything that prices funds, not just triggers.
+///
+/// `max_conf_bps == 0` falls back to DEFAULT_MAX_CONF_BPS so a pot that never
+/// configured a bound still gets a sane default. Reverts on stale feed,
+/// non-positive price, or a confidence interval wider than the bound.
+pub fn read_price_checked(account: &UncheckedAccount, max_conf_bps: u16) -> Result<OraclePrice> {
+    let (price, expo, publish_time) = read_price_update(account)?;
+    require!(price > 0, PotError::PriceStale);
+
+    // Confidence is published in the same units as price (mantissa); compare
+    // as a ratio so the exponent cancels out.
+    let conf = {
+        let data = account
+            .try_borrow_data()
+            .map_err(|_| error!(PotError::PriceStale))?;
+        read_u64_le(&data, OFFSET_CONF)
+    };
+    let conf_bps = ((conf as u128)
+        .checked_mul(10_000)
+        .ok_or(error!(PotError::MathOverflow))?
+        / (price as u128)) as u64;
+    let bound = if max_conf_bps == 0 { DEFAULT_MAX_CONF_BPS } else { max_conf_bps };
+    require!(conf_bps <= bound as u128 as u64, PotError::OracleConfidenceTooLow);
+
+    Ok(OraclePrice {
+        price_x64: price_to_q64(price, expo)?,
+        conf_bps: conf_bps as u16,
+        publish_time,
+    })
+}
+
 /// Verify that `current_price_x64` satisfies the strategy's trigger conditions,
 /// and return the matching TriggerReason. Errors with TriggerNotMet if no
 /// condition fires at the given price.
@@ -143,4 +190,9 @@ fn read_i32_le(data: &[u8], offset: usize) -> i32 {
 #[inline]
 fn read_i64_le(data: &[u8], offset: usize) -> i64 {
     i64::from_le_bytes(data[offset..offset + 8].try_into().unwrap())
+}
+
+#[inline]
+fn read_u64_le(data: &[u8], offset: usize) -> u64 {
+    u64::from_le_bytes(data[offset..offset + 8].try_into().unwrap())
 }
