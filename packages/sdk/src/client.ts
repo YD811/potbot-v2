@@ -247,6 +247,90 @@ export async function fetchAllStrategyVaults(
   return accounts
 }
 
+// ── Oracle / NAV (Phase A) helpers ───────────────────────────────────────────
+//
+// On-chain the program reads Pyth with a confidence bound + a swap deviation
+// guard. Off-chain the UI prices NAV from the Pyth Price API (Hermes) — the
+// same source, no manual price entry anywhere. NAV counts idle SOL PLUS every
+// token leg the vault holds, fixing the SOL-only under-reporting of the old
+// share_price.
+
+/** One priced holding for NAV: a token amount and its USD price. */
+export interface NavHolding {
+  /** UI amount (already scaled out of base units). */
+  amount: number
+  /** USD price per unit (from Pyth Price API). */
+  priceUsd: number
+}
+
+export interface NavResult {
+  navUsd: number
+  navPerShareUsd: number
+}
+
+/**
+ * Compute pot NAV and NAV/share from idle SOL + token holdings, all priced
+ * via the Pyth Price API. `solPriceUsd` and each holding's `priceUsd` come
+ * from `fetchPythPrices`. Mirrors the on-chain `nav_per_share` semantics
+ * (seeds at 1.0 when there are no shares).
+ */
+export function computeNav(
+  idleSol: number,
+  solPriceUsd: number,
+  holdings: NavHolding[],
+  totalShares: number,
+): NavResult {
+  const navUsd =
+    idleSol * solPriceUsd +
+    holdings.reduce((acc, h) => acc + h.amount * h.priceUsd, 0)
+  const navPerShareUsd = totalShares > 0 ? navUsd / totalShares : solPriceUsd
+  return { navUsd, navPerShareUsd }
+}
+
+/**
+ * Fetch USD prices for a set of Pyth price-feed ids from the Hermes API.
+ * Returns a map feedId → priceUsd. Network failures resolve to an empty map
+ * so callers can render a graceful "—" rather than throw.
+ */
+export async function fetchPythPrices(
+  feedIds: string[],
+  hermesUrl = 'https://hermes.pyth.network',
+): Promise<Record<string, number>> {
+  if (feedIds.length === 0) return {}
+  try {
+    const qs = feedIds.map((id) => `ids[]=${id}`).join('&')
+    const res = await fetch(`${hermesUrl}/v2/updates/price/latest?${qs}`)
+    if (!res.ok) return {}
+    const json = (await res.json()) as any
+    const out: Record<string, number> = {}
+    for (const p of json.parsed ?? []) {
+      // price.price is an integer mantissa; expo is negative (e.g. -8).
+      const px = Number(p.price.price) * Math.pow(10, p.price.expo)
+      out[p.id] = px
+    }
+    return out
+  } catch {
+    return {}
+  }
+}
+
+/** Configure the pot's oracle source + confidence/deviation guards (authority). */
+export async function buildSetOracleConfigTx(
+  program: Program<any>,
+  pot: PublicKey,
+  authority: PublicKey,
+  opts: { oracleKind?: number; maxOracleConfBps?: number; maxOracleDeviationBps?: number },
+): Promise<Transaction> {
+  return await (program as any).methods
+    .setOracleConfig({
+      oracleKind: opts.oracleKind ?? 0,
+      maxOracleConfBps: opts.maxOracleConfBps ?? 0,
+      maxOracleDeviationBps: opts.maxOracleDeviationBps ?? 0,
+    })
+    .accounts({ pot, authority })
+    .transaction()
+}
+
 // ── Security hardening (Phase A) helpers ─────────────────────────────────────
 //
 // Sentinel role, freeze/unfreeze, proposal cancellation, protocol allowlist

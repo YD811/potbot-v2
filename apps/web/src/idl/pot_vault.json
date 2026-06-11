@@ -2855,6 +2855,42 @@
       "docs": [
         "Route idle vault SOL to a yield protocol (Phase 4 stub)."
       ]
+    },
+    {
+      "name": "set_oracle_config",
+      "discriminator": [
+        96,
+        171,
+        6,
+        98,
+        153,
+        183,
+        233,
+        31
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "SetOracleConfigArgs"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Configure the pot's oracle source, confidence bound, and swap deviation guard."
+      ]
     }
   ],
   "accounts": [
@@ -3196,6 +3232,19 @@
         63,
         203,
         70
+      ]
+    },
+    {
+      "name": "OracleConfigUpdated",
+      "discriminator": [
+        130,
+        6,
+        5,
+        137,
+        29,
+        155,
+        34,
+        68
       ]
     }
   ],
@@ -3604,6 +3653,26 @@
       "code": 6080,
       "name": "AssetExposureExceeded",
       "msg": "Daily exposure cap for this asset exceeded"
+    },
+    {
+      "code": 6081,
+      "name": "OracleConfidenceTooLow",
+      "msg": "Oracle confidence interval wider than the configured bound"
+    },
+    {
+      "code": 6082,
+      "name": "OracleDeviationExceeded",
+      "msg": "Realised swap price deviates from the oracle mid beyond the cap"
+    },
+    {
+      "code": 6083,
+      "name": "OracleKindUnsupported",
+      "msg": "Configured oracle source is not supported"
+    },
+    {
+      "code": 6084,
+      "name": "OracleAccountMissing",
+      "msg": "Oracle price account required for this guarded action"
     }
   ],
   "types": [
@@ -4349,6 +4418,39 @@
               "array": [
                 "u64",
                 16
+              ]
+            }
+          },
+          {
+            "name": "oracle_kind",
+            "docs": [
+              "Oracle source: 0 = Pyth, 1 = Switchboard."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "max_oracle_conf_bps",
+            "docs": [
+              "Max accepted oracle confidence interval, bps. 0 = source default."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "max_oracle_deviation_bps",
+            "docs": [
+              "Max swap-vs-oracle deviation, bps. 0 = guard disabled."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "reserved",
+            "docs": [
+              "Forward-compat tail \u2014 carve new fields from here, never insert."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                128
               ]
             }
           }
@@ -6012,6 +6114,50 @@
           {
             "name": "timestamp",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SetOracleConfigArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "oracle_kind",
+            "type": "u8"
+          },
+          {
+            "name": "max_oracle_conf_bps",
+            "type": "u16"
+          },
+          {
+            "name": "max_oracle_deviation_bps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OracleConfigUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "oracle_kind",
+            "type": "u8"
+          },
+          {
+            "name": "max_oracle_conf_bps",
+            "type": "u16"
+          },
+          {
+            "name": "max_oracle_deviation_bps",
+            "type": "u16"
           }
         ]
       }

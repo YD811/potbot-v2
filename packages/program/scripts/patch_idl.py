@@ -69,6 +69,9 @@ add_ix("fund_fee_reserve",
         {"name": "system_program", "address": "11111111111111111111111111111111"}],
        [{"name": "args", "type": {"defined": {"name": "FundFeeReserveArgs"}}}],
        ["Fund the pot's keeper-gas reserve."])
+add_ix("set_oracle_config", [POT_W, AUTH_S],
+       [{"name": "args", "type": {"defined": {"name": "SetOracleConfigArgs"}}}],
+       ["Configure the pot's oracle source, confidence bound, and swap deviation guard."])
 
 # ── instructions missing from the stale May-2026 IDL ────────────────────────
 add_ix("redeem_tokens",
@@ -105,6 +108,10 @@ NEW_POT_FIELDS = [
     {"name": "allowed_programs_count", "type": "u8"},
     {"name": "max_asset_exposure_bps", "docs": ["Max cumulative daily spend toward one output mint, bps of vault. 0 = unlimited."], "type": "u16"},
     {"name": "per_mint_daily_spent", "docs": ["Daily spend per allowed_mints slot."], "type": {"array": ["u64", 16]}},
+    {"name": "oracle_kind", "docs": ["Oracle source: 0 = Pyth, 1 = Switchboard."], "type": "u8"},
+    {"name": "max_oracle_conf_bps", "docs": ["Max accepted oracle confidence interval, bps. 0 = source default."], "type": "u16"},
+    {"name": "max_oracle_deviation_bps", "docs": ["Max swap-vs-oracle deviation, bps. 0 = guard disabled."], "type": "u16"},
+    {"name": "reserved", "docs": ["Forward-compat tail — carve new fields from here, never insert."], "type": {"array": ["u8", 128]}},
 ]
 for t in idl["types"]:
     if t["name"] == "PotAccount":
@@ -154,6 +161,17 @@ add_type("SetRiskTimelockArgs", [
 add_type("FundFeeReserveArgs", [
     {"name": "amount", "type": "u64"},
 ])
+add_type("SetOracleConfigArgs", [
+    {"name": "oracle_kind", "type": "u8"},
+    {"name": "max_oracle_conf_bps", "type": "u16"},
+    {"name": "max_oracle_deviation_bps", "type": "u16"},
+])
+add_type("OracleConfigUpdated", [
+    {"name": "pot", "type": "pubkey"},
+    {"name": "oracle_kind", "type": "u8"},
+    {"name": "max_oracle_conf_bps", "type": "u16"},
+    {"name": "max_oracle_deviation_bps", "type": "u16"},
+])
 # event payload types
 add_type("SentinelUpdated", [
     {"name": "pot", "type": "pubkey"},
@@ -197,7 +215,8 @@ add_type("YieldRouted", [
 # ── events ──────────────────────────────────────────────────────────────────
 event_names = {e["name"] for e in idl["events"]}
 for ev in ["SentinelUpdated", "PotFrozenEvent", "ProposalCancelled",
-           "AllowedProgramsUpdated", "PendingParamsApplied", "YieldRouted"]:
+           "AllowedProgramsUpdated", "PendingParamsApplied", "YieldRouted",
+           "OracleConfigUpdated"]:
     if ev not in event_names:
         idl["events"].append({"name": ev, "discriminator": disc("event", ev)})
 
@@ -223,6 +242,10 @@ TAIL_ERRORS = [
     ("NoPendingChange", "No pending parameter change staged for this pot"),
     ("ProgramNotAllowed", "Program is not in the pot's protocol allowlist"),
     ("AssetExposureExceeded", "Daily exposure cap for this asset exceeded"),
+    ("OracleConfidenceTooLow", "Oracle confidence interval wider than the configured bound"),
+    ("OracleDeviationExceeded", "Realised swap price deviates from the oracle mid beyond the cap"),
+    ("OracleKindUnsupported", "Configured oracle source is not supported"),
+    ("OracleAccountMissing", "Oracle price account required for this guarded action"),
 ]
 have = {e["name"] for e in idl["errors"]}
 next_code = max(e["code"] for e in idl["errors"]) + 1
