@@ -31,14 +31,17 @@ for acc in idl["accounts"]:
     assert acc["discriminator"] == disc("account", acc["name"]), f"acct disc mismatch: {acc['name']}"
 print(f"self-check OK: {len(idl['instructions'])} ix, {len(idl['events'])} events, {len(idl['accounts'])} accounts")
 
-names = {i["name"] for i in idl["instructions"]}
-
 def add_ix(name, accounts, args, docs=None):
-    if name in names:
-        return
+    # Idempotent upsert: every add_ix target is an instruction THIS script
+    # owns (new, or one anchor's broken IDL-gen drops). Replace any existing
+    # copy so account-list changes (e.g. dropping member_account) re-apply when
+    # patching from an already-patched base. Real IDL-gen instructions
+    # (create_pot, deposit, vote, …) are never added here, only modified in
+    # place, so replacing managed names is safe.
     entry = {"name": name, "discriminator": disc("global", name), "accounts": accounts, "args": args}
     if docs:
         entry["docs"] = docs
+    idl["instructions"] = [i for i in idl["instructions"] if i["name"] != name]
     idl["instructions"].append(entry)
 
 POT_W = {"name": "pot", "writable": True}
@@ -81,7 +84,6 @@ _TOKEN_PROG = {"name": "token_program", "address": "TokenkegQfeZyiNwAJbNbGKPFXCW
 _SYS = {"name": "system_program", "address": "11111111111111111111111111111111"}
 add_ix("request_redemption",
        [POT_W, {"name": "vault"},
-        {"name": "member_account", "writable": True},
         {"name": "request", "writable": True},
         {"name": "token_mint", "writable": True},
         {"name": "member_token_ata", "writable": True},
@@ -99,13 +101,12 @@ add_ix("fulfill_redemption",
 add_ix("cancel_redemption",
        [POT_W,
         {"name": "request", "writable": True},
-        {"name": "member_account", "writable": True},
         {"name": "token_mint", "writable": True},
         {"name": "member_token_ata", "writable": True},
         {"name": "member", "writable": True, "signer": True},
         _TOKEN_PROG],
        [],
-       ["Cancel a Pending redemption — re-mint the member's shares."])
+       ["Cancel a Pending redemption — re-mint the member's SPL shares."])
 
 # ── deposit: optional liquid-mode SPL accounts (Phase B) ────────────────────
 for ins in idl["instructions"]:
@@ -348,6 +349,7 @@ TAIL_ERRORS = [
     ("RedemptionNotPending", "Redemption request is not in a Pending state"),
     ("RedemptionStillIlliquid", "Liquid vault still lacks the SOL to fulfil this redemption"),
     ("InvalidReserveBps", "Withdrawal reserve bps must be <= 10000"),
+    ("TokenizedUseRedeem", "Tokenized pot — exit via redeem_tokens / the redemption queue, not withdraw"),
 ]
 have = {e["name"] for e in idl["errors"]}
 next_code = max(e["code"] for e in idl["errors"]) + 1

@@ -211,6 +211,8 @@ pub enum ErrorCode {
     RedemptionStillIlliquid,
     #[msg("Withdrawal reserve bps must be <= 10000")]
     InvalidReserveBps,
+    #[msg("Tokenized pot — exit via redeem_tokens / the redemption queue, not withdraw")]
+    TokenizedUseRedeem,
 }
 
 /// Alias used throughout instruction handlers.

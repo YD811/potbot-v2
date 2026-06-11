@@ -18,11 +18,19 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program;
 use anchor_spl::token::{self, Burn, Mint, MintTo, Token, TokenAccount};
 
+// NOTE: the redemption queue operates purely on the SPL share-token + the
+// global total_shares ledger — the FUND claim. It deliberately does NOT touch
+// per-member `MemberAccount.shares`, which is a vote-weight field: SPL can be
+// transferred on a secondary market, so a holder's redeemable claim is their
+// token balance, not their (possibly stale) member.shares. Tying the queue to
+// member.shares would (a) wrongly let member.shares-based withdraw double-exit
+// and (b) block a legitimate secondary-market holder from redeeming. withdraw
+// is blocked for tokenized pots; member.shares ↔ SPL reconciliation for vote
+// weight is a Phase C governance item.
 use crate::constants::VAULT_SEED;
 use crate::errors::PotError;
 use crate::state::pot::PotAccount;
 use crate::state::redemption::{RedemptionRequest, RedemptionStatus};
-use crate::state::member::MemberAccount;
 
 // ─── request_redemption ──────────────────────────────────────────────────────
 
@@ -34,13 +42,6 @@ pub struct RequestRedemption<'info> {
     /// CHECK: vault PDA (read-only here — NAV snapshot only, no SOL moves).
     #[account(seeds = [VAULT_SEED, pot.key().as_ref()], bump = pot.vault_bump)]
     pub vault: SystemAccount<'info>,
-
-    #[account(
-        mut,
-        seeds = [b"member", pot.key().as_ref(), member.key().as_ref()],
-        bump = member_account.bump,
-    )]
-    pub member_account: Box<Account<'info, MemberAccount>>,
 
     #[account(
         init,
@@ -102,12 +103,6 @@ pub fn request_redemption(ctx: Context<RequestRedemption>, token_amount: u64) ->
         ),
         token_amount,
     )?;
-
-    let member_acct = &mut ctx.accounts.member_account;
-    member_acct.shares = member_acct
-        .shares
-        .checked_sub(internal_shares)
-        .ok_or(PotError::InsufficientShares)?;
 
     let request = &mut ctx.accounts.request;
     request.pot = ctx.accounts.pot.key();
@@ -175,11 +170,13 @@ pub fn fulfill_redemption(ctx: Context<FulfillRedemption>) -> Result<()> {
     let raw = ctx.accounts.vault.lamports();
     let rent_min = Rent::get()?.minimum_balance(0);
 
-    // Must keep the account rent-exempt after paying `owed`. Because owed was
-    // earmarked in pending, the only failure mode is the vault hasn't been
-    // funded/unwound back to enough SOL yet.
+    // Keep rent-exemption AND the rest of the queue's earmark covered after
+    // paying `owed`: require raw >= rent + pending (i.e. raw - owed >= rent +
+    // (pending - owed)). This prevents fulfilling one request out of order in
+    // a way that strands a later request's earmarked SOL (Finding 7).
+    let pending = ctx.accounts.pot.pending_redemption_lamports;
     require!(
-        raw.saturating_sub(owed) >= rent_min,
+        raw >= rent_min.saturating_add(pending),
         PotError::RedemptionStillIlliquid
     );
 
@@ -228,13 +225,6 @@ pub struct CancelRedemption<'info> {
     )]
     pub request: Box<Account<'info, RedemptionRequest>>,
 
-    #[account(
-        mut,
-        seeds = [b"member", pot.key().as_ref(), member.key().as_ref()],
-        bump = member_account.bump,
-    )]
-    pub member_account: Box<Account<'info, MemberAccount>>,
-
     #[account(mut, constraint = token_mint.key() == pot.token_mint @ PotError::NotTokenized)]
     pub token_mint: Box<Account<'info, Mint>>,
 
@@ -275,9 +265,6 @@ pub fn cancel_redemption(ctx: Context<CancelRedemption>) -> Result<()> {
         ),
         mint_amount,
     )?;
-
-    let member_acct = &mut ctx.accounts.member_account;
-    member_acct.shares = member_acct.shares.checked_add(internal_shares).ok_or(PotError::ArithmeticOverflow)?;
 
     ctx.accounts.request.status = RedemptionStatus::Cancelled;
 

@@ -2779,99 +2779,6 @@
       ]
     },
     {
-      "name": "redeem_tokens",
-      "discriminator": [
-        246,
-        98,
-        134,
-        41,
-        152,
-        33,
-        120,
-        69
-      ],
-      "accounts": [
-        {
-          "name": "pot",
-          "writable": true
-        },
-        {
-          "name": "vault",
-          "writable": true
-        },
-        {
-          "name": "member",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "token_mint",
-          "writable": true
-        },
-        {
-          "name": "member_token_ata",
-          "writable": true
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "token_amount",
-          "type": "u64"
-        }
-      ],
-      "docs": [
-        "Burn SPL share-tokens and receive SOL from the vault at NAV."
-      ]
-    },
-    {
-      "name": "route_to_yield",
-      "discriminator": [
-        82,
-        31,
-        61,
-        118,
-        105,
-        209,
-        221,
-        31
-      ],
-      "accounts": [
-        {
-          "name": "pot",
-          "writable": true
-        },
-        {
-          "name": "vault"
-        },
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        }
-      ],
-      "args": [
-        {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "RouteToYieldArgs"
-            }
-          }
-        }
-      ],
-      "docs": [
-        "Route idle vault SOL to a yield protocol (Phase 4 stub)."
-      ]
-    },
-    {
       "name": "set_oracle_config",
       "discriminator": [
         96,
@@ -2962,10 +2869,6 @@
         },
         {
           "name": "vault"
-        },
-        {
-          "name": "member_account",
-          "writable": true
         },
         {
           "name": "request",
@@ -3068,10 +2971,6 @@
           "writable": true
         },
         {
-          "name": "member_account",
-          "writable": true
-        },
-        {
           "name": "token_mint",
           "writable": true
         },
@@ -3091,7 +2990,100 @@
       ],
       "args": [],
       "docs": [
-        "Cancel a Pending redemption \u2014 re-mint the member's shares."
+        "Cancel a Pending redemption \u2014 re-mint the member's SPL shares."
+      ]
+    },
+    {
+      "name": "redeem_tokens",
+      "discriminator": [
+        246,
+        98,
+        134,
+        41,
+        152,
+        33,
+        120,
+        69
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "member",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_mint",
+          "writable": true
+        },
+        {
+          "name": "member_token_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "token_amount",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Burn SPL share-tokens and receive SOL from the vault at NAV."
+      ]
+    },
+    {
+      "name": "route_to_yield",
+      "discriminator": [
+        82,
+        31,
+        61,
+        118,
+        105,
+        209,
+        221,
+        31
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "RouteToYieldArgs"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Route idle vault SOL to a yield protocol (Phase 4 stub)."
       ]
     }
   ],
@@ -3975,6 +3967,11 @@
       "code": 6091,
       "name": "InvalidReserveBps",
       "msg": "Withdrawal reserve bps must be <= 10000"
+    },
+    {
+      "code": 6092,
+      "name": "TokenizedUseRedeem",
+      "msg": "Tokenized pot \u2014 exit via redeem_tokens / the redemption queue, not withdraw"
     }
   ],
   "types": [

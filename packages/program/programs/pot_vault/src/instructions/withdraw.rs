@@ -35,6 +35,14 @@ pub fn handler(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
     let pot = &ctx.accounts.pot;
     let clock = Clock::get()?;
 
+    // CRITICAL: a tokenized pot's fund claim is the SPL share-token, not
+    // member.shares. Liquid deposit credits BOTH (member.shares for vote
+    // weight + SPL for redemption); allowing the member.shares-based withdraw
+    // here too would let a holder exit twice (redeem the SPL AND withdraw the
+    // shares) and drain other members. For a tokenized pot the only exit is
+    // redeem_tokens / the redemption queue.
+    require!(pot.token_mint == Pubkey::default(), PotError::TokenizedUseRedeem);
+
     require!(shares > 0 && shares <= member.shares, PotError::InsufficientShares);
     require!(shares <= pot.total_shares, PotError::InsufficientShares);
 

@@ -89,7 +89,7 @@ describe('redemption queue (Phase B)', () => {
 
     const request = requestPda(pot, id)
     await (program.methods as any).requestRedemption(new BN(tokenAmount)).accounts({
-      pot, vault, memberAccount: member, request, tokenMint, memberTokenAta: ata,
+      pot, vault, request, tokenMint, memberTokenAta: ata,
       member: authority, tokenProgram: TOKEN_PROGRAM_ID, systemProgram: SystemProgram.programId }).rpc()
 
     // Shares burned; SOL earmarked.
@@ -123,6 +123,18 @@ describe('redemption queue (Phase B)', () => {
     expect(ps.pendingRedemptionLamports.toNumber()).to.equal(0)
   })
 
+  it('blocks the member.shares-based withdraw on a tokenized pot (no double-exit)', async () => {
+    const { pot, vault, member } = await liquidPotWithDeposit(`rq-wd-${Date.now() % 1e6}`, 0)
+    // withdraw uses member.shares; on a tokenized/liquid pot the only exit is
+    // redeem/queue, so this must revert — otherwise a holder could redeem the
+    // SPL AND withdraw the shares (CRITICAL double-exit found in audit).
+    await expectError(
+      (program.methods as any).withdraw(new BN(1)).accounts({
+        pot, vault, member, withdrawer: authority, systemProgram: SystemProgram.programId,
+      }).rpc(),
+      'TokenizedUseRedeem')
+  })
+
   it('cancels a Pending redemption and re-mints the shares', async () => {
     const { pot, vault, tokenMint, member, ata } = await liquidPotWithDeposit(`rq-cxl-${Date.now() % 1e6}`, 0)
     const potState: any = await (program.account as any).potAccount.fetch(pot)
@@ -133,11 +145,11 @@ describe('redemption queue (Phase B)', () => {
 
     const request = requestPda(pot, id)
     await (program.methods as any).requestRedemption(new BN(tokenAmount)).accounts({
-      pot, vault, memberAccount: member, request, tokenMint, memberTokenAta: ata,
+      pot, vault, request, tokenMint, memberTokenAta: ata,
       member: authority, tokenProgram: TOKEN_PROGRAM_ID, systemProgram: SystemProgram.programId }).rpc()
 
     await (program.methods as any).cancelRedemption().accounts({
-      pot, request, memberAccount: member, tokenMint, memberTokenAta: ata,
+      pot, request, tokenMint, memberTokenAta: ata,
       member: authority, tokenProgram: TOKEN_PROGRAM_ID }).rpc()
 
     const ataAfter = await getTokenAccount(provider.connection, ata)
