@@ -117,6 +117,26 @@ pub struct PotAccount {
     /// Daily spend (input lamport-equivalents) per allowed_mints slot.
     /// Resets together with daily_spend_day.
     pub per_mint_daily_spent: [u64; 16],
+
+    // ─── Oracle / NAV (Phase A) ──────────────────────────────────────────
+
+    /// Which oracle backs this pot's price reads (0 = Pyth, 1 = Switchboard).
+    /// See `crate::oracle::OracleKind`.
+    pub oracle_kind: u8,
+
+    /// Max accepted confidence interval on an oracle price, as bps of price.
+    /// 0 = source default (pyth::DEFAULT_MAX_CONF_BPS).
+    pub max_oracle_conf_bps: u16,
+
+    /// Max accepted deviation between a realised swap price and the oracle
+    /// mid, as bps. 0 = guard disabled (no oracle account required).
+    pub max_oracle_deviation_bps: u16,
+
+    /// Forward-compatibility tail. New fields are carved from here so the
+    /// serialized layout never shifts and old accounts stay readable — this
+    /// is the LAST layout-breaking change before that guarantee holds.
+    /// Reduce this array by exactly the InitSpace of any field you add.
+    pub reserved: [u8; 128],
 }
 
 // ─── Config structs ───────────────────────────────────────────────────────
@@ -172,7 +192,30 @@ pub enum YieldStrategy {
 
 // ─── impl PotAccount ─────────────────────────────────────────────────────
 
+/// One priced leg of a pot's holdings for NAV: a token balance valued at an
+/// oracle price. Amounts/prices are caller-normalized to lamports of quote.
+pub struct NavLeg {
+    /// Lamport-equivalent value of this leg (token_amount × oracle_price,
+    /// already converted to the SOL quote by the caller/SDK).
+    pub lamport_value: u64,
+}
+
 impl PotAccount {
+    /// True NAV per share (×10^9), counting idle SOL PLUS the oracle-priced
+    /// value of every token leg the vault holds. This is the multi-asset
+    /// generalization of `share_price`, which only saw idle SOL and therefore
+    /// under-reported NAV for any pot mid-strategy. Pure function: the caller
+    /// supplies oracle-priced legs (on-chain from `oracle::read_price`, or in
+    /// the SDK from the Pyth Price API) so this stays layout-free.
+    pub fn nav_per_share(&self, vault_lamports: u64, legs: &[NavLeg]) -> u64 {
+        let total_value = legs
+            .iter()
+            .fold(vault_lamports as u128, |acc, leg| {
+                acc.saturating_add(leg.lamport_value as u128)
+            });
+        nav_per_share_raw(self.total_shares, total_value)
+    }
+
     /// Calculate the share price: vault_lamports / total_shares (scaled ×10^9).
     /// Saturating semantics: overflow paths return 0 — unreachable for any
     /// realistic vault size (mul would need vault > 1.8e10 SOL to overflow u128).
@@ -546,6 +589,20 @@ impl PotAccount {
     }
 }
 
+/// Pure NAV math: total holdings value (lamports) over total shares, scaled
+/// ×10^9. Seeds at 1.0 when there are no shares. Extracted so it can be unit
+/// tested without constructing a full PotAccount (which holds String fields).
+pub fn nav_per_share_raw(total_shares: u64, total_value: u128) -> u64 {
+    if total_shares == 0 {
+        return 1_000_000_000;
+    }
+    total_value
+        .checked_mul(1_000_000_000)
+        .unwrap_or(0)
+        .checked_div(total_shares as u128)
+        .unwrap_or(0) as u64
+}
+
 /// 0 = unlimited (loosest). Otherwise a higher cap is looser.
 fn cap_is_looser(old: u64, new: u64) -> bool {
     if old == new {
@@ -572,4 +629,34 @@ fn timelock_is_looser(old: i64, new: i64) -> bool {
         return false;
     }
     new < old
+}
+
+#[cfg(test)]
+mod nav_tests {
+    use super::nav_per_share_raw;
+
+    #[test]
+    fn nav_seeds_at_one_when_no_shares() {
+        assert_eq!(nav_per_share_raw(0, 0), 1_000_000_000);
+    }
+
+    #[test]
+    fn nav_counts_idle_sol_only() {
+        // 10 SOL vault, 10e9 shares → 1.0 NAV/share (×1e9).
+        assert_eq!(nav_per_share_raw(10_000_000_000, 10_000_000_000), 1_000_000_000);
+    }
+
+    #[test]
+    fn nav_includes_token_legs() {
+        // 4 SOL idle + a token leg worth 6 SOL = 10 SOL total, 10e9 shares
+        // → 1.0 NAV. share_price would have seen only the 4 SOL → 0.4, the
+        // exact under-reporting the oracle NAV fixes.
+        assert_eq!(nav_per_share_raw(10_000_000_000, 10_000_000_000), 1_000_000_000);
+        assert_eq!(nav_per_share_raw(10_000_000_000, 4_000_000_000), 400_000_000);
+    }
+
+    #[test]
+    fn nav_doubles_when_value_doubles() {
+        assert_eq!(nav_per_share_raw(10_000_000_000, 20_000_000_000), 2_000_000_000);
+    }
 }

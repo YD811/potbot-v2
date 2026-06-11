@@ -241,6 +241,64 @@ pub fn apply_pending_params(ctx: Context<ApplyPendingParams>) -> Result<()> {
         Ok(())
 }
 
+// ─── Set oracle config ──────────────────────────────────────────────────────
+//
+// Configures which oracle backs the pot, the confidence bound, and the swap
+// deviation guard. These are NOT risk-param-timelocked: tightening them is
+// always safe, and loosening them only weakens a guard that is itself opt-in
+// (a deviation cap of 0 disables the guard entirely). Authority-only.
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub struct SetOracleConfigArgs {
+        /// 0 = Pyth, 1 = Switchboard (see crate::oracle::OracleKind).
+    pub oracle_kind: u8,
+        /// Max accepted confidence interval, bps of price. 0 = source default.
+        pub max_oracle_conf_bps: u16,
+        /// Max accepted swap-vs-oracle deviation, bps. 0 = guard disabled.
+        pub max_oracle_deviation_bps: u16,
+}
+
+#[derive(Accounts)]
+pub struct SetOracleConfig<'info> {
+        #[account(
+                    mut,
+                    constraint = authority.key() == pot.authority @ PotError::StrategyNotAdmin,
+                )]
+        pub pot: Box<Account<'info, PotAccount>>,
+        pub authority: Signer<'info>,
+}
+
+pub fn set_oracle_config(
+        ctx: Context<SetOracleConfig>,
+        args: SetOracleConfigArgs,
+    ) -> Result<()> {
+        // Validate the selector now so a bad value can't be stored and only
+        // blow up later inside execute_swap.
+        crate::oracle::OracleKind::from_u8(args.oracle_kind)?;
+
+        // The deviation guard compares output-per-input (realised) against a
+        // single oracle feed price; that is only dimensionally correct with
+        // two USD feeds normalized by decimals (Phase B). Refuse to enable a
+        // guard that would not enforce a meaningful bound — a fake guard is
+        // worse than none. The confidence filter (max_oracle_conf_bps) IS
+        // meaningful today and stays enableable.
+        require!(
+                args.max_oracle_deviation_bps == 0,
+                PotError::OracleGuardUnavailable
+        );
+        let pot = &mut ctx.accounts.pot;
+        pot.oracle_kind              = args.oracle_kind;
+        pot.max_oracle_conf_bps      = args.max_oracle_conf_bps;
+        pot.max_oracle_deviation_bps = args.max_oracle_deviation_bps;
+        emit!(OracleConfigUpdated {
+                    pot: pot.key(),
+                    oracle_kind: args.oracle_kind,
+                    max_oracle_conf_bps: args.max_oracle_conf_bps,
+                    max_oracle_deviation_bps: args.max_oracle_deviation_bps,
+        });
+        Ok(())
+}
+
 // ─── Fund fee reserve ───────────────────────────────────────────────────────
 //
 // Deposits SOL from the authority's account into pot.fee_reserve so that
@@ -326,4 +384,12 @@ pub struct AllowedProgramsUpdated {
 pub struct PendingParamsApplied {
         pub pot: Pubkey,
         pub applied_at: i64,
+}
+
+#[event]
+pub struct OracleConfigUpdated {
+        pub pot: Pubkey,
+        pub oracle_kind: u8,
+        pub max_oracle_conf_bps: u16,
+        pub max_oracle_deviation_bps: u16,
 }

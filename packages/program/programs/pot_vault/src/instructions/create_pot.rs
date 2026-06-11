@@ -113,6 +113,12 @@ pub fn handler(ctx: Context<CreatePot>, params: CreatePotParams) -> Result<()> {
     pot.max_asset_exposure_bps   = 0;
     pot.per_mint_daily_spent     = [0u64; 16];
 
+    // Oracle / NAV (Phase A) — Pyth default, guards opt-in via set_oracle_config.
+    pot.oracle_kind              = 0; // OracleKind::Pyth
+    pot.max_oracle_conf_bps      = 0; // → pyth::DEFAULT_MAX_CONF_BPS
+    pot.max_oracle_deviation_bps = 0; // guard disabled until configured
+    pot.reserved                 = [0u8; 128];
+
     pot.config = PotConfig {
         is_public: params.is_public,
         min_deposit: params.min_deposit,

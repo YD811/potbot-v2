@@ -4,6 +4,7 @@ pub mod state;
 pub mod instructions;
 pub mod constants;
 pub mod pyth;
+pub mod oracle;
 
 #[path = "errors/mod.rs"]
 pub mod errors;
@@ -272,6 +273,15 @@ pub mod pot_vault {
     /// timelock has elapsed.
     pub fn apply_pending_params(ctx: Context<ApplyPendingParams>) -> Result<()> {
         instructions::pot_admin::apply_pending_params(ctx)
+    }
+
+    /// Configure the pot's oracle source, confidence bound, and swap
+    /// deviation guard (Phase A). Authority-only.
+    pub fn set_oracle_config(
+        ctx: Context<SetOracleConfig>,
+        args: SetOracleConfigArgs,
+    ) -> Result<()> {
+        instructions::pot_admin::set_oracle_config(ctx, args)
     }
 
     // ─── Yield routing (Phase 4 stub — emit-only) ─────────────────────────

@@ -185,6 +185,18 @@ pub enum ErrorCode {
     ProgramNotAllowed,
     #[msg("Daily exposure cap for this asset exceeded")]
     AssetExposureExceeded,
+
+    // ─── Oracle / NAV (Phase A) ───────────────────────────────────────────
+    #[msg("Oracle confidence interval wider than the configured bound")]
+    OracleConfidenceTooLow,
+    #[msg("Realised swap price deviates from the oracle mid beyond the cap")]
+    OracleDeviationExceeded,
+    #[msg("Configured oracle source is not supported")]
+    OracleKindUnsupported,
+    #[msg("Oracle price account required for this guarded action")]
+    OracleAccountMissing,
+    #[msg("Oracle deviation guard needs two-feed pricing (Phase B); not enableable yet")]
+    OracleGuardUnavailable,
 }
 
 /// Alias used throughout instruction handlers.

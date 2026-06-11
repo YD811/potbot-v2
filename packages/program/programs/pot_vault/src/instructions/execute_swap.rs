@@ -335,6 +335,33 @@ pub fn handler<'info>(
         }
     }
 
+    // --- 7b. oracle deviation guard (anti-sandwich) -----------------------
+    // Compares the REALISED execution price against a live oracle reading so a
+    // manipulated pool / sandwich that still clears `min_out` is rejected when
+    // it strays too far from fair value. Fail-closed: a sentinel/short oracle
+    // account reverts rather than executing unguarded.
+    //
+    // GATED OFF in Phase A: `set_oracle_config` rejects max_oracle_deviation_bps
+    // > 0, so this block is dormant until Phase B adds two-feed (input-USD ÷
+    // output-USD, decimals-normalized) pricing — the single-feed comparison
+    // here is only dimensionally correct for a direct pair feed and must not be
+    // advertised as a guarantee. The plumbing + fail-closed semantics are kept
+    // and unit-tested so Phase B only swaps in correct pricing.
+    if ctx.accounts.pot.max_oracle_deviation_bps > 0 {
+        let kind = crate::oracle::OracleKind::from_u8(ctx.accounts.pot.oracle_kind)?;
+        let oracle = crate::oracle::read_price(
+            kind,
+            &ctx.accounts.pyth_price_update,
+            ctx.accounts.pot.max_oracle_conf_bps,
+        )?;
+        let realised_x64 = compute_price_x64(spent, received)?;
+        let dev = crate::oracle::deviation_bps(realised_x64, oracle.price_x64);
+        require!(
+            dev <= ctx.accounts.pot.max_oracle_deviation_bps,
+            crate::errors::PotError::OracleDeviationExceeded
+        );
+    }
+
     // --- 8. update strategy state machine ---------------------------------
     let now = Clock::get()?.unix_timestamp;
     let strategy = &mut ctx.accounts.strategy;
