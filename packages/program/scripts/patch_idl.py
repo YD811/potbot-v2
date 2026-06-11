@@ -111,14 +111,21 @@ NEW_POT_FIELDS = [
     {"name": "oracle_kind", "docs": ["Oracle source: 0 = Pyth, 1 = Switchboard."], "type": "u8"},
     {"name": "max_oracle_conf_bps", "docs": ["Max accepted oracle confidence interval, bps. 0 = source default."], "type": "u16"},
     {"name": "max_oracle_deviation_bps", "docs": ["Max swap-vs-oracle deviation, bps. 0 = guard disabled."], "type": "u16"},
-    {"name": "reserved", "docs": ["Forward-compat tail — carve new fields from here, never insert."], "type": {"array": ["u8", 128]}},
+    # ── Liquid Vaults (Phase B) — carved from reserved (128 → 117) ──
+    {"name": "liquid_mode", "docs": ["deposit auto-mints SPL shares at NAV when true."], "type": "bool"},
+    {"name": "withdrawal_reserve_bps", "docs": ["Target % of NAV kept liquid in SOL for instant redemptions."], "type": "u16"},
+    {"name": "next_redemption_id", "docs": ["Monotonic id for RedemptionRequest PDAs."], "type": "u64"},
+    {"name": "reserved", "docs": ["Forward-compat tail — carve new fields from here, never insert."], "type": {"array": ["u8", 117]}},
 ]
+_managed = {f["name"] for f in NEW_POT_FIELDS}
 for t in idl["types"]:
     if t["name"] == "PotAccount":
-        existing = {f["name"] for f in t["type"]["fields"]}
-        for f in NEW_POT_FIELDS:
-            if f["name"] not in existing:
-                t["type"]["fields"].append(f)
+        # Idempotent: drop any managed fields already present (so a changed
+        # size like reserved[128]→[117] is corrected on re-run), then append
+        # the managed set in canonical order after the base fields.
+        t["type"]["fields"] = [
+            f for f in t["type"]["fields"] if f["name"] not in _managed
+        ] + NEW_POT_FIELDS
     if t["name"] == "ProposalStatus":
         if not any(v["name"] == "Cancelled" for v in t["type"]["variants"]):
             t["type"]["variants"].append({"name": "Cancelled"})
@@ -247,6 +254,12 @@ TAIL_ERRORS = [
     ("OracleKindUnsupported", "Configured oracle source is not supported"),
     ("OracleAccountMissing", "Oracle price account required for this guarded action"),
     ("OracleGuardUnavailable", "Oracle deviation guard needs two-feed pricing (Phase B); not enableable yet"),
+    ("NotLiquidMode", "Pot is not in liquid (SPL share) mode"),
+    ("NavLegAccountInvalid", "A required token-leg account or its oracle feed is missing/mismatched"),
+    ("RedemptionNotQueued", "Redemption can be paid instantly — use redeem_tokens, not the queue"),
+    ("RedemptionNotPending", "Redemption request is not in a Pending state"),
+    ("RedemptionStillIlliquid", "Liquid vault still lacks the SOL to fulfil this redemption"),
+    ("InvalidReserveBps", "Withdrawal reserve bps must be <= 10000"),
 ]
 have = {e["name"] for e in idl["errors"]}
 next_code = max(e["code"] for e in idl["errors"]) + 1

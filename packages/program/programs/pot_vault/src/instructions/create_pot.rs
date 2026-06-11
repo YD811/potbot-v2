@@ -117,7 +117,13 @@ pub fn handler(ctx: Context<CreatePot>, params: CreatePotParams) -> Result<()> {
     pot.oracle_kind              = 0; // OracleKind::Pyth
     pot.max_oracle_conf_bps      = 0; // → pyth::DEFAULT_MAX_CONF_BPS
     pot.max_oracle_deviation_bps = 0; // guard disabled until configured
-    pot.reserved                 = [0u8; 128];
+
+    // Liquid Vaults (Phase B) — internal-shares (Seedling) default; opt into
+    // liquid mode after tokenizing via set_liquid_config.
+    pot.liquid_mode              = false;
+    pot.withdrawal_reserve_bps   = 0;
+    pot.next_redemption_id       = 0;
+    pot.reserved                 = [0u8; 117];
 
     pot.config = PotConfig {
         is_public: params.is_public,

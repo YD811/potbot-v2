@@ -56,6 +56,49 @@ pub fn deviation_bps(executed_x64: u128, oracle_mid_x64: u128) -> u16 {
     bps.min(u16::MAX as u128) as u16
 }
 
+/// Value a token leg in SOL lamports from two Pyth readings (the token's
+/// USD feed and the SOL/USD feed) plus the token's decimals. Pure integer
+/// math — no Q64 round-trip — so it is exact and unit-testable.
+///
+///   token_usd = t_mant · 10^t_expo ,  sol_usd = s_mant · 10^s_expo
+///   lamports  = token_amount · (token_usd / sol_usd) · 10^(9 − token_decimals)
+///             = token_amount · t_mant · 10^E / s_mant ,
+///   where E = t_expo − s_expo + 9 − token_decimals.
+///
+/// Returns None on non-positive prices or arithmetic overflow (caller treats
+/// None as "can't price → revert", fail-closed).
+pub fn leg_value_lamports(
+    token_amount: u64,
+    token_decimals: u8,
+    t_mant: i64,
+    t_expo: i32,
+    s_mant: i64,
+    s_expo: i32,
+) -> Option<u64> {
+    if t_mant <= 0 || s_mant <= 0 {
+        return None;
+    }
+    let amount = token_amount as u128;
+    let t = t_mant as u128;
+    let s = s_mant as u128;
+    let e: i32 = t_expo - s_expo + 9 - token_decimals as i32;
+
+    let mut num = amount.checked_mul(t)?;
+    let lamports = if e >= 0 {
+        let scale = 10u128.checked_pow(e as u32)?;
+        num = num.checked_mul(scale)?;
+        num.checked_div(s)?
+    } else {
+        let scale = 10u128.checked_pow((-e) as u32)?;
+        let denom = s.checked_mul(scale)?;
+        num.checked_div(denom)?
+    };
+    if lamports > u64::MAX as u128 {
+        return None;
+    }
+    Some(lamports as u64)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -88,5 +131,39 @@ mod tests {
     fn deviation_saturates_huge_gap() {
         // 10x the mid → 90_000 bps, clamped to u16::MAX.
         assert_eq!(deviation_bps(100_000, 10_000), u16::MAX);
+    }
+
+    // ─── leg valuation ───────────────────────────────────────────────────
+
+    #[test]
+    fn leg_usdc_at_one_dollar_sol_at_150() {
+        // 1 USDC (6 decimals) with SOL at $150 → 1/150 SOL = 6_666_666 lamports.
+        let v = leg_value_lamports(1_000_000, 6, 100_000_000, -8, 15_000_000_000, -8);
+        assert_eq!(v, Some(6_666_666));
+    }
+
+    #[test]
+    fn leg_same_price_same_decimals_is_one_to_one() {
+        // A 9-decimal token priced exactly like SOL: amount → equal lamports.
+        let v = leg_value_lamports(2_500_000_000, 9, 15_000_000_000, -8, 15_000_000_000, -8);
+        assert_eq!(v, Some(2_500_000_000));
+    }
+
+    #[test]
+    fn leg_scales_with_token_price() {
+        // Token at $300 (2× SOL's $150), 9 decimals: 1 token → 2 SOL.
+        let v = leg_value_lamports(1_000_000_000, 9, 30_000_000_000, -8, 15_000_000_000, -8);
+        assert_eq!(v, Some(2_000_000_000));
+    }
+
+    #[test]
+    fn leg_rejects_nonpositive_price() {
+        assert_eq!(leg_value_lamports(1, 6, 0, -8, 1, -8), None);
+        assert_eq!(leg_value_lamports(1, 6, 1, -8, -5, -8), None);
+    }
+
+    #[test]
+    fn leg_zero_amount_is_zero() {
+        assert_eq!(leg_value_lamports(0, 6, 100_000_000, -8, 15_000_000_000, -8), Some(0));
     }
 }

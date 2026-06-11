@@ -3678,6 +3678,36 @@
       "code": 6085,
       "name": "OracleGuardUnavailable",
       "msg": "Oracle deviation guard needs two-feed pricing (Phase B); not enableable yet"
+    },
+    {
+      "code": 6086,
+      "name": "NotLiquidMode",
+      "msg": "Pot is not in liquid (SPL share) mode"
+    },
+    {
+      "code": 6087,
+      "name": "NavLegAccountInvalid",
+      "msg": "A required token-leg account or its oracle feed is missing/mismatched"
+    },
+    {
+      "code": 6088,
+      "name": "RedemptionNotQueued",
+      "msg": "Redemption can be paid instantly \u2014 use redeem_tokens, not the queue"
+    },
+    {
+      "code": 6089,
+      "name": "RedemptionNotPending",
+      "msg": "Redemption request is not in a Pending state"
+    },
+    {
+      "code": 6090,
+      "name": "RedemptionStillIlliquid",
+      "msg": "Liquid vault still lacks the SOL to fulfil this redemption"
+    },
+    {
+      "code": 6091,
+      "name": "InvalidReserveBps",
+      "msg": "Withdrawal reserve bps must be <= 10000"
     }
   ],
   "types": [
@@ -4448,6 +4478,27 @@
             "type": "u16"
           },
           {
+            "name": "liquid_mode",
+            "docs": [
+              "deposit auto-mints SPL shares at NAV when true."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "withdrawal_reserve_bps",
+            "docs": [
+              "Target % of NAV kept liquid in SOL for instant redemptions."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "next_redemption_id",
+            "docs": [
+              "Monotonic id for RedemptionRequest PDAs."
+            ],
+            "type": "u64"
+          },
+          {
             "name": "reserved",
             "docs": [
               "Forward-compat tail \u2014 carve new fields from here, never insert."
@@ -4455,7 +4506,7 @@
             "type": {
               "array": [
                 "u8",
-                128
+                117
               ]
             }
           }

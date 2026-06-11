@@ -12,6 +12,7 @@ pub mod private_pot;
 // Strategy layer v2
 pub mod strategy;
 pub mod proposal_swap;
+pub mod redemption;
 
 pub use pot::*;
 pub use member::*;
@@ -24,3 +25,4 @@ pub use tamagotchi_nft::*;
 pub use private_pot::*;
 pub use strategy::*;
 pub use proposal_swap::*;
+pub use redemption::*;

@@ -132,11 +132,26 @@ pub struct PotAccount {
     /// mid, as bps. 0 = guard disabled (no oracle account required).
     pub max_oracle_deviation_bps: u16,
 
+    // ─── Liquid Vaults (Phase B) — carved from reserved, NO layout shift ──
+
+    /// When true, `deposit` mints SPL share-tokens to the depositor at NAV in
+    /// the same tx (frictionless join). False = legacy internal-shares path
+    /// (Seedling, saves SPL rent). Only meaningful once `token_mint` is set.
+    pub liquid_mode: bool,
+
+    /// Target fraction of NAV (bps) kept liquid in SOL for instant redemptions.
+    /// A redeem that would drop liquidity below this is queued instead of paid
+    /// instantly. 0 = no reserve target (instant whenever liquid SOL suffices).
+    pub withdrawal_reserve_bps: u16,
+
+    /// Monotonic id for RedemptionRequest PDAs under this pot.
+    pub next_redemption_id: u64,
+
     /// Forward-compatibility tail. New fields are carved from here so the
-    /// serialized layout never shifts and old accounts stay readable — this
-    /// is the LAST layout-breaking change before that guarantee holds.
+    /// serialized layout never shifts and old accounts stay readable.
     /// Reduce this array by exactly the InitSpace of any field you add.
-    pub reserved: [u8; 128],
+    /// Phase B consumed 11 bytes (bool 1 + u16 2 + u64 8): 128 → 117.
+    pub reserved: [u8; 117],
 }
 
 // ─── Config structs ───────────────────────────────────────────────────────

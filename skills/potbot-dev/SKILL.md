@@ -112,10 +112,11 @@ getProposalAddress(potPubkey, id)    // [b"proposal", potPubkey, id_bytes]
 ```bash
 # Web
 cd apps/web && npx next dev            # localhost:3000
-# Anchor
-cd packages/program && anchor build
+# Anchor (IDL gen is broken on rustc≥1.85 — see Build Logic below)
+cd packages/program && anchor build --no-idl
 anchor deploy --provider.cluster devnet
-anchor test
+anchor test --skip-build --provider.cluster localnet   # ts-mocha integration tests
+cargo test -p pot-vault --lib                           # pure-logic unit tests
 anchor keys list                        # show/verify program IDs
 solana airdrop 2 --url devnet
 # MCP
@@ -129,6 +130,34 @@ Full setup: `docs/operations/development.md`. Deploy: `docs/operations/deploy.md
 `apps/web` auto-detects deployment via `useIsProgramLive()` (hooks/usePots.ts):
 program account exists at PROGRAM_ID → on-chain; else mock (Zustand seed store).
 Enable on-chain: deploy program, set `NEXT_PUBLIC_RPC_URL` + `NEXT_PUBLIC_PROGRAM_ID` in `apps/web/.env.local`.
+
+## Build Logic (non-obvious, durable — read before touching the program)
+- **IDL gen is BROKEN on rustc ≥ 1.85.** anchor 0.30.1's `anchor-syn` calls
+  `proc_macro2::Span::source_file`, removed in recent proc-macro2/rustc. Never run a
+  bare `anchor build`. Workflow:
+  1. `anchor build --no-idl`
+  2. `python3 packages/program/scripts/patch_idl.py <sdk_idl> <sdk_idl>` — patches the IDL
+     and self-checks discriminators in place.
+  3. Copy the patched IDL to `packages/sdk/src/idl` **and** `apps/web/src/idl`.
+  Keep the `Cargo.lock` pins (`proc-macro2 1.0.86`, `borsh 1.5.7`, etc.) — bumping them
+  re-breaks the build.
+- **4KB BPF stack limit.** `PotAccount` is large; in instruction contexts it MUST be
+  `Box<Account<'info, PotAccount>>` or `try_accounts` blows the stack. Most contexts already
+  box it; `mint_tamagotchi_nft` is a known remaining offender (~4848 bytes).
+- **`reserved` tail is sacred.** New `PotAccount` fields are CARVED from `reserved`
+  (shrink the array, append the field just above it) — never inserted mid-struct. This keeps
+  the serialized layout stable so already-deployed accounts stay readable. Standing rule for
+  every account-shape change.
+- **Vault payouts must be seeds-signed `system_program::transfer`.** The vault PDA is
+  System-owned, so direct lamport debits are runtime-rejected. Sign with
+  `[b"vault", pot_key, &[vault_bump]]` (see `withdraw.rs`).
+- **Tests:** Anchor.toml runs `npx ts-mocha` (not yarn). Integration: `anchor build --no-idl`
+  then `anchor test --skip-build --provider.cluster localnet`. Pure logic gets cargo unit tests
+  (`cargo test -p pot-vault --lib`).
+- **Oracle:** Pyth decoding is devnet-legacy `PriceAccount` layout only. Mainnet needs the
+  Pyth receiver `PriceUpdateV2` decode — tracked Phase B follow-up. The swap deviation guard is
+  plumbed + unit-tested but gated off (`set_oracle_config` rejects `max_oracle_deviation_bps > 0`)
+  until two-feed pricing lands.
 
 ## Known Blockers / Gates (check before claiming "done")
 - 🔴 **Jupiter swap CPI** needs the executor wallet funded + program deployed (this is the mainnet gate).
@@ -148,9 +177,9 @@ Enable on-chain: deploy program, set `NEXT_PUBLIC_RPC_URL` + `NEXT_PUBLIC_PROGRA
 - Design tokens: bg `#0D1117`, card `#111827`, border `#1A2332`, green `#14F195`, accent `#9945FF`, muted `#6B7280`.
 
 ## When Adding Features
-1. Read the relevant `docs/architecture/*` first; mirror new program fields in `packages/sdk` + IDL.
+1. Read the relevant `docs/architecture/*` first; mirror new program fields in `packages/sdk` + IDL (regenerate via the `--no-idl` + `patch_idl.py` flow in Build Logic).
 2. Keep `pot_vault` minimal/auditable; new monetization (subscriptions, etc.) as separate modules.
-3. Backward-compatible account changes; document migration impact before mainnet.
+3. Account changes must carve from `PotAccount.reserved` (never shift layout); document migration impact before mainnet.
 4. Update mock store (`apps/web/src/lib/mock-store.ts`) so demo mode keeps working.
-5. Add/extend anchor tests; run `anchor build && anchor test` green before deploy.
+5. Add/extend tests; `anchor build --no-idl` then `anchor test --skip-build` (+ `cargo test -p pot-vault --lib`) green before deploy.
 ```

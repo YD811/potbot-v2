@@ -45,7 +45,7 @@ The vault is a Solana program account from day one — no custodian, no operator
 
 A POT is a program-controlled treasury on Solana. Members deposit SOL, USDC, LSTs, LP positions or any tokenized asset, and receive proportional shares (NAV-priced). Every change to the treasury — swap, withdrawal, settings update — is a proposal that members vote on. The vault PDA signs the execution.
 
-- **Programmable ownership** — SPL-tokenized shares, redeemable any time
+- **Programmable ownership** — NAV-priced shares, redeemable any time; deposit mints internal share accounting, with an explicit `tokenize_shares` step to migrate to an SPL mint (auto-mint at NAV is in progress, Phase B)
 - **Onchain governance** — five levels from Autocracy (L0) to Consensus (L4), plus optional risk caps (`max_swap_pct`, `max_budget_grant_pct`, `require_admin_cosign`, `timelock_seconds`) and one-click presets (😎 Chill · ⚖️ Balanced · 🏛 Institutional)
 - **Security layer** — optional sentinel/guardian wallet (can freeze a pot and cancel proposals, can never move funds), risk-param timelock (loosening changes wait, tightening is instant), per-protocol CPI allowlist, per-asset daily exposure caps. Member exits are never blockable — withdraw and share redemption stay open even while frozen
 - **AI orchestration** — the BOT proposes, executes once quorum is reached, and can be delegated to vote on rules you set
@@ -214,7 +214,7 @@ Set `NEXT_PUBLIC_PRIVY_APP_ID` to enable email / Google / Twitter / LinkedIn log
 
 | Layer | Status |
 |---|---|
-| `pot_vault` Anchor program (30+ instructions: deposit · propose · vote · execute_swap) | 🟡 Devnet live |
+| `pot_vault` Anchor program (39 instructions: deposit · propose · vote · execute_swap) | 🟡 Devnet live |
 | Sentinel/guardian role — `freeze_pot` / `cancel_proposal`; member exits never blocked | 🟡 Devnet (pending redeploy) |
 | Risk-param timelock — loosening staged, applied via permissionless `apply_pending_params` | 🟡 Devnet (pending redeploy) |
 | Per-protocol CPI allowlist (8 slots) + per-asset daily exposure caps | 🟡 Devnet (pending redeploy) |
@@ -236,7 +236,7 @@ Set `NEXT_PUBLIC_PRIVY_APP_ID` to enable email / Google / Twitter / LinkedIn log
 | Governance presets — 😎 Chill / ⚖️ Balanced / 🏛 Institutional | 🟢 Live |
 | Proposal card v2 (risk check · quorum bar · countdown) + trust surfaces (vault PDA + explorer, frozen/sentinel chips) | 🟢 Live |
 | `pot_duel` program — 1v1 vault challenges (unlocks at Bud stage) | 🟡 Devnet live |
-| Pyth in-program oracle guard (re-reads price feeds inside `execute_swap`) | 🔵 Phase 2 |
+| Pyth in-program oracle layer — confidence-filtered price reads (`read_price_checked`) + oracle-priced NAV groundwork (`set_oracle_config`, `nav_per_share`) | 🟡 Devnet (swap deviation guard plumbed but gated off pending Phase B two-feed pricing; mainnet needs Pyth receiver `PriceUpdateV2` decode — currently devnet-legacy layout) |
 | Meteora DLMM + Kamino yield strategies | 🔵 Phase 2 |
 | Light Protocol ZK-compressed audit log | 🔵 Phase 2 |
 | Tamagotchi NFT mint (Bloom unlock, Metaplex) | 🟣 Phase 3 |
