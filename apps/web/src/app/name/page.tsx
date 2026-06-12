@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import ClaimWidget from '@/components/sns/ClaimWidget'
 import MyNames from '@/components/sns/MyNames'
-import { PRICE_TIERS, DEFAULT_PRICING } from '@/lib/sns'
+import { PRICE_TIERS, DEFAULT_PRICING, SNS_PROMO_FLAT } from '@/lib/sns'
 
 export const metadata: Metadata = {
   title: 'Claim your .potbot.sol — PotBot',
@@ -14,7 +14,12 @@ export default function NamePage({ searchParams }: { searchParams?: { name?: str
   return (
     <main className="min-h-screen bg-pot-dark text-white" style={{ padding: '64px 20px 96px' }}>
       <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pot-border bg-pot-card text-pot-green text-xs" style={{ marginBottom: 20 }}>{'🌿'} Powered by Solana Name Service</div>
+        <div className="inline-flex items-center gap-2" style={{ marginBottom: 20 }}>
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pot-border bg-pot-card text-pot-green text-xs">{'🌿'} Powered by Solana Name Service</span>
+          {SNS_PROMO_FLAT && (
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-pot-green/40 bg-pot-green/10 text-pot-green text-xs font-bold">{'🔥'} PROMO</span>
+          )}
+        </div>
         <h1 className="text-4xl font-extrabold" style={{ lineHeight: 1.1, margin: '0 0 14px', letterSpacing: -0.5 }}>Claim your <span className="text-pot-green">.potbot.sol</span></h1>
         <p className="text-pot-muted" style={{ fontSize: 17, maxWidth: 520, margin: '0 auto 36px' }}>One human-readable name for the whole PotBot ecosystem. It resolves to your wallet today — and to your pots tomorrow.</p>
       </div>
@@ -41,6 +46,22 @@ function Feature({ title, body }: { title: string; body: string }) {
 }
 
 function PricingTable() {
+  // Launch promo: one flat price for every name. The length-based ladder is
+  // preserved behind the !SNS_PROMO_FLAT branch so flipping the flag restores it.
+  if (SNS_PROMO_FLAT) {
+    return (
+      <div style={{ maxWidth: 560, margin: '48px auto 0', width: '100%' }}>
+        <div className="text-pot-muted text-xs mb-2.5">Pricing</div>
+        <div className="bg-pot-card border border-pot-green/40 rounded-xl overflow-hidden">
+          <div className="flex justify-between px-4 py-3 text-sm">
+            <span>Any name</span>
+            <span className="text-pot-green font-semibold">{DEFAULT_PRICING.sol} SOL · {DEFAULT_PRICING.usdc} USDC</span>
+          </div>
+        </div>
+        <div className="text-pot-muted text-xs mt-2">Launch promo — flat price for every name, any length. Pay once, no renewals.</div>
+      </div>
+    )
+  }
   const rows = [
     { len: '1 char', p: PRICE_TIERS[1] }, { len: '2 chars', p: PRICE_TIERS[2] },
     { len: '3 chars', p: PRICE_TIERS[3] }, { len: '4 chars', p: PRICE_TIERS[4] },

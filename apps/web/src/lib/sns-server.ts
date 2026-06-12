@@ -8,12 +8,13 @@ import {
   createTransferCheckedInstruction, TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
 import {
-  getDomainKeySync, NameRegistryState, resolve, createSubdomain, findSubdomains,
+  getDomainKeySync, NameRegistryState, resolve, createSubdomain, transferSubdomain,
+  findSubdomains,
 } from '@bonfida/spl-name-service'
 import bs58 from 'bs58'
 
 import {
-  PARENT_LABEL, DEFAULT_PRICING, PRICE_TIERS, type PriceConfig, type Currency,
+  PARENT_LABEL, DEFAULT_PRICING, PRICE_TIERS, SNS_PROMO_FLAT, type PriceConfig, type Currency,
   type AvailabilityResult, type OwnedName, toFqdn, validateLabel, USDC_DECIMALS,
   LAMPORTS_PER_SOL_SNS,
 } from './sns'
@@ -64,6 +65,10 @@ export function getPricing(): PriceConfig {
 }
 
 export function priceForLabelServer(label: string): PriceConfig {
+  // Mirror the client promo: while SNS_PROMO_FLAT, every label is the standard
+  // env-overridable price (0.05 SOL / 5 USDC) regardless of length. Env
+  // overrides (POTBOT_SNS_PRICE_SOL / _USDC) still win via getPricing().
+  if (SNS_PROMO_FLAT) return getPricing()
   return PRICE_TIERS[label.length] ?? getPricing()
 }
 
@@ -117,8 +122,26 @@ export async function buildClaimTransaction({ label, buyer, currency }: BuildCla
     ))
   }
 
-  const subIxs = await createSubdomain(connection, `${label}.${PARENT_LABEL}`, buyer, undefined, buyer)
-  for (const ix of flattenInstructions(subIxs)) ixs.push(ix)
+  // Subdomain build (@bonfida/spl-name-service v3.0.21). VERIFIED against the
+  // installed package source:
+  //   createSubdomain(connection, subdomain, owner, space?, feePayer?) → TransactionInstruction[]
+  //     The new subdomain is created OWNED BY `owner` (3rd arg). The previous
+  //     code passed `buyer` here, which also made the reverse-name record use
+  //     the buyer as the (wrong) parent authority. Correct: create it owned by
+  //     the potbot.sol PARENT owner, with the buyer as fee payer (buyer pays
+  //     rent), then transfer it to the buyer in the same tx.
+  //   transferSubdomain(connection, subdomain, newOwner, isParentOwnerSigner?, owner?) → TransactionInstruction
+  //     We pass owner=parent owner (5th arg) explicitly: without it the SDK
+  //     retrieves the subdomain registry to find the current owner, which does
+  //     NOT exist yet inside this same (not-yet-sent) transaction and would
+  //     throw at build time. isParentOwnerSigner=true → the parent owner
+  //     authorizes; the buyer needs no registry signature, only fee payer.
+  const fqdn = `${label}.${PARENT_LABEL}`
+  const createRes = await createSubdomain(connection, fqdn, owner.publicKey, undefined, buyer)
+  for (const ix of flattenInstructions(createRes as any)) ixs.push(ix)
+
+  const transferIx = await transferSubdomain(connection, fqdn, buyer, true, owner.publicKey)
+  for (const ix of flattenInstructions([transferIx] as any)) ixs.push(ix)
 
   const tx = new Transaction()
   tx.feePayer = buyer
