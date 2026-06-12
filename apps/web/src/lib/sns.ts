@@ -346,6 +346,9 @@ export interface PriceConfig {
   usdc: number
 }
 
+// Launch promo: flat price for all label lengths. Set false to restore the length-based ladder.
+export const SNS_PROMO_FLAT = true
+
 export const PRICE_TIERS: Record<number, PriceConfig> = {
   1: { sol: 2, usdc: 200 },
   2: { sol: 1, usdc: 100 },
@@ -359,10 +362,14 @@ export function priceForLabel(
   label: string,
   standard: PriceConfig = DEFAULT_PRICING,
 ): PriceConfig {
+  // During the launch promo every name is the flat standard tier (0.05 SOL /
+  // 5 USDC), regardless of length. Flip SNS_PROMO_FLAT to restore the ladder.
+  if (SNS_PROMO_FLAT) return standard
   return PRICE_TIERS[label.length] ?? standard
 }
 
 export function tierName(label: string): string {
+  if (SNS_PROMO_FLAT) return 'promo'
   if (label.length <= 4) return `${label.length}-char premium`
   return 'standard'
 }
