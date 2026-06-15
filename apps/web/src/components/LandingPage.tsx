@@ -559,7 +559,7 @@ export default function LandingPage() {
                   <>
                     A program-controlled vault.
                     <br />
-                    Drop in SOL, USDC, LSTs, LP positions, memecoins, anything tokenized.
+                    Drop in SOL, receive index-token.
                     <br />
                     Members hold shares, the vault holds the assets.
                   </>
