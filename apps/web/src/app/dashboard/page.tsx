@@ -27,7 +27,7 @@ const QUEST_PLACEHOLDER = [
   {
     id: 'q2',
     icon: '👥',
-    title: 'Bring 3 Friends',
+    title: 'Invite 3 Members',
     desc: 'Refer 3 users who each deposit ≥ 0.1 SOL',
     points: 500,
     done: false,

@@ -124,7 +124,7 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         q: 'What are quests?',
-        a: 'Quests are time-limited tasks (often marketing-related — sharing about PotBot, bringing friends, exploring new features) that award bonus points. New quests rotate weekly.',
+        a: 'Quests are time-limited tasks (often marketing-related — sharing about PotBot, inviting members, exploring new features) that award bonus points. New quests rotate weekly.',
       },
     ],
   },
