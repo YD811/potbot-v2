@@ -82,7 +82,6 @@ const FOOTER_LINKS = [
   { label: 'FAQ',         href: '/faq' },
   { label: 'Roadmap',     href: '/roadmap' },
   { label: 'Leaderboard', href: '/leaderboard' },
-  { label: 'Hackathon',   href: '/hackathon' },
   { label: 'For Agents',  href: '/for-agents' },
   { label: 'GitHub',      href: 'https://github.com/YD811/potbot-v2', external: true },
   { label: 'Twitter',     href: 'https://x.com/PotBot_sol', external: true },
@@ -113,7 +112,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link href="/" className="flex items-center gap-2">
                   <span className="text-xl">🪴</span>
                   <span className="font-bold text-white">Pot<span className="text-pot-green">Bot</span></span>
-                  <span className="text-xs text-pot-muted">v2 · Solana Frontier 2026</span>
+                  <span className="text-xs text-pot-muted">v2</span>
                 </Link>
                 <nav className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-pot-muted justify-center">
                   {FOOTER_LINKS.map(({ label, href, external }) =>

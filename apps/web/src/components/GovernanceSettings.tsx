@@ -81,7 +81,7 @@ const GOV_PRESETS: GovPreset[] = [
     key: 'chill',
     icon: '😎',
     label: 'Chill',
-    desc: 'Friends & small groups — fast, high trust',
+    desc: 'Small groups — fast, high trust',
     // trade L1 Advisory · withdraw L2 Majority · quorum 30% · timelock 0 · max swap 50%
     values: { quorumPct: 30, approvalPct: 51, votingWindowHours: 24, maxSwapPct: 50, riskLevel: 'aggressive' },
   },

@@ -10,6 +10,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: 'https://potbot.fun/create', lastModified, changeFrequency: 'weekly', priority: 0.8 },
     { url: 'https://potbot.fun/for-agents', lastModified, changeFrequency: 'weekly', priority: 0.7 },
     { url: 'https://potbot.fun/signup', lastModified, changeFrequency: 'weekly', priority: 0.8 },
-    { url: 'https://potbot.fun/hackathon', lastModified, changeFrequency: 'monthly', priority: 0.6 },
   ]
 }

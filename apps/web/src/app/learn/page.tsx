@@ -13,7 +13,7 @@ const STEPS = [
   {
     emoji: '🫙',
     title: '1. Pool',
-    text: 'Friends (or strangers with a shared strategy) deposit SOL into a shared vault. Everyone gets shares matching what they put in.',
+    text: 'A group deposits SOL into a shared vault. Everyone gets shares matching what they put in.',
   },
   {
     emoji: '🗳️',
@@ -66,7 +66,7 @@ const GOVERNANCE_LEVELS = [
     level: 'L1',
     name: 'Advisory',
     who: 'Creator decides, but members holding 25%+ can veto',
-    fit: 'Friends who trust one trader',
+    fit: 'Small groups who trust one trader',
   },
   {
     level: 'L2',
