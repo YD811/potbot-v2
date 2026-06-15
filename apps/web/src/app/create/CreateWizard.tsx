@@ -700,10 +700,10 @@ export default function CreateWizard() {
           </div>
 
           <div className="rounded-2xl border border-pot-border bg-pot-card/70 p-4 text-xs text-pot-muted">
-            <div className="font-bold text-white mb-2">Recommended for Frontier</div>
+            <div className="font-bold text-white mb-2">Recommended setup</div>
             <p className="leading-relaxed">
               Use Public, the ⚖️ Balanced Autopilot, no lockup, and a small minimum deposit.
-              This gives judges the shortest path to deposit, vote, and verify execution.
+              This is the shortest path to deposit, vote, and verify execution.
             </p>
           </div>
         </aside>

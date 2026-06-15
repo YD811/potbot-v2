@@ -184,7 +184,7 @@ export function renderEmail(input: EmailTemplateInput): string {
 
           <!-- Footer -->
           <div style="max-width:600px;margin:16px auto 0;text-align:center;color:${C.muted};font-size:12px;line-height:1.5;">
-            <div>Built for Solana Frontier 2026 · Group DeFi Vaults</div>
+            <div>PotBot · Group DeFi Vaults on Solana</div>
             ${footerLinks}
           </div>
 

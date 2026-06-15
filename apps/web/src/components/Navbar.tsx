@@ -72,7 +72,6 @@ function LivePriceTicker() {
 const NAV_LINKS: { href: string; emoji: string; term: string }[] = [
   { href: '/learn',       emoji: '📖',   term: 'Learn' },
   { href: '/pricing',     emoji: '💎',   term: 'Pricing' },
-  { href: '/hackathon',   emoji: '⚒️',   term: 'Hackathon' },
   { href: '/create',      emoji: '+',    term: 'Create' },
   { href: '/name',        emoji: '🌿',   term: 'Get a name' },
 ]

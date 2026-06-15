@@ -30,7 +30,7 @@ const FEATURES_CRYPTO: FeatureCard[] = [
   {
     icon: '🤖',
     title: 'AI Execution (BOT)',
-    status: 'Focus for Frontier',
+    status: 'In progress',
     desc: 'Set IF/THEN rules — "if SOL drops 5%, buy 10%." The MCP-native agent creates proposals and executes after votes pass. Any LLM can drive it.',
   },
   {
@@ -497,10 +497,10 @@ export default function LandingPage() {
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto">
-          {/* Frontier badge */}
+          {/* Status badge */}
           <div className="inline-flex items-center gap-2 bg-pot-card/60 backdrop-blur border border-pot-border rounded-full px-4 py-1.5 text-[11px] font-medium text-pot-muted mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-pot-green animate-pulse inline-block" />
-            Built for Solana Frontier 2026 · Open source
+            Live on Solana devnet · Open source
           </div>
 
           <div className="text-7xl mb-6 animate-float" aria-hidden="true">🪴</div>

@@ -59,7 +59,7 @@ export default async function OgImage() {
             fontWeight: 600,
           }}
         >
-          🌱 Season 1: The Garden · Solana Frontier 2026
+          🌱 Season 1: The Garden
         </div>
 
         {/* Logo + name */}

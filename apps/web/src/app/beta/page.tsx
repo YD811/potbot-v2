@@ -130,8 +130,7 @@ export default function BetaPage() {
 
       {/* Footer */}
       <div className="border-t border-pot-border py-8 px-4 text-center text-pot-muted text-sm">
-        <p>🏆 Solana Frontier 2026 Hackathon Project</p>
-        <p className="mt-2">Test drive the future of group trading on Solana</p>
+        <p>Test drive the future of group trading on Solana</p>
       </div>
     </div>
   )
