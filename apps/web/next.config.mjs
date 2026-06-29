@@ -5,6 +5,21 @@ const require = createRequire(import.meta.url)
 const config = {
   eslint: { ignoreDuringBuilds: true },
   experimental: { externalDir: true },
+  // Serve the documentation at the docs.potbot.fun subdomain.
+  // Requires the domain to be attached to this project in Vercel + a DNS
+  // CNAME (docs → cname.vercel-dns.com). Once that resolves, the subdomain
+  // root renders the /docs page; all asset paths (/_next/*) pass through.
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'docs.potbot.fun' }],
+          destination: '/docs',
+        },
+      ],
+    }
+  },
   transpilePackages: [
     '@solana/wallet-adapter-react-ui',
     '@solana/wallet-adapter-react',
