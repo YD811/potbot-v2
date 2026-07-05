@@ -39,6 +39,7 @@ import { isLikelyBase58Pubkey, tryPublicKey } from '@/lib/solana-validation'
 // disclosure. Defer their JS + initial fetches until the user actually
 // switches to that view — saves several hundred ms on first render of
 // the Trade tab and trims first-load JS for the page.
+const IndexVaultPanel   = dynamic(() => import('@/components/IndexVaultPanel'))
 const PnLDashboard      = dynamic(() => import('@/components/PnLDashboard').then(m => m.PnLDashboard))
 const VaultPortfolio    = dynamic(() => import('@/components/VaultPortfolio'))
 const VaultPortfolioDisplay = dynamic(() => import('@/components/VaultPortfolioDisplay'))
@@ -583,6 +584,8 @@ export default function PotPage() {
                 title="Connect your wallet to deposit"
                 subtitle="Deposit SOL and receive vault shares. Withdraw anytime per this vault’s policy."
               >
+                {/* Index layer (iPOT) — renders only when the pot has a StrategyConfig */}
+                <IndexVaultPanel potAddress={pubkey} />
                 <DepositPanel potPubkey={pubkey} potName={pot.name} vaultBalance={(pot.balance ?? 0) + (potAny.meteoraLpBalance ?? 0)} />
               </WalletGate>
             </section>
