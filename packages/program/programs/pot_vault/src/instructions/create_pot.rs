@@ -117,7 +117,12 @@ pub fn handler(ctx: Context<CreatePot>, params: CreatePotParams) -> Result<()> {
     pot.oracle_kind              = 0; // OracleKind::Pyth
     pot.max_oracle_conf_bps      = 0; // → pyth::DEFAULT_MAX_CONF_BPS
     pot.max_oracle_deviation_bps = 0; // guard disabled until configured
-    pot.reserved                 = [0u8; 128];
+
+    // Index vault layer — dormant until init_strategy_config.
+    pot.index_mint               = Pubkey::default();
+    pot.is_flagship              = false;
+    pot.nav_snapshot             = None;
+    pot.reserved                 = [0u8; 70];
 
     pot.config = PotConfig {
         is_public: params.is_public,

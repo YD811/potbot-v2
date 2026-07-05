@@ -522,7 +522,7 @@
           "name": "strategy_config",
           "type": {
             "defined": {
-              "name": "StrategyConfig"
+              "name": "LegacyStrategyConfig"
             }
           }
         }
@@ -690,6 +690,11 @@
           "signer": true
         },
         {
+          "name": "recipient",
+          "writable": true,
+          "optional": true
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -717,7 +722,7 @@
           "name": "pot",
           "docs": [
             "Parent pot. Authority / agent_authority are validated dynamically",
-            "inside `authorize_mode` — we can't bind via `has_one` here because",
+            "inside `authorize_mode` \u2014 we can't bind via `has_one` here because",
             "the required signer varies by mode."
           ],
           "writable": true,
@@ -840,9 +845,9 @@
           "name": "authority",
           "docs": [
             "Signer interpretation:",
-            "AdminDirect      → must equal pot.authority",
-            "Proposal         → must equal pot.authority (Phase 2: or Member NFT)",
-            "StrategyTrigger  → must equal pot.agent_authority"
+            "AdminDirect      \u2192 must equal pot.authority",
+            "Proposal         \u2192 must equal pot.authority (Phase 2: or Member NFT)",
+            "StrategyTrigger  \u2192 must equal pot.agent_authority"
           ],
           "writable": true,
           "signer": true
@@ -1596,7 +1601,7 @@
     {
       "name": "pause_pot",
       "docs": [
-        "Emergency pause — blocks all execute_swap calls on this pot."
+        "Emergency pause \u2014 blocks all execute_swap calls on this pot."
       ],
       "discriminator": [
         240,
@@ -1625,7 +1630,7 @@
       "docs": [
         "Register (or re-register) a delegate wallet that may sign votes for this",
         "member. `rules_uri` is an off-chain URI describing the delegate's",
-        "voting policy — purely for transparency, not enforced on-chain."
+        "voting policy \u2014 purely for transparency, not enforced on-chain."
       ],
       "discriminator": [
         218,
@@ -2234,7 +2239,7 @@
         {
           "name": "voter_record",
           "docs": [
-            "VoterRecord PDA — `init` (NOT init_if_needed) means tx fails if already exists.",
+            "VoterRecord PDA \u2014 `init` (NOT init_if_needed) means tx fails if already exists.",
             "This is the on-chain double-vote prevention mechanism."
           ],
           "writable": true,
@@ -2369,8 +2374,8 @@
         {
           "name": "voter_record",
           "docs": [
-            "VoterRecord PDA — keyed by member.wallet (NOT delegate_signer.key).",
-            "`init` (not `init_if_needed`) → fails if the member or any prior",
+            "VoterRecord PDA \u2014 keyed by member.wallet (NOT delegate_signer.key).",
+            "`init` (not `init_if_needed`) \u2192 fails if the member or any prior",
             "delegate already voted on this proposal. Same double-vote prevention",
             "as the original `vote` instruction."
           ],
@@ -2497,6 +2502,1260 @@
           "name": "shares",
           "type": "u64"
         }
+      ]
+    },
+    {
+      "name": "set_sentinel",
+      "discriminator": [
+        94,
+        200,
+        82,
+        129,
+        53,
+        149,
+        232,
+        113
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_sentinel",
+          "type": {
+            "option": "pubkey"
+          }
+        }
+      ],
+      "docs": [
+        "Assign or clear the sentinel/guardian wallet. The sentinel can freeze the pot and cancel proposals but can NEVER move funds."
+      ]
+    },
+    {
+      "name": "freeze_pot",
+      "discriminator": [
+        214,
+        106,
+        66,
+        139,
+        63,
+        30,
+        222,
+        108
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "signer",
+          "signer": true
+        }
+      ],
+      "args": [],
+      "docs": [
+        "Freeze the pot (sentinel or authority). Blocks deposits, proposal execution, swaps and strategy creation. Member withdrawals stay open."
+      ]
+    },
+    {
+      "name": "unfreeze_pot",
+      "discriminator": [
+        56,
+        13,
+        215,
+        37,
+        23,
+        228,
+        254,
+        118
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "signer",
+          "signer": true
+        }
+      ],
+      "args": [],
+      "docs": [
+        "Unfreeze the pot \u2014 authority only."
+      ]
+    },
+    {
+      "name": "cancel_proposal",
+      "discriminator": [
+        106,
+        74,
+        128,
+        146,
+        19,
+        65,
+        39,
+        23
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "proposal",
+          "writable": true
+        },
+        {
+          "name": "signer",
+          "signer": true
+        }
+      ],
+      "args": [],
+      "docs": [
+        "Cancel an Active or Passed proposal (sentinel, authority or proposer)."
+      ]
+    },
+    {
+      "name": "set_allowed_programs",
+      "discriminator": [
+        242,
+        240,
+        178,
+        3,
+        188,
+        33,
+        161,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "SetAllowedProgramsArgs"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Set the program-id allowlist for external CPI targets."
+      ]
+    },
+    {
+      "name": "set_risk_timelock",
+      "discriminator": [
+        57,
+        91,
+        75,
+        195,
+        185,
+        80,
+        142,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "SetRiskTimelockArgs"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Configure the risk-param timelock and per-asset exposure cap."
+      ]
+    },
+    {
+      "name": "apply_pending_params",
+      "discriminator": [
+        11,
+        15,
+        47,
+        58,
+        28,
+        220,
+        231,
+        123
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "cranker",
+          "signer": true
+        }
+      ],
+      "args": [],
+      "docs": [
+        "Permissionless crank: apply a staged risky-param change once its timelock has elapsed."
+      ]
+    },
+    {
+      "name": "fund_fee_reserve",
+      "discriminator": [
+        218,
+        216,
+        202,
+        40,
+        206,
+        195,
+        149,
+        71
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "FundFeeReserveArgs"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Fund the pot's keeper-gas reserve."
+      ]
+    },
+    {
+      "name": "redeem_tokens",
+      "discriminator": [
+        246,
+        98,
+        134,
+        41,
+        152,
+        33,
+        120,
+        69
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "member",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_mint",
+          "writable": true
+        },
+        {
+          "name": "member_token_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "token_amount",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Burn SPL share-tokens and receive SOL from the vault at NAV."
+      ]
+    },
+    {
+      "name": "route_to_yield",
+      "discriminator": [
+        82,
+        31,
+        61,
+        118,
+        105,
+        209,
+        221,
+        31
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "RouteToYieldArgs"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Route idle vault SOL to a yield protocol (Phase 4 stub)."
+      ]
+    },
+    {
+      "name": "set_oracle_config",
+      "discriminator": [
+        96,
+        171,
+        6,
+        98,
+        153,
+        183,
+        233,
+        31
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "SetOracleConfigArgs"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Configure the pot's oracle source, confidence bound, and swap deviation guard."
+      ]
+    },
+    {
+      "name": "init_allowlist",
+      "discriminator": [
+        186,
+        165,
+        190,
+        208,
+        55,
+        86,
+        208,
+        6
+      ],
+      "accounts": [
+        {
+          "name": "allowlist",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "tokens",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "AllowedToken"
+              }
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Bootstrap the global mint allowlist (protocol authority = signer)."
+      ]
+    },
+    {
+      "name": "set_allowlist",
+      "discriminator": [
+        141,
+        30,
+        41,
+        131,
+        132,
+        7,
+        216,
+        134
+      ],
+      "accounts": [
+        {
+          "name": "allowlist",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "tokens",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "AllowedToken"
+              }
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Replace the global mint allowlist (authority only)."
+      ]
+    },
+    {
+      "name": "init_index_mint",
+      "discriminator": [
+        211,
+        164,
+        147,
+        32,
+        184,
+        174,
+        213,
+        53
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "index_mint",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [],
+      "docs": [
+        "Index bootstrap step 1: create the iPOT mint (authority = vault PDA)."
+      ]
+    },
+    {
+      "name": "init_strategy_config",
+      "discriminator": [
+        8,
+        72,
+        3,
+        242,
+        211,
+        140,
+        61,
+        69
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "index_mint"
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "allowlist"
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitStrategyConfigArgs"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Index bootstrap step 2: StrategyConfig (weights, caps, keeper). Vault ATAs are created client-side."
+      ]
+    },
+    {
+      "name": "update_strategy_config",
+      "discriminator": [
+        81,
+        217,
+        177,
+        65,
+        40,
+        227,
+        8,
+        165
+      ],
+      "accounts": [
+        {
+          "name": "pot"
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "allowlist"
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "UpdateStrategyConfigArgs"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Tune launch guards / weights / keeper (pot authority only)."
+      ]
+    },
+    {
+      "name": "set_strategy_paused",
+      "discriminator": [
+        174,
+        71,
+        247,
+        168,
+        24,
+        203,
+        33,
+        63
+      ],
+      "accounts": [
+        {
+          "name": "pot"
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "signer",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "paused",
+          "type": "bool"
+        }
+      ],
+      "docs": [
+        "Pause (authority or sentinel) / unpause (authority) deposits+deploys."
+      ]
+    },
+    {
+      "name": "update_nav_snapshot",
+      "discriminator": [
+        225,
+        209,
+        235,
+        132,
+        94,
+        34,
+        177,
+        13
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "keeper",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "value_base",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Keeper NAV crank, guarded by monotonic slot + deviation cap."
+      ]
+    },
+    {
+      "name": "deposit_base",
+      "discriminator": [
+        213,
+        125,
+        25,
+        122,
+        8,
+        72,
+        100,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "vault_base_ata",
+          "writable": true
+        },
+        {
+          "name": "index_mint",
+          "writable": true
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "depositor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "depositor_base_ata",
+          "writable": true
+        },
+        {
+          "name": "depositor_index_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount_base",
+          "type": "u64"
+        },
+        {
+          "name": "min_shares_out",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Deposit base (USDC) \u2192 mint iPOT index tokens at NAV."
+      ]
+    },
+    {
+      "name": "redeem_instant",
+      "discriminator": [
+        126,
+        63,
+        6,
+        139,
+        213,
+        60,
+        16,
+        157
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "vault_base_ata",
+          "writable": true
+        },
+        {
+          "name": "index_mint",
+          "writable": true
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "member",
+          "signer": true
+        },
+        {
+          "name": "member_index_ata",
+          "writable": true
+        },
+        {
+          "name": "member_base_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "index_amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_out_base",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Burn iPOT at NAV, paid instantly from the idle buffer."
+      ]
+    },
+    {
+      "name": "request_redeem",
+      "discriminator": [
+        105,
+        49,
+        44,
+        38,
+        207,
+        241,
+        33,
+        173
+      ],
+      "accounts": [
+        {
+          "name": "pot"
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "vault_index_ata",
+          "writable": true
+        },
+        {
+          "name": "index_mint"
+        },
+        {
+          "name": "request",
+          "writable": true
+        },
+        {
+          "name": "member",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "member_index_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index_amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_out_base",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Queue a redemption (escrows iPOT now, prices at settlement NAV)."
+      ]
+    },
+    {
+      "name": "settle_redeem",
+      "discriminator": [
+        249,
+        101,
+        149,
+        103,
+        27,
+        38,
+        182,
+        198
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "vault_base_ata",
+          "writable": true
+        },
+        {
+          "name": "vault_index_ata",
+          "writable": true
+        },
+        {
+          "name": "index_mint",
+          "writable": true
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "request",
+          "writable": true
+        },
+        {
+          "name": "member",
+          "writable": true
+        },
+        {
+          "name": "member_base_ata",
+          "writable": true
+        },
+        {
+          "name": "cranker",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [],
+      "docs": [
+        "Settle a queued redemption (permissionless crank)."
+      ]
+    },
+    {
+      "name": "cancel_redeem",
+      "discriminator": [
+        111,
+        76,
+        232,
+        50,
+        39,
+        175,
+        48,
+        242
+      ],
+      "accounts": [
+        {
+          "name": "pot"
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "vault_index_ata",
+          "writable": true
+        },
+        {
+          "name": "request",
+          "writable": true
+        },
+        {
+          "name": "member",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "member_index_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [],
+      "docs": [
+        "Cancel own queued redemption; escrowed iPOT returns."
+      ]
+    },
+    {
+      "name": "init_position",
+      "discriminator": [
+        197,
+        20,
+        10,
+        1,
+        97,
+        160,
+        177,
+        91
+      ],
+      "accounts": [
+        {
+          "name": "pot"
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "leg_mint"
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "RouteKind"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Per-leg bootstrap step 1: position record (keeper or authority)."
+      ]
+    },
+    {
+      "name": "init_position_vault",
+      "discriminator": [
+        46,
+        185,
+        224,
+        118,
+        51,
+        27,
+        10,
+        101
+      ],
+      "accounts": [
+        {
+          "name": "pot"
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "leg_mint"
+        },
+        {
+          "name": "position_vault",
+          "writable": true
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "RouteKind"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Per-leg bootstrap step 2: escrow token account."
+      ]
+    },
+    {
+      "name": "deploy_to_strategy",
+      "discriminator": [
+        215,
+        49,
+        61,
+        222,
+        180,
+        60,
+        9,
+        118
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "allowlist"
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "vault_base_ata",
+          "writable": true
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "leg_mint"
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "position_vault",
+          "writable": true
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "RouteKind"
+            }
+          }
+        },
+        {
+          "name": "amount_base",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Keeper: move idle base into a configured index leg (idle buffer preserved)."
+      ]
+    },
+    {
+      "name": "withdraw_from_strategy",
+      "discriminator": [
+        140,
+        239,
+        65,
+        54,
+        125,
+        128,
+        223,
+        125
+      ],
+      "accounts": [
+        {
+          "name": "pot"
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "vault_base_ata",
+          "writable": true
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "leg_mint"
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "position_vault",
+          "writable": true
+        },
+        {
+          "name": "keeper",
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "RouteKind"
+            }
+          }
+        },
+        {
+          "name": "amount_base",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Keeper: unwind a leg back into the idle buffer (allowed even while paused)."
       ]
     }
   ],
@@ -2630,6 +3889,58 @@
         115,
         33
       ]
+    },
+    {
+      "name": "StrategyConfig",
+      "discriminator": [
+        103,
+        12,
+        123,
+        61,
+        47,
+        87,
+        129,
+        57
+      ]
+    },
+    {
+      "name": "TokenAllowlist",
+      "discriminator": [
+        153,
+        168,
+        129,
+        66,
+        180,
+        22,
+        0,
+        239
+      ]
+    },
+    {
+      "name": "StrategyPosition",
+      "discriminator": [
+        39,
+        177,
+        202,
+        35,
+        88,
+        177,
+        104,
+        129
+      ]
+    },
+    {
+      "name": "RedeemRequest",
+      "discriminator": [
+        103,
+        82,
+        139,
+        51,
+        199,
+        234,
+        111,
+        115
+      ]
     }
   ],
   "events": [
@@ -2762,6 +4073,97 @@
         85,
         49
       ]
+    },
+    {
+      "name": "SentinelUpdated",
+      "discriminator": [
+        47,
+        118,
+        194,
+        209,
+        176,
+        50,
+        176,
+        137
+      ]
+    },
+    {
+      "name": "PotFrozenEvent",
+      "discriminator": [
+        228,
+        183,
+        174,
+        100,
+        119,
+        9,
+        61,
+        57
+      ]
+    },
+    {
+      "name": "ProposalCancelled",
+      "discriminator": [
+        253,
+        59,
+        104,
+        46,
+        129,
+        78,
+        9,
+        14
+      ]
+    },
+    {
+      "name": "AllowedProgramsUpdated",
+      "discriminator": [
+        114,
+        253,
+        112,
+        200,
+        132,
+        74,
+        185,
+        113
+      ]
+    },
+    {
+      "name": "PendingParamsApplied",
+      "discriminator": [
+        197,
+        32,
+        230,
+        125,
+        18,
+        42,
+        85,
+        234
+      ]
+    },
+    {
+      "name": "YieldRouted",
+      "discriminator": [
+        10,
+        238,
+        211,
+        233,
+        196,
+        63,
+        203,
+        70
+      ]
+    },
+    {
+      "name": "OracleConfigUpdated",
+      "discriminator": [
+        130,
+        6,
+        5,
+        137,
+        29,
+        155,
+        34,
+        68
+      ]
     }
   ],
   "errors": [
@@ -2883,7 +4285,7 @@
     {
       "code": 6023,
       "name": "TimelockNotExpired",
-      "msg": "Timelock period has not elapsed — wait before executing this proposal"
+      "msg": "Timelock period has not elapsed \u2014 wait before executing this proposal"
     },
     {
       "code": 6024,
@@ -2963,7 +4365,7 @@
     {
       "code": 6039,
       "name": "ProposalMismatch",
-      "msg": "Proposal mismatch — proposal_id or pot does not match attached spec"
+      "msg": "Proposal mismatch \u2014 proposal_id or pot does not match attached spec"
     },
     {
       "code": 6040,
@@ -3079,6 +4481,191 @@
       "code": 6062,
       "name": "MathOverflow",
       "msg": "Arithmetic overflow during fixed-point math"
+    },
+    {
+      "code": 6063,
+      "name": "InvalidBurnAmount",
+      "msg": "Burn amount must be > 0"
+    },
+    {
+      "code": 6064,
+      "name": "InsufficientReserve",
+      "msg": "Redemption would violate 20% reserve guard"
+    },
+    {
+      "code": 6065,
+      "name": "RedemptionPausedWhilePotPaused",
+      "msg": "Cannot redeem while pot is paused"
+    },
+    {
+      "code": 6066,
+      "name": "RedemptionInsufficientVault",
+      "msg": "Insufficient vault balance for redemption"
+    },
+    {
+      "code": 6067,
+      "name": "YieldTargetNoneNotRoutable",
+      "msg": "YieldTarget None is not routable"
+    },
+    {
+      "code": 6068,
+      "name": "WithdrawalReserveBreached",
+      "msg": "Redemption exceeds 80% vault liquidity reserve"
+    },
+    {
+      "code": 6069,
+      "name": "PotPaused",
+      "msg": "Pot is paused -- redemptions blocked"
+    },
+    {
+      "code": 6070,
+      "name": "InvalidAmount",
+      "msg": "Amount must be greater than zero"
+    },
+    {
+      "code": 6071,
+      "name": "NotSentinelOrAuthority",
+      "msg": "Signer is neither the pot authority nor the sentinel"
+    },
+    {
+      "code": 6072,
+      "name": "PotFrozen",
+      "msg": "Pot is frozen \u2014 this action is blocked until unfreeze"
+    },
+    {
+      "code": 6073,
+      "name": "SentinelCannotUnfreeze",
+      "msg": "Only the pot authority can unfreeze the pot"
+    },
+    {
+      "code": 6074,
+      "name": "ProposalNotCancellable",
+      "msg": "Proposal is not in a cancellable state"
+    },
+    {
+      "code": 6075,
+      "name": "RecipientMismatch",
+      "msg": "Recipient account does not match the proposal beneficiary"
+    },
+    {
+      "code": 6076,
+      "name": "RecipientMissing",
+      "msg": "Recipient account is required for this proposal type"
+    },
+    {
+      "code": 6077,
+      "name": "PendingChangeNotReady",
+      "msg": "Pending parameter change has not reached effective_at yet"
+    },
+    {
+      "code": 6078,
+      "name": "NoPendingChange",
+      "msg": "No pending parameter change staged for this pot"
+    },
+    {
+      "code": 6079,
+      "name": "ProgramNotAllowed",
+      "msg": "Program is not in the pot's protocol allowlist"
+    },
+    {
+      "code": 6080,
+      "name": "AssetExposureExceeded",
+      "msg": "Daily exposure cap for this asset exceeded"
+    },
+    {
+      "code": 6081,
+      "name": "OracleConfidenceTooLow",
+      "msg": "Oracle confidence interval wider than the configured bound"
+    },
+    {
+      "code": 6082,
+      "name": "OracleDeviationExceeded",
+      "msg": "Realised swap price deviates from the oracle mid beyond the cap"
+    },
+    {
+      "code": 6083,
+      "name": "OracleKindUnsupported",
+      "msg": "Configured oracle source is not supported"
+    },
+    {
+      "code": 6084,
+      "name": "OracleAccountMissing",
+      "msg": "Oracle price account required for this guarded action"
+    },
+    {
+      "code": 6085,
+      "name": "OracleGuardUnavailable",
+      "msg": "Oracle deviation guard needs two-feed pricing (Phase B); not enableable yet"
+    },
+    {
+      "code": 6086,
+      "name": "StrategyPaused",
+      "msg": "Strategy is paused \u2014 deposits and deploys are blocked"
+    },
+    {
+      "code": 6087,
+      "name": "WeightsMustSumTo100",
+      "msg": "Active index weights must sum to exactly 10000 bps"
+    },
+    {
+      "code": 6088,
+      "name": "TooManyTokens",
+      "msg": "Index composition exceeds the 10-token limit"
+    },
+    {
+      "code": 6089,
+      "name": "NavSnapshotStale",
+      "msg": "NAV snapshot is older than the configured staleness bound"
+    },
+    {
+      "code": 6090,
+      "name": "NavDeviationTooHigh",
+      "msg": "NAV moved more than the configured deviation cap since last snapshot"
+    },
+    {
+      "code": 6091,
+      "name": "DepositBelowMin",
+      "msg": "Deposit is below the configured minimum"
+    },
+    {
+      "code": 6092,
+      "name": "DepositAboveCap",
+      "msg": "Deposit is above the configured per-deposit cap"
+    },
+    {
+      "code": 6093,
+      "name": "TvlCapExceeded",
+      "msg": "Deposit would push NAV above the TVL cap"
+    },
+    {
+      "code": 6094,
+      "name": "InsufficientIdleBuffer",
+      "msg": "Deploy would breach the idle redemption buffer"
+    },
+    {
+      "code": 6095,
+      "name": "UnauthorizedKeeper",
+      "msg": "Signer is not the allowlisted keeper for this pot"
+    },
+    {
+      "code": 6096,
+      "name": "RouteNotConfigured",
+      "msg": "No route configured for this mint in the index weights"
+    },
+    {
+      "code": 6097,
+      "name": "IndexNotInitialized",
+      "msg": "Index layer is not initialized for this pot"
+    },
+    {
+      "code": 6098,
+      "name": "RedeemNotPending",
+      "msg": "Redeem request is not in a settleable state"
+    },
+    {
+      "code": 6099,
+      "name": "RedeemBelowMinOut",
+      "msg": "Settlement payout is below the requester's min_out floor"
     }
   ],
   "types": [
@@ -3289,7 +4876,7 @@
           {
             "name": "min_out",
             "docs": [
-              "Minimum acceptable output — hard floor enforced on-chain."
+              "Minimum acceptable output \u2014 hard floor enforced on-chain."
             ],
             "type": "u64"
           },
@@ -3303,7 +4890,7 @@
           {
             "name": "is_entry",
             "docs": [
-              "Entry (Pending→Active) or exit (Active/Parked→Closed)."
+              "Entry (Pending\u2192Active) or exit (Active/Parked\u2192Closed)."
             ],
             "type": "bool"
           },
@@ -3479,7 +5066,7 @@
             "name": "rules_uri",
             "docs": [
               "IPFS / Arweave / https URI describing the agent's voting policy.",
-              "On-chain program does NOT enforce this — it's a transparency artefact",
+              "On-chain program does NOT enforce this \u2014 it's a transparency artefact",
               "that lets other members audit the AI's behaviour and revoke if needed."
             ],
             "type": "string"
@@ -3696,7 +5283,7 @@
             "name": "agent_authority",
             "docs": [
               "Keeper agent authority for StrategyTrigger mode.",
-              "This is the keeper's hot wallet pubkey — separate from agent_pubkey.",
+              "This is the keeper's hot wallet pubkey \u2014 separate from agent_pubkey.",
               "Set via set_allowed_mints."
             ],
             "type": "pubkey"
@@ -3764,6 +5351,125 @@
               "Keeper gas reserve (lamports). Keeper draws from this for trigger gas."
             ],
             "type": "u64"
+          },
+          {
+            "name": "sentinel",
+            "docs": [
+              "Optional sentinel/guardian wallet. Can freeze the pot and cancel proposals; has NO instruction that can move funds."
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "risk_param_timelock_secs",
+            "docs": [
+              "Timelock (seconds) applied when a risky governance parameter is LOOSENED. 0 = disabled."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "pending_params",
+            "docs": [
+              "Staged loosening change awaiting its timelock."
+            ],
+            "type": {
+              "defined": {
+                "name": "PendingRiskParams"
+              }
+            }
+          },
+          {
+            "name": "allowed_programs",
+            "docs": [
+              "Program-id allowlist for external CPI targets. count == 0 = open mode."
+            ],
+            "type": {
+              "array": [
+                "pubkey",
+                8
+              ]
+            }
+          },
+          {
+            "name": "allowed_programs_count",
+            "type": "u8"
+          },
+          {
+            "name": "max_asset_exposure_bps",
+            "docs": [
+              "Max cumulative daily spend toward one output mint, bps of vault. 0 = unlimited."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "per_mint_daily_spent",
+            "docs": [
+              "Daily spend per allowed_mints slot."
+            ],
+            "type": {
+              "array": [
+                "u64",
+                16
+              ]
+            }
+          },
+          {
+            "name": "oracle_kind",
+            "docs": [
+              "Oracle source: 0 = Pyth, 1 = Switchboard."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "max_oracle_conf_bps",
+            "docs": [
+              "Max accepted oracle confidence interval, bps. 0 = source default."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "max_oracle_deviation_bps",
+            "docs": [
+              "Max swap-vs-oracle deviation, bps. 0 = guard disabled."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "index_mint",
+            "docs": [
+              "SPL mint of the pot's liquid index token (iPOT*). Default = index layer not initialized."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "is_flagship",
+            "type": "bool"
+          },
+          {
+            "name": "nav_snapshot",
+            "docs": [
+              "Latest keeper NAV observation (base units)."
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "NavSnapshot"
+                }
+              }
+            }
+          },
+          {
+            "name": "reserved",
+            "docs": [
+              "Forward-compat tail \u2014 carve new fields from here, never insert."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                70
+              ]
+            }
           }
         ]
       }
@@ -3868,7 +5574,7 @@
           {
             "name": "passed_at",
             "docs": [
-              "Timestamp when proposal transitioned to Passed — used for timelock enforcement.",
+              "Timestamp when proposal transitioned to Passed \u2014 used for timelock enforcement.",
               "0 if not yet passed."
             ],
             "type": "i64"
@@ -3927,6 +5633,9 @@
           },
           {
             "name": "Expired"
+          },
+          {
+            "name": "Cancelled"
           }
         ]
       }
@@ -3959,14 +5668,14 @@
           {
             "name": "max_in",
             "docs": [
-              "Maximum input the executor may spend. Enforced on-chain: spent ≤ max_in."
+              "Maximum input the executor may spend. Enforced on-chain: spent \u2264 max_in."
             ],
             "type": "u64"
           },
           {
             "name": "min_out",
             "docs": [
-              "Minimum output the executor must receive. Enforced: received ≥ min_out."
+              "Minimum output the executor must receive. Enforced: received \u2265 min_out."
             ],
             "type": "u64"
           },
@@ -3980,7 +5689,7 @@
           {
             "name": "price_feed_id",
             "docs": [
-              "Optional Pyth feed id — if set, execute_swap verifies execution price",
+              "Optional Pyth feed id \u2014 if set, execute_swap verifies execution price",
               "is within oracle_deviation_bps of the oracle mid at execution time."
             ],
             "type": {
@@ -4494,7 +6203,7 @@
       }
     },
     {
-      "name": "StrategyConfig",
+      "name": "LegacyStrategyConfig",
       "type": {
         "kind": "struct",
         "fields": [
@@ -4688,7 +6397,7 @@
             "name": "strategy_config",
             "type": {
               "defined": {
-                "name": "StrategyConfig"
+                "name": "LegacyStrategyConfig"
               }
             }
           },
@@ -4996,7 +6705,7 @@
       "docs": [
         "Tracks that a specific wallet has already voted on a specific proposal.",
         "PDA: [b\"voter\", proposal_pubkey, voter_pubkey]",
-        "Using `init` (not `init_if_needed`) means the tx fails if this already exists —",
+        "Using `init` (not `init_if_needed`) means the tx fails if this already exists \u2014",
         "which is exactly the double-vote prevention mechanism."
       ],
       "type": {
@@ -5173,6 +6882,788 @@
                 "type": "pubkey"
               }
             ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "PendingRiskParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "is_pending",
+            "type": "bool"
+          },
+          {
+            "name": "effective_at",
+            "type": "i64"
+          },
+          {
+            "name": "trade_level",
+            "type": "u8"
+          },
+          {
+            "name": "withdraw_level",
+            "type": "u8"
+          },
+          {
+            "name": "max_trade_size_bps",
+            "type": "u16"
+          },
+          {
+            "name": "single_swap_cap_bps",
+            "type": "u16"
+          },
+          {
+            "name": "daily_budget_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "risk_param_timelock_secs",
+            "type": "i64"
+          },
+          {
+            "name": "max_asset_exposure_bps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SetAllowedProgramsArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "programs",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SetRiskTimelockArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "risk_param_timelock_secs",
+            "type": "i64"
+          },
+          {
+            "name": "max_asset_exposure_bps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FundFeeReserveArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SentinelUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "sentinel",
+            "type": {
+              "option": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PotFrozenEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "by",
+            "type": "pubkey"
+          },
+          {
+            "name": "frozen",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProposalCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposal_id",
+            "type": "u64"
+          },
+          {
+            "name": "by",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AllowedProgramsUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "count",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PendingParamsApplied",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "applied_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouteToYieldArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "yield_target",
+            "type": {
+              "defined": {
+                "name": "YieldRouteTarget"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "YieldRouteTarget",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Kamino"
+          },
+          {
+            "name": "MeteoraStable"
+          },
+          {
+            "name": "MeteoraDynamic"
+          }
+        ]
+      }
+    },
+    {
+      "name": "YieldRouted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "target",
+            "type": {
+              "defined": {
+                "name": "YieldRouteTarget"
+              }
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "executed",
+            "type": "bool"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SetOracleConfigArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "oracle_kind",
+            "type": "u8"
+          },
+          {
+            "name": "max_oracle_conf_bps",
+            "type": "u16"
+          },
+          {
+            "name": "max_oracle_deviation_bps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OracleConfigUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "oracle_kind",
+            "type": "u8"
+          },
+          {
+            "name": "max_oracle_conf_bps",
+            "type": "u16"
+          },
+          {
+            "name": "max_oracle_deviation_bps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouteKind",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Hold"
+          },
+          {
+            "name": "KaminoLend"
+          },
+          {
+            "name": "KaminoLiquidity"
+          },
+          {
+            "name": "MeteoraDlmm"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenClass",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Stable"
+          },
+          {
+            "name": "StakedSol"
+          },
+          {
+            "name": "RwaStock"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedeemStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pending"
+          },
+          {
+            "name": "Settled"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WeightEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "weight_bps",
+            "type": "u16"
+          },
+          {
+            "name": "route",
+            "type": {
+              "defined": {
+                "name": "RouteKind"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AllowedToken",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "class",
+            "type": {
+              "defined": {
+                "name": "TokenClass"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "NavSnapshot",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "value_base",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitStrategyConfigArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "keeper",
+            "type": "pubkey"
+          },
+          {
+            "name": "weights",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "WeightEntry"
+                }
+              }
+            }
+          },
+          {
+            "name": "band_bps",
+            "type": "u16"
+          },
+          {
+            "name": "max_slippage_bps",
+            "type": "u16"
+          },
+          {
+            "name": "idle_buffer_bps",
+            "type": "u16"
+          },
+          {
+            "name": "tvl_cap",
+            "type": "u64"
+          },
+          {
+            "name": "deposit_min",
+            "type": "u64"
+          },
+          {
+            "name": "deposit_max",
+            "type": "u64"
+          },
+          {
+            "name": "nav_staleness_slots",
+            "type": "u64"
+          },
+          {
+            "name": "max_nav_deviation_bps",
+            "type": "u16"
+          },
+          {
+            "name": "is_flagship",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateStrategyConfigArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "keeper",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "weights",
+            "type": {
+              "option": {
+                "vec": {
+                  "defined": {
+                    "name": "WeightEntry"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "name": "band_bps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "max_slippage_bps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "idle_buffer_bps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "tvl_cap",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "deposit_min",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "deposit_max",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "nav_staleness_slots",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "max_nav_deviation_bps",
+            "type": {
+              "option": "u16"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategyConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "keeper",
+            "type": "pubkey"
+          },
+          {
+            "name": "weights",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "WeightEntry"
+                  }
+                },
+                10
+              ]
+            }
+          },
+          {
+            "name": "weights_count",
+            "type": "u8"
+          },
+          {
+            "name": "band_bps",
+            "type": "u16"
+          },
+          {
+            "name": "max_slippage_bps",
+            "type": "u16"
+          },
+          {
+            "name": "idle_buffer_bps",
+            "type": "u16"
+          },
+          {
+            "name": "tvl_cap",
+            "type": "u64"
+          },
+          {
+            "name": "deposit_min",
+            "type": "u64"
+          },
+          {
+            "name": "deposit_max",
+            "type": "u64"
+          },
+          {
+            "name": "fee_reserved_bps",
+            "type": "u16"
+          },
+          {
+            "name": "nav_staleness_slots",
+            "type": "u64"
+          },
+          {
+            "name": "max_nav_deviation_bps",
+            "type": "u16"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "pending_redeem_shares",
+            "type": "u64"
+          },
+          {
+            "name": "next_redeem_id",
+            "type": "u64"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenAllowlist",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "tokens",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "AllowedToken"
+                }
+              }
+            }
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategyPosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "route",
+            "type": {
+              "defined": {
+                "name": "RouteKind"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "deployed_base",
+            "type": "u64"
+          },
+          {
+            "name": "receipt_amount",
+            "type": "u64"
+          },
+          {
+            "name": "last_updated_ts",
+            "type": "i64"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedeemRequest",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "member",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "index_amount",
+            "type": "u64"
+          },
+          {
+            "name": "min_out_base",
+            "type": "u64"
+          },
+          {
+            "name": "requested_at",
+            "type": "i64"
+          },
+          {
+            "name": "settled_at",
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "RedeemStatus"
+              }
+            }
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
           }
         ]
       }

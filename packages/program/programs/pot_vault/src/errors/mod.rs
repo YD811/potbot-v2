@@ -197,6 +197,36 @@ pub enum ErrorCode {
     OracleAccountMissing,
     #[msg("Oracle deviation guard needs two-feed pricing (Phase B); not enableable yet")]
     OracleGuardUnavailable,
+
+    // ─── Index vault (flagship) ───────────────────────────────────────────
+    #[msg("Strategy is paused — deposits and deploys are blocked")]
+    StrategyPaused,
+    #[msg("Active index weights must sum to exactly 10000 bps")]
+    WeightsMustSumTo100,
+    #[msg("Index composition exceeds the 10-token limit")]
+    TooManyTokens,
+    #[msg("NAV snapshot is older than the configured staleness bound")]
+    NavSnapshotStale,
+    #[msg("NAV moved more than the configured deviation cap since last snapshot")]
+    NavDeviationTooHigh,
+    #[msg("Deposit is below the configured minimum")]
+    DepositBelowMin,
+    #[msg("Deposit is above the configured per-deposit cap")]
+    DepositAboveCap,
+    #[msg("Deposit would push NAV above the TVL cap")]
+    TvlCapExceeded,
+    #[msg("Deploy would breach the idle redemption buffer")]
+    InsufficientIdleBuffer,
+    #[msg("Signer is not the allowlisted keeper for this pot")]
+    UnauthorizedKeeper,
+    #[msg("No route configured for this mint in the index weights")]
+    RouteNotConfigured,
+    #[msg("Index layer is not initialized for this pot")]
+    IndexNotInitialized,
+    #[msg("Redeem request is not in a settleable state")]
+    RedeemNotPending,
+    #[msg("Settlement payout is below the requester's min_out floor")]
+    RedeemBelowMinOut,
 }
 
 /// Alias used throughout instruction handlers.

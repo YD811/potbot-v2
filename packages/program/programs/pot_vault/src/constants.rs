@@ -40,6 +40,27 @@ pub const VAULT_SEED: &[u8] = b"vault";
 /// Ensures the keeper has gas budget to fire the trigger.
 pub const MIN_FEE_RESERVE_LAMPORTS: u64 = 50_000_000; // 0.05 SOL
 
+// ─── Index vault constants ────────────────────────────────────────────────
+
+/// PDA seed for StrategyConfig: ["strategy", pot_pubkey]
+/// (Same literal as STRATEGY_SEED; arity disambiguates from StrategyAccount.)
+pub const STRATEGY_CONFIG_SEED: &[u8] = b"strategy";
+
+/// PDA seed for the global TokenAllowlist: ["allowlist"]
+pub const ALLOWLIST_SEED: &[u8] = b"allowlist";
+
+/// PDA seed for StrategyPosition: ["position", pot, mint, [route as u8]]
+pub const POSITION_SEED: &[u8] = b"position";
+
+/// PDA seed for RedeemRequest: ["redeem", pot, member, id_le_bytes]
+pub const REDEEM_SEED: &[u8] = b"redeem";
+
+/// PDA seed for the index token mint: ["index_mint", pot]
+pub const INDEX_MINT_SEED: &[u8] = b"index_mint";
+
+/// Index token decimals (matches USDC so 1 token ≈ 1 USDC at bootstrap).
+pub const INDEX_TOKEN_DECIMALS: u8 = 6;
+
 /// Pyth push oracle program IDs (for ownership verification)
 pub const PYTH_PROGRAM_MAINNET: Pubkey =
     pubkey!("FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH");

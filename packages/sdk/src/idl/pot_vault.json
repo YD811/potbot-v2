@@ -522,7 +522,7 @@
           "name": "strategy_config",
           "type": {
             "defined": {
-              "name": "StrategyConfig"
+              "name": "LegacyStrategyConfig"
             }
           }
         }
@@ -2891,6 +2891,872 @@
       "docs": [
         "Configure the pot's oracle source, confidence bound, and swap deviation guard."
       ]
+    },
+    {
+      "name": "init_allowlist",
+      "discriminator": [
+        186,
+        165,
+        190,
+        208,
+        55,
+        86,
+        208,
+        6
+      ],
+      "accounts": [
+        {
+          "name": "allowlist",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "tokens",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "AllowedToken"
+              }
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Bootstrap the global mint allowlist (protocol authority = signer)."
+      ]
+    },
+    {
+      "name": "set_allowlist",
+      "discriminator": [
+        141,
+        30,
+        41,
+        131,
+        132,
+        7,
+        216,
+        134
+      ],
+      "accounts": [
+        {
+          "name": "allowlist",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "tokens",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "AllowedToken"
+              }
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Replace the global mint allowlist (authority only)."
+      ]
+    },
+    {
+      "name": "init_index_mint",
+      "discriminator": [
+        211,
+        164,
+        147,
+        32,
+        184,
+        174,
+        213,
+        53
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "index_mint",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [],
+      "docs": [
+        "Index bootstrap step 1: create the iPOT mint (authority = vault PDA)."
+      ]
+    },
+    {
+      "name": "init_strategy_config",
+      "discriminator": [
+        8,
+        72,
+        3,
+        242,
+        211,
+        140,
+        61,
+        69
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "index_mint"
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "allowlist"
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitStrategyConfigArgs"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Index bootstrap step 2: StrategyConfig (weights, caps, keeper). Vault ATAs are created client-side."
+      ]
+    },
+    {
+      "name": "update_strategy_config",
+      "discriminator": [
+        81,
+        217,
+        177,
+        65,
+        40,
+        227,
+        8,
+        165
+      ],
+      "accounts": [
+        {
+          "name": "pot"
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "allowlist"
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "UpdateStrategyConfigArgs"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Tune launch guards / weights / keeper (pot authority only)."
+      ]
+    },
+    {
+      "name": "set_strategy_paused",
+      "discriminator": [
+        174,
+        71,
+        247,
+        168,
+        24,
+        203,
+        33,
+        63
+      ],
+      "accounts": [
+        {
+          "name": "pot"
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "signer",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "paused",
+          "type": "bool"
+        }
+      ],
+      "docs": [
+        "Pause (authority or sentinel) / unpause (authority) deposits+deploys."
+      ]
+    },
+    {
+      "name": "update_nav_snapshot",
+      "discriminator": [
+        225,
+        209,
+        235,
+        132,
+        94,
+        34,
+        177,
+        13
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "keeper",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "value_base",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Keeper NAV crank, guarded by monotonic slot + deviation cap."
+      ]
+    },
+    {
+      "name": "deposit_base",
+      "discriminator": [
+        213,
+        125,
+        25,
+        122,
+        8,
+        72,
+        100,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "vault_base_ata",
+          "writable": true
+        },
+        {
+          "name": "index_mint",
+          "writable": true
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "depositor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "depositor_base_ata",
+          "writable": true
+        },
+        {
+          "name": "depositor_index_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount_base",
+          "type": "u64"
+        },
+        {
+          "name": "min_shares_out",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Deposit base (USDC) \u2192 mint iPOT index tokens at NAV."
+      ]
+    },
+    {
+      "name": "redeem_instant",
+      "discriminator": [
+        126,
+        63,
+        6,
+        139,
+        213,
+        60,
+        16,
+        157
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "vault_base_ata",
+          "writable": true
+        },
+        {
+          "name": "index_mint",
+          "writable": true
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "member",
+          "signer": true
+        },
+        {
+          "name": "member_index_ata",
+          "writable": true
+        },
+        {
+          "name": "member_base_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "index_amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_out_base",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Burn iPOT at NAV, paid instantly from the idle buffer."
+      ]
+    },
+    {
+      "name": "request_redeem",
+      "discriminator": [
+        105,
+        49,
+        44,
+        38,
+        207,
+        241,
+        33,
+        173
+      ],
+      "accounts": [
+        {
+          "name": "pot"
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "vault_index_ata",
+          "writable": true
+        },
+        {
+          "name": "index_mint"
+        },
+        {
+          "name": "request",
+          "writable": true
+        },
+        {
+          "name": "member",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "member_index_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index_amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_out_base",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Queue a redemption (escrows iPOT now, prices at settlement NAV)."
+      ]
+    },
+    {
+      "name": "settle_redeem",
+      "discriminator": [
+        249,
+        101,
+        149,
+        103,
+        27,
+        38,
+        182,
+        198
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "vault_base_ata",
+          "writable": true
+        },
+        {
+          "name": "vault_index_ata",
+          "writable": true
+        },
+        {
+          "name": "index_mint",
+          "writable": true
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "request",
+          "writable": true
+        },
+        {
+          "name": "member",
+          "writable": true
+        },
+        {
+          "name": "member_base_ata",
+          "writable": true
+        },
+        {
+          "name": "cranker",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [],
+      "docs": [
+        "Settle a queued redemption (permissionless crank)."
+      ]
+    },
+    {
+      "name": "cancel_redeem",
+      "discriminator": [
+        111,
+        76,
+        232,
+        50,
+        39,
+        175,
+        48,
+        242
+      ],
+      "accounts": [
+        {
+          "name": "pot"
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "vault_index_ata",
+          "writable": true
+        },
+        {
+          "name": "request",
+          "writable": true
+        },
+        {
+          "name": "member",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "member_index_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [],
+      "docs": [
+        "Cancel own queued redemption; escrowed iPOT returns."
+      ]
+    },
+    {
+      "name": "init_position",
+      "discriminator": [
+        197,
+        20,
+        10,
+        1,
+        97,
+        160,
+        177,
+        91
+      ],
+      "accounts": [
+        {
+          "name": "pot"
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "leg_mint"
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "RouteKind"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Per-leg bootstrap step 1: position record (keeper or authority)."
+      ]
+    },
+    {
+      "name": "init_position_vault",
+      "discriminator": [
+        46,
+        185,
+        224,
+        118,
+        51,
+        27,
+        10,
+        101
+      ],
+      "accounts": [
+        {
+          "name": "pot"
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "leg_mint"
+        },
+        {
+          "name": "position_vault",
+          "writable": true
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "RouteKind"
+            }
+          }
+        }
+      ],
+      "docs": [
+        "Per-leg bootstrap step 2: escrow token account."
+      ]
+    },
+    {
+      "name": "deploy_to_strategy",
+      "discriminator": [
+        215,
+        49,
+        61,
+        222,
+        180,
+        60,
+        9,
+        118
+      ],
+      "accounts": [
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "allowlist"
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "vault_base_ata",
+          "writable": true
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "leg_mint"
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "position_vault",
+          "writable": true
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "RouteKind"
+            }
+          }
+        },
+        {
+          "name": "amount_base",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Keeper: move idle base into a configured index leg (idle buffer preserved)."
+      ]
+    },
+    {
+      "name": "withdraw_from_strategy",
+      "discriminator": [
+        140,
+        239,
+        65,
+        54,
+        125,
+        128,
+        223,
+        125
+      ],
+      "accounts": [
+        {
+          "name": "pot"
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "vault_base_ata",
+          "writable": true
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "leg_mint"
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "position_vault",
+          "writable": true
+        },
+        {
+          "name": "keeper",
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "route",
+          "type": {
+            "defined": {
+              "name": "RouteKind"
+            }
+          }
+        },
+        {
+          "name": "amount_base",
+          "type": "u64"
+        }
+      ],
+      "docs": [
+        "Keeper: unwind a leg back into the idle buffer (allowed even while paused)."
+      ]
     }
   ],
   "accounts": [
@@ -3022,6 +3888,58 @@
         202,
         115,
         33
+      ]
+    },
+    {
+      "name": "StrategyConfig",
+      "discriminator": [
+        103,
+        12,
+        123,
+        61,
+        47,
+        87,
+        129,
+        57
+      ]
+    },
+    {
+      "name": "TokenAllowlist",
+      "discriminator": [
+        153,
+        168,
+        129,
+        66,
+        180,
+        22,
+        0,
+        239
+      ]
+    },
+    {
+      "name": "StrategyPosition",
+      "discriminator": [
+        39,
+        177,
+        202,
+        35,
+        88,
+        177,
+        104,
+        129
+      ]
+    },
+    {
+      "name": "RedeemRequest",
+      "discriminator": [
+        103,
+        82,
+        139,
+        51,
+        199,
+        234,
+        111,
+        115
       ]
     }
   ],
@@ -3678,6 +4596,76 @@
       "code": 6085,
       "name": "OracleGuardUnavailable",
       "msg": "Oracle deviation guard needs two-feed pricing (Phase B); not enableable yet"
+    },
+    {
+      "code": 6086,
+      "name": "StrategyPaused",
+      "msg": "Strategy is paused \u2014 deposits and deploys are blocked"
+    },
+    {
+      "code": 6087,
+      "name": "WeightsMustSumTo100",
+      "msg": "Active index weights must sum to exactly 10000 bps"
+    },
+    {
+      "code": 6088,
+      "name": "TooManyTokens",
+      "msg": "Index composition exceeds the 10-token limit"
+    },
+    {
+      "code": 6089,
+      "name": "NavSnapshotStale",
+      "msg": "NAV snapshot is older than the configured staleness bound"
+    },
+    {
+      "code": 6090,
+      "name": "NavDeviationTooHigh",
+      "msg": "NAV moved more than the configured deviation cap since last snapshot"
+    },
+    {
+      "code": 6091,
+      "name": "DepositBelowMin",
+      "msg": "Deposit is below the configured minimum"
+    },
+    {
+      "code": 6092,
+      "name": "DepositAboveCap",
+      "msg": "Deposit is above the configured per-deposit cap"
+    },
+    {
+      "code": 6093,
+      "name": "TvlCapExceeded",
+      "msg": "Deposit would push NAV above the TVL cap"
+    },
+    {
+      "code": 6094,
+      "name": "InsufficientIdleBuffer",
+      "msg": "Deploy would breach the idle redemption buffer"
+    },
+    {
+      "code": 6095,
+      "name": "UnauthorizedKeeper",
+      "msg": "Signer is not the allowlisted keeper for this pot"
+    },
+    {
+      "code": 6096,
+      "name": "RouteNotConfigured",
+      "msg": "No route configured for this mint in the index weights"
+    },
+    {
+      "code": 6097,
+      "name": "IndexNotInitialized",
+      "msg": "Index layer is not initialized for this pot"
+    },
+    {
+      "code": 6098,
+      "name": "RedeemNotPending",
+      "msg": "Redeem request is not in a settleable state"
+    },
+    {
+      "code": 6099,
+      "name": "RedeemBelowMinOut",
+      "msg": "Settlement payout is below the requester's min_out floor"
     }
   ],
   "types": [
@@ -4448,6 +5436,30 @@
             "type": "u16"
           },
           {
+            "name": "index_mint",
+            "docs": [
+              "SPL mint of the pot's liquid index token (iPOT*). Default = index layer not initialized."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "is_flagship",
+            "type": "bool"
+          },
+          {
+            "name": "nav_snapshot",
+            "docs": [
+              "Latest keeper NAV observation (base units)."
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "NavSnapshot"
+                }
+              }
+            }
+          },
+          {
             "name": "reserved",
             "docs": [
               "Forward-compat tail \u2014 carve new fields from here, never insert."
@@ -4455,7 +5467,7 @@
             "type": {
               "array": [
                 "u8",
-                128
+                70
               ]
             }
           }
@@ -5191,7 +6203,7 @@
       }
     },
     {
-      "name": "StrategyConfig",
+      "name": "LegacyStrategyConfig",
       "type": {
         "kind": "struct",
         "fields": [
@@ -5385,7 +6397,7 @@
             "name": "strategy_config",
             "type": {
               "defined": {
-                "name": "StrategyConfig"
+                "name": "LegacyStrategyConfig"
               }
             }
           },
@@ -6163,6 +7175,495 @@
           {
             "name": "max_oracle_deviation_bps",
             "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouteKind",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Hold"
+          },
+          {
+            "name": "KaminoLend"
+          },
+          {
+            "name": "KaminoLiquidity"
+          },
+          {
+            "name": "MeteoraDlmm"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenClass",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Stable"
+          },
+          {
+            "name": "StakedSol"
+          },
+          {
+            "name": "RwaStock"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedeemStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pending"
+          },
+          {
+            "name": "Settled"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WeightEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "weight_bps",
+            "type": "u16"
+          },
+          {
+            "name": "route",
+            "type": {
+              "defined": {
+                "name": "RouteKind"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AllowedToken",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "class",
+            "type": {
+              "defined": {
+                "name": "TokenClass"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "NavSnapshot",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "value_base",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitStrategyConfigArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "keeper",
+            "type": "pubkey"
+          },
+          {
+            "name": "weights",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "WeightEntry"
+                }
+              }
+            }
+          },
+          {
+            "name": "band_bps",
+            "type": "u16"
+          },
+          {
+            "name": "max_slippage_bps",
+            "type": "u16"
+          },
+          {
+            "name": "idle_buffer_bps",
+            "type": "u16"
+          },
+          {
+            "name": "tvl_cap",
+            "type": "u64"
+          },
+          {
+            "name": "deposit_min",
+            "type": "u64"
+          },
+          {
+            "name": "deposit_max",
+            "type": "u64"
+          },
+          {
+            "name": "nav_staleness_slots",
+            "type": "u64"
+          },
+          {
+            "name": "max_nav_deviation_bps",
+            "type": "u16"
+          },
+          {
+            "name": "is_flagship",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateStrategyConfigArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "keeper",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "weights",
+            "type": {
+              "option": {
+                "vec": {
+                  "defined": {
+                    "name": "WeightEntry"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "name": "band_bps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "max_slippage_bps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "idle_buffer_bps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "tvl_cap",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "deposit_min",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "deposit_max",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "nav_staleness_slots",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "max_nav_deviation_bps",
+            "type": {
+              "option": "u16"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategyConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "keeper",
+            "type": "pubkey"
+          },
+          {
+            "name": "weights",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "WeightEntry"
+                  }
+                },
+                10
+              ]
+            }
+          },
+          {
+            "name": "weights_count",
+            "type": "u8"
+          },
+          {
+            "name": "band_bps",
+            "type": "u16"
+          },
+          {
+            "name": "max_slippage_bps",
+            "type": "u16"
+          },
+          {
+            "name": "idle_buffer_bps",
+            "type": "u16"
+          },
+          {
+            "name": "tvl_cap",
+            "type": "u64"
+          },
+          {
+            "name": "deposit_min",
+            "type": "u64"
+          },
+          {
+            "name": "deposit_max",
+            "type": "u64"
+          },
+          {
+            "name": "fee_reserved_bps",
+            "type": "u16"
+          },
+          {
+            "name": "nav_staleness_slots",
+            "type": "u64"
+          },
+          {
+            "name": "max_nav_deviation_bps",
+            "type": "u16"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "pending_redeem_shares",
+            "type": "u64"
+          },
+          {
+            "name": "next_redeem_id",
+            "type": "u64"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenAllowlist",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "tokens",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "AllowedToken"
+                }
+              }
+            }
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategyPosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "route",
+            "type": {
+              "defined": {
+                "name": "RouteKind"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "deployed_base",
+            "type": "u64"
+          },
+          {
+            "name": "receipt_amount",
+            "type": "u64"
+          },
+          {
+            "name": "last_updated_ts",
+            "type": "i64"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedeemRequest",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "member",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "index_amount",
+            "type": "u64"
+          },
+          {
+            "name": "min_out_base",
+            "type": "u64"
+          },
+          {
+            "name": "requested_at",
+            "type": "i64"
+          },
+          {
+            "name": "settled_at",
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "RedeemStatus"
+              }
+            }
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
           }
         ]
       }
