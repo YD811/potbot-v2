@@ -93,6 +93,19 @@ server.listen(PORT, () => {
         console.warn('[keeper] worker failed to start:', (err as Error).message)
       })
   }
+
+  // Index-vault cranks (NAV snapshot 60s + redeem settler). No-op unless a
+  // keeper keypair is configured via KEEPER_KEYPAIR_PATH / KEEPER_KEYPAIR_JSON.
+  if ((process.env.KEEPER_ENABLE_INDEX_CRANK ?? 'true').toLowerCase() !== 'false') {
+    Promise.all([import('./index-crank.js'), import('@solana/web3.js')])
+      .then(([{ startIndexCrank }, { PublicKey }]) => {
+        startIndexCrank(new PublicKey(PROGRAM_ID))
+      })
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.warn('[keeper] index crank failed to start:', (err as Error).message)
+      })
+  }
 })
 
 export function setStrategiesMonitored(pubkeys: string[]): void {
