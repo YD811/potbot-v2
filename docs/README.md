@@ -22,6 +22,7 @@ Foundational design — what is on-chain, what isn't, and why.
 | [`architecture/governance.md`](architecture/governance.md) | Governance levels, quorum, risk caps |
 | [`architecture/private-pots.md`](architecture/private-pots.md) | Private pot threat model and role matrix |
 | [`architecture/etf-token-system.md`](architecture/etf-token-system.md) | Pot tokenisation as community ETFs |
+| [`architecture/index-vault.md`](architecture/index-vault.md) | **Index vault (flagship POT-1)** — iPOT token, NAV math, yield routing, looping economics |
 | [`architecture/premium-features.md`](architecture/premium-features.md) | Premium pot tier feature set |
 
 ## Integrations
@@ -47,6 +48,8 @@ Deploying, running, securing, and rotating credentials.
 | [`operations/deploy.md`](operations/deploy.md) | Deployment guide (devnet/mainnet) |
 | [`operations/deploy-render.md`](operations/deploy-render.md) | Hosted MCP deploy on Render |
 | [`operations/mainnet-cutover.md`](operations/mainnet-cutover.md) | Mainnet cutover checklist |
+| [`operations/index-keeper.md`](operations/index-keeper.md) | Index keeper runbook (NAV crank + redeem settler) |
+| [`operations/index-mainnet-runbook.md`](operations/index-mainnet-runbook.md) | Index vault mainnet launch runbook + open decisions |
 | [`operations/mock-mode.md`](operations/mock-mode.md) | Mock mode explanation |
 | [`operations/mock-to-onchain-audit.md`](operations/mock-to-onchain-audit.md) | Mock vs on-chain parity audit |
 | [`operations/security-audit.md`](operations/security-audit.md) | Security audit report |
