@@ -71,6 +71,7 @@ function LivePriceTicker() {
 // as a tab inside /pots. FAQ lives in the footer only.
 const NAV_LINKS: { href: string; emoji: string; term: string }[] = [
   { href: '/learn',       emoji: '',     term: 'Learn' },
+  { href: '/docs',        emoji: '',     term: 'Docs' },
   { href: '/pricing',     emoji: '',     term: 'Pricing' },
   { href: '/create',      emoji: '+',    term: 'Create' },
   { href: '/name',        emoji: '',     term: 'Get a name' },
