@@ -4,8 +4,10 @@ Read this first, every session. This is the operating context for Claude Code on
 Source of truth is the code + `docs/`; if this file and the code disagree, trust the code and update this file.
 
 ## What this is
-PotBot v2 — group trading vaults on Solana. A POT is a PDA-owned, non-custodial vault governed
-on-chain. Monorepo (Turborepo + npm workspaces). Owner: YD811 (Yehor). Built for Solana Frontier 2026.
+PotBot v2 — infrastructure for on-chain index vaults ("S&P 500 on the blockchain"): deposit USDC into
+a POT → receive a liquid index token (iPOT) → capital works in DeFi while you stay liquid. A POT is a
+PDA-owned, non-custodial vault governed on-chain. Index layer: `docs/architecture/index-vault.md`.
+Monorepo (Turborepo + npm workspaces). Owner: YD811 (Yehor). Built for Solana Frontier 2026.
 DApp: potbot.fun · MCP: `@potbot/mcp` · Program ID (devnet): GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK.
 
 ## 🔴 Right now — the one thing that matters
