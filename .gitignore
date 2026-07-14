@@ -50,7 +50,7 @@ packages/program/target/deploy/*.json
 packages/program/.anchor/
 
 # ── App-specific build outputs ────────────────────────────────────
-apps/web/.next/
+.next/
 apps/web/next-env.d.ts
 
 # ── Local-only scratch / per-machine state ────────────────────────
