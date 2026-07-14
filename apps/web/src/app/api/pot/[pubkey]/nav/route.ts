@@ -45,10 +45,10 @@ interface NAVHistory {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { pubkey: string } }
+  { params }: { params: Promise<{ pubkey: string }> }
 ) {
   try {
-    const { pubkey } = params;
+    const { pubkey } = await params;
     const { searchParams } = new URL(request.url);
     const historyCount = parseInt(searchParams.get("history") || "0");
     const interval = searchParams.get("interval") || "1d";
@@ -151,10 +151,10 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { pubkey: string } }
+  { params }: { params: Promise<{ pubkey: string }> }
 ) {
   try {
-    const { pubkey } = params;
+    const { pubkey } = await params;
     const body = await request.json();
     const { assets, liabilities = [] } = body;
 

@@ -108,14 +108,14 @@ async function proxyRequest(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { path: string[] } },
+  { params }: { params: Promise<{ path: string[] }> },
 ) {
-  return proxyRequest(req, params.path)
+  return proxyRequest(req, (await params).path)
 }
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { path: string[] } },
+  { params }: { params: Promise<{ path: string[] }> },
 ) {
-  return proxyRequest(req, params.path)
+  return proxyRequest(req, (await params).path)
 }

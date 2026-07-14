@@ -42,10 +42,10 @@ interface Portfolio {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { wallet: string } }
+  { params }: { params: Promise<{ wallet: string }> }
 ) {
   try {
-    const { wallet } = params;
+    const { wallet } = await params;
     const { searchParams } = new URL(request.url);
     const includeZeroBalance = searchParams.get("includeZeroBalance") === "true";
     const minValue = parseFloat(searchParams.get("minValue") || "0");
@@ -190,10 +190,10 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { wallet: string } }
+  { params }: { params: Promise<{ wallet: string }> }
 ) {
   try {
-    const { wallet } = params;
+    const { wallet } = await params;
     const body = await request.json();
     const { analysis = "summary" } = body;
 

@@ -3,13 +3,13 @@ import { createServerSupabase } from '@/lib/supabase'
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { pubkey: string } },
+  { params }: { params: Promise<{ pubkey: string }> },
 ) {
   const supabase = createServerSupabase()
   const { data, error } = await supabase
     .from('swap_proposal_meta')
     .select('*')
-    .eq('proposal_pubkey', params.pubkey)
+    .eq('proposal_pubkey', (await params).pubkey)
     .single()
 
   if (error || !data) return NextResponse.json(null, { status: 404 })
@@ -25,13 +25,13 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { pubkey: string } },
+  { params }: { params: Promise<{ pubkey: string }> },
 ) {
   const body = await req.json()
   const supabase = createServerSupabase()
 
   const { error } = await supabase.from('swap_proposal_meta').upsert({
-    proposal_pubkey: params.pubkey,
+    proposal_pubkey: (await params).pubkey,
     input_mint:      body.inputMint,
     output_mint:     body.outputMint,
     amount_lamports: body.amountLamports,
@@ -46,13 +46,13 @@ export async function POST(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { pubkey: string } },
+  { params }: { params: Promise<{ pubkey: string }> },
 ) {
   const supabase = createServerSupabase()
   await supabase
     .from('swap_proposal_meta')
     .delete()
-    .eq('proposal_pubkey', params.pubkey)
+    .eq('proposal_pubkey', (await params).pubkey)
 
   return NextResponse.json({ ok: true })
 }

@@ -26,9 +26,9 @@ const ACTION_HEADERS = {
  */
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { potPubkey: string } }
+  { params }: { params: Promise<{ potPubkey: string }> }
 ) {
-  const potPubkey = params.potPubkey
+  const potPubkey = (await params).potPubkey
 
   try {
     new PublicKey(potPubkey)
@@ -86,7 +86,7 @@ export async function GET(
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { potPubkey: string } }
+  { params }: { params: Promise<{ potPubkey: string }> }
 ) {
   try {
     const url = new URL(req.url)
@@ -108,7 +108,7 @@ export async function POST(
     }
 
     const userPubkey = new PublicKey(account)
-    const potPubkey = new PublicKey(params.potPubkey)
+    const potPubkey = new PublicKey((await params).potPubkey)
     const [vaultPda] = getVaultAddress(potPubkey)
 
     const connection = new Connection(RPC_URL, 'confirmed')
@@ -133,11 +133,11 @@ export async function POST(
       {
         type: 'transaction',
         transaction: serialized,
-        message: `Depositing ${amountSol} SOL into PotBot pot ${params.potPubkey.slice(0, 8)}…`,
+        message: `Depositing ${amountSol} SOL into PotBot pot ${(await params).potPubkey.slice(0, 8)}…`,
         links: {
           next: {
             type: 'post',
-            href: `${APP_URL}/api/actions/${params.potPubkey}/deposit/next`,
+            href: `${APP_URL}/api/actions/${(await params).potPubkey}/deposit/next`,
           },
         },
       },

@@ -26,9 +26,9 @@ const ACTION_HEADERS = {
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { potPubkey: string } }
+  { params }: { params: Promise<{ potPubkey: string }> }
 ) {
-  const potPubkey = params.potPubkey
+  const potPubkey = (await params).potPubkey
   const url = new URL(req.url)
   const proposalId = url.searchParams.get('proposalId') ?? 'latest'
 
@@ -70,7 +70,7 @@ export async function GET(
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { potPubkey: string } }
+  { params }: { params: Promise<{ potPubkey: string }> }
 ) {
   try {
     const url = new URL(req.url)
@@ -93,7 +93,7 @@ export async function POST(
     }
 
     const userPubkey = new PublicKey(account)
-    const potPubkey = new PublicKey(params.potPubkey)
+    const potPubkey = new PublicKey((await params).potPubkey)
 
     const connection = new Connection(RPC_URL, 'confirmed')
     const { blockhash } = await connection.getLatestBlockhash('confirmed')
@@ -118,7 +118,7 @@ export async function POST(
       {
         type: 'transaction',
         transaction: serialized,
-        message: `Voting ${choice.toUpperCase()} on proposal ${proposalId} of pot ${params.potPubkey.slice(0, 8)}…`,
+        message: `Voting ${choice.toUpperCase()} on proposal ${proposalId} of pot ${(await params).potPubkey.slice(0, 8)}…`,
       },
       { headers: ACTION_HEADERS }
     )

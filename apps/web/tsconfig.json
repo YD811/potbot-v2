@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -11,19 +15,33 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@potbot/sdk": ["../../packages/sdk/src"],
-      "@potbot/ui": ["../../packages/ui/src"],
-      "react": ["../../node_modules/@types/react"],
-      "react/*": ["../../node_modules/@types/react/*"],
-      "react-dom": ["../../node_modules/@types/react-dom"],
-      "react-dom/*": ["../../node_modules/@types/react-dom/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@potbot/sdk": [
+        "../../packages/sdk/src"
+      ],
+      "@potbot/ui": [
+        "../../packages/ui/src"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
