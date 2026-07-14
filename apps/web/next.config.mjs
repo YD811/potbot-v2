@@ -3,7 +3,6 @@ const require = createRequire(import.meta.url)
 
 /** @type {import('next').NextConfig} */
 const config = {
-  eslint: { ignoreDuringBuilds: true },
   experimental: { externalDir: true },
   transpilePackages: [
     '@solana/wallet-adapter-react-ui',

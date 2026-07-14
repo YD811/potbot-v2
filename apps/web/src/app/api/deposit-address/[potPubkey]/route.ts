@@ -5,9 +5,9 @@ export const runtime = 'nodejs'
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { potPubkey: string } }
+  { params }: { params: Promise<{ potPubkey: string }> }
 ) {
-  const { potPubkey } = params
+  const { potPubkey } = await params
 
   if (!potPubkey || potPubkey.length < 32) {
     return NextResponse.json({ error: 'Invalid potPubkey' }, { status: 400 })

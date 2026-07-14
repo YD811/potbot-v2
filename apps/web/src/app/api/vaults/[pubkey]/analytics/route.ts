@@ -71,9 +71,9 @@ function computeSharpe(returns: number[]): number {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { pubkey: string } }
+  { params }: { params: Promise<{ pubkey: string }> }
 ) {
-  const { pubkey } = params
+  const { pubkey } = await params
 
   // Basic validation
   if (!pubkey || pubkey.length < 32) {

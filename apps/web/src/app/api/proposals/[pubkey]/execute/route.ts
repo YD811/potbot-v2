@@ -13,7 +13,7 @@ const JUP_SWAP  = 'https://quote-api.jup.ag/v6/swap'
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { pubkey: string } },
+  { params }: { params: Promise<{ pubkey: string }> },
 ) {
   try {
     const { inputMint, outputMint, amountLamports, slippageBps = 50, signerPublicKey } = await req.json()
@@ -31,7 +31,7 @@ export async function POST(
       const { data: proposal } = await db
         .from('proposals')
         .select('status')
-        .eq('pubkey', params.pubkey)
+        .eq('pubkey', (await params).pubkey)
         .single()
 
       if (proposal && proposal.status !== 'passed') {
@@ -87,7 +87,7 @@ export async function POST(
       await db
         .from('proposals')
         .update({ status: 'pending_execution' })
-        .eq('pubkey', params.pubkey)
+        .eq('pubkey', (await params).pubkey)
         .eq('status', 'passed') // idempotent: only move forward if still passed
     }
 

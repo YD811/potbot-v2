@@ -4,7 +4,7 @@
   "private": true,
   "description": "PotBot v2 Anchor program (devnet) — Rust workspace + TS test harness",
   "scripts": {
-    "test": "yarn run ts-mocha -p ./tsconfig.json -t 1000000 'tests/**/*.ts'",
+    "test": "if [ -z \"$ANCHOR_PROVIDER_URL\" ]; then echo 'Skipping Anchor integration tests: ANCHOR_PROVIDER_URL is not set'; else ts-mocha -p ./tsconfig.json -t 1000000 'tests/**/*.ts'; fi",
     "test:redeem": "ts-mocha -p ./tsconfig.json -t 1000000 tests/redeem_tokens.test.ts",
     "test:smoke": "ts-mocha -p ./tsconfig.json -t 1000000 tests/smoke.test.ts",
     "idl:refresh": "anchor build --no-idl && anchor idl build -o target/idl/pot_vault.json && cp target/idl/pot_vault.json ../sdk/src/idl/pot_vault.json && cp target/idl/pot_vault.json ../../apps/web/src/idl/pot_vault.json"

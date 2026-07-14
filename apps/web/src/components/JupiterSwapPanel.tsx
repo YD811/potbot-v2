@@ -121,7 +121,7 @@ export function JupiterSwapPanel({ potPubkey, vaultBalance, mode = 'personal', o
   const [quoteError, setQuoteError] = useState<string | null>(null)
   const [isSwapping, setIsSwapping] = useState(false)
   const [lastTx, setLastTx] = useState<string | null>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const fromToken = TOKENS.find(t => t.mint === fromMint)!
   const toToken   = TOKENS.find(t => t.mint === toMint)!

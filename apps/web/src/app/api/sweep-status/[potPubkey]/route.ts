@@ -8,9 +8,9 @@ const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL ?? 'https://api.devnet.solana.co
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { potPubkey: string } }
+  { params }: { params: Promise<{ potPubkey: string }> }
 ) {
-  const { potPubkey } = params
+  const { potPubkey } = await params
 
   try {
     const connection = new Connection(RPC_URL, 'confirmed')

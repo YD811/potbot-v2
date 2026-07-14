@@ -16,26 +16,41 @@
     "clean": "turbo run clean"
   },
   "overrides": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "@types/react": "^18.3.28",
-    "@types/react-dom": "^18.3.7",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "next": "16.2.10",
+    "shell-quote": "1.10.0",
+    "protobufjs": "7.6.5",
+    "@trezor/protobuf": {
+      "protobufjs": "7.6.5"
+    },
+    "react-devtools-core": {
+      "shell-quote": "1.10.0"
+    },
     "@solana/wallet-adapter-react": {
-      "@types/react": "^18.3.28",
-      "@types/react-dom": "^18.3.7"
+      "@types/react": "^19.2.0",
+      "@types/react-dom": "^19.2.0"
     },
     "@solana/wallet-adapter-react-ui": {
-      "@types/react": "^18.3.28",
-      "@types/react-dom": "^18.3.7"
+      "@types/react": "^19.2.0",
+      "@types/react-dom": "^19.2.0"
     },
     "@solana/wallet-adapter-base": {
-      "@types/react": "^18.3.28"
+      "@types/react": "^19.2.0"
     }
   },
   "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
     "turbo": "^2.0.6"
   },
   "dependencies": {
-    "postcss-selector-parser": "^7.1.1"
+    "postcss-selector-parser": "^7.1.1",
+    "protobufjs": "7.6.5",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "shell-quote": "1.10.0"
   }
 }

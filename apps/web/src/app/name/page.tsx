@@ -8,9 +8,10 @@ export const metadata: Metadata = {
   description: 'Your on-chain identity in the PotBot ecosystem. Grab a human-readable .potbot.sol name that resolves to your wallet.',
 }
 
-export default function NamePage({ searchParams }: { searchParams?: { name?: string; pot?: string } }) {
-  const initialName = typeof searchParams?.name === 'string' ? searchParams.name : ''
-  const potPubkey = typeof searchParams?.pot === 'string' ? searchParams.pot : undefined
+export default async function NamePage({ searchParams }: { searchParams?: Promise<{ name?: string; pot?: string }> }) {
+  const resolvedSearchParams = await searchParams
+  const initialName = typeof resolvedSearchParams?.name === 'string' ? resolvedSearchParams.name : ''
+  const potPubkey = typeof resolvedSearchParams?.pot === 'string' ? resolvedSearchParams.pot : undefined
   return (
     <main className="min-h-screen bg-pot-dark text-white" style={{ padding: '64px 20px 96px' }}>
       <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
