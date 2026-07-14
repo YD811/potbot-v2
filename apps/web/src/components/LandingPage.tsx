@@ -530,72 +530,7 @@ export default function LandingPage() {
             )}
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto mb-10 text-left">
-            <div
-              className="group relative rounded-2xl p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
-              style={{
-                background: 'linear-gradient(135deg, rgba(20,241,149,0.06), rgba(20,241,149,0.01))',
-                border: '1px solid rgba(20,241,149,0.25)',
-              }}
-            >
-              <div
-                aria-hidden
-                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                style={{ boxShadow: '0 0 50px rgba(20,241,149,0.12), inset 0 0 0 1px rgba(20,241,149,0.4)' }}
-              />
-              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
-                <span className="text-2xl font-black text-pot-green">POT</span>
-                <span className="text-sm font-semibold text-white">
-                  Programmable On-chain Treasury
-                </span>
-              </div>
-              <div className="text-[11px] text-pot-muted uppercase tracking-wider mb-2">
-                the container
-              </div>
-              <p className="text-sm text-white/80 leading-relaxed">
-                {isLight ? (
-                  'A shared pot your group owns together. Add money, hold a share, take it out any time. Nobody else can touch it.'
-                ) : (
-                  <>
-                    A program-controlled vault.
-                    <br />
-                    Drop in SOL, receive index-token.
-                    <br />
-                    Members hold shares, the vault holds the assets.
-                  </>
-                )}
-              </p>
-            </div>
-            <div
-              className="group relative rounded-2xl p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
-              style={{
-                background: 'linear-gradient(135deg, rgba(153,69,255,0.06), rgba(153,69,255,0.01))',
-                border: '1px solid rgba(153,69,255,0.25)',
-              }}
-            >
-              <div
-                aria-hidden
-                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                style={{ boxShadow: '0 0 50px rgba(153,69,255,0.12), inset 0 0 0 1px rgba(153,69,255,0.4)' }}
-              />
-              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
-                <span className="text-2xl font-black text-pot-accent">BOT</span>
-                <span className="text-sm font-semibold text-white">
-                  Blockchain Orchestration Tool
-                </span>
-              </div>
-              <div className="text-[11px] text-pot-muted uppercase tracking-wider mb-2">
-                the AI agent
-              </div>
-              <p className="text-sm text-white/80 leading-relaxed">
-                {isLight
-                  ? 'An AI helper that suggests trades and runs them once the group says yes. Or set rules and let it vote for you.'
-                  : 'Suggests trades, posts proposals, executes once the vote passes. Delegate it to vote on your behalf based on rules you set, or keep it advisory.'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-4 justify-center mb-12">
+          <div className="flex flex-wrap gap-4 justify-center">
             <Link
               href="/vaults"
               className="btn-primary text-base px-6 py-3 glow-green flex items-center gap-2"
@@ -614,31 +549,102 @@ export default function LandingPage() {
               Follow on X
             </a>
           </div>
-
-          {/* Live protocol stats — only shown when data is real */}
-          {totalTvlSol > 0 && (
-            <div className="inline-flex flex-wrap items-center gap-0 bg-pot-card border border-pot-border rounded-2xl overflow-hidden shadow-xl">
-              {[
-                {
-                  label: 'Total Value Locked',
-                  value: totalTvlUsd > 0
-                    ? `$${totalTvlUsd >= 1000 ? (totalTvlUsd / 1000).toFixed(1) + 'K' : totalTvlUsd.toFixed(0)}`
-                    : `${totalTvlSol.toFixed(1)} SOL`,
-                  color: 'text-pot-green',
-                },
-                { label: 'Active Vaults', value: String(pots?.length ?? 0), color: 'text-white' },
-                { label: 'Members', value: String(totalMembers), color: 'text-white' },
-                { label: 'Total Trades', value: String(totalTrades), color: 'text-pot-accent' },
-              ].map((s, i, arr) => (
-                <div key={s.label} className={`px-6 py-4 text-center ${i < arr.length - 1 ? 'border-r border-pot-border' : ''}`}>
-                  <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
-                  <div className="text-xs text-pot-muted mt-0.5">{s.label}</div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </section>
+
+      {/* ── Top vaults — directly under the hero CTA as social proof.
+           No top padding so buttons + vaults read as one block. ── */}
+      {topVaults.length > 0 && (
+        <section className="max-w-6xl mx-auto px-4 pb-12">
+          <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
+            <div>
+              <div className="inline-flex items-center gap-3 mb-4">
+                <span className="h-px w-6 bg-gradient-to-r from-transparent to-pot-green/60" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-green">
+                  Live on devnet
+                </span>
+              </div>
+              <h2 className="text-3xl sm:text-5xl font-bold text-white leading-[1.15] tracking-tight">
+                Top vaults
+              </h2>
+              <p className="text-white/70 text-base mt-2">Best performing community vaults this week.</p>
+            </div>
+            <Link
+              href="/leaderboard"
+              className="text-sm font-semibold text-pot-green hover:text-white transition flex items-center gap-1"
+            >
+              Full leaderboard
+              <span aria-hidden>→</span>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {topVaults.map((pot, i) => {
+              const balanceUsd = solPrice ? pot.balance * solPrice : 0
+              const medals = ['🥇', '🥈', '🥉']
+              return (
+                <Link
+                  key={pot.pubkey}
+                  href={`/pots/${pot.pubkey}`}
+                  className="group relative bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:border-pot-green/40 hover:bg-pot-card/70"
+                >
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                    style={{ boxShadow: '0 0 40px rgba(20,241,149,0.08)' }}
+                  />
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">{medals[i]}</span>
+                    <span className="text-3xl group-hover:animate-float">{pot.emoji}</span>
+                    <div className="min-w-0">
+                      <div className="font-bold text-white truncate">{pot.name}</div>
+                      <div className="text-xs text-pot-muted">{pot.memberCount} members</div>
+                    </div>
+                  </div>
+                  <div className="text-2xl font-black text-pot-green">{pot.balance.toFixed(2)} SOL</div>
+                  {balanceUsd > 0 && (
+                    <div className="text-xs text-pot-muted mt-0.5">≈ ${balanceUsd >= 1000 ? (balanceUsd / 1000).toFixed(1) + 'K' : balanceUsd.toFixed(0)}</div>
+                  )}
+                  <div className="flex gap-2 mt-4">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-pot-green/10 border border-pot-green/20 text-pot-green">
+                      {pot.isPublic ? 'Public' : 'Private'}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-pot-card border border-pot-border text-pot-muted">
+                      L{pot.governanceLevel} Gov
+                    </span>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ── Live protocol stats — proof block right next to Top vaults,
+           only shown when data is real ── */}
+      {totalTvlSol > 0 && (
+        <section className="px-4 pb-8 text-center">
+          <div className="inline-flex flex-wrap items-center gap-0 bg-pot-card border border-pot-border rounded-2xl overflow-hidden shadow-xl">
+            {[
+              {
+                label: 'Total Value Locked',
+                value: totalTvlUsd > 0
+                  ? `$${totalTvlUsd >= 1000 ? (totalTvlUsd / 1000).toFixed(1) + 'K' : totalTvlUsd.toFixed(0)}`
+                  : `${totalTvlSol.toFixed(1)} SOL`,
+                color: 'text-pot-green',
+              },
+              { label: 'Active Vaults', value: String(pots?.length ?? 0), color: 'text-white' },
+              { label: 'Members', value: String(totalMembers), color: 'text-white' },
+              { label: 'Total Trades', value: String(totalTrades), color: 'text-pot-accent' },
+            ].map((s, i, arr) => (
+              <div key={s.label} className={`px-6 py-4 text-center ${i < arr.length - 1 ? 'border-r border-pot-border' : ''}`}>
+                <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
+                <div className="text-xs text-pot-muted mt-0.5">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Mission statement — readable: white kicker, large body, no
            italics, no decorative chrome. ── */}
@@ -813,6 +819,87 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── POT / BOT definitions — moved out of the hero so the terms are
+           introduced right before "How it works" uses them. ── */}
+      <section className="relative py-20 sm:py-24 px-4 overflow-hidden">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-3">
+              <span className="h-px w-6 bg-gradient-to-r from-transparent to-pot-green/60" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-green">
+                The building blocks
+              </span>
+              <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-green/60" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto text-left">
+            <div
+              className="group relative rounded-2xl p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
+              style={{
+                background: 'linear-gradient(135deg, rgba(20,241,149,0.06), rgba(20,241,149,0.01))',
+                border: '1px solid rgba(20,241,149,0.25)',
+              }}
+            >
+              <div
+                aria-hidden
+                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{ boxShadow: '0 0 50px rgba(20,241,149,0.12), inset 0 0 0 1px rgba(20,241,149,0.4)' }}
+              />
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
+                <span className="text-2xl font-black text-pot-green">POT</span>
+                <span className="text-sm font-semibold text-white">
+                  Programmable On-chain Treasury
+                </span>
+              </div>
+              <div className="text-[11px] text-pot-muted uppercase tracking-wider mb-2">
+                the container
+              </div>
+              <p className="text-sm text-white/80 leading-relaxed">
+                {isLight ? (
+                  'A shared pot your group owns together. Add money, hold a share, take it out any time. Nobody else can touch it.'
+                ) : (
+                  <>
+                    A program-controlled vault.
+                    <br />
+                    Drop in SOL, receive index-token.
+                    <br />
+                    Members hold shares, the vault holds the assets.
+                  </>
+                )}
+              </p>
+            </div>
+            <div
+              className="group relative rounded-2xl p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
+              style={{
+                background: 'linear-gradient(135deg, rgba(153,69,255,0.06), rgba(153,69,255,0.01))',
+                border: '1px solid rgba(153,69,255,0.25)',
+              }}
+            >
+              <div
+                aria-hidden
+                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{ boxShadow: '0 0 50px rgba(153,69,255,0.12), inset 0 0 0 1px rgba(153,69,255,0.4)' }}
+              />
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
+                <span className="text-2xl font-black text-pot-accent">BOT</span>
+                <span className="text-sm font-semibold text-white">
+                  Blockchain Orchestration Tool
+                </span>
+              </div>
+              <div className="text-[11px] text-pot-muted uppercase tracking-wider mb-2">
+                the AI agent
+              </div>
+              <p className="text-sm text-white/80 leading-relaxed">
+                {isLight
+                  ? 'An AI helper that suggests trades and runs them once the group says yes. Or set rules and let it vote for you.'
+                  : 'Suggests trades, posts proposals, executes once the vote passes. Delegate it to vote on your behalf based on rules you set, or keep it advisory.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── HOW IT WORKS — actual 4-step pot lifecycle. ── */}
       <section className="relative py-20 sm:py-24 px-4 overflow-hidden">
         <div className="max-w-6xl mx-auto">
@@ -937,73 +1024,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* ── Top vaults ── */}
-      {topVaults.length > 0 && (
-        <section className="max-w-6xl mx-auto px-4 py-20 sm:py-24">
-          <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
-            <div>
-              <div className="inline-flex items-center gap-3 mb-4">
-                <span className="h-px w-6 bg-gradient-to-r from-transparent to-pot-green/60" />
-                <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-green">
-                  Live on devnet
-                </span>
-              </div>
-              <h2 className="text-3xl sm:text-5xl font-bold text-white leading-[1.15] tracking-tight">
-                Top vaults
-              </h2>
-              <p className="text-white/70 text-base mt-2">Best performing community vaults this week.</p>
-            </div>
-            <Link
-              href="/leaderboard"
-              className="text-sm font-semibold text-pot-green hover:text-white transition flex items-center gap-1"
-            >
-              Full leaderboard
-              <span aria-hidden>→</span>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {topVaults.map((pot, i) => {
-              const balanceUsd = solPrice ? pot.balance * solPrice : 0
-              const medals = ['🥇', '🥈', '🥉']
-              return (
-                <Link
-                  key={pot.pubkey}
-                  href={`/pots/${pot.pubkey}`}
-                  className="group relative bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:border-pot-green/40 hover:bg-pot-card/70"
-                >
-                  <div
-                    aria-hidden
-                    className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                    style={{ boxShadow: '0 0 40px rgba(20,241,149,0.08)' }}
-                  />
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">{medals[i]}</span>
-                    <span className="text-3xl group-hover:animate-float">{pot.emoji}</span>
-                    <div className="min-w-0">
-                      <div className="font-bold text-white truncate">{pot.name}</div>
-                      <div className="text-xs text-pot-muted">{pot.memberCount} members</div>
-                    </div>
-                  </div>
-                  <div className="text-2xl font-black text-pot-green">{pot.balance.toFixed(2)} SOL</div>
-                  {balanceUsd > 0 && (
-                    <div className="text-xs text-pot-muted mt-0.5">≈ ${balanceUsd >= 1000 ? (balanceUsd / 1000).toFixed(1) + 'K' : balanceUsd.toFixed(0)}</div>
-                  )}
-                  <div className="flex gap-2 mt-4">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-pot-green/10 border border-pot-green/20 text-pot-green">
-                      {pot.isPublic ? 'Public' : 'Private'}
-                    </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-pot-card border border-pot-border text-pot-muted">
-                      L{pot.governanceLevel} Gov
-                    </span>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        </section>
-      )}
 
       {/* ── Live vault mockup — "See your vault at a glance" ── */}
       <LiveVaultMockup />
