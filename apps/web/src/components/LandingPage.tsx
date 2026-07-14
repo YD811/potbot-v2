@@ -490,8 +490,16 @@ export default function LandingPage() {
 
       {/* ── Hero ── */}
       <section className="relative flex flex-col items-center text-center pt-8 pb-12 px-4 overflow-hidden">
-        {/* Glow background */}
-        <div className="absolute inset-0 pointer-events-none">
+        {/* Glow background — masked so the blurred blobs fade to zero before
+            the section's overflow-hidden edge instead of getting hard-clipped
+            at the seam with the Top vaults block below. */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
+          }}
+        >
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-pot-green/5 rounded-full blur-3xl" />
           <div className="absolute top-1/3 left-1/3 w-[400px] h-[300px] bg-pot-accent/5 rounded-full blur-3xl" />
         </div>
