@@ -15,6 +15,14 @@
 -- a vote-share delegation:
 --   advisory  → only create proposals; never vote
 --   delegate  → vote on its own proposals using AGENT_KEYPAIR's shares
+--
+-- Replaces the narrower agent_configs table from
+-- 005_agent_configs_and_swap_proposal_meta.sql (no is_active /
+-- governance_mode columns). The drop makes a from-scratch replay
+-- (Supabase preview branches, `db reset`) deterministic; on databases
+-- where this version is already recorded the file never re-runs.
+
+drop table if exists agent_configs cascade;
 
 create table if not exists agent_configs (
   pot_pubkey       text        primary key,
