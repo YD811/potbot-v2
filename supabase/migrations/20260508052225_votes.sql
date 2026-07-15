@@ -8,6 +8,13 @@
 --
 -- Written by: Helius webhook on `vote` instruction confirmation
 -- Read by:    proposal detail page, governance dashboard
+--
+-- Replaces the legacy votes table from 001_initial.sql (voter/approve/
+-- shares shape). The drop makes a from-scratch replay (Supabase preview
+-- branches, `db reset`) deterministic; on databases where this version
+-- is already recorded the file never re-runs.
+
+drop table if exists votes cascade;
 
 create table if not exists votes (
   id              uuid           primary key default gen_random_uuid(),

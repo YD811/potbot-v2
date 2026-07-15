@@ -6,6 +6,13 @@
 --   tier 2 = referrer's referrer (passive earnings)
 -- reward_usdc is the cumulative payout owed; paid_at is set once the
 -- payout transaction confirms.
+--
+-- Replaces the legacy referrals table from 001_initial.sql (referrer/
+-- referee shape). The drop makes a from-scratch replay (Supabase preview
+-- branches, `db reset`) deterministic; on databases where this version
+-- is already recorded the file never re-runs.
+
+drop table if exists referrals cascade;
 
 create table if not exists referrals (
   id              uuid           primary key default gen_random_uuid(),
