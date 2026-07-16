@@ -1,7 +1,7 @@
 {
   "name": "potbot-v2",
   "version": "0.1.0",
-  "description": "AI-native infrastructure for programmable onchain treasuries on Solana",
+  "description": "Yield-bearing Solana vaults with liquid, redeemable share tokens",
   "private": true,
   "packageManager": "npm@10.8.2",
   "workspaces": [
