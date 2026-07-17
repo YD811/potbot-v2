@@ -212,12 +212,11 @@ function LiveVaultMockup() {
         }
         .potbot-mock:hover {
           animation-play-state: paused;
-          transform: perspective(1400px) rotateX(0deg) rotateY(0deg) scale(1.015);
+          transform: perspective(1400px) rotateY(0deg) scale(1.015);
         }
         @keyframes potbot-tilt {
-          0%   { transform: perspective(1400px) rotateX(4deg)  rotateY(-10deg); }
-          50%  { transform: perspective(1400px) rotateX(-3deg) rotateY(8deg); }
-          100% { transform: perspective(1400px) rotateX(4deg)  rotateY(-10deg); }
+          0%, 100% { transform: perspective(1400px) rotateY(-10deg); }
+          50% { transform: perspective(1400px) rotateY(8deg); }
         }
         @media (prefers-reduced-motion: reduce) {
           .potbot-mock { animation: none; transform: none; }
@@ -830,20 +829,20 @@ export default function LandingPage() {
       {/* ── POT / BOT definitions — moved out of the hero so the terms are
            introduced right before "How it works" uses them. ── */}
       <section className="relative py-20 sm:py-24 px-4 overflow-hidden">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-3">
               <span className="h-px w-6 bg-gradient-to-r from-transparent to-pot-green/60" />
               <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-green">
-                The building blocks
+                Pot+Bot
               </span>
               <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-green/60" />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto text-left">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
             <div
-              className="group relative rounded-2xl p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
+              className="group relative flex flex-col min-h-[300px] rounded-3xl p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
               style={{
                 background: 'linear-gradient(135deg, rgba(20,241,149,0.06), rgba(20,241,149,0.01))',
                 border: '1px solid rgba(20,241,149,0.25)',
@@ -851,7 +850,7 @@ export default function LandingPage() {
             >
               <div
                 aria-hidden
-                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                 style={{ boxShadow: '0 0 50px rgba(20,241,149,0.12), inset 0 0 0 1px rgba(20,241,149,0.4)' }}
               />
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
@@ -863,7 +862,7 @@ export default function LandingPage() {
               <div className="text-[11px] text-pot-muted uppercase tracking-wider mb-2">
                 the container
               </div>
-              <p className="text-sm text-white/80 leading-relaxed">
+              <p className="text-base text-white/80 leading-relaxed">
                 {isLight ? (
                   'A shared pot your group owns together. Add money, hold a share, take it out any time. Nobody else can touch it.'
                 ) : (
@@ -876,9 +875,16 @@ export default function LandingPage() {
                   </>
                 )}
               </p>
+              <Link
+                href="/learn"
+                className="mt-auto pt-4 text-sm font-semibold text-pot-green hover:text-white transition flex items-center gap-1 self-start"
+              >
+                See details
+                <span aria-hidden>→</span>
+              </Link>
             </div>
             <div
-              className="group relative rounded-2xl p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
+              className="group relative flex flex-col min-h-[300px] rounded-3xl p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
               style={{
                 background: 'linear-gradient(135deg, rgba(153,69,255,0.06), rgba(153,69,255,0.01))',
                 border: '1px solid rgba(153,69,255,0.25)',
@@ -886,7 +892,7 @@ export default function LandingPage() {
             >
               <div
                 aria-hidden
-                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                 style={{ boxShadow: '0 0 50px rgba(153,69,255,0.12), inset 0 0 0 1px rgba(153,69,255,0.4)' }}
               />
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
@@ -898,11 +904,18 @@ export default function LandingPage() {
               <div className="text-[11px] text-pot-muted uppercase tracking-wider mb-2">
                 the AI agent
               </div>
-              <p className="text-sm text-white/80 leading-relaxed">
+              <p className="text-base text-white/80 leading-relaxed">
                 {isLight
                   ? 'An AI helper that suggests trades and runs them once the group says yes. Or set rules and let it vote for you.'
                   : 'Suggests trades, posts proposals, executes once the vote passes. Delegate it to vote on your behalf based on rules you set, or keep it advisory.'}
               </p>
+              <Link
+                href="/for-agents"
+                className="mt-auto pt-4 text-sm font-semibold text-pot-accent hover:text-white transition flex items-center gap-1 self-start"
+              >
+                See details
+                <span aria-hidden>→</span>
+              </Link>
             </div>
           </div>
         </div>
