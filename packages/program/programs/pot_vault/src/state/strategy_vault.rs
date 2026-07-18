@@ -30,7 +30,7 @@ impl Default for StrategyType {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, Default)]
-pub struct StrategyConfig {
+pub struct LegacyStrategyConfig {
     pub risk_level: RiskLevel,
     pub max_swap_pct: u8,        // max % of vault per swap (1-100)
     pub ai_rules_hash: [u8; 32], // SHA256 of AI rules JSON (stored off-chain)
@@ -50,7 +50,7 @@ pub struct StrategyVaultAccount {
     pub referral_bps: u16,        // % of PotBot fee to referrer, e.g. 2000 = 20%
 
     // Strategy
-    pub strategy_config: StrategyConfig,
+    pub strategy_config: LegacyStrategyConfig,
     pub description: String, // max 200 chars
     pub allowed_token_count: u8,
 

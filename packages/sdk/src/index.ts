@@ -1,5 +1,6 @@
 export * from './client'
 export * from './pda'
+export * from './index-vault'
 export * from './types'
 export * from './instructions/pot'
 export * from './premium'

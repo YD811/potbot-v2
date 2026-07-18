@@ -65,7 +65,7 @@ describe('oracle config (Phase A)', () => {
     expect(s.oracleKind).to.equal(0)
     expect(s.maxOracleConfBps).to.equal(0)
     expect(s.maxOracleDeviationBps).to.equal(0)
-    expect(s.reserved.length).to.equal(128)
+    expect(s.reserved.length).to.equal(70)
   })
 
   it('stores and round-trips the confidence bound', async () => {

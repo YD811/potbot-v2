@@ -33,6 +33,11 @@ pub mod pot_admin;
 // Security hardening (Phase A)
 pub mod sentinel;
 
+// Index vault layer (flagship POT-1)
+pub mod index_admin;
+pub mod index_vault;
+pub mod index_deploy;
+
 pub use create_pot::{CreatePot, CreatePotParams};
 pub(crate) use create_pot::__client_accounts_create_pot;
 pub use deposit::Deposit;
@@ -106,4 +111,25 @@ pub use sentinel::{
 pub(crate) use sentinel::{
     __client_accounts_cancel_proposal, __client_accounts_freeze_pot,
     __client_accounts_set_sentinel, __client_accounts_unfreeze_pot,
+};
+pub use index_admin::{
+    InitAllowlist, InitIndexMint, InitStrategyConfig, InitStrategyConfigArgs, SetAllowlist,
+    SetStrategyPaused, UpdateNavSnapshot, UpdateStrategyConfig, UpdateStrategyConfigArgs,
+};
+pub(crate) use index_admin::{
+    __client_accounts_init_allowlist, __client_accounts_init_index_mint,
+    __client_accounts_init_strategy_config, __client_accounts_set_allowlist,
+    __client_accounts_set_strategy_paused, __client_accounts_update_nav_snapshot,
+    __client_accounts_update_strategy_config,
+};
+pub use index_vault::{CancelRedeem, DepositBase, RedeemInstant, RequestRedeem, SettleRedeem};
+pub(crate) use index_vault::{
+    __client_accounts_cancel_redeem, __client_accounts_deposit_base,
+    __client_accounts_redeem_instant, __client_accounts_request_redeem,
+    __client_accounts_settle_redeem,
+};
+pub use index_deploy::{DeployToStrategy, InitPosition, InitPositionVault, WithdrawFromStrategy};
+pub(crate) use index_deploy::{
+    __client_accounts_deploy_to_strategy, __client_accounts_init_position,
+    __client_accounts_init_position_vault, __client_accounts_withdraw_from_strategy,
 };

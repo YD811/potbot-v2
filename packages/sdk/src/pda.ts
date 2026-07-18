@@ -122,6 +122,71 @@ export function getTamagotchiMintAddress(potPubkey: PublicKey): [PublicKey, numb
   );
 }
 
+// ─── Index vault layer (flagship POT-1) ────────────────────────────────────
+
+// StrategyConfig PDA: ["strategy", pot] (arity disambiguates from
+// StrategyAccount ["strategy", pot, slot_id_le]).
+export function getStrategyConfigAddress(potPubkey: PublicKey): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('strategy'), potPubkey.toBuffer()],
+    PROGRAM_ID
+  );
+}
+
+// Global TokenAllowlist PDA: ["allowlist"]
+export function getAllowlistAddress(): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync([Buffer.from('allowlist')], PROGRAM_ID);
+}
+
+// iPOT index mint PDA: ["index_mint", pot]
+export function getIndexMintAddress(potPubkey: PublicKey): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('index_mint'), potPubkey.toBuffer()],
+    PROGRAM_ID
+  );
+}
+
+// Route ids mirror the on-chain RouteKind enum order.
+export type RouteKindId = 0 | 1 | 2 | 3; // Hold | KaminoLend | KaminoLiquidity | MeteoraDlmm
+
+// StrategyPosition PDA: ["position", pot, leg_mint, [route]]
+export function getStrategyPositionAddress(
+  potPubkey: PublicKey,
+  legMint: PublicKey,
+  route: RouteKindId
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('position'), potPubkey.toBuffer(), legMint.toBuffer(), Buffer.from([route])],
+    PROGRAM_ID
+  );
+}
+
+// Position escrow token account PDA: ["position_vault", pot, leg_mint, [route]]
+export function getPositionVaultAddress(
+  potPubkey: PublicKey,
+  legMint: PublicKey,
+  route: RouteKindId
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('position_vault'), potPubkey.toBuffer(), legMint.toBuffer(), Buffer.from([route])],
+    PROGRAM_ID
+  );
+}
+
+// RedeemRequest PDA: ["redeem", pot, member, id_le_u64]
+export function getRedeemRequestAddress(
+  potPubkey: PublicKey,
+  member: PublicKey,
+  id: bigint | number
+): [PublicKey, number] {
+  const idBuf = Buffer.alloc(8);
+  idBuf.writeBigUInt64LE(BigInt(id));
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('redeem'), potPubkey.toBuffer(), member.toBuffer(), idBuf],
+    PROGRAM_ID
+  );
+}
+
 // Helper: Get Metaplex metadata PDA
 export function getMetadataAddress(mint: PublicKey): [PublicKey, number] {
   const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');

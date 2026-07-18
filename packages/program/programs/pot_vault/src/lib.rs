@@ -127,7 +127,7 @@ pub mod pot_vault {
         performance_fee_bps: u16,
         management_fee_bps: u16,
         referral_bps: u16,
-        strategy_config: state::strategy_vault::StrategyConfig,
+        strategy_config: state::strategy_vault::LegacyStrategyConfig,
     ) -> Result<()> {
         instructions::strategy_vault::create_strategy_vault(
             ctx, pot_name, description, entry_fee_lamports,
@@ -294,5 +294,130 @@ pub mod pot_vault {
         args: RouteToYieldArgs,
     ) -> Result<()> {
         instructions::route_to_yield::handler(ctx, args)
+    }
+
+    // ─── Index vault layer (flagship POT-1) ────────────────────────────────
+
+    /// Bootstrap the global mint allowlist (protocol authority = signer).
+    pub fn init_allowlist(
+        ctx: Context<InitAllowlist>,
+        tokens: Vec<state::AllowedToken>,
+    ) -> Result<()> {
+        instructions::index_admin::init_allowlist_handler(ctx, tokens)
+    }
+
+    /// Replace the global mint allowlist (authority only).
+    pub fn set_allowlist(
+        ctx: Context<SetAllowlist>,
+        tokens: Vec<state::AllowedToken>,
+    ) -> Result<()> {
+        instructions::index_admin::set_allowlist_handler(ctx, tokens)
+    }
+
+    /// Step 1 of the index bootstrap: create the iPOT mint (authority =
+    /// vault PDA). Pot authority only.
+    pub fn init_index_mint(ctx: Context<InitIndexMint>) -> Result<()> {
+        instructions::index_admin::init_index_mint_handler(ctx)
+    }
+
+    /// Step 2: initialize StrategyConfig (weights, caps, keeper, flagship
+    /// flag). Vault ATAs are created client-side. Pot authority only.
+    pub fn init_strategy_config(
+        ctx: Context<InitStrategyConfig>,
+        args: InitStrategyConfigArgs,
+    ) -> Result<()> {
+        instructions::index_admin::init_strategy_config_handler(ctx, args)
+    }
+
+    /// Tune launch guards / weights / keeper (pot authority only).
+    pub fn update_strategy_config(
+        ctx: Context<UpdateStrategyConfig>,
+        args: UpdateStrategyConfigArgs,
+    ) -> Result<()> {
+        instructions::index_admin::update_strategy_config_handler(ctx, args)
+    }
+
+    /// Pause (authority or sentinel) / unpause (authority) deposits+deploys.
+    /// Redemptions stay open.
+    pub fn set_strategy_paused(ctx: Context<SetStrategyPaused>, paused: bool) -> Result<()> {
+        instructions::index_admin::set_strategy_paused_handler(ctx, paused)
+    }
+
+    /// Keeper NAV crank: write total NAV in base units, guarded by
+    /// staleness monotonicity + deviation cap.
+    pub fn update_nav_snapshot(ctx: Context<UpdateNavSnapshot>, value_base: u64) -> Result<()> {
+        instructions::index_admin::update_nav_snapshot_handler(ctx, value_base)
+    }
+
+    /// Deposit base (USDC) → mint iPOT index tokens at NAV.
+    pub fn deposit_base(
+        ctx: Context<DepositBase>,
+        amount_base: u64,
+        min_shares_out: u64,
+    ) -> Result<()> {
+        instructions::index_vault::deposit_base_handler(ctx, amount_base, min_shares_out)
+    }
+
+    /// Burn iPOT at NAV, paid instantly from the idle buffer.
+    pub fn redeem_instant(
+        ctx: Context<RedeemInstant>,
+        index_amount: u64,
+        min_out_base: u64,
+    ) -> Result<()> {
+        instructions::index_vault::redeem_instant_handler(ctx, index_amount, min_out_base)
+    }
+
+    /// Queue a redemption the idle buffer can't serve (escrows iPOT now,
+    /// prices at settlement NAV).
+    pub fn request_redeem(
+        ctx: Context<RequestRedeem>,
+        index_amount: u64,
+        min_out_base: u64,
+    ) -> Result<()> {
+        instructions::index_vault::request_redeem_handler(ctx, index_amount, min_out_base)
+    }
+
+    /// Settle a queued redemption (permissionless crank; payout only ever
+    /// reaches the requester's ATA).
+    pub fn settle_redeem(ctx: Context<SettleRedeem>) -> Result<()> {
+        instructions::index_vault::settle_redeem_handler(ctx)
+    }
+
+    /// Cancel own queued redemption; escrowed iPOT returns.
+    pub fn cancel_redeem(ctx: Context<CancelRedeem>) -> Result<()> {
+        instructions::index_vault::cancel_redeem_handler(ctx)
+    }
+
+    /// One-time per-leg position bootstrap, step 1: position record.
+    pub fn init_position(ctx: Context<InitPosition>, route: state::RouteKind) -> Result<()> {
+        instructions::index_deploy::init_position_handler(ctx, route)
+    }
+
+    /// One-time per-leg position bootstrap, step 2: escrow token account.
+    pub fn init_position_vault(
+        ctx: Context<InitPositionVault>,
+        route: state::RouteKind,
+    ) -> Result<()> {
+        instructions::index_deploy::init_position_vault_handler(ctx, route)
+    }
+
+    /// Keeper: move idle base into a configured index leg (capped, idle
+    /// buffer preserved). Phase-2 protocol CPIs plug into this seam.
+    pub fn deploy_to_strategy(
+        ctx: Context<DeployToStrategy>,
+        route: state::RouteKind,
+        amount_base: u64,
+    ) -> Result<()> {
+        instructions::index_deploy::deploy_to_strategy_handler(ctx, route, amount_base)
+    }
+
+    /// Keeper: unwind a leg back into the idle buffer (allowed even while
+    /// paused — pausing must never trap capital).
+    pub fn withdraw_from_strategy(
+        ctx: Context<WithdrawFromStrategy>,
+        route: state::RouteKind,
+        amount_base: u64,
+    ) -> Result<()> {
+        instructions::index_deploy::withdraw_from_strategy_handler(ctx, route, amount_base)
     }
 }

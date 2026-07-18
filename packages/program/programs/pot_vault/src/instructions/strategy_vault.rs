@@ -37,7 +37,7 @@ pub fn create_strategy_vault(
     performance_fee_bps: u16,
     management_fee_bps: u16,
     referral_bps: u16,
-    strategy_config: StrategyConfig,
+    strategy_config: LegacyStrategyConfig,
 ) -> Result<()> {
     require!(description.len() <= 200, PotError::DescriptionTooLong);
     require!(performance_fee_bps <= 5000, PotError::FeeTooHigh);

@@ -132,14 +132,45 @@ pub struct PotAccount {
     /// mid, as bps. 0 = guard disabled (no oracle account required).
     pub max_oracle_deviation_bps: u16,
 
+    // ─── Index vault (flagship) ──────────────────────────────────────────
+    // Carved from the reserved tail: 32 (index_mint) + 1 (is_flagship)
+    // + 25 (Option<NavSnapshot>) = 58 bytes; 128 - 58 = 70 remain.
+
+    /// SPL mint of this pot's liquid index token (iPOT*). Pubkey::default()
+    /// = index layer not initialized for this pot.
+    pub index_mint: Pubkey,
+
+    /// Pinned on / and atop /leaderboard. Exactly one pot should carry this.
+    pub is_flagship: bool,
+
+    /// Latest keeper-written NAV observation (base units of
+    /// StrategyConfig.base_mint). None until the first snapshot lands.
+    /// Mint/redeem price against this, gated by staleness + deviation
+    /// guards in StrategyConfig.
+    pub nav_snapshot: Option<NavSnapshot>,
+
     /// Forward-compatibility tail. New fields are carved from here so the
     /// serialized layout never shifts and old accounts stay readable — this
     /// is the LAST layout-breaking change before that guarantee holds.
     /// Reduce this array by exactly the InitSpace of any field you add.
-    pub reserved: [u8; 128],
+    pub reserved: [u8; 70],
 }
 
 // ─── Config structs ───────────────────────────────────────────────────────
+
+/// One keeper NAV observation. Value is the TOTAL vault NAV in base units
+/// (idle base balance + oracle/SDK-priced strategy legs), not per-share —
+/// per-share pricing divides by the live index-mint supply at use time so
+/// mints between snapshots can't be gamed.
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, InitSpace, Default)]
+pub struct NavSnapshot {
+    /// Total NAV in base units (e.g. USDC 1e6).
+    pub value_base: u64,
+    /// Unix time of the observation.
+    pub ts: i64,
+    /// Slot of the observation — staleness is measured in slots.
+    pub slot: u64,
+}
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
 pub struct PotConfig {

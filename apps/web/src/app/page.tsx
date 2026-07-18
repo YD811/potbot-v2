@@ -6,6 +6,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { usePots } from '@/hooks/usePots'
 import { useMockStore } from '@/lib/mock-store'
 import { useSolPrice } from '@/lib/prices'
+import { pinFlagshipFirst } from '@/lib/flagship'
 import LandingPage from '@/components/LandingPage'
 import { TrustBadge } from '@/components/TrustBadge'
 
@@ -49,7 +50,8 @@ export default function DashboardPage() {
   }, [pots, tab, walletStr, myPotPubkeys])
 
   const filtered = useMemo(
-    () => basePots.filter((p) => p.name.toLowerCase().includes(search.toLowerCase())),
+    // flagship POT-1 pins to the top of the grid
+    () => pinFlagshipFirst(basePots.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))),
     [basePots, search]
   )
 

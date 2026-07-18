@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { usePots } from '@/hooks/usePots'
+import { isFlagshipPot } from '@/lib/flagship'
 import { useVaultAnalyticsBatch } from '@/hooks/useAnalytics'
 import { useSupabaseLeaderboard } from '@/hooks/useSupabaseLeaderboard'
 import { useSolPrice } from '@/lib/prices'
@@ -138,6 +139,7 @@ export default function LeaderboardPage() {
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       (snsNames[p.pubkey] ?? '').includes(search.toLowerCase())
     )
+    // Flagship POT-1 pins above the sort, whatever the key
     return [...filtered].sort((a: any, b: any) => {
       switch (sortBy) {
         case 'season':  return b.seasonScore - a.seasonScore
@@ -149,6 +151,7 @@ export default function LeaderboardPage() {
         default:        return 0
       }
     })
+      .sort((a: any, b: any) => Number(isFlagshipPot(b)) - Number(isFlagshipPot(a)))
   }, [enriched, sortBy, search, snsNames])
 
   const totalTvlUsd  = enriched.reduce((s: number, p: any) => s + p.navUsd, 0)
