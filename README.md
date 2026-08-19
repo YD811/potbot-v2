@@ -1,3 +1,5 @@
+
+
 <div align="center">
 
 # POTBOT
@@ -87,7 +89,7 @@ Use the labels defined in [FEATURE_STATUS.md](docs/product/FEATURE_STATUS.md).
 | Single production yield adapter | Planned / under implementation |
 | End-to-end deposit → yield → redeem flow | Mainnet MVP target |
 | Jupiter execution and keeper automation | Devnet live |
-| `@potbot/mcp@0.2.0` | Live |
+| `@potbot/mcp@0.6.1` | Live |
 | Privy and wallet-adapter onboarding | Live |
 | Multi-asset blue-chip baskets | Planned |
 | Tokenized equities and RWAs | Planned |
