@@ -84,4 +84,14 @@ pub enum PotError {
     ZeroAmount,
     #[msg("Leg count mismatch")]
     LegCountMismatch, // 6040
+    #[msg("Leg is within the rebalance deadband")]
+    WithinDeadband,
+    #[msg("Rebalance cooldown has not elapsed")]
+    Cooldown,
+    #[msg("max_price_age_secs above the protocol limit")]
+    PriceAgeTooLong,
+    #[msg("USDC mint must have 6 decimals")]
+    BadUsdcDecimals,
+    #[msg("No pending admin, or signer is not the pending admin")]
+    NotPendingAdmin, // 6045
 }

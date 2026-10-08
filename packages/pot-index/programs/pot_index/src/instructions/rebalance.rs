@@ -10,7 +10,10 @@
 //! - sold leg must be overweight and must not go below its target weight;
 //! - bought leg must be underweight and must not go above its target weight;
 //! - trade value ≤ `max_trade_bps` of NAV;
-//! - received ≥ fair value × (1 − `slippage_bps`).
+//! - received ≥ fair value × (1 − `slippage_bps`), where the sold leg is valued at Pyth
+//!   price + conf and the bought leg at price − conf (conservative for the Pot);
+//! - sold leg must be at least `REBALANCE_DEADBAND_BPS` of NAV above target;
+//! - at most one rebalance per `REBALANCE_COOLDOWN_SLOTS` per Pot.
 
 use anchor_lang::{
     compat::solana_instructions_sysvar::{load_current_index_checked, load_instruction_at_checked},
@@ -64,6 +67,13 @@ pub fn handle_rebalance_open<'info>(
     require!(pot.finalized, PotError::PotNotFinalized);
     require!(!pot.rebalance.open, PotError::RebalanceOpen);
     require!(amount_out > 0, PotError::ZeroAmount);
+    let clock = Clock::get()?;
+    if pot.last_rebalance_slot > 0 {
+        require!(
+            clock.slot >= pot.last_rebalance_slot.saturating_add(REBALANCE_COOLDOWN_SLOTS),
+            PotError::Cooldown
+        );
+    }
     require!(leg_out != leg_in, PotError::InvalidLeg);
     // Cash can only be sold (deployed), never bought: exits are in kind, cash target is 0.
     require!(leg_in != CASH_LEG, PotError::InvalidLeg);
@@ -95,7 +105,6 @@ pub fn handle_rebalance_open<'info>(
     require!(found, PotError::MissingClose);
 
     // --- Price everything.
-    let clock = Clock::get()?;
     let legs = oracle::snapshot_legs(pot, ctx.remaining_accounts, &clock, config.max_price_age_secs)?;
     let nav = oracle::nav_usd(ctx.accounts.cash_vault.amount, &legs)?;
     require!(nav > 0, PotError::ZeroAmount);
@@ -121,7 +130,8 @@ pub fn handle_rebalance_open<'info>(
     } else {
         let leg = pot.leg(leg_out).ok_or(PotError::InvalidLeg)?;
         let snap = legs[leg_out as usize];
-        let tv = oracle::token_value_usd(amount_out, snap.decimals, snap.price, snap.expo)?;
+        // Sold asset valued high (price + conf): the Pot asks for more in return.
+        let tv = oracle::token_value_usd(amount_out, snap.decimals, snap.price_hi, snap.expo)?;
         (
             leg.vault,
             leg.mint,
@@ -143,6 +153,8 @@ pub fn handle_rebalance_open<'info>(
 
     // --- Bounds.
     require!(out_value > out_target, PotError::NotOverweight);
+    let deadband = nav * (REBALANCE_DEADBAND_BPS as u128) / (BPS as u128);
+    require!(out_value - out_target >= deadband, PotError::WithinDeadband);
     require!(in_snap.value_usd < in_target, PotError::NotOverweight);
     require!(out_value - trade_value >= out_target, PotError::OvershootOut);
     require!(in_snap.value_usd + trade_value <= in_target, PotError::OvershootIn);
@@ -151,7 +163,8 @@ pub fn handle_rebalance_open<'info>(
 
     // Minimum to receive: trade value at the Pyth price minus slippage, in bought-token units.
     let min_value = trade_value * ((BPS - pot.slippage_bps as u64) as u128) / (BPS as u128);
-    let min_in = oracle::usd_to_token_amount(min_value, in_snap.decimals, in_snap.price, in_snap.expo)?;
+    // Bought asset valued low (price − conf): more units required.
+    let min_in = oracle::usd_to_token_amount(min_value, in_snap.decimals, in_snap.price_lo, in_snap.expo)?;
     require!(min_in > 0, PotError::ZeroAmount);
 
     // --- Hand the sold amount to the keeper.
@@ -181,6 +194,7 @@ pub fn handle_rebalance_open<'info>(
         in_vault_before: ctx.accounts.in_vault.amount,
         slot: clock.slot,
     };
+    pot.last_rebalance_slot = clock.slot;
     emit!(RebalanceOpened {
         pot: pot.key(),
         keeper: ctx.accounts.keeper.key(),
@@ -198,9 +212,6 @@ pub struct RebalanceClose<'info> {
     #[account(mut, seeds = [POT_SEED, pot.index_mint.as_ref()], bump = pot.bump)]
     pub pot: Account<'info, Pot>,
     pub in_vault: Account<'info, TokenAccount>,
-    /// CHECK: the Instructions sysvar, address-checked.
-    #[account(address = anchor_lang::compat::solana_instructions_sysvar::ID)]
-    pub instructions: UncheckedAccount<'info>,
 }
 
 pub fn handle_rebalance_close(ctx: Context<RebalanceClose>) -> Result<()> {

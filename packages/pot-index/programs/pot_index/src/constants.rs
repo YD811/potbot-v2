@@ -44,6 +44,17 @@ pub const MAX_CONF_BPS: u64 = 200; // 2%
 /// Sentinel leg index meaning "the USDC cash leg".
 pub const CASH_LEG: u8 = u8::MAX;
 
+/// Hard upper bound on the oracle age any config may allow (pull oracle: clients post fresh updates).
+pub const MAX_PRICE_AGE_SECS_LIMIT: u64 = 300;
+
+/// Minimum deposit so fees can never round to zero: 1 USDC.
+pub const MIN_DEPOSIT: u64 = 1_000_000;
+
+/// A leg must deviate from target by at least this share of NAV before it can be traded.
+pub const REBALANCE_DEADBAND_BPS: u64 = 50; // 0.5% of NAV
+/// Minimum slots between two rebalances of the same Pot (~1 minute).
+pub const REBALANCE_COOLDOWN_SLOTS: u64 = 150;
+
 /// Hard limits on creator-chosen rebalance parameters.
-pub const MAX_SLIPPAGE_BPS: u16 = 300; // 3%
+pub const MAX_SLIPPAGE_BPS: u16 = 100; // 1%
 pub const MAX_TRADE_BPS_LIMIT: u16 = 2_500; // 25% of NAV per trade

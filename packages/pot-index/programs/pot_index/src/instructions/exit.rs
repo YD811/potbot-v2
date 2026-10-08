@@ -32,7 +32,11 @@ pub fn handle_exit<'info>(
 ) -> Result<()> {
     let pot = &ctx.accounts.pot;
     require!(pot.finalized, PotError::PotNotFinalized);
-    require!(!pot.rebalance.open, PotError::RebalanceOpen);
+    let clock = Clock::get()?;
+    require!(
+        !(pot.rebalance.open && pot.rebalance.slot == clock.slot),
+        PotError::RebalanceOpen
+    );
     require!(shares > 0, PotError::ZeroShares);
     require!(
         ctx.remaining_accounts.len() == pot.legs.len() * 3,
@@ -111,6 +115,8 @@ pub fn handle_exit<'info>(
         )?;
     }
 
+    let pot = &mut ctx.accounts.pot;
+    pot.total_exits_usd = pot.total_exits_usd.saturating_add(usdc_out);
     emit!(Exited {
         pot: pot.key(),
         user: user_key,

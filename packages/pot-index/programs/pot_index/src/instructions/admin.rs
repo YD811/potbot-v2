@@ -21,8 +21,11 @@ pub struct InitConfig<'info> {
 
 pub fn handle_init_config(ctx: Context<InitConfig>, treasury: Pubkey, max_price_age_secs: u64) -> Result<()> {
     require!(max_price_age_secs > 0, PotError::InvalidParams);
+    require!(max_price_age_secs <= MAX_PRICE_AGE_SECS_LIMIT, PotError::PriceAgeTooLong);
+    require!(ctx.accounts.usdc_mint.decimals == 6, PotError::BadUsdcDecimals);
     let c = &mut ctx.accounts.config;
     c.admin = ctx.accounts.admin.key();
+    c.pending_admin = Pubkey::default();
     c.treasury = treasury;
     c.usdc_mint = ctx.accounts.usdc_mint.key();
     c.max_price_age_secs = max_price_age_secs;
@@ -54,14 +57,34 @@ pub fn handle_set_config(ctx: Context<AdminOnly>, u: ConfigUpdate) -> Result<()>
     }
     if let Some(a) = u.max_price_age_secs {
         require!(a > 0, PotError::InvalidParams);
+        require!(a <= MAX_PRICE_AGE_SECS_LIMIT, PotError::PriceAgeTooLong);
         c.max_price_age_secs = a;
     }
     if let Some(t) = u.treasury {
         c.treasury = t;
     }
     if let Some(a) = u.new_admin {
-        c.admin = a;
+        // Two-step: the new key must accept before it holds any power.
+        c.pending_admin = a;
     }
+    Ok(())
+}
+
+#[derive(Accounts)]
+pub struct AcceptAdmin<'info> {
+    pub new_admin: Signer<'info>,
+    #[account(mut, seeds = [CONFIG_SEED], bump = config.bump)]
+    pub config: Account<'info, Config>,
+}
+
+pub fn handle_accept_admin(ctx: Context<AcceptAdmin>) -> Result<()> {
+    let c = &mut ctx.accounts.config;
+    require!(
+        c.pending_admin != Pubkey::default() && c.pending_admin == ctx.accounts.new_admin.key(),
+        PotError::NotPendingAdmin
+    );
+    c.admin = c.pending_admin;
+    c.pending_admin = Pubkey::default();
     Ok(())
 }
 

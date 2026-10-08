@@ -44,15 +44,20 @@ pub fn handle_deposit<'info>(
     require!(!config.paused, PotError::ProtocolPaused);
     require!(pot.finalized, PotError::PotNotFinalized);
     require!(!pot.paused, PotError::PotPaused);
-    require!(!pot.rebalance.open, PotError::RebalanceOpen);
-    require!(amount > 0, PotError::ZeroAmount);
+    require!(amount >= MIN_DEPOSIT, PotError::DepositTooSmall);
+    let clock = Clock::get()?;
+    // A rebalance can only be open inside its own transaction (see rebalance.rs); a stale flag
+    // from any other slot must never block users.
+    require!(
+        !(pot.rebalance.open && pot.rebalance.slot == clock.slot),
+        PotError::RebalanceOpen
+    );
 
     if let Some(r) = &ctx.accounts.referrer_usdc {
         require!(r.owner != ctx.accounts.user.key(), PotError::SelfReferral);
     }
 
-    // 1. Price the Pot before the deposit.
-    let clock = Clock::get()?;
+    // 1. Price the Pot before the deposit (legs valued at price + conf: conservative for the Pot).
     let legs = oracle::snapshot_legs(pot, ctx.remaining_accounts, &clock, config.max_price_age_secs)?;
     let nav_before = oracle::nav_usd(ctx.accounts.cash_vault.amount, &legs)?;
 

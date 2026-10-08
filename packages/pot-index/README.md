@@ -18,8 +18,20 @@ A **Pot** is a non-custodial basket of Solana assets with fixed target weights.
 
 There is **no withdraw instruction**. Assets leave a Pot only as a proportional share.
 
-NAV = USDC cash + Σ (vault balance × Pyth price), with staleness (`max_price_age_secs`) and
-confidence (≤ 2%) checks. First-depositor inflation is blunted by a phantom $1 / 1 share.
+NAV = USDC cash + Σ (vault balance × Pyth price), with staleness (`max_price_age_secs`, hard-capped at
+300 s) and confidence (≤ 2%) checks. Pricing is conservative for the Pot: what the Pot holds or gives
+away is valued at `price + conf`, what it receives at `price − conf`. First-depositor inflation is
+blunted by a phantom $1 / 1 share. Rebalances need a 0.5%-of-NAV deadband and ~1 minute cooldown.
+
+## Security review (Oct 8)
+
+Independent checklist review (Solana Foundation + repo `solana-security-review` skill): no criticals.
+Fixed in-code: oracle age cap + conservative confidence pricing (H1), rebalance deadband/cooldown and
+1% max slippage (M1), two-step admin transfer and USDC-decimals check (M2), exit safety valve against a
+stale rebalance flag (L1), ATA `init_if_needed` against pre-creation griefing (L2), 1 USDC minimum
+deposit (L5). Open by design / policy: referral share can be self-rebated by a second wallet (M3 —
+mitigated later with registered referrers); keeper slippage is the implicit rebalance fee (M1);
+admin should be a Squads multisig on mainnet.
 
 ## Build & test
 

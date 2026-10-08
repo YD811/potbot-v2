@@ -35,6 +35,9 @@ pub mod pot_index {
     pub fn set_config(ctx: Context<AdminOnly>, update: ConfigUpdate) -> Result<()> {
         instructions::admin::handle_set_config(ctx, update)
     }
+    pub fn accept_admin(ctx: Context<AcceptAdmin>) -> Result<()> {
+        instructions::admin::handle_accept_admin(ctx)
+    }
     pub fn register_asset(ctx: Context<RegisterAsset>, feed_id: [u8; 32]) -> Result<()> {
         instructions::admin::handle_register_asset(ctx, feed_id)
     }

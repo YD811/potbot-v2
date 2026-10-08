@@ -12,9 +12,13 @@ pub struct LegSnapshot {
     pub amount: u64,
     /// Pyth price (mantissa) and exponent, e.g. price=15_000_000_000, expo=-8 → $150.
     pub price: i64,
+    /// price + conf: used when the Pot *values what it holds or gives away* (NAV high → fewer shares).
+    pub price_hi: i64,
+    /// price − conf: used when the Pot *values what it receives* (min_in high).
+    pub price_lo: i64,
     pub expo: i32,
     pub decimals: u8,
-    /// Value of `amount` in micro-USD.
+    /// Conservative value of `amount` in micro-USD (at `price_hi`).
     pub value_usd: u128,
 }
 
@@ -49,13 +53,13 @@ pub fn usd_to_token_amount(value_usd: u128, decimals: u8, price: i64, expo: i32)
     u64::try_from(amt).map_err(|_| PotError::MathOverflow.into())
 }
 
-/// Read and validate a Pyth `PriceUpdateV2` account for `feed_id`.
+/// Read and validate a Pyth `PriceUpdateV2` account for `feed_id`. Returns `(price, conf, expo)`.
 pub fn read_price(
     info: &AccountInfo,
     feed_id: &[u8; 32],
     clock: &Clock,
     max_age_secs: u64,
-) -> Result<(i64, i32)> {
+) -> Result<(i64, u64, i32)> {
     require_keys_eq!(*info.owner, pyth_solana_receiver_sdk::ID, PotError::BadOracleOwner);
     let data = info.try_borrow_data()?;
     let update = PriceUpdateV2::try_deserialize(&mut &data[..])?;
@@ -69,7 +73,7 @@ pub fn read_price(
         .checked_mul(MAX_CONF_BPS as u128)
         .ok_or(PotError::MathOverflow)?;
     require!(lhs <= rhs, PotError::OracleConfidence);
-    Ok((p.price, p.exponent))
+    Ok((p.price, p.conf, p.exponent))
 }
 
 /// Walk `remaining` as `[vault_i, price_update_i]` pairs in leg order and price every leg.
@@ -92,11 +96,17 @@ pub fn snapshot_legs<'info>(
         require_keys_eq!(vault_info.key(), leg.vault, PotError::VaultMismatch);
         let vault = Account::<TokenAccount>::try_from(vault_info)?;
         require_keys_eq!(vault.mint, leg.mint, PotError::TokenMintMismatch);
-        let (price, expo) = read_price(price_info, &leg.feed_id, clock, max_age_secs)?;
-        let value_usd = token_value_usd(vault.amount, leg.decimals, price, expo)?;
+        let (price, conf, expo) = read_price(price_info, &leg.feed_id, clock, max_age_secs)?;
+        let conf_i = i64::try_from(conf).map_err(|_| PotError::MathOverflow)?;
+        let price_hi = price.checked_add(conf_i).ok_or(PotError::MathOverflow)?;
+        let price_lo = price.checked_sub(conf_i).ok_or(PotError::MathOverflow)?;
+        require!(price_lo > 0, PotError::NonPositivePrice);
+        let value_usd = token_value_usd(vault.amount, leg.decimals, price_hi, expo)?;
         out.push(LegSnapshot {
             amount: vault.amount,
             price,
+            price_hi,
+            price_lo,
             expo,
             decimals: leg.decimals,
             value_usd,

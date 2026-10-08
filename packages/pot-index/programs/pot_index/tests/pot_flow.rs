@@ -161,7 +161,7 @@ fn setup() -> World {
     send(
         &mut svm,
         &[ix(
-            pot_index::instruction::InitConfig { treasury, max_price_age_secs: 3600 },
+            pot_index::instruction::InitConfig { treasury, max_price_age_secs: 300 },
             pot_index::accounts::InitConfig { admin: admin.pubkey(), config, usdc_mint: usdc, system_program: SYSTEM },
             vec![],
         )],
@@ -350,7 +350,7 @@ fn close_ix(w: &World, k: &PotKeys, leg_in: u8) -> Instruction {
     let in_vault = if leg_in == 0 { k.sol_vault } else { k.jup_vault };
     ix(
         pot_index::instruction::RebalanceClose {},
-        pot_index::accounts::RebalanceClose { keeper: w.keeper.pubkey(), pot: k.pot, in_vault, instructions: INSTRUCTIONS_SYSVAR },
+        pot_index::accounts::RebalanceClose { keeper: w.keeper.pubkey(), pot: k.pot, in_vault },
         vec![],
     )
 }
@@ -363,6 +363,13 @@ fn spl_transfer(from: &Pubkey, to: &Pubkey, owner: &Pubkey, amount: u64) -> Inst
         &data,
         vec![AccountMeta::new(*from, false), AccountMeta::new(*to, false), AccountMeta::new_readonly(*owner, true)],
     )
+}
+
+fn advance_slots(svm: &mut LiteSVM, n: u64) {
+    let mut clock: Clock = svm.get_sysvar();
+    clock.slot += n;
+    svm.set_sysvar(&clock);
+    svm.expire_blockhash();
 }
 
 fn read_pot(svm: &LiteSVM, pot: &Pubkey) -> Pot {
@@ -439,12 +446,18 @@ fn full_flow_create_deposit_rebalance_exit() {
     assert_eq!(token_amount(&w.svm, &k.sol_vault), 1_340_000_000);
     assert!(!read_pot(&w.svm, &k.pot).rebalance.open);
 
+    // Cooldown: a second rebalance in the same slot is refused.
+    let err = { let v = vec![open_ix(&w, &k, u8::MAX, 0, 240_000_000), close_ix(&w, &k, 0)]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap_err();
+    assert!(err.contains("Cooldown"), "{err}");
+    advance_slots(&mut w.svm, 200);
+
     // A second trade inside all bounds (201 + 240 < 599 target, 240 < 25% of NAV) fails only
     // because this keeper delivers nothing: the Pot is never left short.
     let err = { let v = vec![open_ix(&w, &k, u8::MAX, 0, 240_000_000), close_ix(&w, &k, 0)]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap_err();
     assert!(err.contains("RebalanceSlippage"), "{err}");
 
     // Selling SOL (leg 0) into JUP (leg 1): SOL is underweight (201 < 599), so it cannot be sold.
+    advance_slots(&mut w.svm, 200);
     set_ata(&mut w.svm, &w.jup, &keeper, 0);
     let err = { let v = vec![open_ix(&w, &k, 0, 1, 100_000_000), close_ix(&w, &k, 1)]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap_err();
     assert!(err.contains("NotOverweight"), "{err}");
@@ -509,6 +522,7 @@ fn rebalance_cannot_overshoot_target() {
         close_ix(&w, &k, 0),
     ]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap_err();
     assert!(err.contains("OvershootIn"), "{err}");
+    advance_slots(&mut w.svm, 200);
 
     // 150 USDC is fine.
     { let v = vec![
@@ -573,4 +587,37 @@ fn weights_must_sum_and_config_is_admin_only() {
     let cfg = Config::try_deserialize(&mut &cfg.data[..]).unwrap();
     assert_eq!(cfg.admin, w.admin.pubkey());
     assert_eq!(cfg.pot_count, 1);
+
+    // Price age above the protocol limit is refused; two-step admin transfer works.
+    let too_old = ix(
+        pot_index::instruction::SetConfig {
+            update: pot_index::instructions::admin::ConfigUpdate {
+                paused: None, max_price_age_secs: Some(3601), treasury: None, new_admin: None,
+            },
+        },
+        pot_index::accounts::AdminOnly { admin: w.admin.pubkey(), config: w.config },
+        vec![],
+    );
+    let err = send(&mut w.svm, &[too_old], &w.admin, &[]).unwrap_err();
+    assert!(err.contains("PriceAgeTooLong"), "{err}");
+
+    let propose = ix(
+        pot_index::instruction::SetConfig {
+            update: pot_index::instructions::admin::ConfigUpdate {
+                paused: None, max_price_age_secs: None, treasury: None, new_admin: Some(w.creator.pubkey()),
+            },
+        },
+        pot_index::accounts::AdminOnly { admin: w.admin.pubkey(), config: w.config },
+        vec![],
+    );
+    send(&mut w.svm, &[propose], &w.admin, &[]).unwrap();
+    let cfg = Config::try_deserialize(&mut &w.svm.get_account(&w.config).unwrap().data[..]).unwrap();
+    assert_eq!(cfg.admin, w.admin.pubkey(), "admin unchanged until accepted");
+    let wrong = ix(pot_index::instruction::AcceptAdmin {}, pot_index::accounts::AcceptAdmin { new_admin: w.user.pubkey(), config: w.config }, vec![]);
+    let err = send(&mut w.svm, &[wrong], &w.user, &[]).unwrap_err();
+    assert!(err.contains("NotPendingAdmin"), "{err}");
+    let accept = ix(pot_index::instruction::AcceptAdmin {}, pot_index::accounts::AcceptAdmin { new_admin: w.creator.pubkey(), config: w.config }, vec![]);
+    send(&mut w.svm, &[accept], &w.creator, &[]).unwrap();
+    let cfg = Config::try_deserialize(&mut &w.svm.get_account(&w.config).unwrap().data[..]).unwrap();
+    assert_eq!(cfg.admin, w.creator.pubkey());
 }

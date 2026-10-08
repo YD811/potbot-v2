@@ -20,7 +20,7 @@ custom-heap = []
 custom-panic = []
 
 [dependencies]
-anchor-lang = "1.2.1"
+anchor-lang = { version = "1.2.1", features = ["init-if-needed"] }
 anchor-spl = "1.2.1"
 pyth-solana-receiver-sdk = "2.0.0"
 

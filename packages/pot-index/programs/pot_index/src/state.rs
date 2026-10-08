@@ -7,6 +7,8 @@ use crate::constants::*;
 #[derive(InitSpace)]
 pub struct Config {
     pub admin: Pubkey,
+    /// Two-step admin transfer: proposed key must call `accept_admin`.
+    pub pending_admin: Pubkey,
     /// Wallet that receives the protocol share of entry fees (its USDC ATA is checked at deposit).
     pub treasury: Pubkey,
     pub usdc_mint: Pubkey,
@@ -76,6 +78,7 @@ pub struct Pot {
     /// Max single rebalance trade as bps of NAV.
     pub max_trade_bps: u16,
     pub rebalance: RebalanceState,
+    pub last_rebalance_slot: u64,
     pub total_deposits_usd: u64,
     pub total_exits_usd: u64,
     pub created_at: i64,

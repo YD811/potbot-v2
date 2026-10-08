@@ -42,7 +42,7 @@ pub struct CreatePot<'info> {
     #[account(address = config.usdc_mint)]
     pub usdc_mint: Account<'info, Mint>,
     #[account(
-        init,
+        init_if_needed,
         payer = creator,
         associated_token::mint = usdc_mint,
         associated_token::authority = pot,
@@ -76,6 +76,7 @@ pub fn handle_create_pot(ctx: Context<CreatePot>, p: CreatePotParams) -> Result<
     pot.slippage_bps = p.slippage_bps;
     pot.max_trade_bps = p.max_trade_bps;
     pot.rebalance = RebalanceState::default();
+    pot.last_rebalance_slot = 0;
     pot.total_deposits_usd = 0;
     pot.total_exits_usd = 0;
     pot.created_at = Clock::get()?.unix_timestamp;
@@ -101,7 +102,7 @@ pub struct AddLeg<'info> {
     #[account(address = asset.mint)]
     pub mint: Account<'info, Mint>,
     #[account(
-        init,
+        init_if_needed,
         payer = creator,
         associated_token::mint = mint,
         associated_token::authority = pot,
