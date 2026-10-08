@@ -19,68 +19,74 @@ interface Section {
 
 const SECTIONS: Section[] = [
   {
-    tier: 'live',
-    title: 'Live / verifiable',
-    blurb: 'Working today. Network-specific pages show whether the proof is on devnet or mainnet. The judge clicks through and watches it run.',
-    features: [
-      { emoji: '🪴', name: 'pot_vault Anchor program', desc: '30+ instructions deployed: create_pot, deposit, withdraw, vote, execute_swap, pot_admin, treasury config.', doc: '/docs/architecture/program' },
-      { emoji: '⚡', name: 'execute_swap with Jupiter v6 CPI', desc: 'Vault PDA signs the swap directly. Three modes (AdminDirect / Proposal / StrategyTrigger) in one instruction with strict mode-source matching.' },
-      { emoji: '🗳️', name: 'On-chain governance + voting', desc: 'Proposal → vote → mark_proposal_passed → execute. Quorum, approval %, risk caps configurable per pot.' },
-      { emoji: '🪙', name: 'Solana Blinks (vote + deposit)', desc: 'GET / POST endpoints at /api/actions/[potPubkey]/{deposit,vote}. Pot proposal becomes a tweet anyone can act on without leaving X.' },
-      { emoji: '🤖', name: '@potbot/mcp on npm', desc: '18 tools (free + paid via x402). HTTP+SSE+stdio transports. Any LLM can drive a pot.' },
-      { emoji: '🛡️', name: 'Helius RPC + webhooks', desc: 'Priority fees, realtime pot events to Supabase, off-chain mirror for analytics.' },
-      { emoji: '🤝', name: 'Squads v4 multisig (creator role)', desc: 'High-value pots can be owned by a Squads multisig instead of a single key. Banner + lib live.' },
-      { emoji: '📊', name: 'Public leaderboard', desc: 'Live ranking by Season Score = volume × members × pet_health.' },
-    ],
-  },
-  {
     tier: 'devnet',
-    title: 'Devnet · mainnet target this sprint',
-    blurb: 'Proven on devnet. Mainnet cut targeted within the current quarter.',
+    title: '1 · Hackathon core — Pots & the index token',
+    blurb: 'Built from scratch during Colosseum Crypto World\'s Fair (Sept 14 – Oct 12, 2026). New `pot_index` program, deployed to devnet.',
     features: [
-      { emoji: '⚙️', name: 'Strategy slot accounts', desc: 'create_strategy, close_strategy, mark_proposal_passed. Strategy parks on-chain, AI agents and keepers can attach to slots.' },
-      { emoji: '🌱', name: 'Tamagotchi state machine', desc: 'Five levels (Seedling → Sprout → Bud → Bloom → Mature Tree). HP grows from member activity, not P&L.', doc: '/docs/architecture/governance' },
-      { emoji: '🪪', name: 'Personal AI Voters', desc: 'MemberDelegate + vote_as_delegate. Members register an AI agent wallet to vote on their behalf, revocable on-chain with a reason string.' },
-      { emoji: '🤖', name: 'PotBot AI suggestion feed', desc: 'Decision-support layer surfacing 4 candidate proposals every 60s with confidence + impact %. Vote still required.' },
-      { emoji: '📈', name: 'Dune SIM portfolio + activity', desc: 'Vault holdings + tx history via Dune SIM SVM endpoints. Drives leaderboard TVL and keeper pre-flight checks.' },
-      { emoji: '🎛️', name: 'Strategy proposal builder', desc: 'Token search (ticker or contract address) → action select → amount slider → preview → submit as proposal.' },
+      { emoji: '🧺', name: 'Create a Pot', desc: '2–5 allowlisted assets with fixed target weights. Weights lock at creation; depositors always know what they hold.' },
+      { emoji: '🪙', name: 'Index token at NAV', desc: 'Deposit USDC, mint one SPL index token at Pyth-priced NAV. 0.30% entry fee split 40/40/20 between referrer, creator and protocol.' },
+      { emoji: '🔓', name: 'Exit in kind, always', desc: 'Burn the token and receive your share of every asset. No oracle, no pause, no swaps. 0.50% stays with remaining holders. There is no withdraw instruction for anyone.' },
+      { emoji: '⚖️', name: 'Bounded permissionless rebalancing', desc: 'Anyone can rebalance toward target weights in a same-transaction open/close pair. Enforced on-chain: only overweight → underweight, never past target, per-trade cap, Pyth slippage band, deadband, cooldown.' },
+      { emoji: '🔗', name: 'Referral links', desc: 'Every Pot page has a referral link; referred deposits pay the referrer 40% of the entry fee, on-chain, at deposit time.' },
+      { emoji: '🛡️', name: 'Security pass', desc: 'Conservative Pyth pricing (price ± conf), 300 s max price age, first-depositor protection, two-step admin transfer, LiteSVM end-to-end tests.' },
     ],
   },
   {
     tier: 'phase-2',
-    title: 'Phase 2 · Q3 2026',
-    blurb: 'Designed and scaffolded in code. Ships next quarter.',
+    title: '2 · Guarded mainnet — target Q4 2026',
+    blurb: 'One flagship Pot with a TVL cap and a security review. First creators and depositors from Y-DAO and Superteam NL.',
     features: [
-      { emoji: '🔐', name: 'Pyth in-program oracle guard', desc: 'execute_swap re-reads Pyth price feeds inside the instruction and rejects keepers that fire on the wrong condition. Triggers cannot be faked.' },
-      { emoji: '🌾', name: 'Meteora DLMM + DAMM yield CPI', desc: 'Park idle pot capital in Meteora pools. CPI path scaffolded, yield_strategy field on PotAccount supports it.' },
-      { emoji: '🏦', name: 'Kamino lending CPI', desc: 'Lending-based yield strategy as an alternative to Meteora. Same allocation surface.' },
-      { emoji: '✉️', name: 'Privy embedded wallets', desc: 'Email + social login + Solana auto-create wallet. Implementation branch exists, but the PR was not merged; ships after env setup and final review.' },
-      { emoji: '🪶', name: 'Light Protocol ZK-compressed audit log', desc: 'SwapEvent + NavSnapshot compressed accounts cut rent ~5000× while keeping full on-chain audit trail.', doc: '/docs/architecture/architecture-onchain' },
-      { emoji: '🪙', name: 'init_share_mint graduation', desc: 'Off-chain shares (Seedling) graduate to on-chain SPL mint at Sprout+. Members hold transferable, DeFi-composable share tokens.', doc: '/docs/architecture/etf-token-system' },
-      { emoji: '🎯', name: 'Advanced strategies (SL / TP / trailing / DCA)', desc: 'Stop-loss, take-profit, trailing-stop, recurring DCA — all built on the existing proposal flow.' },
+      { emoji: '🚀', name: 'Flagship Pot on mainnet', desc: 'SOL + LSTs + stables, TVL-capped, honest "unaudited beta" label. This is also the funded grant milestone.' },
+      { emoji: '🔁', name: 'Jupiter-routed keeper', desc: 'Open-source keeper that fills bounded rebalances through Jupiter. Anyone can run one.' },
+      { emoji: '🏦', name: 'Squads multisig admin', desc: 'Protocol admin and upgrade authority move to a Squads v4 multisig before any real TVL.' },
+    ],
+  },
+  {
+    tier: 'phase-2',
+    title: '3 · Creator economy',
+    blurb: 'Run a Pot as a business — the Hyperliquid vault-leader model, applied to portfolios.',
+    features: [
+      { emoji: '💸', name: 'Management & performance fees', desc: 'Creator-set fees above a high-water mark, paid in index tokens. Protocol takes a cut.' },
+      { emoji: '🏆', name: 'Leaderboard', desc: 'Pots ranked by NAV performance and AUM. Public track records, like Hyperliquid vaults.' },
+      { emoji: '🆔', name: '.potbot.sol per Pot', desc: 'Readable on-chain identity for every Pot (already selling as subdomains).' },
     ],
   },
   {
     tier: 'phase-3',
-    title: 'Phase 3 · Q4 2026',
-    blurb: 'Architecture set. Some UI placeholders already in the app.',
+    title: '4 · DeFi layer — the token works everywhere',
+    blurb: 'The index token becomes a first-class DeFi asset.',
     features: [
-      { emoji: '🎨', name: 'Tamagotchi NFT mint', desc: 'Soulbound NFT minted at Bloom (L4). Metadata via Metaplex Token Metadata, evolves with pot stage.' },
-      { emoji: '⚔️', name: 'Pot duels', desc: 'Vault-vs-vault PnL competition unlocked at Bud (L3). Winner takes a slice of the loser\'s shares.' },
-      { emoji: '💎', name: 'Premium tier', desc: 'SNS subdomain (yourpot.potbot.sol), share tokenization (tokenize_pot), priority on-chain features. Currently visible as "Available" placeholders.' },
-      { emoji: '🥷', name: 'STAMPPOT — Auditable-Private mode', desc: 'PrivacyCash deposits + Merkle membership proofs + stealth addresses. Vault balance still public; the wallet-to-share link is hidden.', doc: '/docs/architecture/private-pots' },
+      { emoji: '🏛️', name: 'Borrow against your Pot token', desc: 'Index tokens as collateral on lending markets; lend them out; LP them. Liquidity for Pot tokens on spot venues.' },
+      { emoji: '🌾', name: 'Yield on idle assets', desc: 'Assets inside a Pot earn staking and lending yield (LSTs, lending vaults) without leaving the Pot.' },
+      { emoji: '📐', name: 'Smart rules & Mandates', desc: 'DCA-in, buy-the-dip, limit-style rebalances; an AI agent that proposes trades strictly inside on-chain limits.' },
+    ],
+  },
+  {
+    tier: 'phase-3',
+    title: '5 · Open portfolios — stocks, T-bills, RWAs',
+    blurb: 'The open version of Ondo × BlackRock: anyone builds the portfolio.',
+    features: [
+      { emoji: '📈', name: 'Tokenized stocks & T-bills in baskets', desc: 'xStocks, tokenized treasuries and yield-bearing stables as Pot legs, with issuer, oracle and market-hours rules.' },
+      { emoji: '🪪', name: 'Compliant Pots', desc: 'Token-2022 + Token ACL (MPL-3643-compatible) index tokens that only eligible wallets can hold.' },
     ],
   },
   {
     tier: 'vision',
-    title: 'Vision · 2027+',
-    blurb: 'Pitch-deck. No code yet. The product will get here.',
+    title: '6 · Space — your Pot in your own corner of the internet',
+    blurb: 'Vision. Pots become the vault layer for personal spaces, Y-DAO and SOLO Wallet.',
     features: [
-      { emoji: '🔒', name: 'STAMPPOT — Sealed-Private mode', desc: 'Commit-reveal voting, encrypted strategy params, shielded balances via Light Protocol confidential transfer.' },
-      { emoji: '📱', name: 'Saga / Seeker dApp Store entry', desc: 'PWA manifest is mainnet-ready; dApp Store listing with on-device wallet integration is the next mobile step.' },
-      { emoji: '🪙', name: '$POT governance token', desc: 'Protocol fee buyback + season distribution to Money Tree winners. Honest emissions, no airdrop farming.' },
-      { emoji: '🔗', name: 'Cross-pot composability', desc: 'One member, many pots, single unified portfolio view. Squads v4 as kill_switch_admin for all Sealed pots.' },
-      { emoji: '✅', name: 'Adevar Labs audit', desc: 'Full security audit before mainnet GA push.' },
+      { emoji: '🏠', name: 'Space', desc: 'A personal web space on your own hardware, opened with an NFC card, designed with an AI terminal. Your Pot is its treasury, settled on Solana.' },
+      { emoji: '🌐', name: 'Y-DAO & SOLO Wallet', desc: 'Community treasuries and a wallet that unifies it all.' },
+    ],
+  },
+  {
+    tier: 'live',
+    title: 'Experimental & legacy (still in the repo)',
+    blurb: 'Earlier PotBot v2 features — group vaults with governance, AI proposals, Blinks, MCP server, Money Tree, Duels, STAMPPOT. Kept as supporting layers; not part of the Portfolios MVP promise.',
+    features: [
+      { emoji: '🗳️', name: 'Group vaults with on-chain governance (pot_vault)', desc: 'Proposal → vote → execute via Jupiter CPI. Devnet program GJap9D…AmiK.', doc: '/docs/architecture/program' },
+      { emoji: '🤖', name: '@potbot/mcp', desc: '18 tools so any LLM can drive a vault. Will be pointed at Pots next.' },
+      { emoji: '🌱', name: 'Money Tree, Duels, STAMPPOT privacy', desc: 'Gamification and ZK privacy experiments from earlier hackathons.' },
     ],
   },
 ]
@@ -94,9 +100,9 @@ export default function RoadmapPage() {
           <h1 className="text-3xl sm:text-4xl font-black text-white">PotBot — Full Roadmap</h1>
         </div>
         <p className="text-pot-muted text-sm sm:text-base leading-relaxed max-w-2xl">
-          Every feature, every integration, with an explicit lifecycle chip. We ship what&apos;s
-          live, scaffold what&apos;s next, and tell you the truth about what&apos;s still on paper.
-          Group trading on Solana — the whole arc.
+          From one small, shippable thing — a Pot and its index token — to portfolios that work
+          across all of DeFi, and finally to your own corner of the internet. Every stage plugs into the
+          same token. Chips say honestly what is live, on devnet, next, or still on paper.
         </p>
         <div className="flex flex-wrap items-center gap-2 mt-4">
           <StatusBadge tier="live" compact />
@@ -142,10 +148,10 @@ export default function RoadmapPage() {
 
       <footer className="border-t border-pot-border pt-8 text-sm text-pot-muted">
         <p className="break-words">
-          Mainnet program: <code className="font-mono text-pot-green text-xs break-all">GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK</code>
+          Portfolios program (devnet): <code className="font-mono text-pot-green text-xs break-all">DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr</code>
         </p>
         <p className="mt-2">
-          Submission writeup: <Link href="/" className="text-pot-accent hover:text-white">potbot.fun</Link> ·
+          Hackathon build: <Link href="/worldsfair" className="text-pot-accent hover:text-white">/worldsfair</Link> ·
           Repo: <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noreferrer" className="text-pot-accent hover:text-white">github.com/YD811/potbot-v2</a>
         </p>
       </footer>

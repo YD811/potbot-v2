@@ -507,50 +507,51 @@ export default function LandingPage() {
           <div className="text-7xl mb-6 mt-2 animate-float" aria-hidden="true">🪴</div>
 
           <h1
-            className="whitespace-nowrap font-black text-white leading-[1.05] tracking-tight mb-6"
-            style={{ fontSize: 'clamp(1.5rem, 5.5vw, 4rem)' }}
+            className="font-black text-white leading-[1.05] tracking-tight mb-6"
+            style={{ fontSize: 'clamp(1.75rem, 5.5vw, 4rem)' }}
           >
-            A vault for{' '}
+            Any basket of Solana assets.
+            <br />
             <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">
-              anything
-            </span>{' '}
-            on{' '}
-            <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">
-              Solana
+              One liquid index token.
             </span>
-            .
           </h1>
 
           <p className="text-lg sm:text-2xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
             {isLight ? (
               <>
-                A shared money pot for any group online.
+                Pick a few assets and their weights. Get one token that holds them all.
                 <br />
-                Everyone votes. An AI helps. The money stays safe.
+                Share it. Anyone can buy in, anyone can cash out.
               </>
             ) : (
               <>
-                Programmable treasuries for internet communities.
+                Create a Pot in 60 seconds: assets, target weights, done.
                 <br />
-                Owned by the group, run by an AI agent.
+                Depositors mint the index token at NAV and exit in kind. No one can withdraw the assets.
               </>
             )}
           </p>
 
           <div className="flex flex-wrap gap-4 justify-center">
             <Link
-              href="/vaults"
+              href="/portfolios/new"
               className="btn-primary text-base px-6 py-3 glow-green flex items-center gap-2"
             >
-              Explore Vaults
+              Create a Pot
             </Link>
             <Link
-              href="/learn"
+              href="/portfolios"
               className="btn-secondary text-base px-6 py-3 flex items-center gap-2"
             >
-              New? Learn more
+              Explore portfolios
             </Link>
           </div>
+
+          <p className="mt-8 text-sm text-pot-muted max-w-xl mx-auto">
+            BlackRock and Ondo just put model portfolios onchain as single tokens — for eligible investors only.
+            PotBot is the open version: anyone builds the portfolio, anyone holds the token.
+          </p>
         </div>
       </section>
 

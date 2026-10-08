@@ -1,0 +1,1905 @@
+{
+  "address": "DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr",
+  "metadata": {
+    "name": "pot_index",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "PotBot Pot Index — creator baskets as one liquid index token (Crypto World's Fair 2026)"
+  },
+  "instructions": [
+    {
+      "name": "accept_admin",
+      "discriminator": [
+        112,
+        42,
+        45,
+        90,
+        116,
+        181,
+        13,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "new_admin",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "add_leg",
+      "discriminator": [
+        145,
+        145,
+        38,
+        60,
+        188,
+        195,
+        243,
+        248
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "pot"
+          ]
+        },
+        {
+          "name": "pot",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pot.index_mint",
+                "account": "Pot"
+              }
+            ]
+          }
+        },
+        {
+          "name": "asset",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  115,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pot"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "weight_bps",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "create_pot",
+      "discriminator": [
+        232,
+        45,
+        123,
+        181,
+        204,
+        121,
+        131,
+        9
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "index_mint",
+          "docs": [
+            "Fresh keypair; its key seeds the Pot PDA so every Pot is unique."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pot",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "index_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "cash_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pot"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "usdc_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "CreatePotParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "deposit",
+      "discriminator": [
+        242,
+        35,
+        198,
+        137,
+        82,
+        225,
+        242,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pot",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pot.index_mint",
+                "account": "Pot"
+              }
+            ]
+          }
+        },
+        {
+          "name": "index_mint",
+          "writable": true
+        },
+        {
+          "name": "user_index_ata",
+          "writable": true
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "user_usdc",
+          "writable": true
+        },
+        {
+          "name": "cash_vault",
+          "writable": true
+        },
+        {
+          "name": "creator_usdc",
+          "writable": true
+        },
+        {
+          "name": "protocol_usdc",
+          "writable": true
+        },
+        {
+          "name": "referrer_usdc",
+          "docs": [
+            "Optional referrer USDC account. If absent, the referrer share goes to the creator."
+          ],
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_shares_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "exit",
+      "discriminator": [
+        234,
+        32,
+        12,
+        71,
+        126,
+        5,
+        219,
+        160
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pot",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pot.index_mint",
+                "account": "Pot"
+              }
+            ]
+          }
+        },
+        {
+          "name": "index_mint",
+          "writable": true
+        },
+        {
+          "name": "user_index_ata",
+          "writable": true
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "cash_vault",
+          "writable": true
+        },
+        {
+          "name": "user_usdc",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "shares",
+          "type": "u64"
+        },
+        {
+          "name": "min_usdc_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "finalize_pot",
+      "discriminator": [
+        65,
+        142,
+        16,
+        89,
+        109,
+        39,
+        43,
+        161
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "signer": true,
+          "relations": [
+            "pot"
+          ]
+        },
+        {
+          "name": "pot",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pot.index_mint",
+                "account": "Pot"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "init_config",
+      "discriminator": [
+        23,
+        235,
+        115,
+        232,
+        168,
+        96,
+        1,
+        231
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "treasury",
+          "type": "pubkey"
+        },
+        {
+          "name": "max_price_age_secs",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "rebalance_close",
+      "discriminator": [
+        255,
+        219,
+        28,
+        40,
+        161,
+        86,
+        61,
+        36
+      ],
+      "accounts": [
+        {
+          "name": "keeper",
+          "signer": true
+        },
+        {
+          "name": "pot",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pot.index_mint",
+                "account": "Pot"
+              }
+            ]
+          }
+        },
+        {
+          "name": "in_vault"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "rebalance_open",
+      "discriminator": [
+        144,
+        62,
+        124,
+        94,
+        125,
+        0,
+        11,
+        196
+      ],
+      "accounts": [
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pot",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pot.index_mint",
+                "account": "Pot"
+              }
+            ]
+          }
+        },
+        {
+          "name": "cash_vault"
+        },
+        {
+          "name": "out_vault",
+          "docs": [
+            "Vault of the leg being sold (asset leg or the cash vault)."
+          ],
+          "writable": true
+        },
+        {
+          "name": "out_mint"
+        },
+        {
+          "name": "keeper_out_ata",
+          "docs": [
+            "Keeper's token account for the sold asset."
+          ],
+          "writable": true
+        },
+        {
+          "name": "in_vault",
+          "docs": [
+            "Vault of the leg being bought; its balance is snapshotted here and checked at close."
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "instructions",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "leg_out",
+          "type": "u8"
+        },
+        {
+          "name": "leg_in",
+          "type": "u8"
+        },
+        {
+          "name": "amount_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "register_asset",
+      "discriminator": [
+        21,
+        80,
+        155,
+        149,
+        117,
+        207,
+        235,
+        16
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "asset",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  115,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "feed_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "set_asset_enabled",
+      "discriminator": [
+        23,
+        10,
+        133,
+        70,
+        92,
+        118,
+        68,
+        186
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "asset",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  115,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "asset.mint",
+                "account": "AssetConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "enabled",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "set_config",
+      "discriminator": [
+        108,
+        158,
+        154,
+        175,
+        212,
+        98,
+        52,
+        66
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "update",
+          "type": {
+            "defined": {
+              "name": "ConfigUpdate"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "set_pot_params",
+      "discriminator": [
+        175,
+        112,
+        196,
+        242,
+        166,
+        128,
+        21,
+        52
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "signer": true,
+          "relations": [
+            "pot"
+          ]
+        },
+        {
+          "name": "pot",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pot.index_mint",
+                "account": "Pot"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "update",
+          "type": {
+            "defined": {
+              "name": "PotUpdate"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AssetConfig",
+      "discriminator": [
+        57,
+        112,
+        247,
+        166,
+        247,
+        64,
+        140,
+        23
+      ]
+    },
+    {
+      "name": "Config",
+      "discriminator": [
+        155,
+        12,
+        170,
+        224,
+        30,
+        250,
+        204,
+        130
+      ]
+    },
+    {
+      "name": "Pot",
+      "discriminator": [
+        238,
+        118,
+        60,
+        175,
+        178,
+        191,
+        59,
+        58
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "Deposited",
+      "discriminator": [
+        111,
+        141,
+        26,
+        45,
+        161,
+        35,
+        100,
+        57
+      ]
+    },
+    {
+      "name": "Exited",
+      "discriminator": [
+        219,
+        97,
+        107,
+        184,
+        198,
+        48,
+        50,
+        243
+      ]
+    },
+    {
+      "name": "RebalanceClosed",
+      "discriminator": [
+        99,
+        254,
+        181,
+        47,
+        224,
+        59,
+        184,
+        21
+      ]
+    },
+    {
+      "name": "RebalanceOpened",
+      "discriminator": [
+        231,
+        83,
+        57,
+        181,
+        186,
+        101,
+        70,
+        198
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
+    },
+    {
+      "code": 6001,
+      "name": "ProtocolPaused",
+      "msg": "Protocol is paused"
+    },
+    {
+      "code": 6002,
+      "name": "PotPaused",
+      "msg": "Pot deposits are paused"
+    },
+    {
+      "code": 6003,
+      "name": "PotNotFinalized",
+      "msg": "Pot is not finalized yet"
+    },
+    {
+      "code": 6004,
+      "name": "PotAlreadyFinalized",
+      "msg": "Pot is already finalized"
+    },
+    {
+      "code": 6005,
+      "name": "TooManyLegs",
+      "msg": "Too many legs"
+    },
+    {
+      "code": 6006,
+      "name": "TooFewLegs",
+      "msg": "Too few legs"
+    },
+    {
+      "code": 6007,
+      "name": "WeightsDoNotSum",
+      "msg": "Weights must sum to 10000 bps"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidWeight",
+      "msg": "Weight must be between 1 and 10000 bps"
+    },
+    {
+      "code": 6009,
+      "name": "DuplicateLeg",
+      "msg": "Asset already in this Pot"
+    },
+    {
+      "code": 6010,
+      "name": "AssetDisabled",
+      "msg": "Asset is not enabled"
+    },
+    {
+      "code": 6011,
+      "name": "NameTooLong",
+      "msg": "Name or symbol too long"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidParams",
+      "msg": "Invalid pot parameters"
+    },
+    {
+      "code": 6013,
+      "name": "RemainingAccountsMismatch",
+      "msg": "Wrong number of remaining accounts"
+    },
+    {
+      "code": 6014,
+      "name": "VaultMismatch",
+      "msg": "Vault account does not match the leg"
+    },
+    {
+      "code": 6015,
+      "name": "BadOracleOwner",
+      "msg": "Price account is not owned by the Pyth receiver"
+    },
+    {
+      "code": 6016,
+      "name": "StalePrice",
+      "msg": "Oracle price is stale or unavailable"
+    },
+    {
+      "code": 6017,
+      "name": "OracleConfidence",
+      "msg": "Oracle confidence too wide"
+    },
+    {
+      "code": 6018,
+      "name": "NonPositivePrice",
+      "msg": "Oracle price is not positive"
+    },
+    {
+      "code": 6019,
+      "name": "MathOverflow",
+      "msg": "Math overflow"
+    },
+    {
+      "code": 6020,
+      "name": "DepositTooSmall",
+      "msg": "Deposit below minimum"
+    },
+    {
+      "code": 6021,
+      "name": "DepositCapExceeded",
+      "msg": "Deposit would exceed the Pot cap"
+    },
+    {
+      "code": 6022,
+      "name": "SlippageShares",
+      "msg": "Fewer shares than min_shares_out"
+    },
+    {
+      "code": 6023,
+      "name": "SlippageAssets",
+      "msg": "Fewer assets than min_assets_out"
+    },
+    {
+      "code": 6024,
+      "name": "ZeroShares",
+      "msg": "Nothing to redeem"
+    },
+    {
+      "code": 6025,
+      "name": "SelfReferral",
+      "msg": "Referrer cannot be the depositor"
+    },
+    {
+      "code": 6026,
+      "name": "TokenOwnerMismatch",
+      "msg": "Token account owner mismatch"
+    },
+    {
+      "code": 6027,
+      "name": "TokenMintMismatch",
+      "msg": "Token account mint mismatch"
+    },
+    {
+      "code": 6028,
+      "name": "RebalanceOpen",
+      "msg": "A rebalance is already open"
+    },
+    {
+      "code": 6029,
+      "name": "RebalanceNotOpen",
+      "msg": "No rebalance is open"
+    },
+    {
+      "code": 6030,
+      "name": "RebalanceWrongSlot",
+      "msg": "Rebalance must be opened and closed in the same transaction"
+    },
+    {
+      "code": 6031,
+      "name": "CpiNotAllowed",
+      "msg": "Instruction must be called at transaction level, not via CPI"
+    },
+    {
+      "code": 6032,
+      "name": "MissingClose",
+      "msg": "rebalance_close must follow rebalance_open in the same transaction"
+    },
+    {
+      "code": 6033,
+      "name": "InvalidLeg",
+      "msg": "Invalid leg index"
+    },
+    {
+      "code": 6034,
+      "name": "NotOverweight",
+      "msg": "Leg is not overweight; nothing to sell"
+    },
+    {
+      "code": 6035,
+      "name": "OvershootOut",
+      "msg": "Trade would push the sold leg below its target"
+    },
+    {
+      "code": 6036,
+      "name": "OvershootIn",
+      "msg": "Trade would push the bought leg above its target"
+    },
+    {
+      "code": 6037,
+      "name": "TradeTooLarge",
+      "msg": "Trade exceeds max_trade_bps of NAV"
+    },
+    {
+      "code": 6038,
+      "name": "RebalanceSlippage",
+      "msg": "Received less than min_in"
+    },
+    {
+      "code": 6039,
+      "name": "ZeroAmount",
+      "msg": "Zero amount"
+    },
+    {
+      "code": 6040,
+      "name": "LegCountMismatch",
+      "msg": "Leg count mismatch"
+    },
+    {
+      "code": 6041,
+      "name": "WithinDeadband",
+      "msg": "Leg is within the rebalance deadband"
+    },
+    {
+      "code": 6042,
+      "name": "Cooldown",
+      "msg": "Rebalance cooldown has not elapsed"
+    },
+    {
+      "code": 6043,
+      "name": "PriceAgeTooLong",
+      "msg": "max_price_age_secs above the protocol limit"
+    },
+    {
+      "code": 6044,
+      "name": "BadUsdcDecimals",
+      "msg": "USDC mint must have 6 decimals"
+    },
+    {
+      "code": 6045,
+      "name": "NotPendingAdmin",
+      "msg": "No pending admin, or signer is not the pending admin"
+    }
+  ],
+  "types": [
+    {
+      "name": "AssetConfig",
+      "docs": [
+        "Allowlisted asset. PDA: [\"asset\", mint]."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "feed_id",
+            "docs": [
+              "Pyth price feed id (32 bytes) quoting this asset in USD."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "decimals",
+            "type": "u8"
+          },
+          {
+            "name": "enabled",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Config",
+      "docs": [
+        "One per protocol. PDA: [\"config\"]."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_admin",
+            "docs": [
+              "Two-step admin transfer: proposed key must call `accept_admin`."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "docs": [
+              "Wallet that receives the protocol share of entry fees (its USDC ATA is checked at deposit)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "max_price_age_secs",
+            "docs": [
+              "Oldest Pyth price accepted, in seconds."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "paused",
+            "docs": [
+              "Global stop for deposits and rebalances. Exits are never paused."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "pot_count",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConfigUpdate",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "paused",
+            "type": {
+              "option": "bool"
+            }
+          },
+          {
+            "name": "max_price_age_secs",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "treasury",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "new_admin",
+            "type": {
+              "option": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreatePotParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "deposit_cap_usd",
+            "docs": [
+              "Max NAV in micro-USD after a deposit (0 = uncapped)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "slippage_bps",
+            "type": "u16"
+          },
+          {
+            "name": "max_trade_bps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Deposited",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_usdc",
+            "type": "u64"
+          },
+          {
+            "name": "fee_usdc",
+            "type": "u64"
+          },
+          {
+            "name": "shares",
+            "type": "u64"
+          },
+          {
+            "name": "nav_before",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Exited",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "shares",
+            "type": "u64"
+          },
+          {
+            "name": "usdc_out",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Leg",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault",
+            "docs": [
+              "Pot-owned ATA holding this asset."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "feed_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "weight_bps",
+            "type": "u16"
+          },
+          {
+            "name": "decimals",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Pot",
+      "docs": [
+        "A Pot. PDA: [\"pot\", index_mint]."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "index_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "cash_vault",
+            "docs": [
+              "Pot-owned USDC ATA (the cash leg, target weight 0)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "legs",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Leg"
+                }
+              }
+            }
+          },
+          {
+            "name": "finalized",
+            "docs": [
+              "Weights locked; deposits allowed."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "paused",
+            "docs": [
+              "Creator-controlled stop for deposits. Exits always work."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "deposit_cap_usd",
+            "docs": [
+              "Max NAV in micro-USD after a deposit (0 = no cap)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "slippage_bps",
+            "docs": [
+              "Max adverse price move accepted on a rebalance leg, in bps."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "max_trade_bps",
+            "docs": [
+              "Max single rebalance trade as bps of NAV."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "rebalance",
+            "type": {
+              "defined": {
+                "name": "RebalanceState"
+              }
+            }
+          },
+          {
+            "name": "last_rebalance_slot",
+            "type": "u64"
+          },
+          {
+            "name": "total_deposits_usd",
+            "type": "u64"
+          },
+          {
+            "name": "total_exits_usd",
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PotUpdate",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "paused",
+            "type": {
+              "option": "bool"
+            }
+          },
+          {
+            "name": "deposit_cap_usd",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RebalanceClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "received",
+            "type": "u64"
+          },
+          {
+            "name": "min_in",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RebalanceOpened",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "keeper",
+            "type": "pubkey"
+          },
+          {
+            "name": "leg_out",
+            "type": "u8"
+          },
+          {
+            "name": "leg_in",
+            "type": "u8"
+          },
+          {
+            "name": "amount_out",
+            "type": "u64"
+          },
+          {
+            "name": "min_in",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RebalanceState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "open",
+            "type": "bool"
+          },
+          {
+            "name": "leg_out",
+            "type": "u8"
+          },
+          {
+            "name": "leg_in",
+            "type": "u8"
+          },
+          {
+            "name": "amount_out",
+            "type": "u64"
+          },
+          {
+            "name": "min_in",
+            "type": "u64"
+          },
+          {
+            "name": "in_vault_before",
+            "type": "u64"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "ASSET_SEED",
+      "type": "bytes",
+      "value": "[97, 115, 115, 101, 116]"
+    },
+    {
+      "name": "CONFIG_SEED",
+      "type": "bytes",
+      "value": "[99, 111, 110, 102, 105, 103]"
+    },
+    {
+      "name": "POT_SEED",
+      "type": "bytes",
+      "value": "[112, 111, 116]"
+    }
+  ]
+}
