@@ -1,0 +1,21 @@
+skip_local_validator = true
+
+[toolchain]
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+pot_index = "DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr"
+[programs.devnet]
+pot_index = "DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr"
+
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "cargo test"
+
+[hooks]
