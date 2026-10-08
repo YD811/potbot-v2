@@ -1,8 +1,30 @@
 {
   "cluster": "devnet",
   "programId": "DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr",
-  "usdcMint": "11111111111111111111111111111111",
+  "usdcMint": "AYLYmXfkfveAAU3gZwjHqFXePi459yumVw4NYJhHVjeN",
   "treasury": "JHV4qhTEhEKMkugYXuPURzwunYBiCUVji9ZrRiA5rvG",
-  "flagship": null,
-  "assets": {}
+  "flagship": "9NRBAd3RdoBiuArZvQMQiM7NiyYY9Sm5E5CiSrhz9yx",
+  "assets": {
+    "SOL": {
+      "symbol": "SOL",
+      "name": "Solana (test)",
+      "mint": "CXpssYfBep8R3eC8nQc3CgxBFk66iLC6AXi3L6REfRRq",
+      "decimals": 9,
+      "feedId": "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d"
+    },
+    "BTC": {
+      "symbol": "BTC",
+      "name": "Bitcoin (test)",
+      "mint": "D414Sdzss3UH5T2APCTNe69t62aSf4TXKvtPeyUW8LYc",
+      "decimals": 8,
+      "feedId": "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
+    },
+    "JUP": {
+      "symbol": "JUP",
+      "name": "Jupiter (test)",
+      "mint": "2iWo2JhqbGecWeP2euFzQXVbXpZaz5NzFncBGQK99N8i",
+      "decimals": 6,
+      "feedId": "0x0a0408d619e9380abad35060f9192039ed5042fa6f82301d0e48bb52be830996"
+    }
+  }
 }

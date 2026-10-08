@@ -40,7 +40,9 @@ async function main() {
   // 1. Mints (reuse if the file already has them).
   const mk = async (sym: string, decimals: number) => {
     if (existing?.assets?.[sym]?.mint) return new PublicKey(existing.assets[sym].mint)
-    if (sym === 'USDC' && existing?.usdcMint) return new PublicKey(existing.usdcMint)
+    if (sym === 'USDC' && existing?.usdcMint && existing.usdcMint !== SystemProgram.programId.toBase58()) {
+      return new PublicKey(existing.usdcMint)
+    }
     const m = await createMint(connection, admin, admin.publicKey, null, decimals)
     console.log('mint', sym, m.toBase58())
     return m
