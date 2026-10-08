@@ -7,7 +7,9 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "pot-index:init": "NODE_OPTIONS=--require=./scripts/_no-jito.cjs tsx scripts/pot-index-devnet-init.ts",
+    "pot-index:keeper": "NODE_OPTIONS=--require=./scripts/_no-jito.cjs tsx scripts/pot-index-devnet-keeper.ts"
   },
   "dependencies": {
     "@bonfida/spl-name-service": "^3.0.21",
