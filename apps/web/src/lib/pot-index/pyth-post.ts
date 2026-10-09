@@ -14,6 +14,8 @@ import { HermesClient } from '@pythnetwork/hermes-client'
 const HERMES_URL =
   process.env.NEXT_PUBLIC_PYTH_HERMES_URL ??
   (typeof window !== 'undefined' ? `${window.location.origin}/api/pot-index/hermes` : 'https://hermes.pyth.network')
+// Node scripts talking to Hermes directly need the key; the browser goes through the proxy which adds it.
+const HERMES_OPTS = typeof window === 'undefined' && process.env.PYTH_API_KEY ? { accessToken: process.env.PYTH_API_KEY } : {}
 
 export interface PricedTx {
   tx: VersionedTransaction
@@ -31,7 +33,7 @@ export async function buildWithPythUpdates(
   consumer: (priceUpdateAccounts: PublicKey[]) => Promise<TransactionInstruction[]>,
   opts: { computeUnitPriceMicroLamports?: number } = {},
 ): Promise<PricedTx[]> {
-  const hermes = new HermesClient(HERMES_URL)
+  const hermes = new HermesClient(HERMES_URL, HERMES_OPTS)
   const latest = await hermes.getLatestPriceUpdates(feedIds, { encoding: 'base64' })
   const updateData: string[] = latest.binary.data
 
@@ -52,7 +54,7 @@ export async function buildWithPythUpdates(
 /** Latest Hermes prices in USD keyed by feed id (display only). */
 export async function fetchHermesPrices(feedIds: string[]): Promise<Record<string, { price: number; conf: number; publishTime: number }>> {
   if (feedIds.length === 0) return {}
-  const hermes = new HermesClient(HERMES_URL)
+  const hermes = new HermesClient(HERMES_URL, HERMES_OPTS)
   const res = await hermes.getLatestPriceUpdates(feedIds, { parsed: true })
   const out: Record<string, { price: number; conf: number; publishTime: number }> = {}
   for (const p of res.parsed ?? []) {

@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "pot-index:init": "NODE_OPTIONS=--require=./scripts/_no-jito.cjs tsx scripts/pot-index-devnet-init.ts",
-    "pot-index:keeper": "NODE_OPTIONS=--require=./scripts/_no-jito.cjs tsx scripts/pot-index-devnet-keeper.ts"
+    "pot-index:keeper": "NODE_OPTIONS=--require=./scripts/_no-jito.cjs tsx scripts/pot-index-devnet-keeper.ts",
+    "pot-index:flow": "NODE_OPTIONS=--require=./scripts/_no-jito.cjs tsx scripts/pot-index-devnet-flow.ts"
   },
   "dependencies": {
     "@bonfida/spl-name-service": "^3.0.21",
