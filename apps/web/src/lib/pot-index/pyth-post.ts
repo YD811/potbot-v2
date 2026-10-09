@@ -10,7 +10,10 @@ import type { Wallet } from '@coral-xyz/anchor'
 import { PythSolanaReceiver } from '@pythnetwork/pyth-solana-receiver'
 import { HermesClient } from '@pythnetwork/hermes-client'
 
-const HERMES_URL = process.env.NEXT_PUBLIC_PYTH_HERMES_URL ?? 'https://hermes.pyth.network'
+// In the browser go through our same-origin proxy (Hermes has no CORS for browsers); in Node hit Hermes directly.
+const HERMES_URL =
+  process.env.NEXT_PUBLIC_PYTH_HERMES_URL ??
+  (typeof window !== 'undefined' ? `${window.location.origin}/api/pot-index/hermes` : 'https://hermes.pyth.network')
 
 export interface PricedTx {
   tx: VersionedTransaction
