@@ -15,6 +15,7 @@ import { estimateShares, EXIT_FEE_BPS, ENTRY_FEE_BPS, MIN_DEPOSIT_USDC } from '@
 import { assetByMint, explorerAddress, explorerTx, POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
 import { CompositionBar } from '@/components/pot-index/CompositionBar'
 import { ActivityFeed } from '@/components/pot-index/ActivityFeed'
+import { ConnectButton } from '@/components/ConnectButton'
 
 function safePubkey(s: string | null): PublicKey | null {
   try {
@@ -175,14 +176,18 @@ export default function PotPage() {
                   <div className="flex justify-between"><span>Entry fee</span><span>{(amountNum * ENTRY_FEE_BPS / 10_000).toFixed(2)} USDC</span></div>
                   {referrer && <div className="flex justify-between"><span>Referred by</span><span className="font-mono">{referrer.toBase58().slice(0, 4)}…{referrer.toBase58().slice(-4)}</span></div>}
                 </div>
+                {!connected ? (
+                  <div className="[&>button]:!w-full [&>button]:!justify-center"><ConnectButton /></div>
+                ) : (
                 <button
                   type="button"
                   className="btn-primary w-full"
                   disabled={!connected || busy || amountNum < MIN_DEPOSIT_USDC || p.paused}
                   onClick={() => run(() => deposit(p, amountNum, referrer && !referrer.equals(pubkey!) ? referrer : null), `Deposited ${amountNum} USDC`)}
                 >
-                  {!connected ? 'Connect wallet' : busy ? 'Confirm in wallet…' : `Deposit & mint $${p.symbol}`}
+                  {busy ? 'Confirm in wallet…' : `Deposit & mint $${p.symbol}`}
                 </button>
+                )}
                 <p className="text-[11px] text-pot-muted">Posts fresh Pyth prices in the same transaction, then mints at NAV. Min {MIN_DEPOSIT_USDC} USDC.</p>
               </div>
             ) : (
@@ -203,14 +208,18 @@ export default function PotPage() {
                     ))}
                   </div>
                 )}
+                {!connected ? (
+                  <div className="[&>button]:!w-full [&>button]:!justify-center"><ConnectButton /></div>
+                ) : (
                 <button
                   type="button"
                   className="btn-primary w-full"
                   disabled={!connected || busy || sharesInNum <= 0 || sharesInNum > myShareNum + 1e-9}
                   onClick={() => run(() => exit(p, Math.floor(sharesInNum * 1e6)), `Burned ${sharesInNum} $${p.symbol}`)}
                 >
-                  {!connected ? 'Connect wallet' : busy ? 'Confirm in wallet…' : 'Burn & receive assets'}
+                  {busy ? 'Confirm in wallet…' : 'Burn & receive assets'}
                 </button>
+                )}
                 <p className="text-[11px] text-pot-muted">Always available — no oracle, no pause. {EXIT_FEE_BPS / 100}% stays in the Pot.</p>
               </div>
             )}

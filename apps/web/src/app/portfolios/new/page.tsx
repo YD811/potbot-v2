@@ -6,6 +6,7 @@ import { PublicKey } from '@solana/web3.js'
 import { usePotIndexActions, useAssetPrices, usePotIndexConfig } from '@/hooks/usePotIndex'
 import { POT_INDEX_ASSETS } from '@/lib/pot-index/registry'
 import { legColor } from '@/components/pot-index/CompositionBar'
+import { ConnectButton } from '@/components/ConnectButton'
 
 interface Row {
   mint: string
@@ -174,9 +175,13 @@ export default function NewPotPage() {
         </div>
 
         {error && <p className="text-sm text-red-400">{error}</p>}
-        <button type="button" className="btn-primary w-full" disabled={!valid || busy || !connected} onClick={submit}>
-          {!connected ? 'Connect a wallet to create' : busy ? 'Creating…' : 'Create Pot'}
-        </button>
+        {!connected ? (
+          <div className="[&>button]:!w-full [&>button]:!justify-center"><ConnectButton /></div>
+        ) : (
+          <button type="button" className="btn-primary w-full" disabled={!valid || busy} onClick={submit}>
+            {busy ? 'Creating…' : 'Create Pot'}
+          </button>
+        )}
       </div>
     </div>
   )
