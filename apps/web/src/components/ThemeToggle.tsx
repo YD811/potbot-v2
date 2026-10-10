@@ -18,31 +18,27 @@ export function ThemeToggle() {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
-  const light = mounted && isLight
+  const label = !mounted
+    ? '🌑 Crypto mode'
+    : isLight
+      ? '☀️ Normie mode'
+      : '🌑 Crypto mode'
+
   return (
     <button
       type="button"
       onClick={toggleTheme}
       aria-pressed={isLight}
-      aria-label={light ? 'Switch to dark theme' : 'Switch to light theme'}
-      title={light ? 'Dark theme' : 'Light theme'}
+      aria-label={mounted && isLight ? 'Switch to Crypto mode (dark theme)' : 'Switch to Normie mode (light theme)'}
+      title={mounted && isLight ? 'Switch to Crypto mode' : 'Switch to Normie mode'}
       className={
-        'inline-flex h-9 w-9 items-center justify-center rounded-full border transition ' +
+        'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ' +
         (isLight
           ? 'border-pot-border bg-white text-gray-900 hover:border-pot-green'
           : 'border-pot-border bg-pot-card text-white hover:border-pot-green')
       }
     >
-      {light ? (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-        </svg>
-      ) : (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-        </svg>
-      )}
+      {label}
     </button>
   )
 }
