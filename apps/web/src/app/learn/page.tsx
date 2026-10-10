@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { HowAPotWorks } from '@/components/pot-index/HowAPotWorks'
+import { FeeCalculator } from '@/components/pot-index/FeeCalculator'
 import { STAGES } from '@/lib/pot-index/garden'
 
 export const metadata: Metadata = {
@@ -97,6 +98,7 @@ export default function LearnPage() {
           Example: a $10,000 deposit pays $30 at entry ($12 to the creator, $12 to the referrer, $6 to the protocol) and mints $9,970 of
           tokens. Exiting $10,000 later leaves $50 in the Pot and returns $9,950 in assets.
         </p>
+        <FeeCalculator />
       </Section>
 
       <Section title="Garden mode">

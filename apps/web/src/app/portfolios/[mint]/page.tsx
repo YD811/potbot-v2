@@ -16,6 +16,8 @@ import { estimateShares, EXIT_FEE_BPS, ENTRY_FEE_BPS, MIN_DEPOSIT_USDC } from '@
 import { assetByMint, explorerAddress, explorerTx, POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
 import { CompositionBar } from '@/components/pot-index/CompositionBar'
 import { ActivityFeed } from '@/components/pot-index/ActivityFeed'
+import { friendlyError } from '@/lib/pot-index/errors'
+import { DevnetFaucet } from '@/components/pot-index/DevnetFaucet'
 import { NavChart } from '@/components/pot-index/NavChart'
 import { PositionCard } from '@/components/pot-index/PositionCard'
 import { PlantBadge } from '@/components/pot-index/PlantBadge'
@@ -108,7 +110,7 @@ export default function PotPage() {
       const sig = Array.isArray(r) ? r[r.length - 1] : r
       setMsg({ ok: true, text: typeof okText === 'function' ? okText(r) : okText, sig })
     } catch (e) {
-      setMsg({ ok: false, text: e instanceof Error ? e.message : String(e) })
+      setMsg({ ok: false, text: friendlyError(e, { devnet: POT_INDEX_SETTINGS.cluster !== 'mainnet-beta' }) })
     } finally {
       setBusy(false)
     }
@@ -226,7 +228,7 @@ export default function PotPage() {
                 <button
                   type="button"
                   className="btn-primary w-full"
-                  disabled={!connected || busy || amountNum < MIN_DEPOSIT_USDC || p.paused || stalePrices}
+                  disabled={!connected || busy || amountNum < MIN_DEPOSIT_USDC || p.paused || stalePrices || (myUsdc.data !== undefined && amountNum > myUsdc.data)}
                   onClick={() =>
                     run(
                       () => deposit(p, amountNum, referrer && !referrer.equals(pubkey!) ? referrer : null),
@@ -239,6 +241,9 @@ export default function PotPage() {
                 >
                   {stalePrices ? 'Market closed: mint opens with live prices' : busy ? 'Confirm in wallet…' : `Deposit & mint $${p.symbol}`}
                 </button>
+                )}
+                {connected && myUsdc.data !== undefined && amountNum > myUsdc.data && (
+                  <p className="text-xs text-yellow-200">You have {myUsdc.data.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC in this wallet.{POT_INDEX_SETTINGS.cluster !== 'mainnet-beta' ? ' Get test USDC below.' : ''}</p>
                 )}
                 <p className="text-xs text-white/70">One wallet prompt: prices are posted, your tokens are minted at the current value, and the basket is bought in the same go. Min {MIN_DEPOSIT_USDC} USDC.</p>
               </div>
@@ -377,37 +382,3 @@ function Stat({ label, value }: { label: string; value: string }) {
   )
 }
 
-function DevnetFaucet() {
-  const { pubkey } = usePotIndexActions()
-  const [state, setState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle')
-  const [err, setErr] = useState('')
-  const [gotSol, setGotSol] = useState(0)
-  return (
-    <div className="card p-5">
-      <h3 className="font-semibold text-white">Devnet faucet</h3>
-      <p className="mt-1 text-xs text-white/70">Get 1,000 test USDC to try this Pot. A fresh wallet also gets a little SOL for fees. Devnet only, no real value.</p>
-      <button
-        type="button"
-        className="btn-secondary mt-2 w-full text-sm"
-        disabled={!pubkey || state === 'busy'}
-        onClick={async () => {
-          setState('busy')
-          setErr('')
-          try {
-            const r = await fetch('/api/pot-index/faucet', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ wallet: pubkey!.toBase58() }) })
-            const j = await r.json()
-            if (!r.ok) throw new Error(j.error ?? 'faucet failed')
-            setGotSol(Number(j.sol ?? 0))
-            setState('done')
-          } catch (e) {
-            setErr(e instanceof Error ? e.message : String(e))
-            setState('error')
-          }
-        }}
-      >
-        {state === 'busy' ? 'Sending…' : state === 'done' ? (gotSol > 0 ? `Sent 1,000 tUSDC + ${gotSol} SOL ✓` : 'Sent 1,000 tUSDC ✓') : 'Get test USDC'}
-      </button>
-      {err && <p className="mt-2 text-xs text-red-300">{err}</p>}
-    </div>
-  )
-}
