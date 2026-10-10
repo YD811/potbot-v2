@@ -11,6 +11,7 @@ import {
   buildCreatePot,
   buildDeposit,
   buildExit,
+  ENTRY_FEE_BPS,
   buildSetIndexMetadata,
   fetchAllPots,
   fetchConfig,
@@ -251,7 +252,7 @@ export function usePotIndexActions() {
   )
 
   const deposit = useCallback(
-    async (pot: PotView, amountUsdc: number, referrer: PublicKey | null, minSharesOut = 0) => {
+    async (pot: PotView, amountUsdc: number, referrer: PublicKey | null, minSharesOut = 0, opts: { allocate?: boolean } = {}) => {
       if (!program || !wallet || !pubkey) throw new Error('Connect a wallet first')
       const feeds = pot.legs.map((l) => l.feedId)
       const txs = await buildWithPythUpdates(connection, wallet, feeds, (priceUpdates) =>
@@ -277,17 +278,47 @@ export function usePotIndexActions() {
       txs.forEach(({ signers }, i) => {
         if (signers.length) vtxs[i].sign(signers as never[])
       })
+
+      // Deposit and allocate: buy the basket right after the deposit, in the same prompt. Best effort:
+      // if the planner is unavailable (stale prices, market closed) the deposit still goes through
+      // and keepers allocate later.
+      let allocTxs: VersionedTransaction[] = []
+      let allocated = 0
+      if (opts.allocate !== false) {
+        try {
+          const res = await fetch('/api/pot-index/allocate', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              wallet: pubkey.toBase58(),
+              mint: pot.indexMint.toBase58(),
+              depositNetUsdc: Math.floor(amountUsdc * 1e6 * (1 - ENTRY_FEE_BPS / 10_000)),
+            }),
+          })
+          const data = (await res.json()) as { txs?: string[]; plan?: unknown[] }
+          if (res.ok && data.txs?.length) {
+            allocTxs = data.txs.map((b64) => VersionedTransaction.deserialize(Buffer.from(b64, 'base64')))
+            allocated = data.plan?.length ?? 0
+          }
+        } catch {
+          /* deposit only */
+        }
+      }
+
+      const all = [...vtxs, ...allocTxs]
       const signed = wallet.signAllTransactions
-        ? ((await wallet.signAllTransactions(vtxs)) as VersionedTransaction[])
-        : await Promise.all(vtxs.map(async (v) => (await wallet.signTransaction(v)) as VersionedTransaction))
+        ? ((await wallet.signAllTransactions(all)) as VersionedTransaction[])
+        : await Promise.all(all.map(async (v) => (await wallet.signTransaction(v)) as VersionedTransaction))
       const sigs: string[] = []
-      for (const v of signed) {
+      for (let i = 0; i < signed.length; i++) {
+        const v = signed[i]
         const sig = await connection.sendRawTransaction(v.serialize(), { maxRetries: 5 })
-        await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed')
+        if (i < vtxs.length) await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed')
+        else await connection.confirmTransaction(sig, 'confirmed')
         sigs.push(sig)
       }
       await invalidate()
-      return sigs
+      return Object.assign(sigs, { allocated })
     },
     [program, wallet, pubkey, connection],
   )
@@ -303,7 +334,35 @@ export function usePotIndexActions() {
     [program, pubkey, sendLegacy],
   )
 
-  return { createPot, deposit, exit, connected: !!pubkey, pubkey }
+  /** Exit straight to USDC. Devnet: the server builds the bundle with the market maker's fill
+   *  (program enforces the minimum on-chain); the holder signs everything in one prompt. */
+  const exitUsdc = useCallback(
+    async (pot: PotView, shares: number) => {
+      if (!wallet || !pubkey) throw new Error('Connect a wallet first')
+      const res = await fetch('/api/pot-index/exit-usdc', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ wallet: pubkey.toBase58(), mint: pot.indexMint.toBase58(), shares: String(shares) }),
+      })
+      const data = (await res.json()) as { ok?: boolean; txs?: string[]; error?: string }
+      if (!res.ok || !data.txs) throw new Error(data.error ?? 'market maker unavailable')
+      const vtxs = data.txs.map((b64) => VersionedTransaction.deserialize(Buffer.from(b64, 'base64')))
+      const signed = wallet.signAllTransactions
+        ? ((await wallet.signAllTransactions(vtxs)) as VersionedTransaction[])
+        : await Promise.all(vtxs.map(async (v) => (await wallet.signTransaction(v)) as VersionedTransaction))
+      const sigs: string[] = []
+      for (const v of signed) {
+        const sig = await connection.sendRawTransaction(v.serialize(), { maxRetries: 5 })
+        await connection.confirmTransaction(sig, 'confirmed')
+        sigs.push(sig)
+      }
+      await invalidate()
+      return sigs
+    },
+    [wallet, pubkey, connection],
+  )
+
+  return { createPot, deposit, exit, exitUsdc, connected: !!pubkey, pubkey }
 }
 
 export { assetByMint, POT_INDEX_ASSETS, POT_INDEX_SETTINGS }

@@ -14,12 +14,12 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { AnchorProvider, Program, Wallet, type Idl } from '@coral-xyz/anchor'
-import { Connection, Keypair, PublicKey, Transaction, sendAndConfirmTransaction, type VersionedTransaction } from '@solana/web3.js'
-import { getAssociatedTokenAddressSync, getOrCreateAssociatedTokenAccount, mintTo } from '@solana/spl-token'
+import { Connection, Keypair, PublicKey, Transaction, TransactionMessage, VersionedTransaction, sendAndConfirmTransaction } from '@solana/web3.js'
+import { createMintToInstruction, createTransferCheckedInstruction, getAssociatedTokenAddressSync, getOrCreateAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 import idl from '../src/lib/pot-index/idl.json'
 import registry from '../src/lib/pot-index/assets.devnet.json'
-import { buildDeposit, buildExit, fetchPot, fetchPotBalances, navUsd } from '../src/lib/pot-index/client'
-import { buildWithPythUpdates, fetchHermesPrices } from '../src/lib/pot-index/pyth-post'
+import { buildDeposit, buildExit, buildExitUsdcPair, buildRebalancePair, CASH_LEG, fetchPot, fetchPotBalances, navUsd } from '../src/lib/pot-index/client'
+import { buildPythSession, buildWithPythUpdates, fetchHermesPrices } from '../src/lib/pot-index/pyth-post'
 
 const RPC = process.env.POT_INDEX_RPC ?? 'https://api.devnet.solana.com'
 const KEYPAIR = process.env.POT_INDEX_WALLET_KEYPAIR ?? path.join(os.homedir(), '.config/solana/id.json')
@@ -51,7 +51,7 @@ async function main() {
     return
   }
 
-  const mintArg = cmd === 'status' ? positional[0] : positional[1]
+  const mintArg = cmd === 'status' || cmd === 'allocate' ? positional[0] : positional[1]
   const indexMint = new PublicKey(mintArg ?? registry.flagship!)
   const pot = await fetchPot(connection, indexMint)
   if (!pot) throw new Error('pot not found')
@@ -99,7 +99,84 @@ async function main() {
     return status()
   }
 
-  console.error('usage: deposit <usdc> [mint] [--ref <pubkey>] | exit all|<shares> [mint] | mint-usdc <wallet> [amount] | status [mint]')
+  if (cmd === 'exit-usdc') {
+    // Same bundle the web app gets from /api/pot-index/exit-usdc, built here with this wallet as both
+    // holder and devnet market maker (it is the test-USDC mint authority).
+    const myAta = getAssociatedTokenAddressSync(indexMint, kp.publicKey)
+    const have = BigInt((await connection.getTokenAccountBalance(myAta)).value.amount)
+    const shares = positional[0] === 'all' || !positional[0] ? have : BigInt(Math.round(Number(positional[0]) * 1e6))
+    const bal = await fetchPotBalances(connection, pot)
+    const prices = await fetchHermesPrices(feedIds)
+    const legOut = pot.legs.map((l, i) => ((BigInt(bal.legs[i]) * shares) / BigInt(bal.supply)) * 9950n / 10000n)
+    let pay = 0n
+    pot.legs.forEach((l, i) => { pay += BigInt(Math.floor((Number(legOut[i]) / 10 ** l.decimals) * (prices[l.feedId]?.price ?? 0) * 1e6)) })
+    const usdcBefore = Number((await connection.getTokenAccountBalance(getAssociatedTokenAddressSync(USDC, kp.publicKey))).value.amount)
+    const txs = await buildWithPythUpdates(connection, wallet, feedIds, async (priceUpdates) => {
+      const { pre, open, close } = await buildExitUsdcPair(program, { pot, user: kp.publicKey, usdcMint: USDC, treasury: TREASURY, shares: Number(shares), priceUpdates })
+      // Market maker = this wallet: it already holds the legs after `open`, so the sale is just the USDC payment.
+      const payIx = createMintToInstruction(USDC, getAssociatedTokenAddressSync(USDC, kp.publicKey), kp.publicKey, pay)
+      return [...pre, open, payIx, close]
+    })
+    let last = ''
+    for (const { tx, signers } of txs) {
+      if (signers.length) tx.sign(signers as never[])
+      tx.sign([kp])
+      last = await connection.sendRawTransaction(tx.serialize(), { maxRetries: 5 })
+      await connection.confirmTransaction(last, 'confirmed')
+      console.log('tx', explorer(last))
+    }
+    const usdcAfter = Number((await connection.getTokenAccountBalance(getAssociatedTokenAddressSync(USDC, kp.publicKey))).value.amount)
+    console.log(`redeemed ${Number(shares) / 1e6} ${pot.symbol} for USDC: +${((usdcAfter - usdcBefore) / 1e6).toFixed(6)} USDC (sale paid ${Number(pay) / 1e6} at mid, cash share + sale − 0.10% fee)`)
+    return status()
+  }
+
+  if (cmd === 'allocate') {
+    // Same plan the web app gets from /api/pot-index/allocate: this wallet is holder-keeper and market maker.
+    const bal = await fetchPotBalances(connection, pot)
+    const prices = await fetchHermesPrices(feedIds)
+    const price = pot.legs.map((l) => prices[l.feedId]?.price ?? 0)
+    const legUsd = pot.legs.map((l, i) => (bal.legs[i] / 10 ** l.decimals) * price[i] * 1e6)
+    let cash = bal.cash
+    const nav = cash + legUsd.reduce((a, b) => a + b, 0)
+    const maxTrade = (nav * pot.maxTradeBps) / 10_000
+    const plan: { leg: number; amountOut: number; amountIn: number }[] = []
+    for (let pass = 0; pass < 4 && cash >= nav * 0.005; pass++) {
+      let moved = false
+      for (const { i, gap } of pot.legs.map((l, i) => ({ i, gap: (nav * l.weightBps) / 10_000 - legUsd[i] })).filter((g) => g.gap > 0).sort((a, b) => b.gap - a.gap)) {
+        if (cash < nav * 0.005) break
+        const tradeUsd = Math.floor(Math.min(gap, cash, maxTrade) * 0.98)
+        if (tradeUsd < 500_000) continue
+        plan.push({ leg: i, amountOut: tradeUsd, amountIn: Math.floor((tradeUsd / 1e6 / price[i]) * 10 ** pot.legs[i].decimals) })
+        cash -= tradeUsd
+        legUsd[i] += tradeUsd
+        moved = true
+      }
+      if (!moved) break
+    }
+    console.log('plan', plan.map((p) => `${pot.legs[p.leg].mint.toBase58().slice(0, 4)} $${(p.amountOut / 1e6).toFixed(2)}`).join('  ') || '(nothing to deploy)')
+    if (plan.length === 0) return status()
+    const session = await buildPythSession(connection, wallet, feedIds)
+    const send = async (tx: VersionedTransaction, signers: { publicKey: PublicKey; secretKey: Uint8Array }[] = []) => {
+      if (signers.length) tx.sign(signers as never[])
+      tx.sign([kp])
+      const sig = await connection.sendRawTransaction(tx.serialize(), { maxRetries: 5 })
+      await connection.confirmTransaction(sig, 'confirmed')
+      console.log('tx', explorer(sig))
+    }
+    for (const t of session.postTxs) await send(t.tx, t.signers)
+    const myUsdc = getAssociatedTokenAddressSync(USDC, kp.publicKey)
+    for (const p of plan) {
+      const leg = pot.legs[p.leg]
+      const { open, close } = await buildRebalancePair(program, { pot, keeper: kp.publicKey, usdcMint: USDC, legOut: CASH_LEG, legIn: p.leg, amountOut: p.amountOut, priceUpdates: session.priceUpdates })
+      const { blockhash } = await connection.getLatestBlockhash('finalized')
+      const ixs = [open, createTransferCheckedInstruction(myUsdc, USDC, myUsdc, kp.publicKey, BigInt(p.amountOut), 6), createMintToInstruction(leg.mint, leg.vault, kp.publicKey, BigInt(p.amountIn)), close]
+      await send(new VersionedTransaction(new TransactionMessage({ payerKey: kp.publicKey, recentBlockhash: blockhash, instructions: ixs }).compileToV0Message()))
+    }
+    for (const t of session.closeTxs) await send(t.tx, t.signers)
+    return status()
+  }
+
+  console.error('usage: deposit <usdc> [mint] [--ref <pubkey>] | exit all|<shares> [mint] | exit-usdc all|<shares> [mint] | allocate [mint] | mint-usdc <wallet> [amount] | status [mint]')
   process.exit(1)
 }
 

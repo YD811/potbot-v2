@@ -68,7 +68,10 @@ pub fn handle_rebalance_open<'info>(
     require!(!pot.rebalance.open, PotError::RebalanceOpen);
     require!(amount_out > 0, PotError::ZeroAmount);
     let clock = Clock::get()?;
-    if pot.last_rebalance_slot > 0 {
+    // Cooldown applies to asset→asset rotations only. Deploying cash (a fresh deposit) into the
+    // legs may happen leg after leg in consecutive transactions, so one deposit can be fully
+    // allocated in a single wallet prompt.
+    if leg_out != CASH_LEG && pot.last_rebalance_slot > 0 {
         require!(
             clock.slot >= pot.last_rebalance_slot.saturating_add(REBALANCE_COOLDOWN_SLOTS),
             PotError::Cooldown
@@ -221,7 +224,7 @@ pub fn handle_rebalance_close(ctx: Context<RebalanceClose>) -> Result<()> {
     );
     let pot = &ctx.accounts.pot;
     let st = pot.rebalance;
-    require!(st.open, PotError::RebalanceNotOpen);
+    require!(st.open && st.leg_out != EXIT_LEG, PotError::RebalanceNotOpen);
     let clock = Clock::get()?;
     require!(st.slot == clock.slot, PotError::RebalanceWrongSlot);
 

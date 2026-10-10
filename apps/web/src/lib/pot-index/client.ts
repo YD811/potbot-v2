@@ -34,6 +34,8 @@ export const CASH_LEG = 255
 
 export const ENTRY_FEE_BPS = 30
 export const EXIT_FEE_BPS = 50
+/** Conversion fee on exit-to-USDC sales, to the protocol treasury. */
+export const CONVERSION_FEE_BPS = 10
 export const INDEX_DECIMALS = 6
 export const MIN_DEPOSIT_USDC = 1
 
@@ -366,6 +368,66 @@ export async function buildExit(program: Program, a: ExitArgs): Promise<Transact
     .remainingAccounts(remaining)
     .instruction()
   return [...pre, ix]
+}
+
+export interface ExitUsdcArgs {
+  pot: PotView
+  user: PublicKey
+  usdcMint: PublicKey
+  treasury: PublicKey
+  shares: number // base units (6 dec)
+  minUsdcOut?: number // base units, net of fees
+  priceUpdates: PublicKey[]
+}
+
+/**
+ * Exit straight to USDC: `open` burns, pays the cash share, hands every leg to the user's own
+ * accounts and records the minimum USDC the sale must produce; the caller inserts the sale
+ * instructions (Jupiter on mainnet, the devnet market maker here); `close` enforces the minimum
+ * and takes the 0.10% conversion fee. Both must sit in the same transaction, open first.
+ */
+export async function buildExitUsdcPair(program: Program, a: ExitUsdcArgs) {
+  const { pot, user, usdcMint } = a
+  const pre: TransactionInstruction[] = [
+    createAssociatedTokenAccountIdempotentInstruction(user, ata(user, usdcMint), user, usdcMint),
+    createAssociatedTokenAccountIdempotentInstruction(user, ata(a.treasury, usdcMint), a.treasury, usdcMint),
+    ...pot.legs.map((l) => createAssociatedTokenAccountIdempotentInstruction(user, ata(user, l.mint), user, l.mint)),
+  ]
+  const remaining = pot.legs.flatMap((l, i) => [
+    { pubkey: l.vault, isWritable: true, isSigner: false },
+    { pubkey: a.priceUpdates[i], isWritable: false, isSigner: false },
+    { pubkey: ata(user, l.mint), isWritable: true, isSigner: false },
+    { pubkey: l.mint, isWritable: false, isSigner: false },
+  ])
+  const open = await program.methods
+    .exitUsdcOpen(new BN(a.shares), new BN(a.minUsdcOut ?? 0))
+    .accounts({
+      user,
+      config: configPda(),
+      pot: pot.address,
+      indexMint: pot.indexMint,
+      userIndexAta: ata(user, pot.indexMint),
+      usdcMint,
+      cashVault: pot.cashVault,
+      userUsdc: ata(user, usdcMint),
+      tokenProgram: TOKEN_PROGRAM_ID,
+      instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+    })
+    .remainingAccounts(remaining)
+    .instruction()
+  const close = await program.methods
+    .exitUsdcClose()
+    .accounts({
+      user,
+      config: configPda(),
+      pot: pot.address,
+      usdcMint,
+      userUsdc: ata(user, usdcMint),
+      protocolUsdc: ata(a.treasury, usdcMint),
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+    .instruction()
+  return { pre, open, close }
 }
 
 export interface RebalanceArgs {

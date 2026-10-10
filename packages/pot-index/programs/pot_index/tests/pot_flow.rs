@@ -355,6 +355,56 @@ fn close_ix(w: &World, k: &PotKeys, leg_in: u8) -> Instruction {
     )
 }
 
+fn exit_usdc_open_ix(w: &World, k: &PotKeys, shares: u64, min_usdc_out: u64) -> Instruction {
+    let user = w.user.pubkey();
+    ix(
+        pot_index::instruction::ExitUsdcOpen { shares, min_usdc_out },
+        pot_index::accounts::ExitUsdcOpen {
+            user,
+            config: w.config,
+            pot: k.pot,
+            index_mint: k.index_mint,
+            user_index_ata: ata(&user, &k.index_mint),
+            usdc_mint: w.usdc,
+            cash_vault: k.cash_vault,
+            user_usdc: ata(&user, &w.usdc),
+            token_program: TOKEN,
+            instructions: INSTRUCTIONS_SYSVAR,
+        },
+        vec![
+            AccountMeta::new(k.sol_vault, false),
+            AccountMeta::new_readonly(w.sol_price, false),
+            AccountMeta::new(ata(&user, &w.sol), false),
+            AccountMeta::new_readonly(w.sol, false),
+            AccountMeta::new(k.jup_vault, false),
+            AccountMeta::new_readonly(w.jup_price, false),
+            AccountMeta::new(ata(&user, &w.jup), false),
+            AccountMeta::new_readonly(w.jup, false),
+        ],
+    )
+}
+
+fn exit_usdc_close_ix(w: &World, k: &PotKeys, user_usdc: Pubkey) -> Instruction {
+    ix(
+        pot_index::instruction::ExitUsdcClose {},
+        pot_index::accounts::ExitUsdcClose {
+            user: w.user.pubkey(),
+            config: w.config,
+            pot: k.pot,
+            usdc_mint: w.usdc,
+            user_usdc,
+            protocol_usdc: ata(&w.treasury, &w.usdc),
+            token_program: TOKEN,
+        },
+        vec![],
+    )
+}
+
+/// Pro-rata share after the 0.5% exit fee, same integer math as the program.
+fn exit_share(balance: u64, shares: u64, supply: u64) -> u64 {
+    ((balance as u128 * shares as u128 / supply as u128) * 9950 / 10000) as u64
+}
+
 fn spl_transfer(from: &Pubkey, to: &Pubkey, owner: &Pubkey, amount: u64) -> Instruction {
     let mut data = vec![3u8]; // Transfer
     data.extend_from_slice(&amount.to_le_bytes());
@@ -446,9 +496,10 @@ fn full_flow_create_deposit_rebalance_exit() {
     assert_eq!(token_amount(&w.svm, &k.sol_vault), 1_340_000_000);
     assert!(!read_pot(&w.svm, &k.pot).rebalance.open);
 
-    // Cooldown: a second rebalance in the same slot is refused.
+    // Deploying cash has no cooldown (one deposit can be allocated leg after leg); this second
+    // deployment in the same slot fails only because the keeper delivers nothing.
     let err = { let v = vec![open_ix(&w, &k, u8::MAX, 0, 240_000_000), close_ix(&w, &k, 0)]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap_err();
-    assert!(err.contains("Cooldown"), "{err}");
+    assert!(err.contains("RebalanceSlippage"), "{err}");
     advance_slots(&mut w.svm, 200);
 
     // A second trade inside all bounds (201 + 240 < 599 target, 240 < 25% of NAV) fails only
@@ -620,4 +671,198 @@ fn weights_must_sum_and_config_is_admin_only() {
     send(&mut w.svm, &[accept], &w.creator, &[]).unwrap();
     let cfg = Config::try_deserialize(&mut &w.svm.get_account(&w.config).unwrap().data[..]).unwrap();
     assert_eq!(cfg.admin, w.creator.pubkey());
+}
+
+
+/// Deposit → deploy cash into SOL → exit half straight to USDC through a market maker in the
+/// same transaction. Checks the minimum, the 0.10% conversion fee, and that every failure path
+/// leaves the holder with their tokens.
+#[test]
+fn exit_to_usdc_flow() {
+    let mut w = setup();
+    let k = create_pot(&mut w, (6000, 4000), 2500);
+    let c = w.creator.insecure_clone();
+    finalize(&mut w, &k, &c).unwrap();
+    let user = w.user.pubkey();
+    let keeper = w.keeper.pubkey();
+    set_ata(&mut w.svm, &w.usdc, &user, 1_000_000_000);
+    set_ata(&mut w.svm, &k.index_mint, &user, 0);
+    set_ata(&mut w.svm, &w.sol, &user, 0);
+    set_ata(&mut w.svm, &w.jup, &user, 0);
+    set_ata(&mut w.svm, &w.usdc, &w.creator.pubkey(), 0);
+    let protocol_usdc = set_ata(&mut w.svm, &w.usdc, &w.treasury, 0);
+    { let i = deposit_ix(&w, &k, 1_000_000_000, 0, false); send(&mut w.svm, &[i], &w.user, &[]) }.unwrap();
+
+    // Keeper deploys 200 USDC of cash into 1.34 SOL.
+    let keeper_usdc = set_ata(&mut w.svm, &w.usdc, &keeper, 1_000_000_000);
+    let keeper_sol = set_ata(&mut w.svm, &w.sol, &keeper, 10_000_000_000);
+    { let v = vec![
+            open_ix(&w, &k, u8::MAX, 0, 200_000_000),
+            spl_transfer(&keeper_sol, &k.sol_vault, &keeper, 1_340_000_000),
+            close_ix(&w, &k, 0),
+        ]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap();
+    advance_slots(&mut w.svm, 5);
+
+    let supply = token_amount(&w.svm, &ata(&user, &k.index_mint));
+    let half = supply / 2;
+    let cash_before = token_amount(&w.svm, &k.cash_vault);
+    let sol_before = token_amount(&w.svm, &k.sol_vault);
+    let user_usdc = ata(&user, &w.usdc);
+    let user_sol = ata(&user, &w.sol);
+    let usdc_start = token_amount(&w.svm, &user_usdc);
+
+    let cash_out = exit_share(cash_before, half, supply);
+    let sol_out = exit_share(sol_before, half, supply);
+    // Value of the SOL at price − conf ($149.90, expo −8), then the Pot's 1% slippage band, then 0.10% fee.
+    let legs_value = (sol_out as u128) * ((SOL_PRICE - 10_000_000) as u128) / 10u128.pow(11); // 9 dec, expo -8 → micro-USD
+    let min_from_sale = legs_value * 9900 / 10000;
+    let conv_fee = min_from_sale * 10 / 10000;
+    assert!(conv_fee > 0);
+
+    // (a) No close in the transaction → refused, nothing burned.
+    let err = { let i = exit_usdc_open_ix(&w, &k, half, 0); send(&mut w.svm, &[i], &w.user, &[]) }.unwrap_err();
+    assert!(err.contains("MissingClose"), "{err}");
+    assert_eq!(token_amount(&w.svm, &ata(&user, &k.index_mint)), supply);
+
+    // (b) Close bound to a different USDC account → refused.
+    let other_usdc = set_ata(&mut w.svm, &w.usdc, &w.admin.pubkey(), 0);
+    let err = { let v = vec![exit_usdc_open_ix(&w, &k, half, 0), exit_usdc_close_ix(&w, &k, other_usdc)]; send(&mut w.svm, &v, &w.user, &[]) }.unwrap_err();
+    assert!(err.contains("MissingClose"), "{err}");
+
+    // (c) Market maker pays too little for the SOL → whole transaction reverts, holder keeps tokens.
+    let err = { let v = vec![
+            exit_usdc_open_ix(&w, &k, half, 0),
+            spl_transfer(&user_sol, &keeper_sol, &user, sol_out),
+            spl_transfer(&keeper_usdc, &user_usdc, &keeper, (min_from_sale as u64) - 1),
+            exit_usdc_close_ix(&w, &k, user_usdc),
+        ]; send(&mut w.svm, &v, &w.user, &[&w.keeper.insecure_clone()]) }.unwrap_err();
+    assert!(err.contains("RebalanceSlippage"), "{err}");
+    assert_eq!(token_amount(&w.svm, &ata(&user, &k.index_mint)), supply);
+    assert_eq!(token_amount(&w.svm, &k.sol_vault), sol_before);
+    assert_eq!(token_amount(&w.svm, &user_usdc), usdc_start);
+    assert!(!read_pot(&w.svm, &k.pot).rebalance.open);
+
+    // (d) Honest fill: 100 USDC for the SOL.
+    let paid: u64 = 100_000_000;
+    assert!(paid as u128 >= min_from_sale);
+    { let v = vec![
+            exit_usdc_open_ix(&w, &k, half, 0),
+            spl_transfer(&user_sol, &keeper_sol, &user, sol_out),
+            spl_transfer(&keeper_usdc, &user_usdc, &keeper, paid),
+            exit_usdc_close_ix(&w, &k, user_usdc),
+        ]; send(&mut w.svm, &v, &w.user, &[&w.keeper.insecure_clone()]) }.unwrap();
+    assert_eq!(token_amount(&w.svm, &ata(&user, &k.index_mint)), supply - half);
+    assert_eq!(token_amount(&w.svm, &user_sol), 0, "SOL was sold, not kept");
+    assert_eq!(token_amount(&w.svm, &protocol_usdc), 600_000 + conv_fee as u64, "conversion fee reached the treasury");
+    assert_eq!(token_amount(&w.svm, &user_usdc), usdc_start + cash_out + paid - conv_fee as u64);
+    assert_eq!(token_amount(&w.svm, &k.sol_vault), sol_before - sol_out);
+    assert!(!read_pot(&w.svm, &k.pot).rebalance.open);
+
+    // (e) min_usdc_out above what the sale can give → refused up front.
+    let err = { let v = vec![exit_usdc_open_ix(&w, &k, 1_000_000, u64::MAX / 2), exit_usdc_close_ix(&w, &k, user_usdc)]; send(&mut w.svm, &v, &w.user, &[]) }.unwrap_err();
+    assert!(err.contains("SlippageAssets"), "{err}");
+
+    // In-kind exit still works right after.
+    { let i = exit_ix(&w, &k, 1_000_000); send(&mut w.svm, &[i], &w.user, &[]) }.unwrap();
+}
+
+/// A fresh deposit can be deployed into every leg in consecutive transactions (no cooldown for
+/// cash), while asset→asset rotations keep the cooldown.
+#[test]
+fn cash_deploys_without_cooldown_rotations_keep_it() {
+    let mut w = setup();
+    let k = create_pot(&mut w, (6000, 4000), 2500);
+    let c = w.creator.insecure_clone();
+    finalize(&mut w, &k, &c).unwrap();
+    let user = w.user.pubkey();
+    let keeper = w.keeper.pubkey();
+    set_ata(&mut w.svm, &w.usdc, &user, 1_000_000_000);
+    set_ata(&mut w.svm, &k.index_mint, &user, 0);
+    set_ata(&mut w.svm, &w.usdc, &w.creator.pubkey(), 0);
+    set_ata(&mut w.svm, &w.usdc, &w.treasury, 0);
+    { let i = deposit_ix(&w, &k, 1_000_000_000, 0, false); send(&mut w.svm, &[i], &w.user, &[]) }.unwrap();
+    set_ata(&mut w.svm, &w.usdc, &keeper, 0);
+    let keeper_sol = set_ata(&mut w.svm, &w.sol, &keeper, 10_000_000_000);
+    let keeper_jup = set_ata(&mut w.svm, &w.jup, &keeper, 10_000_000_000);
+
+    // Cash → SOL, then cash → JUP one slot later: both pass.
+    { let v = vec![open_ix(&w, &k, u8::MAX, 0, 200_000_000), spl_transfer(&keeper_sol, &k.sol_vault, &keeper, 1_340_000_000), close_ix(&w, &k, 0)]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap();
+    advance_slots(&mut w.svm, 1);
+    { let v = vec![open_ix(&w, &k, u8::MAX, 1, 200_000_000), spl_transfer(&keeper_jup, &k.jup_vault, &keeper, 201_000_000), close_ix(&w, &k, 1)]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap();
+    assert_eq!(token_amount(&w.svm, &k.cash_vault), 597_000_000);
+
+    // An asset→asset rotation one slot after the last trade hits the cooldown; after the cooldown
+    // the same call gets past that check (and fails on the bounds instead: SOL is not overweight).
+    advance_slots(&mut w.svm, 1);
+    let err = { let v = vec![open_ix(&w, &k, 0, 1, 100_000_000), spl_transfer(&keeper_jup, &k.jup_vault, &keeper, 31_000_000), close_ix(&w, &k, 1)]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap_err();
+    assert!(err.contains("Cooldown"), "{err}");
+    advance_slots(&mut w.svm, 200);
+    let err = { let v = vec![open_ix(&w, &k, 0, 1, 100_000_000), spl_transfer(&keeper_jup, &k.jup_vault, &keeper, 31_000_000), close_ix(&w, &k, 1)]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap_err();
+    assert!(err.contains("NotOverweight"), "{err}");
+}
+
+/// Referral fee paths: exact split, self-referral rejected, referrer == creator stacks, referrer ==
+/// treasury allowed, wrong-mint referrer account rejected.
+#[test]
+fn referral_paths_are_exact_and_safe() {
+    let mut w = setup();
+    let k = create_pot(&mut w, (6000, 4000), 2500);
+    let c = w.creator.insecure_clone();
+    finalize(&mut w, &k, &c).unwrap();
+    let user = w.user.pubkey();
+    set_ata(&mut w.svm, &w.usdc, &user, 10_000_000_000);
+    set_ata(&mut w.svm, &k.index_mint, &user, 0);
+    let creator_usdc = set_ata(&mut w.svm, &w.usdc, &w.creator.pubkey(), 0);
+    let protocol_usdc = set_ata(&mut w.svm, &w.usdc, &w.treasury, 0);
+    let referrer_usdc = set_ata(&mut w.svm, &w.usdc, &w.referrer, 0);
+
+    let dep = |w: &mut World, amount: u64, referrer_usdc: Option<Pubkey>| -> Result<Vec<String>, String> {
+        let i = ix(
+            pot_index::instruction::Deposit { amount, min_shares_out: 0 },
+            pot_index::accounts::Deposit {
+                user,
+                config: w.config,
+                pot: k.pot,
+                index_mint: k.index_mint,
+                user_index_ata: ata(&user, &k.index_mint),
+                usdc_mint: w.usdc,
+                user_usdc: ata(&user, &w.usdc),
+                cash_vault: k.cash_vault,
+                creator_usdc: ata(&w.creator.pubkey(), &w.usdc),
+                protocol_usdc: ata(&w.treasury, &w.usdc),
+                referrer_usdc,
+                token_program: TOKEN,
+            },
+            price_remaining(w, &k),
+        );
+        send(&mut w.svm, &[i], &w.user, &[])
+    };
+
+    // 1. With referrer: 0.12% / 0.12% / 0.06% of 10,000 USDC.
+    dep(&mut w, 10_000_000_000, Some(referrer_usdc)).unwrap();
+    assert_eq!(token_amount(&w.svm, &referrer_usdc), 12_000_000);
+    assert_eq!(token_amount(&w.svm, &creator_usdc), 12_000_000);
+    assert_eq!(token_amount(&w.svm, &protocol_usdc), 6_000_000);
+    assert_eq!(token_amount(&w.svm, &k.cash_vault), 9_970_000_000);
+
+    // 2. Self-referral (own USDC account) → rejected.
+    let usdc = w.usdc;
+    set_ata(&mut w.svm, &usdc, &user, 10_000_000_000);
+    let err = dep(&mut w, 1_000_000_000, Some(ata(&user, &usdc))).unwrap_err();
+    assert!(err.contains("SelfReferral"), "{err}");
+
+    // 3. Referrer == creator: creator receives both shares (0.24%).
+    dep(&mut w, 1_000_000_000, Some(creator_usdc)).unwrap();
+    assert_eq!(token_amount(&w.svm, &creator_usdc), 12_000_000 + 2_400_000);
+
+    // 4. No referrer: creator receives 0.24% too; protocol share unchanged at 0.06%.
+    dep(&mut w, 1_000_000_000, None).unwrap();
+    assert_eq!(token_amount(&w.svm, &creator_usdc), 12_000_000 + 2_400_000 + 2_400_000);
+    assert_eq!(token_amount(&w.svm, &protocol_usdc), 6_000_000 + 600_000 + 600_000);
+
+    // 5. A referrer account of the wrong mint → rejected by the account constraint.
+    let (jup, referrer) = (w.jup, w.referrer);
+    let bad = set_ata(&mut w.svm, &jup, &referrer, 0);
+    let err = dep(&mut w, 1_000_000_000, Some(bad)).unwrap_err();
+    assert!(err.contains("ConstraintTokenMint") || err.contains("2014"), "{err}");
 }

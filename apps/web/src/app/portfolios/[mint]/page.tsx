@@ -32,7 +32,24 @@ export default function PotPage() {
   const params = useParams<{ mint: string }>()
   const search = useSearchParams()
   const mint = params.mint
-  const referrer = safePubkey(search.get('ref'))
+  // Referral: first touch wins and is remembered per POTfolio for 30 days, so the referrer is still
+  // paid when the holder comes back later without the link.
+  const [referrer, setReferrer] = useState<PublicKey | null>(null)
+  useEffect(() => {
+    const key = `potbot-ref-${mint}`
+    const fromUrl = safePubkey(search.get('ref'))
+    try {
+      const stored = JSON.parse(localStorage.getItem(key) ?? 'null') as { ref: string; at: number } | null
+      const fresh = stored && Date.now() - stored.at < 30 * 24 * 3600 * 1000 ? safePubkey(stored.ref) : null
+      if (fresh) setReferrer(fresh)
+      else if (fromUrl) {
+        localStorage.setItem(key, JSON.stringify({ ref: fromUrl.toBase58(), at: Date.now() }))
+        setReferrer(fromUrl)
+      }
+    } catch {
+      setReferrer(fromUrl)
+    }
+  }, [mint, search])
   const pot = usePot(mint)
   const stats = usePotStats(pot.data)
   const publishTimes = useAssetPublishTimes()
@@ -44,7 +61,7 @@ export default function PotPage() {
   }, [pot.data, publishTimes.data])
   const myShares = useMyIndexBalance(pot.data)
   const myUsdc = useMyUsdcBalance()
-  const { deposit, exit, connected, pubkey } = usePotIndexActions()
+  const { deposit, exit, exitUsdc, connected, pubkey } = usePotIndexActions()
 
   const [tab, setTab] = useState<'deposit' | 'exit'>('deposit')
   const [amount, setAmount] = useState('100')
@@ -81,13 +98,13 @@ export default function PotPage() {
 
   const refLink = typeof window !== 'undefined' && pubkey ? `${window.location.origin}/portfolios/${mint}?ref=${pubkey.toBase58()}` : ''
 
-  const run = async (fn: () => Promise<string | string[]>, okText: string) => {
+  const run = async (fn: () => Promise<string | string[]>, okText: string | ((r: string | string[]) => string)) => {
     setBusy(true)
     setMsg(null)
     try {
       const r = await fn()
       const sig = Array.isArray(r) ? r[r.length - 1] : r
-      setMsg({ ok: true, text: okText, sig })
+      setMsg({ ok: true, text: typeof okText === 'function' ? okText(r) : okText, sig })
     } catch (e) {
       setMsg({ ok: false, text: e instanceof Error ? e.message : String(e) })
     } finally {
@@ -206,12 +223,20 @@ export default function PotPage() {
                   type="button"
                   className="btn-primary w-full"
                   disabled={!connected || busy || amountNum < MIN_DEPOSIT_USDC || p.paused || stalePrices}
-                  onClick={() => run(() => deposit(p, amountNum, referrer && !referrer.equals(pubkey!) ? referrer : null), `Deposited ${amountNum} USDC`)}
+                  onClick={() =>
+                    run(
+                      () => deposit(p, amountNum, referrer && !referrer.equals(pubkey!) ? referrer : null),
+                      (r) => {
+                        const n = (r as unknown as { allocated?: number }).allocated ?? 0
+                        return n > 0 ? `Deposited ${amountNum} USDC and bought ${n} of ${p.legs.length} assets` : `Deposited ${amountNum} USDC (keepers allocate it next)`
+                      },
+                    )
+                  }
                 >
                   {stalePrices ? 'Market closed: mint opens with live prices' : busy ? 'Confirm in wallet…' : `Deposit & mint $${p.symbol}`}
                 </button>
                 )}
-                <p className="text-xs text-white/70">One wallet signature covers 3–5 transactions: post Pyth prices → deposit & mint at NAV → refund the price-account rent. Min {MIN_DEPOSIT_USDC} USDC.</p>
+                <p className="text-xs text-white/70">One wallet prompt: prices are posted, your tokens are minted at the current value, and the basket is bought in the same go. Min {MIN_DEPOSIT_USDC} USDC.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -229,7 +254,7 @@ export default function PotPage() {
                     onClick={() => setExitMode('usdc')}
                     className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${exitMode === 'usdc' ? 'bg-pot-green text-pot-dark' : 'text-white/70 hover:text-white'}`}
                   >
-                    Get USDC <span className="ml-1 rounded-full border border-current px-1.5 text-[10px] font-bold uppercase">soon</span>
+                    Get USDC
                   </button>
                 </div>
 
@@ -269,9 +294,12 @@ export default function PotPage() {
                     ))}
                   </div>
                 )}
-                {exitMode === 'usdc' && (
+                {exitPreview && exitMode === 'usdc' && (
                   <div className="rounded-lg bg-pot-dark p-3 text-xs text-white/70">
-                    Exit straight to USDC is in development: the Pot sells your share through a keeper in the same transaction, with a 0.10% conversion fee on top of the exit fee. For now choose &ldquo;Get the assets&rdquo;.
+                    <p className="mb-1 text-white">You receive USDC:</p>
+                    <div className="flex justify-between"><span>Your share, sold at market</span><span>≈ ${(exitPreview.usdc + exitPreview.legs.reduce((a, l) => a + l.usd, 0)).toFixed(2)}</span></div>
+                    <div className="flex justify-between"><span>Conversion fee 0.10% (on the sold part)</span><span>−${(exitPreview.legs.reduce((a, l) => a + l.usd, 0) * 0.001).toFixed(2)}</span></div>
+                    <p className="mt-1">Sold in the same transaction. If the sale gives less than the on-chain minimum, nothing happens and you keep your tokens.{stalePrices ? ' Market closed: live prices needed, choose "Get the assets" meanwhile.' : ''}</p>
                   </div>
                 )}
                 {!connected ? (
@@ -280,10 +308,14 @@ export default function PotPage() {
                 <button
                   type="button"
                   className="btn-primary w-full"
-                  disabled={!connected || busy || exitMode === 'usdc' || sharesInNum <= 0 || sharesInNum > myShareNum + 1e-9}
-                  onClick={() => run(() => exit(p, Math.floor(sharesInNum * 1e6)), `Redeemed ${sharesInNum.toFixed(4)} $${p.symbol}`)}
+                  disabled={!connected || busy || sharesInNum <= 0 || sharesInNum > myShareNum + 1e-9 || (exitMode === 'usdc' && stalePrices)}
+                  onClick={() =>
+                    exitMode === 'usdc'
+                      ? run(() => exitUsdc(p, Math.floor(sharesInNum * 1e6)), `Redeemed ${sharesInNum.toFixed(4)} $${p.symbol} for USDC`)
+                      : run(() => exit(p, Math.floor(sharesInNum * 1e6)), `Redeemed ${sharesInNum.toFixed(4)} $${p.symbol}`)
+                  }
                 >
-                  {busy ? 'Confirm in wallet…' : exitMode === 'usdc' ? 'Get USDC (soon)' : `Redeem ${exitPct}% for the assets`}
+                  {busy ? 'Confirm in wallet…' : exitMode === 'usdc' ? `Redeem ${exitPct}% for USDC` : `Redeem ${exitPct}% for the assets`}
                 </button>
                 )}
                 <p className="text-xs text-white/70">Always available, no oracle, no pause. {EXIT_FEE_BPS / 100}% stays in the Pot for the holders who remain.</p>
