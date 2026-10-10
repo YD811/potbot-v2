@@ -46,7 +46,7 @@ export default function PortfoliosPage() {
           <h1 className="text-3xl font-black text-white sm:text-4xl">POTfolios</h1>
           <p className="mt-2 max-w-2xl text-white/70">
             A POTfolio is a basket of Solana assets (crypto, Solana natives, tokenized stocks, memes) issued as one index token.
-            Deposit USDC to mint it, burn it to get your share of every asset back. No one can withdraw the assets directly.
+            Deposit USDC to get it, redeem it any time for your share of every asset. No one can withdraw the assets directly.
           </p>
         </div>
         <Link href="/portfolios/new" className="btn-primary whitespace-nowrap">

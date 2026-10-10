@@ -481,3 +481,21 @@ html[data-theme="light"] button:disabled {
   30% { opacity: 1; transform: translateY(0); }
   100% { opacity: 1; transform: translateY(0); }
 }
+
+/* Percent slider (exit / deposit): tall track with a filled part and a big thumb */
+.pot-range {
+  -webkit-appearance: none; appearance: none;
+  height: 10px; border-radius: 9999px; outline: none; cursor: pointer;
+  background: linear-gradient(90deg, #14F195 0 var(--pct, 0%), rgba(255,255,255,0.12) var(--pct, 0%) 100%);
+}
+html[data-theme="light"] .pot-range { background: linear-gradient(90deg, #0f9d6a 0 var(--pct, 0%), rgba(13,17,23,0.12) var(--pct, 0%) 100%); }
+.pot-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 26px; height: 26px; border-radius: 9999px; background: #fff;
+  border: 3px solid #14F195; box-shadow: 0 2px 10px rgba(0,0,0,0.35); cursor: grab;
+}
+.pot-range::-moz-range-thumb {
+  width: 26px; height: 26px; border-radius: 9999px; background: #fff;
+  border: 3px solid #14F195; box-shadow: 0 2px 10px rgba(0,0,0,0.35); cursor: grab;
+}
+.pot-range:active::-webkit-slider-thumb { cursor: grabbing; transform: scale(1.08); }

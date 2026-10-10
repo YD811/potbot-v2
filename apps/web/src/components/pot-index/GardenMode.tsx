@@ -76,8 +76,7 @@ export function GardenMode({ series: fixed }: { series?: PlantSeries }) {
             <span className="bg-gradient-to-r from-pot-green to-pot-accent bg-clip-text text-transparent">grow.</span>
           </h2>
           <p className="mx-auto max-w-2xl text-base leading-relaxed text-white/80 sm:text-lg">
-            Every POTfolio is a plant. Deposits water it: the more tokens are minted, the higher the level. Exits dry it out.
-            The level is read from on-chain supply and price, so it cannot be faked.
+            Every POTfolio is a plant. Deposits water it, exits dry it out. The level comes from on-chain value, so it cannot be faked.
           </p>
         </div>
 

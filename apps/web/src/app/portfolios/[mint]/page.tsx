@@ -160,7 +160,7 @@ export default function PotPage() {
             <h2 className="mb-2 font-semibold text-white">How this POTfolio works</h2>
             <ul className="list-disc space-y-1 pl-5">
               <li>Deposit USDC → the Pot mints ${p.symbol} at the current NAV per token. Entry fee {ENTRY_FEE_BPS / 100}%.</li>
-              <li>Burn ${p.symbol} → you receive your share of every asset inside, in kind. {EXIT_FEE_BPS / 100}% stays for remaining holders.</li>
+              <li>Redeem ${p.symbol} → you receive your share of every asset inside, in kind. {EXIT_FEE_BPS / 100}% stays for remaining holders.</li>
               <li>The index token is a normal SPL token: hold it, send it, trade it.</li>
               <li>Nobody, not the creator and not PotBot, can withdraw the assets. There is no such instruction.</li>
             </ul>
@@ -236,7 +236,7 @@ export default function PotPage() {
                 {/* How much: percent slider + max */}
                 <div>
                   <div className="mb-1 flex items-center justify-between text-xs text-white/70">
-                    <span>Burn {exitPct}% of your ${p.symbol}</span>
+                    <span>Redeem {exitPct}% of your ${p.symbol}</span>
                     <button type="button" className="font-semibold text-pot-green" onClick={() => setExitPct(100)}>Max</button>
                   </div>
                   <input
@@ -246,8 +246,8 @@ export default function PotPage() {
                     step={1}
                     value={exitPct}
                     onChange={(e) => setExitPct(Number(e.target.value))}
-                    className="w-full accent-pot-green"
-                    disabled={myShareNum <= 0}
+                    className="pot-range w-full"
+                    style={{ ['--pct' as string]: `${exitPct}%` }}
                   />
                   <div className="mt-1 flex justify-between text-xs text-white/70">
                     {[25, 50, 75, 100].map((q) => (
@@ -281,9 +281,9 @@ export default function PotPage() {
                   type="button"
                   className="btn-primary w-full"
                   disabled={!connected || busy || exitMode === 'usdc' || sharesInNum <= 0 || sharesInNum > myShareNum + 1e-9}
-                  onClick={() => run(() => exit(p, Math.floor(sharesInNum * 1e6)), `Burned ${sharesInNum.toFixed(4)} $${p.symbol}`)}
+                  onClick={() => run(() => exit(p, Math.floor(sharesInNum * 1e6)), `Redeemed ${sharesInNum.toFixed(4)} $${p.symbol}`)}
                 >
-                  {busy ? 'Confirm in wallet…' : exitMode === 'usdc' ? 'Get USDC (soon)' : `Burn ${exitPct}% & get the assets`}
+                  {busy ? 'Confirm in wallet…' : exitMode === 'usdc' ? 'Get USDC (soon)' : `Redeem ${exitPct}% for the assets`}
                 </button>
                 )}
                 <p className="text-xs text-white/70">Always available, no oracle, no pause. {EXIT_FEE_BPS / 100}% stays in the Pot for the holders who remain.</p>
