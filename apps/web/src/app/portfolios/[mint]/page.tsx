@@ -48,7 +48,8 @@ export default function PotPage() {
 
   const [tab, setTab] = useState<'deposit' | 'exit'>('deposit')
   const [amount, setAmount] = useState('100')
-  const [sharesIn, setSharesIn] = useState('')
+  const [exitPct, setExitPct] = useState(100)
+  const [exitMode, setExitMode] = useState<'assets' | 'usdc'>('assets')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string; sig?: string } | null>(null)
   const [copied, setCopied] = useState(false)
@@ -64,7 +65,7 @@ export default function PotPage() {
   }, [stats.data, amountNum])
 
   const myShareNum = (myShares.data ?? 0) / 1e6
-  const sharesInNum = Number(sharesIn) || 0
+  const sharesInNum = Math.floor(myShareNum * exitPct / 100 * 1e6) / 1e6
   const exitPreview = useMemo(() => {
     if (!pot.data || !stats.data || sharesInNum <= 0 || stats.data.supply <= 0) return null
     const frac = Math.min(1, sharesInNum / stats.data.supply) * (1 - EXIT_FEE_BPS / 10_000)
@@ -210,24 +211,67 @@ export default function PotPage() {
                   {stalePrices ? 'Market closed: mint opens with live prices' : busy ? 'Confirm in wallet…' : `Deposit & mint $${p.symbol}`}
                 </button>
                 )}
-                <p className="text-[11px] text-white/70">One wallet signature covers 3–5 transactions: post Pyth prices → deposit & mint at NAV → refund the price-account rent. Min {MIN_DEPOSIT_USDC} USDC.</p>
+                <p className="text-xs text-white/70">One wallet signature covers 3–5 transactions: post Pyth prices → deposit & mint at NAV → refund the price-account rent. Min {MIN_DEPOSIT_USDC} USDC.</p>
               </div>
             ) : (
               <div className="space-y-3">
-                <label className="block">
-                  <span className="mb-1 flex justify-between text-xs text-white/70">
-                    <span>Burn (${p.symbol})</span>
-                    <button type="button" className="text-pot-green" onClick={() => setSharesIn(String(myShareNum))}>max {myShareNum.toFixed(4)}</button>
-                  </span>
-                  <input className="input" type="number" min={0} value={sharesIn} onChange={(e) => setSharesIn(e.target.value)} />
-                </label>
-                {exitPreview && (
+                {/* What you want back */}
+                <div className="grid grid-cols-2 gap-2 rounded-xl bg-pot-dark p-1">
+                  <button
+                    type="button"
+                    onClick={() => setExitMode('assets')}
+                    className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${exitMode === 'assets' ? 'bg-pot-green text-pot-dark' : 'text-white/70 hover:text-white'}`}
+                  >
+                    Get the assets
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExitMode('usdc')}
+                    className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${exitMode === 'usdc' ? 'bg-pot-green text-pot-dark' : 'text-white/70 hover:text-white'}`}
+                  >
+                    Get USDC <span className="ml-1 rounded-full border border-current px-1.5 text-[10px] font-bold uppercase">soon</span>
+                  </button>
+                </div>
+
+                {/* How much: percent slider + max */}
+                <div>
+                  <div className="mb-1 flex items-center justify-between text-xs text-white/70">
+                    <span>Burn {exitPct}% of your ${p.symbol}</span>
+                    <button type="button" className="font-semibold text-pot-green" onClick={() => setExitPct(100)}>Max</button>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={exitPct}
+                    onChange={(e) => setExitPct(Number(e.target.value))}
+                    className="w-full accent-pot-green"
+                    disabled={myShareNum <= 0}
+                  />
+                  <div className="mt-1 flex justify-between text-xs text-white/70">
+                    {[25, 50, 75, 100].map((q) => (
+                      <button key={q} type="button" onClick={() => setExitPct(q)} className={q === exitPct ? 'text-pot-green' : 'hover:text-white'}>{q}%</button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-sm text-white">
+                    {sharesInNum.toLocaleString(undefined, { maximumFractionDigits: 4 })} ${p.symbol}
+                    {stats.data && <span className="text-white/70"> ≈ ${(sharesInNum * stats.data.indexPrice).toFixed(2)}</span>}
+                  </p>
+                </div>
+
+                {exitPreview && exitMode === 'assets' && (
                   <div className="rounded-lg bg-pot-dark p-3 text-xs text-white/70">
-                    <p className="mb-1 text-white">You receive, in kind:</p>
-                    <div className="flex justify-between"><span>USDC</span><span>{exitPreview.usdc.toFixed(2)}</span></div>
+                    <p className="mb-1 text-white">You receive, every asset in kind:</p>
+                    {exitPreview.usdc > 0.005 && <div className="flex justify-between"><span>USDC (not yet bought in)</span><span>{exitPreview.usdc.toFixed(2)}</span></div>}
                     {exitPreview.legs.map((l) => (
                       <div key={l.symbol} className="flex justify-between"><span>{l.symbol}</span><span>{l.amount.toFixed(6)} (≈${l.usd.toFixed(2)})</span></div>
                     ))}
+                  </div>
+                )}
+                {exitMode === 'usdc' && (
+                  <div className="rounded-lg bg-pot-dark p-3 text-xs text-white/70">
+                    Exit straight to USDC is in development: the Pot sells your share through a keeper in the same transaction, with a 0.10% conversion fee on top of the exit fee. For now choose &ldquo;Get the assets&rdquo;.
                   </div>
                 )}
                 {!connected ? (
@@ -236,13 +280,13 @@ export default function PotPage() {
                 <button
                   type="button"
                   className="btn-primary w-full"
-                  disabled={!connected || busy || sharesInNum <= 0 || sharesInNum > myShareNum + 1e-9}
-                  onClick={() => run(() => exit(p, Math.floor(sharesInNum * 1e6)), `Burned ${sharesInNum} $${p.symbol}`)}
+                  disabled={!connected || busy || exitMode === 'usdc' || sharesInNum <= 0 || sharesInNum > myShareNum + 1e-9}
+                  onClick={() => run(() => exit(p, Math.floor(sharesInNum * 1e6)), `Burned ${sharesInNum.toFixed(4)} $${p.symbol}`)}
                 >
-                  {busy ? 'Confirm in wallet…' : 'Burn & receive assets'}
+                  {busy ? 'Confirm in wallet…' : exitMode === 'usdc' ? 'Get USDC (soon)' : `Burn ${exitPct}% & get the assets`}
                 </button>
                 )}
-                <p className="text-[11px] text-white/70">Always available, no oracle, no pause. {EXIT_FEE_BPS / 100}% stays in the Pot.</p>
+                <p className="text-xs text-white/70">Always available, no oracle, no pause. {EXIT_FEE_BPS / 100}% stays in the Pot for the holders who remain.</p>
               </div>
             )}
 

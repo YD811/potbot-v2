@@ -13,6 +13,14 @@ interface Row {
   weight: number // percent
 }
 
+/** Ticker from the name: initials for multi-word names, first letters for one word. */
+function suggestSymbol(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean)
+  if (words.length === 0) return ''
+  const letters = words.length >= 2 ? words.map((w) => w[0]) : [...words[0].slice(0, 4)]
+  return letters.join('').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)
+}
+
 export default function NewPotPage() {
   const router = useRouter()
   const { createPot, connected } = usePotIndexActions()
@@ -20,10 +28,10 @@ export default function NewPotPage() {
   const config = usePotIndexConfig()
   const [name, setName] = useState('')
   const [symbol, setSymbol] = useState('')
+  const [symbolTouched, setSymbolTouched] = useState(false)
   const [rows, setRows] = useState<Row[]>(() =>
     POT_INDEX_ASSETS.slice(0, 2).map((a, i) => ({ mint: a.mint, weight: i === 0 ? 60 : 40 })),
   )
-  const [cap, setCap] = useState<number>(0)
   const [ca, setCa] = useState('')
   const [caMsg, setCaMsg] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -58,7 +66,7 @@ export default function NewPotPage() {
         name: name.trim(),
         symbol: symbol.trim().toUpperCase(),
         legs: rows.map((r) => ({ mint: new PublicKey(r.mint), weightBps: r.weight * 100 })),
-        depositCapUsd: cap,
+        depositCapUsd: 0,
         slippageBps: 100,
         maxTradeBps: 1000,
         onGrind: setGrind,
@@ -89,11 +97,29 @@ export default function NewPotPage() {
         <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
           <label className="block">
             <span className="mb-1 block text-sm text-white/70">Name</span>
-            <input className="input" maxLength={32} value={name} onChange={(e) => setName(e.target.value)} placeholder="Solana Blue Chips" />
+            <input
+              className="input"
+              maxLength={32}
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value)
+                if (!symbolTouched) setSymbol(suggestSymbol(e.target.value))
+              }}
+              placeholder="Solana Blue Chips"
+            />
           </label>
           <label className="block">
             <span className="mb-1 block text-sm text-white/70">Ticker</span>
-            <input className="input font-mono uppercase" maxLength={10} value={symbol} onChange={(e) => setSymbol(e.target.value)} placeholder="SBC" />
+            <input
+              className="input font-mono uppercase"
+              maxLength={10}
+              value={symbol}
+              onChange={(e) => {
+                setSymbolTouched(true)
+                setSymbol(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))
+              }}
+              placeholder="SBC"
+            />
           </label>
         </div>
 
@@ -145,31 +171,32 @@ export default function NewPotPage() {
               )
             })}
           </div>
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <span className={`flex items-center gap-2 text-sm ${total === 100 ? 'text-pot-green' : 'text-yellow-300'}`}>
-              Total {total}%
-              {total !== 100 && (
-                <>
-                  <span>{total > 100 ? `· remove ${total - 100}%` : `· add ${100 - total}%`}</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (total <= 0) return
-                      setRows((rs) => {
-                        const scaled = rs.map((r) => Math.round((r.weight / total) * 100))
-                        const diff = 100 - scaled.reduce((a, b) => a + b, 0)
-                        return rs.map((r, i) => ({ ...r, weight: scaled[i] + (i === 0 ? diff : 0) }))
-                      })
-                    }}
-                    className="rounded-full border border-yellow-300/50 px-2 py-0.5 text-xs text-yellow-200 hover:bg-yellow-300/10"
-                  >
-                    Scale to 100%
-                  </button>
-                </>
-              )}
-            </span>
+          <div className={`mt-3 flex min-h-[32px] flex-wrap items-center gap-2 text-sm ${total === 100 ? 'text-pot-green' : 'text-yellow-300'}`}>
+            <span className="font-semibold">Total {total}%</span>
+            {total !== 100 && (
+              <>
+                <span>{total > 100 ? `remove ${total - 100}%` : `add ${100 - total}%`}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (total <= 0) return
+                    setRows((rs) => {
+                      const scaled = rs.map((r) => Math.round((r.weight / total) * 100))
+                      const diff = 100 - scaled.reduce((a, b) => a + b, 0)
+                      return rs.map((r, i) => ({ ...r, weight: scaled[i] + (i === 0 ? diff : 0) }))
+                    })
+                  }}
+                  className="rounded-full border border-yellow-300/50 px-2 py-0.5 text-xs text-yellow-200 hover:bg-yellow-300/10"
+                >
+                  Scale to 100%
+                </button>
+              </>
+            )}
+            {total === 100 && <span className="text-xs text-white/70">weights are locked once published</span>}
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <input
-              className="input w-44 px-2 py-1.5 font-mono text-xs"
+              className="input w-full px-2 py-1.5 font-mono text-xs sm:w-56"
               placeholder="paste token CA"
               value={ca}
               onChange={(e) => setCa(e.target.value.trim())}
@@ -184,7 +211,7 @@ export default function NewPotPage() {
             />
             {available.length > 0 && rows.length < 5 && (
               <select
-                className="input w-auto px-3 py-1.5 text-sm"
+                className="input w-full px-3 py-1.5 text-sm sm:w-auto"
                 value=""
                 onChange={(e) => e.target.value && setRows((rs) => [...rs, { mint: e.target.value, weight: 0 }])}
               >
@@ -210,17 +237,17 @@ export default function NewPotPage() {
 
         {caMsg && <p className="-mt-3 text-xs text-yellow-300">{caMsg}</p>}
 
-        <label className="block">
-          <span className="mb-1 block text-sm text-white/70">Max POTfolio size in USD (optional). Deposits stop once the Pot holds this much. 0 = no limit.</span>
-          <input type="number" min={0} className="input" value={cap} onChange={(e) => setCap(Number(e.target.value))} />
-        </label>
-
         <div className="rounded-xl border border-pot-border bg-pot-dark p-4 text-sm text-white/70">
           <p className="mb-1 font-semibold text-white">What you are publishing</p>
           <ul className="list-disc space-y-1 pl-5">
-            <li>Entry fee 0.30% on every deposit: 40% to you, 40% to the referrer (or you), 20% to the protocol.</li>
-            <li>Exit fee 0.50% stays inside the Pot for remaining holders.</li>
-            <li>Anyone can rebalance toward your targets, within on-chain limits. Nobody, including you, can withdraw assets.</li>
+            <li>
+              <b className="text-white">Entry fee 0.30%</b> on every deposit, split in the same transaction: 0.12% to you as creator,
+              0.12% to whoever referred the depositor (the holder who shared the link; with no referrer this part also goes to you),
+              0.06% to the PotBot protocol. On a $10,000 deposit: $12 you, $12 referrer, $6 protocol.
+            </li>
+            <li><b className="text-white">Exit fee 0.50%</b> never leaves the Pot: it stays with the holders who remain.</li>
+            <li><b className="text-white">No management fee.</b> You earn from deposits and from holding the token yourself.</li>
+            <li>Weights are locked. Keepers move the basket toward them within on-chain limits. Nobody, including you, can withdraw assets.</li>
           </ul>
         </div>
 

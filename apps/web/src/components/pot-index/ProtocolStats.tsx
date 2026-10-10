@@ -40,11 +40,10 @@ export function ProtocolStats({ pots }: { pots: PotView[] }) {
   const items = [
     { label: 'Pots', value: String(pots.length) },
     { label: 'TVL (devnet)', value: d ? fmt(d.tvl) : '—' },
-    { label: 'Deposits', value: d ? `${d.deposits} · ${fmt(d.depositVolume)}` : '—' },
     { label: 'Wallets', value: d ? String(d.wallets) : '—' },
   ]
   return (
-    <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="mb-6 grid grid-cols-3 gap-3">
       {items.map((it) => (
         <div key={it.label} className="card px-4 py-3">
           <p className="text-xs text-white/70">{it.label}</p>

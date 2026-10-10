@@ -204,14 +204,25 @@ export function usePotIndexActions() {
   const sendLegacy = useCallback(
     async (ixs: Transaction['instructions'], extraSigners: { publicKey: PublicKey; secretKey: Uint8Array }[] = []) => {
       if (!wallet || !pubkey) throw new Error('Connect a wallet first')
-      const tx = new Transaction().add(...ixs)
-      tx.feePayer = pubkey
-      tx.recentBlockhash = (await connection.getLatestBlockhash('confirmed')).blockhash
-      if (extraSigners.length) tx.partialSign(...(extraSigners as never[]))
-      const signed = await wallet.signTransaction(tx)
-      const sig = await connection.sendRawTransaction(signed.serialize(), { skipPreflight: false })
-      await connection.confirmTransaction(sig, 'confirmed')
-      return sig
+      // 'finalized' blockhash: wallets simulate against their own RPC, which may lag a 'confirmed'
+      // hash by a few slots and reject it with "Blockhash not found".
+      const attempt = async () => {
+        const tx = new Transaction().add(...ixs)
+        tx.feePayer = pubkey
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized')
+        tx.recentBlockhash = blockhash
+        if (extraSigners.length) tx.partialSign(...(extraSigners as never[]))
+        const signed = await wallet.signTransaction(tx)
+        const sig = await connection.sendRawTransaction(signed.serialize(), { skipPreflight: false, maxRetries: 5 })
+        await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed')
+        return sig
+      }
+      try {
+        return await attempt()
+      } catch (e) {
+        if (String(e).includes('Blockhash not found')) return attempt()
+        throw e
+      }
     },
     [connection, wallet, pubkey],
   )
@@ -257,7 +268,7 @@ export function usePotIndexActions() {
       )
       // One wallet prompt for the whole bundle (post prices → deposit → refund rent): fresh blockhash
       // on every tx right before signing, sign all at once, then send strictly in order.
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized')
       const vtxs = txs.map(({ tx }) => {
         const v = tx as VersionedTransaction
         v.message.recentBlockhash = blockhash

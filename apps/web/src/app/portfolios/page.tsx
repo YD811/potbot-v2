@@ -44,7 +44,7 @@ export default function PortfoliosPage() {
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-black text-white sm:text-4xl">POTfolios</h1>
-          <p className="mt-2 max-w-2xl text-pot-muted">
+          <p className="mt-2 max-w-2xl text-white/70">
             A POTfolio is a basket of Solana assets (crypto, Solana natives, tokenized stocks, memes) issued as one index token.
             Deposit USDC to mint it, burn it to get your share of every asset back. No one can withdraw the assets directly.
           </p>
@@ -65,39 +65,31 @@ export default function PortfoliosPage() {
 
       {pots.data && pots.data.length > 0 && <ProtocolStats pots={pots.data} />}
       {pots.data && pots.data.length > 0 && (
-        <div className="mb-5 flex flex-wrap items-center gap-2">
-          {CATS.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => setCat(c.id)}
-              className={`rounded-full border px-3 py-1 text-sm transition ${cat === c.id ? 'border-pot-green bg-pot-green/15 text-pot-green' : 'border-pot-border text-pot-muted hover:text-white'}`}
-            >
-              {c.label}
-            </button>
-          ))}
-          <span className="mx-2 hidden h-5 w-px bg-pot-border sm:inline-block" />
-          {([
-            ['tvl', 'Most money'],
-            ['holders', 'Most holders'],
-            ['perf', 'Top performers'],
-            ['newest', 'Newest'],
-          ] as const).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setSort(id)}
-              className={`rounded-full border px-3 py-1 text-sm transition ${sort === id ? 'border-pot-accent bg-pot-accent/15 text-white' : 'border-pot-border text-pot-muted hover:text-white'}`}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="mb-5 flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm text-white/70">
+            Category
+            <select className="input w-auto px-3 py-1.5 text-sm" value={cat} onChange={(e) => setCat(e.target.value as typeof cat)}>
+              {CATS.map((c) => (
+                <option key={c.id} value={c.id}>{c.label}</option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-white/70">
+            Sort by
+            <select className="input w-auto px-3 py-1.5 text-sm" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}>
+              <option value="tvl">Most money</option>
+              <option value="holders">Most holders</option>
+              <option value="perf">Top performers</option>
+              <option value="newest">Newest</option>
+            </select>
+          </label>
+          <span className="ml-auto text-sm text-white/70">{shown.length} POTfolio{shown.length === 1 ? '' : 's'}</span>
         </div>
       )}
-      {pots.isLoading && <p className="text-pot-muted">Loading Pots from chain…</p>}
+      {pots.isLoading && <p className="text-white/70">Loading Pots from chain…</p>}
       {pots.isError && <p className="text-red-400">Could not load Pots: {String(pots.error)}</p>}
       {pots.data && pots.data.length === 0 && (
-        <div className="card p-8 text-center text-pot-muted">
+        <div className="card p-8 text-center text-white/70">
           No Pots yet. <Link href="/portfolios/new" className="text-pot-green underline">Create the first one.</Link>
         </div>
       )}
