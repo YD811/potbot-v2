@@ -506,10 +506,12 @@ export async function fetchPotActivity(connection: Connection, pot: PotView, lim
   const program = readonlyProgram(connection)
   const parser = new EventParser(program.programId, program.coder)
   const out: PotEvent[] = []
+  // Batched RPC responses can come back in a different order than requested: take the signature
+  // and time from the transaction itself, never from the index.
   txs.forEach((tx, i) => {
-    const sig = sigs[i].signature
-    const time = sigs[i].blockTime ?? null
     if (!tx || tx.meta?.err || !tx.meta?.logMessages) return
+    const sig = tx.transaction.signatures[0] ?? sigs[i].signature
+    const time = tx.blockTime ?? null
     let opened: { keeper: string; legOut: number; legIn: number; amountOut: number } | null = null
     let exitUsdc: { user: string; shares: number; cashOut: number } | null = null
     let any = false
@@ -535,8 +537,9 @@ export async function fetchPotActivity(connection: Connection, pot: PotView, lim
         opened = null
       }
     }
-    if (!any && i === txs.length - 1) out.push({ kind: 'created', sig, time })
+    if (!any && sig === sigs[sigs.length - 1].signature) out.push({ kind: 'created', sig, time })
   })
+  out.sort((a, b) => (b.time ?? 0) - (a.time ?? 0))
   return out
 }
 
@@ -555,8 +558,8 @@ export interface WalletPosition {
 
 /**
  * Reads the transaction history of the wallet's index-token account and folds deposits and exits
- * into an average-cost position. Asset exits (in kind) reduce shares and cost but carry no USDC
- * value, so realized P&L only reflects exits to USDC.
+ * into an average-cost position. In-kind exits reduce shares and cost but realize nothing (the
+ * holder keeps the assets); realized P&L only reflects exits to USDC.
  */
 export async function fetchWalletPosition(connection: Connection, pot: PotView, wallet: PublicKey, limit = 200): Promise<WalletPosition> {
   const empty: WalletPosition = { shares: 0, costUsd: 0, depositedUsd: 0, withdrawnUsd: 0, realizedUsd: 0, events: 0 }
@@ -579,11 +582,11 @@ export async function fetchWalletPosition(connection: Connection, pot: PotView, 
   const program = readonlyProgram(connection)
   const parser = new EventParser(program.programId, program.coder)
   const me = wallet.toBase58()
-  type Ev = { t: number; kind: 'deposit' | 'exit'; shares: number; usdc: number }
+  type Ev = { t: number; kind: 'deposit' | 'exit' | 'exitUsdc'; shares: number; usdc: number }
   const evs: Ev[] = []
-  txs.forEach((tx, i) => {
+  txs.forEach((tx) => {
     if (!tx || tx.meta?.err || !tx.meta?.logMessages) return
-    const t = sigs[i].blockTime ?? 0
+    const t = tx.blockTime ?? 0 // from the tx itself: batched RPC results are not always in request order
     let exitUsdc: { shares: number; cashOut: number } | null = null
     for (const ev of parser.parseLogs(tx.meta.logMessages)) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -596,7 +599,7 @@ export async function fetchWalletPosition(connection: Connection, pot: PotView, 
       } else if (name === 'exitusdcopened' && d.user.toBase58() === me) {
         exitUsdc = { shares: Number(d.shares) / 1e6, cashOut: Number(d.cashOut) / 1e6 }
       } else if (name === 'exitusdcclosed' && exitUsdc) {
-        evs.push({ t, kind: 'exit', shares: exitUsdc.shares, usdc: exitUsdc.cashOut + (Number(d.usdcFromSale) - Number(d.conversionFee)) / 1e6 })
+        evs.push({ t, kind: 'exitUsdc', shares: exitUsdc.shares, usdc: exitUsdc.cashOut + (Number(d.usdcFromSale) - Number(d.conversionFee)) / 1e6 })
         exitUsdc = null
       }
     }
@@ -613,10 +616,12 @@ export async function fetchWalletPosition(connection: Connection, pot: PotView, 
       const costOut = pos.costUsd * frac
       pos.shares = Math.max(0, pos.shares - e.shares)
       pos.costUsd = Math.max(0, pos.costUsd - costOut)
-      if (e.usdc > 0) {
+      if (e.kind === 'exitUsdc') {
         pos.withdrawnUsd += e.usdc
         pos.realizedUsd += e.usdc - costOut
       }
+      // In-kind exits: the assets are still the holder's, so nothing is realized here (the small
+      // USDC cash share they receive is ignored for P&L).
     }
   }
   return pos

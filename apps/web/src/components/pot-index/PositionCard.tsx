@@ -11,10 +11,18 @@ function usd(v: number, digits = 2) {
  * The connected wallet's P&L in this Pot. Value = tokens held × index price (live). Cost basis comes
  * from the wallet's own deposits and exits on-chain (average cost, entry fees included).
  */
-export function PositionCard({ pot, sharesBase, indexPrice }: { pot: PotView; sharesBase: number | undefined; indexPrice: number | undefined }) {
+export function PositionCard({ pot, sharesBase, indexPrice, connected }: { pot: PotView; sharesBase: number | undefined; indexPrice: number | undefined; connected: boolean }) {
   const q = useWalletPosition(pot)
   const shares = (sharesBase ?? 0) / 1e6
-  if (!sharesBase && !(q.data && q.data.events > 0)) return null
+  if (!connected || (!sharesBase && !(q.data && q.data.events > 0))) {
+    return (
+      <div className="card p-5">
+        <h3 className="font-semibold text-white">Your position</h3>
+        <p className="mt-1 text-2xl font-bold text-white">{shares.toFixed(4)} <span className="text-base text-white/70">${pot.symbol}</span></p>
+        <p className="text-sm text-white/70">{connected ? 'No deposits from this wallet yet.' : 'Connect a wallet to see your holding and P&L.'}</p>
+      </div>
+    )
+  }
   const value = indexPrice != null ? shares * indexPrice : null
   const pos = q.data
   const cost = pos ? pos.costUsd : null

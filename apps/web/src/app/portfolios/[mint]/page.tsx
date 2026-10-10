@@ -339,11 +339,7 @@ export default function PotPage() {
             )}
           </div>
 
-          <div className="card p-5">
-            <h3 className="font-semibold text-white">Your position</h3>
-            <p className="mt-1 text-2xl font-bold text-white">{myShareNum.toFixed(4)} <span className="text-base text-white/70">${p.symbol}</span></p>
-            <p className="text-sm text-white/70">≈ ${stats.data ? (myShareNum * stats.data.indexPrice).toFixed(2) : '—'}</p>
-          </div>
+          <PositionCard pot={p} sharesBase={myShares.data} indexPrice={stats.data?.indexPrice} connected={connected} />
 
           <div className="card p-5">
             <h3 className="font-semibold text-white">Share & earn</h3>
@@ -364,8 +360,6 @@ export default function PotPage() {
               </button>
             </div>
           </div>
-
-          {connected && <PositionCard pot={p} sharesBase={myShares.data} indexPrice={stats.data?.indexPrice} />}
 
           {POT_INDEX_SETTINGS.cluster !== 'mainnet-beta' && <DevnetFaucet />}
         </aside>
