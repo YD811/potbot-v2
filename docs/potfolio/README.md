@@ -9,6 +9,7 @@ POTfolio is a basket of Solana assets issued as one liquid SPL token. Built duri
 | [fees-and-economics.md](fees-and-economics.md) | You want to know who earns what and when. |
 | [keepers.md](keepers.md) | You want to run a keeper or understand how rebalancing is bounded. |
 | [garden-mode.md](garden-mode.md) | You want the plant levels and how they are computed. |
+| [security.md](security.md) | You want the review findings, what was fixed, what is accepted, and the mainnet list. |
 | [operations.md](operations.md) | You run the devnet deployment: scripts, env vars, upgrade procedure. |
 | [faq.md](faq.md) | You have a question a holder or creator would ask. |
 

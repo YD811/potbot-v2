@@ -66,6 +66,12 @@ pub fn read_price(
     let p = update
         .get_price_no_older_than(clock, max_age_secs, feed_id)
         .map_err(|_| PotError::StalePrice)?;
+    // Freshness of the posting itself, not only of the publish time: the account must have been
+    // written in roughly the same slot, so nobody can shop for a favourable tick inside the window.
+    require!(
+        update.posted_slot.saturating_add(MAX_POSTED_SLOT_AGE) >= clock.slot,
+        PotError::StalePrice
+    );
     require!(p.price > 0, PotError::NonPositivePrice);
     // conf / price <= MAX_CONF_BPS / BPS
     let lhs = (p.conf as u128).checked_mul(BPS as u128).ok_or(PotError::MathOverflow)?;

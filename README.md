@@ -104,7 +104,7 @@ Tests cover: fee split with and without referrer, self-referral rejection, missi
 
 ## Security
 
-Reviewed against the Solana Foundation program-security checklist (Oct 8 and Oct 10): no criticals. Oracle age cap and conservative confidence pricing, rebalance deadband and cooldown, two-step admin, exit safety valve against a stale rebalance flag, `init_if_needed` ATAs, 1 USDC minimum deposit. Known and accepted for the devnet build: a depositor can self-refer from a second wallet (registered referrers later); keeper slippage up to 1% is the implicit rebalance cost. Third-party audit, Squads multisig for upgrade authority and a capped flagship are on the [mainnet path](https://potbot.fun/mainnet). Report issues per [SECURITY.md](SECURITY.md).
+Reviewed against the Solana Foundation program-security checklist (Oct 8, and Oct 10 by an independent reviewer agent after exit-to-USDC): no criticals or highs; the two mediums (oracle tick shopping, keeper margin on cash deploys) are fixed, see [docs/potfolio/security.md](docs/potfolio/security.md). Oracle age cap and conservative confidence pricing, rebalance deadband and cooldown, two-step admin, exit safety valve against a stale rebalance flag, `init_if_needed` ATAs, 1 USDC minimum deposit. Known and accepted for the devnet build: a depositor can self-refer from a second wallet (registered referrers later); keeper slippage up to 1% is the implicit rebalance cost. Third-party audit, Squads multisig for upgrade authority and a capped flagship are on the [mainnet path](https://potbot.fun/mainnet). Report issues per [SECURITY.md](SECURITY.md).
 
 ## What is next
 

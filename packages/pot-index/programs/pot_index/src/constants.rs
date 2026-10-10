@@ -44,6 +44,10 @@ pub const MAX_CONF_BPS: u64 = 200; // 2%
 /// Sentinel leg index meaning "the USDC cash leg".
 pub const CASH_LEG: u8 = u8::MAX;
 
+/// A Pyth price update account must have been posted within this many slots of the instruction
+/// that reads it, so a caller cannot pick the most favourable tick of the last few minutes.
+pub const MAX_POSTED_SLOT_AGE: u64 = 150; // ~1 minute
+
 /// Marker in `RebalanceState.leg_out` for an open exit-to-USDC window (see instructions::exit_usdc).
 pub const EXIT_LEG: u8 = u8::MAX - 1;
 

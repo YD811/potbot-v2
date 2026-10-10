@@ -28,7 +28,6 @@ pub struct CreatePot<'info> {
         payer = creator,
         mint::decimals = INDEX_DECIMALS,
         mint::authority = pot,
-        mint::freeze_authority = pot,
     )]
     pub index_mint: Account<'info, Mint>,
     #[account(

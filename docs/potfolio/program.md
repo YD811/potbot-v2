@@ -33,7 +33,7 @@ Anchor 1.2.1, Solana CLI 4.3. Source: `packages/pot-index/programs/pot_index/src
 - Exit fee 50 bps, stays in the Pot.
 - 2 to 5 legs. Index decimals 6. Minimum deposit 1 USDC.
 - Virtual shares/assets 1 token / $1 against first-depositor inflation.
-- Oracle: max confidence 2%, max age `max_price_age_secs` capped at 300 s. Pot values what it holds or gives at `price + conf`, what it receives at `price - conf`.
+- Oracle: max confidence 2%, max age `max_price_age_secs` capped at 300 s, update account posted within 150 slots. Pot values what it holds or gives at `price + conf`, what it receives at `price - conf`.
 - Rebalance: deadband 0.5% of NAV, cooldown 150 slots (asset→asset only; cash deployment has none), max slippage 1%, max trade 25% of NAV per transaction; only from an overweight leg (or cash) toward an underweight leg, never past target on either side.
 - Exit to USDC: minimum = Σ legs at (price − conf) × (1 − slippage_bps) − 0.10% conversion fee; the open/close window reuses `Pot.rebalance` with `leg_out == EXIT_LEG (254)`, so no account layout change.
 
@@ -46,4 +46,6 @@ Common ones in the UI: `StalePrice` (stock feeds stop on weekends: deposits wait
 `Deposited`, `Exited`, `ExitUsdcOpened`, `ExitUsdcClosed`, `RebalanceOpened`, `RebalanceClosed` (camelCase in the Anchor event parser). The activity feed on each POTfolio page reads them.
 
 ## Security notes
+
+Full review log: [security.md](security.md).
 No withdraw instruction. Exit cannot be paused and does not read the oracle. Keeper trades are atomic: an `open` without a `close` in the same transaction fails; under-delivery reverts both. Admin is two-step and will be a Squads multisig on mainnet. Known, accepted: a depositor can self-refer from a second wallet (mitigated later with registered referrers); keeper slippage up to 1% is the implicit rebalance cost.
