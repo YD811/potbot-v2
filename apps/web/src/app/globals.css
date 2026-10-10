@@ -474,3 +474,10 @@ html[data-theme="light"] .border-white\/5 {
 html[data-theme="light"] button:disabled {
   filter: grayscale(0.2);
 }
+
+/* Garden mode deposit drop */
+@keyframes garden-drop {
+  0% { opacity: 0; transform: translateY(-14px); }
+  30% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 1; transform: translateY(0); }
+}

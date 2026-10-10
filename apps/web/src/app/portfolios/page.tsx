@@ -5,7 +5,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePots, useAssetPrices, useAllPotStats } from '@/hooks/usePotIndex'
 import { PotCard } from '@/components/pot-index/PotCard'
 import { ProtocolStats } from '@/components/pot-index/ProtocolStats'
-import { POT_INDEX_SETTINGS, assetByMint } from '@/lib/pot-index/registry'
+import { POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
+import { potCategory } from '@/lib/pot-index/garden'
 import type { PotView } from '@/lib/pot-index/client'
 
 const CATS = [
@@ -15,16 +16,6 @@ const CATS = [
   { id: 'stock', label: 'Stocks (xStocks)' },
   { id: 'meme', label: 'Memes' },
 ] as const
-
-/** A Pot's category = the category carrying the most weight. */
-function potCategory(p: PotView): string {
-  const w: Record<string, number> = {}
-  for (const l of p.legs) {
-    const c = assetByMint(l.mint.toBase58())?.category ?? 'crypto'
-    w[c] = (w[c] ?? 0) + l.weightBps
-  }
-  return Object.entries(w).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'crypto'
-}
 
 export default function PortfoliosPage() {
   const pots = usePots()

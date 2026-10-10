@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { HowAPotWorks } from '@/components/pot-index/HowAPotWorks'
+import { GardenMode } from '@/components/pot-index/GardenMode'
 import { useState } from 'react'
 import { usePots } from '@/hooks/usePots'
 import { useSolPrice } from '@/lib/prices'
@@ -783,61 +784,8 @@ export default function LandingPage() {
       {/* ── Live vault mockup — "See your vault at a glance" ── */}
       <LiveVaultMockup />
 
-      {/* ── Tamagotchi gamification — labelled section so the "Watch your vault grow"
-           strip reads as a feature, not a random plant rail ── */}
-      <section className="relative py-20 sm:py-24 px-4 overflow-hidden">
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(20,241,149,0.05), transparent 60%)' }}
-        />
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-3 mb-6">
-              <span className="h-px w-6 bg-gradient-to-r from-transparent to-pot-green/60" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-green">
-                Garden mode
-              </span>
-              <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-green/60" />
-            </div>
-            <h2 className="text-3xl sm:text-5xl font-bold text-white leading-[1.15] tracking-tight mb-4">
-              Watch your vault{' '}
-              <span className="bg-gradient-to-r from-pot-green to-pot-accent bg-clip-text text-transparent">
-                grow.
-              </span>
-            </h2>
-            <p className="text-white/70 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-              Every deposit, vote, and member feeds the plant.
-              Six stages. The streak you don&apos;t want to break.
-            </p>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4 max-w-4xl mx-auto">
-            {[
-              { emoji: '🌱', label: 'Seedling', tier: 'L1' },
-              { emoji: '🌿', label: 'Sprout', tier: 'L2' },
-              { emoji: '🍀', label: 'Bud', tier: 'L3' },
-              { emoji: '🌾', label: 'Bloom', tier: 'L4' },
-              { emoji: '🌺', label: 'Full Bloom', tier: 'L5' },
-              { emoji: '🌳', label: 'Mature Tree', tier: 'L6' },
-            ].map((stage, i) => (
-              <div key={stage.label} className="flex flex-col items-center gap-2">
-                <div
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl transition-transform hover:scale-110"
-                  style={{
-                    background: `rgba(20,241,149,${0.04 + i * 0.015})`,
-                    border: `1px solid rgba(20,241,149,${0.15 + i * 0.04})`,
-                    boxShadow: i >= 4 ? '0 0 24px rgba(20,241,149,0.25)' : 'none',
-                  }}
-                >
-                  {stage.emoji}
-                </div>
-                <div className="text-xs font-bold text-white">{stage.label}</div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-white/70">{stage.tier}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ── Garden mode: one plant grows with deposits, six-stage ladder below ── */}
+      <GardenMode />
 
       {/* ── Two pot modes — placed after Garden mode, right before the
            MCP/agents section. ── */}
