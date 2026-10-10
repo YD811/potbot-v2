@@ -4,7 +4,7 @@
 |---|---|---|
 | Deposit | 0.30% of the deposit | 0.12% creator, 0.12% referrer, 0.06% protocol treasury, paid in the deposit transaction to USDC token accounts. No referrer: creator receives 0.24%. |
 | Exit (in kind) | 0.50% of the redeemed share | stays in the Pot, i.e. accrues to remaining holders |
-| Exit to USDC (planned) | 0.50% exit + 0.10% conversion | conversion fee to the protocol; keeper fills the swap in the same transaction |
+| Exit to USDC | 0.50% exit + 0.10% conversion on the sold part | conversion fee to the protocol treasury, enforced by `exit_usdc_close`; the cash share carries no conversion fee |
 | Holding | 0% | no management or performance fee |
 | Rebalance | up to 1% slippage per trade vs Pyth | implicit; keepers compete on price |
 

@@ -22,8 +22,8 @@ A POTfolio is any basket of Solana assets, held as one token: deposit USDC to ge
 ## Lifecycle
 1. Creator picks 2 to 5 registered assets and weights that sum to 100%, names the basket, publishes. The program creates the Pot PDA, one vault per asset plus a USDC cash vault, the index mint (6 decimals, address starts with `Pot`), and Metaplex metadata.
 2. Holder deposits USDC. Pyth prices are posted in the same transaction. Tokens minted = deposit / NAV per token. 0.30% entry fee split instantly.
-3. Keepers buy the basket: USDC in the cash vault is swapped into the target assets within program limits. Deposits land as cash first; allocation follows within minutes.
-4. Holder redeems: tokens burned, pro-rata share of USDC cash and every asset transferred in kind. 0.50% stays in the Pot. Exit to USDC in one step is in development.
+3. The basket is bought in the same wallet prompt: after the deposit lands, the holder's own transactions deploy the cash leg by leg through `rebalance_open`/`close`, inside the program's bounds. Keepers top up whatever is left.
+4. Holder redeems: tokens burned, pro-rata share of USDC cash and every asset transferred in kind, or sold to USDC in the same transaction with an on-chain minimum. 0.50% stays in the Pot.
 
 ## Glossary
 - **Pot**: the on-chain basket (PDA + vaults + mint). "POTfolio" is the product name for a Pot and its token.
