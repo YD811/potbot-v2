@@ -8,7 +8,7 @@ import { CompositionBar } from './CompositionBar'
 export function PotCard({ pot, list }: { pot: PotView; prices: Record<string, number>; list?: PotListStats }) {
   const stats = usePotStats(pot)
   const perf = list?.perf
-  const perfCls = perf === undefined ? 'text-pot-muted' : perf >= 0 ? 'text-pot-green' : 'text-red-400'
+  const perfCls = perf === undefined ? 'text-white/70' : perf >= 0 ? 'text-pot-green' : 'text-red-400'
   const mint = pot.indexMint.toBase58()
   return (
     <Link href={`/portfolios/${mint}`} className="card block p-5 transition hover:border-pot-green/60">
@@ -18,7 +18,7 @@ export function PotCard({ pot, list }: { pot: PotView; prices: Record<string, nu
           <p className="font-mono text-xs text-pot-green">${pot.symbol}</p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-pot-muted">TVL</p>
+          <p className="text-xs text-white/70">TVL</p>
           <p className="font-semibold text-white">
             {stats.data ? `$${stats.data.navUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}
           </p>
@@ -28,7 +28,7 @@ export function PotCard({ pot, list }: { pot: PotView; prices: Record<string, nu
       <div className="mt-4">
         <CompositionBar pot={pot} />
       </div>
-      <div className="mt-4 flex items-center justify-between text-xs text-pot-muted">
+      <div className="mt-4 flex items-center justify-between text-xs text-white/70">
         <span>
           Index price{' '}
           <span className="text-white">{stats.data ? `$${stats.data.indexPrice.toFixed(4)}` : '—'}</span>

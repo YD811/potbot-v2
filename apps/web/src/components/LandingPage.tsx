@@ -460,7 +460,7 @@ function AskClaudeChat() {
 }
 
 function CountUp({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
-  if (value === 0) return <span className="text-pot-muted">—</span>
+  if (value === 0) return <span className="text-white/70">—</span>
   return <>{prefix}{value >= 1000 ? (value / 1000).toFixed(1) + 'K' : value.toLocaleString()}{suffix}</>
 }
 
@@ -479,10 +479,6 @@ export default function LandingPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const potRows = (pots ?? []) as any[]
-  const totalTvlSol = potRows.reduce((s, p) => s + p.balance, 0)
-  const totalTvlUsd = solPrice ? totalTvlSol * solPrice : 0
-  const totalMembers = potRows.reduce((s, p) => s + p.memberCount, 0)
-  const totalTrades = potRows.reduce((s, p) => s + p.tradeCount, 0)
   const topVaults = [...potRows].sort((a, b) => b.balance - a.balance).slice(0, 3)
 
   return (
@@ -519,15 +515,15 @@ export default function LandingPage() {
           <p className="text-lg sm:text-2xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
             {isLight ? (
               <>
-                Pick a few assets and their weights. Get one token that holds them all.
+                Invest and stay liquid. One token holds the whole basket.
                 <br />
-                Share it. Anyone can buy in, anyone can cash out.
+                No rugs, no exit liquidity: burn it any time and take your share of every asset back.
               </>
             ) : (
               <>
-                Crypto, Solana natives, tokenized stocks, memes: pick the assets and weights, get one index token.
+                Invest and stay liquid. One token holds the whole basket.
                 <br />
-                Hold it, send it, trade it. Burn it to take your share of every asset back. No one can withdraw.
+                No rugs, no exit liquidity: burn it any time and take your share of every asset back.
               </>
             )}
           </p>
@@ -547,9 +543,8 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <p className="mt-8 text-sm text-pot-muted max-w-xl mx-auto">
-            Institutional-grade portfolios as a single token, now for degens, creators and communities.
-            Build one, share it, let your people hold it.
+          <p className="mt-8 text-sm text-white/70 max-w-xl mx-auto">
+            Institutional-grade portfolios as a single token, built for communities, creators and degens.
           </p>
         </div>
       </section>
@@ -602,50 +597,24 @@ export default function LandingPage() {
                     <span className="text-3xl group-hover:animate-float">{pot.emoji}</span>
                     <div className="min-w-0">
                       <div className="font-bold text-white truncate">{pot.name}</div>
-                      <div className="text-xs text-pot-muted">{pot.memberCount} members</div>
+                      <div className="text-xs text-white/70">{pot.memberCount} members</div>
                     </div>
                   </div>
                   <div className="text-2xl font-black text-pot-green">{pot.balance.toFixed(2)} SOL</div>
                   {balanceUsd > 0 && (
-                    <div className="text-xs text-pot-muted mt-0.5">≈ ${balanceUsd >= 1000 ? (balanceUsd / 1000).toFixed(1) + 'K' : balanceUsd.toFixed(0)}</div>
+                    <div className="text-xs text-white/70 mt-0.5">≈ ${balanceUsd >= 1000 ? (balanceUsd / 1000).toFixed(1) + 'K' : balanceUsd.toFixed(0)}</div>
                   )}
                   <div className="flex gap-2 mt-4">
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-pot-green/10 border border-pot-green/20 text-pot-green">
                       {pot.isPublic ? 'Public' : 'Private'}
                     </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-pot-card border border-pot-border text-pot-muted">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-pot-card border border-pot-border text-white/70">
                       L{pot.governanceLevel} Gov
                     </span>
                   </div>
                 </Link>
               )
             })}
-          </div>
-        </section>
-      )}
-
-      {/* ── Live protocol stats — proof block right next to Top vaults,
-           only shown when data is real ── */}
-      {totalTvlSol > 0 && (
-        <section className="px-4 pb-8 text-center">
-          <div className="inline-flex flex-wrap items-center gap-0 bg-pot-card border border-pot-border rounded-2xl overflow-hidden shadow-xl">
-            {[
-              {
-                label: 'Total Value Locked',
-                value: totalTvlUsd > 0
-                  ? `$${totalTvlUsd >= 1000 ? (totalTvlUsd / 1000).toFixed(1) + 'K' : totalTvlUsd.toFixed(0)}`
-                  : `${totalTvlSol.toFixed(1)} SOL`,
-                color: 'text-pot-green',
-              },
-              { label: 'Active Vaults', value: String(pots?.length ?? 0), color: 'text-white' },
-              { label: 'Members', value: String(totalMembers), color: 'text-white' },
-              { label: 'Total Trades', value: String(totalTrades), color: 'text-pot-accent' },
-            ].map((s, i, arr) => (
-              <div key={s.label} className={`px-6 py-4 text-center ${i < arr.length - 1 ? 'border-r border-pot-border' : ''}`}>
-                <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
-                <div className="text-xs text-pot-muted mt-0.5">{s.label}</div>
-              </div>
-            ))}
           </div>
         </section>
       )}
@@ -681,13 +650,12 @@ export default function LandingPage() {
             </p>
           ) : (
             <p className="text-3xl sm:text-5xl md:text-6xl font-bold text-white leading-[1.15] tracking-tight">
-              Unite <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">people</span> and{' '}
-              <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">capital</span>{' '}
-              across every direction Solana offers,
+              Bring <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">people</span> and{' '}
+              <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">capital</span> together,
               <br className="hidden sm:block" />
-              as <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">vault infrastructure</span> for tokenized funds,
+              in one <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">liquid token</span>,
               <br className="hidden sm:block" />
-              built natively for <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">AI agents</span>.
+              on <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">Solana</span>.
             </p>
           )}
         </div>
@@ -726,7 +694,7 @@ export default function LandingPage() {
                   Programmable On-chain Treasury
                 </span>
               </div>
-              <div className="text-[11px] text-pot-muted uppercase tracking-wider mb-2">
+              <div className="text-[11px] text-white/70 uppercase tracking-wider mb-2">
                 the container
               </div>
               <p className="text-base text-white/80 leading-relaxed">
@@ -768,7 +736,7 @@ export default function LandingPage() {
                   Blockchain Orchestration Tool
                 </span>
               </div>
-              <div className="text-[11px] text-pot-muted uppercase tracking-wider mb-2">
+              <div className="text-[11px] text-white/70 uppercase tracking-wider mb-2">
                 the AI agent
               </div>
               <p className="text-base text-white/80 leading-relaxed">
@@ -864,7 +832,7 @@ export default function LandingPage() {
                   {stage.emoji}
                 </div>
                 <div className="text-xs font-bold text-white">{stage.label}</div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-pot-muted">{stage.tier}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-white/70">{stage.tier}</div>
               </div>
             ))}
           </div>

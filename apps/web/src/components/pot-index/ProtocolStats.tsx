@@ -47,7 +47,7 @@ export function ProtocolStats({ pots }: { pots: PotView[] }) {
     <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
       {items.map((it) => (
         <div key={it.label} className="card px-4 py-3">
-          <p className="text-xs text-pot-muted">{it.label}</p>
+          <p className="text-xs text-white/70">{it.label}</p>
           <p className="text-lg font-bold text-white">{it.value}</p>
         </div>
       ))}
