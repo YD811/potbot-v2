@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { PageHeader } from '@/components/PageHeader'
 
 interface FAQItem {
   q: string
@@ -172,19 +173,13 @@ export default function FAQPage() {
   const category = FAQ_DATA.find((c) => c.id === activeCategory) ?? FAQ_DATA[0]
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 text-sm text-pot-muted mb-3">
-          <Link href="/" className="hover:text-white transition">Home</Link>
-          <span>/</span>
-          <span className="text-white">FAQ</span>
-        </div>
-        <h1 className="text-3xl font-black text-white mb-2">Frequently Asked Questions</h1>
-        <p className="text-pot-muted">
-          POTfolio in plain words. Longer explanations live on <Link href="/learn" className="text-pot-green underline">Learn</Link>, the mechanics in the <a href="https://github.com/YD811/potbot-v2/tree/main/docs/potfolio" target="_blank" rel="noreferrer" className="text-pot-green underline">docs</a>.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="FAQ"
+        title="Questions, answered"
+        lede={<>POTfolio in plain words. Longer explanations live on <Link href="/learn" className="text-pot-green underline">Learn</Link>, the mechanics in the <a href="https://github.com/YD811/potbot-v2/tree/main/docs/potfolio" target="_blank" rel="noreferrer" className="text-pot-green underline">docs</a>.</>}
+      />
 
       {/* Category tabs */}
       <div className="flex gap-2 flex-wrap mb-6">

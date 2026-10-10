@@ -8,6 +8,7 @@ import { ProtocolStats } from '@/components/pot-index/ProtocolStats'
 import { POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
 import { potCategory } from '@/lib/pot-index/garden'
 import type { PotView } from '@/lib/pot-index/client'
+import { PageHeader } from '@/components/PageHeader'
 
 const CATS = [
   { id: 'all', label: 'All' },
@@ -41,17 +42,16 @@ export default function PortfoliosPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-      <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-black text-white sm:text-4xl">POTfolios</h1>
-          <p className="mt-2 max-w-2xl text-white/70">
-            One token, a whole basket inside. Deposit USDC to get it, redeem it any time for the assets or USDC.
-          </p>
-        </div>
+      <PageHeader
+        eyebrow="Live on devnet"
+        title="POTfolios"
+        lede="One token, a whole basket inside. Deposit USDC to get it, redeem it any time for the assets or USDC."
+        action={
         <Link href="/portfolios/new" className="btn-primary whitespace-nowrap">
           + Create a POTfolio
         </Link>
-      </header>
+        }
+      />
 
       {POT_INDEX_SETTINGS.cluster !== 'mainnet-beta' && (
         <div className="mb-6 rounded-xl border border-pot-accent/40 bg-pot-accent/10 px-4 py-3 text-sm text-white">

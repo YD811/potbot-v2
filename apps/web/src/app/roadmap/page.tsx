@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { StatusBadge, type StatusTier } from '@/components/StatusBadge'
+import { PageHeader } from '@/components/PageHeader'
 
 interface Feature {
   name: string
@@ -97,16 +98,14 @@ const SECTIONS: Section[] = [
 
 export default function RoadmapPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-12">
+    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 space-y-12">
       <header>
-        <div className="flex items-center gap-3 mb-3 flex-wrap">
-                    <h1 className="text-3xl sm:text-4xl font-black text-white">PotBot Roadmap</h1>
-        </div>
-        <p className="text-pot-muted text-sm sm:text-base leading-relaxed max-w-2xl">
-          From one shippable thing, a POTfolio and its index token, to portfolios that work across DeFi,
-          and finally to your own corner of the internet. Every stage plugs into the same token. Chips say
-          what is live, on devnet, next, or still on paper.
-        </p>
+        <PageHeader
+          eyebrow="Roadmap"
+          title="Where PotBot goes"
+          lede="From one shippable thing, a POTfolio and its index token, to portfolios that work across DeFi, and finally to your own corner of the internet. Every stage plugs into the same token. Chips say what is live, on devnet, next, or still on paper."
+          className="mb-4"
+        />
         <div className="flex flex-wrap items-center gap-2 mt-4">
           <StatusBadge tier="live" compact />
           <StatusBadge tier="devnet" compact />

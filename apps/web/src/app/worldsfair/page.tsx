@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
 import { HowAPotWorks } from '@/components/pot-index/HowAPotWorks'
 import { LivePots } from '@/components/pot-index/LivePots'
+import { PageHeader } from '@/components/PageHeader'
 
 export const metadata: Metadata = {
   title: 'PotBot POTfolio × Crypto World\'s Fair',
@@ -16,14 +17,12 @@ const explorer = `https://explorer.solana.com/address/${PROGRAM}?cluster=devnet`
 export default function WorldsFairPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
-      <p className="text-xs font-semibold uppercase tracking-widest text-pot-accent">Colosseum · Crypto World&apos;s Fair · Solana</p>
-      <h1 className="mt-2 text-3xl font-black text-white sm:text-5xl">
-        PotBot <span className="text-pot-green">POTfolio</span>
-      </h1>
-      <p className="mt-3 text-xl text-white/85">
-        A basket of Solana assets as one liquid index token. Crypto majors, Solana natives, tokenized stocks, memes: pick the
-        assets, set the weights, and the Pot issues a token you can hold, send, trade and plug into DeFi.
-      </p>
+      <PageHeader
+        eyebrow="Colosseum · Crypto World's Fair · Solana"
+        title={<>PotBot <span className="text-pot-green">POTfolio</span></>}
+        lede="A basket of Solana assets as one liquid index token. Crypto majors, Solana natives, tokenized stocks, memes: pick the assets, set the weights, and the Pot issues a token you can hold, send, trade and plug into DeFi."
+        className="mb-4"
+      />
       <p className="mt-3 text-pot-muted">
         A launchpad for portfolios. Live on devnet with five POTfolios, real Pyth prices, and every deposit, rebalance and exit
         visible on-chain.

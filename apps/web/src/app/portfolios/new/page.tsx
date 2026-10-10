@@ -10,6 +10,7 @@ import { usePotIndexActions, useAssetPrices, usePotIndexConfig } from '@/hooks/u
 import { POT_INDEX_ASSETS } from '@/lib/pot-index/registry'
 import { legColor } from '@/components/pot-index/CompositionBar'
 import { ConnectButton } from '@/components/ConnectButton'
+import { PageHeader } from '@/components/PageHeader'
 
 interface Row {
   mint: string
@@ -84,11 +85,11 @@ export default function NewPotPage() {
 
   return (
     <div className="potfolio-create mx-auto max-w-2xl px-4 py-10 sm:px-6">
-      <h1 className="text-3xl font-black text-white sm:text-4xl">Create a POTfolio</h1>
-      <p className="mt-2 text-white/70">
-        Pick up to 5 assets, set target weights, publish. You get an index token that anyone can mint by depositing USDC.
-        Weights are locked at creation, so depositors know exactly what they are buying.
-      </p>
+      <PageHeader
+        eyebrow="Create"
+        title="Create a POTfolio"
+        lede="Pick up to 5 assets, set target weights, publish. You get an index token that anyone can mint by depositing USDC. Weights are locked at creation, so depositors know exactly what they are buying."
+      />
 
       {config.data === null && (
         <div className="mt-6 rounded-xl border border-yellow-500/40 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-200">

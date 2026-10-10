@@ -4,63 +4,36 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { useQuery } from '@tanstack/react-query'
 import { useSolPrice } from '@/lib/prices'
-import { healthApi } from '@/lib/api-client'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ConnectButton } from '@/components/ConnectButton'
-import { SeasonPrizePoolModal } from '@/components/SeasonPrizePoolModal'
 import { useHumanText } from '@/hooks/useHumanText'
 
 function LivePriceTicker() {
   const { price: solPrice } = useSolPrice()
-  const [showSeasonModal, setShowSeasonModal] = useState(false)
-
-  const { data: health, isError: apiDown } = useQuery({
-    queryKey: ['api-health'],
-    queryFn:  healthApi.check,
-    refetchInterval: 30_000,
-    retry: 1,
-    staleTime: 25_000,
-  })
-
   return (
     <div className="border-b border-pot-border/40 bg-pot-dark/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-7 flex items-center gap-4">
         {solPrice != null && (
           <div className="flex items-center gap-1.5 text-[11px]">
-            <span className="text-pot-muted">◎</span>
+            <span className="text-pot-muted">SOL</span>
             <span className="font-mono font-semibold text-white">
               ${solPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
-            <span className="text-pot-muted">SOL</span>
           </div>
         )}
         <div className="w-px h-3 bg-pot-border" />
         <div className="flex items-center gap-1.5 text-[11px]">
-          <span className={`w-1.5 h-1.5 rounded-full ${apiDown ? 'bg-red-500' : 'bg-pot-green animate-pulse'}`} />
-          <span className={apiDown ? 'text-red-400/80' : 'text-pot-green'}>
-            {apiDown ? 'Demo Mode' : 'Live'}
-          </span>
-        </div>
-        {/* Season 1 ticker — clickable, opens prize-pool modal */}
-        <div className="hidden sm:flex items-center gap-1.5 text-[11px]">
-          <span className="text-pot-muted">|</span>
-          <button
-            onClick={() => setShowSeasonModal(true)}
-            className="text-pot-accent hover:text-white hover:underline underline-offset-2 transition cursor-pointer"
-            aria-label="Open Season 1 prize pool details"
-          >
-            🌱 Season 1: The Garden
-          </button>
+          <span className="w-1.5 h-1.5 rounded-full bg-pot-green animate-pulse" />
+          <span className="text-pot-green">Live on devnet</span>
+          <span className="hidden sm:inline text-pot-muted">· test tokens, real Pyth prices</span>
         </div>
         <div className="ml-auto flex items-center gap-3 text-[11px] text-pot-muted">
-          <Link href="/for-agents" className="hover:text-pot-green transition hidden sm:block">
-            🤖 For AI Agents
+          <Link href="/worldsfair" className="hover:text-pot-green transition hidden sm:block">
+            Built for Colosseum Crypto World&apos;s Fair
           </Link>
         </div>
       </div>
-      {showSeasonModal && <SeasonPrizePoolModal onClose={() => setShowSeasonModal(false)} />}
     </div>
   )
 }

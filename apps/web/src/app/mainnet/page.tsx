@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
+import { PageHeader } from '@/components/PageHeader'
 
 export const metadata: Metadata = {
   title: 'Mainnet | PotBot POTfolio',
@@ -12,12 +13,12 @@ const isMainnet = POT_INDEX_SETTINGS.cluster === 'mainnet-beta'
 export default function MainnetPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
-      <p className="text-xs font-semibold uppercase tracking-widest text-pot-accent">Mainnet</p>
-      <h1 className="mt-2 text-3xl font-black text-white sm:text-5xl">From devnet to real money</h1>
-      <p className="mt-4 text-lg text-white/85">
-        POTfolio runs on Solana devnet today: test tokens, real Pyth prices, every transaction public. This page is what changes
-        when the same program goes live on mainnet, and what stays limited on purpose at the start.
-      </p>
+      <PageHeader
+        eyebrow="Mainnet"
+        title="From devnet to real money"
+        lede="POTfolio runs on Solana devnet today: test tokens, real Pyth prices, every transaction public. This page is what changes when the same program goes live on mainnet, and what stays limited on purpose at the start."
+        className="mb-6"
+      />
 
       <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-pot-border bg-pot-card px-4 py-3 text-sm">
         <span className="font-semibold text-white">Status</span>
