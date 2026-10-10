@@ -4,6 +4,8 @@ Project root: [`../`](../) · Live site: [potbot.fun](https://potbot.fun) · Rep
 
 ## Start here
 
+- [`potfolio/README.md`](potfolio/README.md) — **POTfolio (v3, Crypto World's Fair 2026)**: the live product. Overview, program reference, fees, keepers, garden mode, operations, FAQ.
+
 - [`architecture/overview.md`](architecture/overview.md) — read this first. What PotBot is, how the pieces connect.
 - [`hackathon/submission.md`](hackathon/submission.md) — the live Solana Frontier 2026 submission writeup.
 

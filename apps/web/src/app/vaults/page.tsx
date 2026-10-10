@@ -8,6 +8,7 @@ import { useVaultAnalyticsBatch } from '@/hooks/useAnalytics'
 import { useHumanText } from '@/hooks/useHumanText'
 import { TrustBadge } from '@/components/TrustBadge'
 import { VerifiedModal } from '@/components/VerifiedModal'
+import { VaultsPreviewBanner } from '@/components/VaultsPreviewBanner'
 
 // Target APY ranges per yield strategy NUMBER (matches the Strategy Autopilot
 // presets on /create). Used only for display on the featured cards.
@@ -141,6 +142,7 @@ export default function VaultsPage() {
 
   return (
     <div className="min-h-screen">
+      <VaultsPreviewBanner />
       {/* Page header — small breadcrumb + create CTA */}
       <div className="max-w-[1400px] mx-auto px-3 sm:px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 text-xs text-white/70">

@@ -1,6 +1,7 @@
 'use client'
 
 import nextDynamic from 'next/dynamic'
+import { VaultsPreviewBanner } from '@/components/VaultsPreviewBanner'
 
 // The wizard pulls in Anchor + the Privy bridge, which crash Next.js
 // static prerender (Maximum call stack size in @privy-io/react-auth's
@@ -17,5 +18,10 @@ const CreateWizard = nextDynamic(() => import('./CreateWizard'), {
 })
 
 export default function CreatePage() {
-  return <CreateWizard />
+  return (
+    <>
+      <div className="pt-6"><VaultsPreviewBanner /></div>
+      <CreateWizard />
+    </>
+  )
 }

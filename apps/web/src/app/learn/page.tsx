@@ -153,6 +153,7 @@ export default function LearnPage() {
           <Link href="/portfolios/new" className="btn-secondary">Create a POTfolio</Link>
           <Link href="/roadmap" className="btn-secondary">Roadmap</Link>
           <Link href="/mainnet" className="btn-secondary">Mainnet plan</Link>
+          <a href="https://github.com/YD811/potbot-v2/tree/feat/pot-index/docs/potfolio" target="_blank" rel="noreferrer" className="btn-secondary">Docs on GitHub</a>
         </div>
       </Section>
     </div>
