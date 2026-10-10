@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
+import { HowAPotWorks } from '@/components/pot-index/HowAPotWorks'
 
 export const metadata: Metadata = {
   title: 'PotBot × Crypto World\'s Fair — what we built',
@@ -37,10 +38,14 @@ export default function WorldsFairPage() {
         </p>
       </Section>
 
+      <Section title="How a Pot works">
+        <HowAPotWorks compact />
+      </Section>
+
       <Section title="Built during the hackathon (Sept 14 – Oct 12)">
         <ul className="list-disc space-y-2 pl-5">
           <li>
-            <b>New Anchor 1.2 program <code>pot_index</code></b> (12 instructions) in its own workspace — not a fork of our earlier
+            <b>New Anchor 1.2 program <code>pot_index</code></b> (13 instructions), live on devnet since Oct 8 in its own workspace — not a fork of our earlier
             vault code. Devnet program id <code className="break-all text-pot-green">{PROGRAM}</code>.
           </li>
           <li>

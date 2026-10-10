@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect } from 'react'
 import { usePots, useAssetPrices } from '@/hooks/usePotIndex'
 import { PotCard } from '@/components/pot-index/PotCard'
+import { ProtocolStats } from '@/components/pot-index/ProtocolStats'
 import { POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
 
 export default function PortfoliosPage() {
@@ -38,6 +39,7 @@ export default function PortfoliosPage() {
         </div>
       )}
 
+      {pots.data && pots.data.length > 0 && <ProtocolStats pots={pots.data} />}
       {pots.isLoading && <p className="text-pot-muted">Loading Pots from chain…</p>}
       {pots.isError && <p className="text-red-400">Could not load Pots: {String(pots.error)}</p>}
       {pots.data && pots.data.length === 0 && (

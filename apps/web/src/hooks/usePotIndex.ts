@@ -14,6 +14,7 @@ import {
   fetchAllPots,
   fetchConfig,
   fetchPot,
+  fetchPotActivity,
   fetchPotBalances,
   makePotIndexProgram,
   navUsd,
@@ -69,6 +70,17 @@ export function useAssetPrices() {
       return byMint
     },
     refetchInterval: 10_000,
+  })
+}
+
+/** Recent on-chain events for a Pot (deposits, exits, rebalances). */
+export function usePotActivity(pot: PotView | null | undefined) {
+  const { connection } = useConnection()
+  return useQuery({
+    queryKey: ['pot-index', 'activity', pot?.address.toBase58()],
+    queryFn: () => fetchPotActivity(connection, pot!),
+    enabled: !!pot,
+    refetchInterval: 20_000,
   })
 }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { HowAPotWorks } from '@/components/pot-index/HowAPotWorks'
 import { useState } from 'react'
 import { usePots } from '@/hooks/usePots'
 import { useSolPrice } from '@/lib/prices'
@@ -555,9 +556,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Top vaults — directly under the hero CTA as social proof.
-           No top padding so buttons + vaults read as one block. ── */}
-      {topVaults.length > 0 && (
+      {/* ── How a Pot works — the four moves, right under the hero ── */}
+      <HowAPotWorks />
+
+      {/* ── Legacy top vaults (pot_vault mock) — hidden on the Portfolios landing ── */}
+      {false && topVaults.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 pb-12">
           <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
             <div>

@@ -4,7 +4,7 @@
  * Thin, explicit wrapper over the Anchor program: PDAs, account reads, instruction builders.
  * Transactions that need prices post fresh Pyth updates in the same transaction (see pyth-post.ts).
  */
-import { AnchorProvider, BN, Program, type Idl, type Wallet } from '@coral-xyz/anchor'
+import { AnchorProvider, BN, EventParser, Program, type Idl, type Wallet } from '@coral-xyz/anchor'
 import {
   Connection,
   Keypair,
@@ -382,4 +382,51 @@ export function estimateShares(amountUsdc: number, navUsd: number, supplyBase: n
   const net = amountUsdc * (1 - ENTRY_FEE_BPS / 10_000) * 1e6
   const vs = 1_000_000
   return Math.floor((net * (supplyBase + vs)) / (navUsd * 1e6 + vs))
+}
+
+// ---------------------------------------------------------------------------
+// Activity feed (program events parsed from transaction logs)
+// ---------------------------------------------------------------------------
+
+export type PotEvent =
+  | { kind: 'deposit'; sig: string; time: number | null; user: string; amountUsdc: number; feeUsdc: number; shares: number }
+  | { kind: 'exit'; sig: string; time: number | null; user: string; shares: number; usdcOut: number }
+  | { kind: 'rebalance'; sig: string; time: number | null; keeper: string; legOut: number; legIn: number; amountOut: number; received: number }
+  | { kind: 'created'; sig: string; time: number | null }
+
+/** Last `limit` events for a Pot, newest first. Reads the Pot account's transaction history. */
+export async function fetchPotActivity(connection: Connection, pot: PotView, limit = 30): Promise<PotEvent[]> {
+  const sigs = await connection.getSignaturesForAddress(pot.address, { limit }, 'confirmed')
+  if (sigs.length === 0) return []
+  const txs = await connection.getParsedTransactions(
+    sigs.map((s) => s.signature),
+    { maxSupportedTransactionVersion: 0, commitment: 'confirmed' },
+  )
+  const program = readonlyProgram(connection)
+  const parser = new EventParser(program.programId, program.coder)
+  const out: PotEvent[] = []
+  txs.forEach((tx, i) => {
+    const sig = sigs[i].signature
+    const time = sigs[i].blockTime ?? null
+    if (!tx || tx.meta?.err || !tx.meta?.logMessages) return
+    let opened: { keeper: string; legOut: number; legIn: number; amountOut: number } | null = null
+    let any = false
+    for (const ev of parser.parseLogs(tx.meta.logMessages)) {
+      any = true
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const d = ev.data as any
+      if (ev.name === 'Deposited') {
+        out.push({ kind: 'deposit', sig, time, user: d.user.toBase58(), amountUsdc: Number(d.amountUsdc) / 1e6, feeUsdc: Number(d.feeUsdc) / 1e6, shares: Number(d.shares) / 1e6 })
+      } else if (ev.name === 'Exited') {
+        out.push({ kind: 'exit', sig, time, user: d.user.toBase58(), shares: Number(d.shares) / 1e6, usdcOut: Number(d.usdcOut) / 1e6 })
+      } else if (ev.name === 'RebalanceOpened') {
+        opened = { keeper: d.keeper.toBase58(), legOut: d.legOut, legIn: d.legIn, amountOut: Number(d.amountOut) }
+      } else if (ev.name === 'RebalanceClosed' && opened) {
+        out.push({ kind: 'rebalance', sig, time, ...opened, received: Number(d.received) })
+        opened = null
+      }
+    }
+    if (!any && i === txs.length - 1) out.push({ kind: 'created', sig, time })
+  })
+  return out
 }

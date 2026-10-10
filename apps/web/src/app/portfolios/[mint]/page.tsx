@@ -14,6 +14,7 @@ import {
 import { estimateShares, EXIT_FEE_BPS, ENTRY_FEE_BPS, MIN_DEPOSIT_USDC } from '@/lib/pot-index/client'
 import { assetByMint, explorerAddress, explorerTx, POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
 import { CompositionBar } from '@/components/pot-index/CompositionBar'
+import { ActivityFeed } from '@/components/pot-index/ActivityFeed'
 
 function safePubkey(s: string | null): PublicKey | null {
   try {
@@ -145,6 +146,8 @@ export default function PotPage() {
               <a className="text-pot-green hover:underline" href={explorerAddress(POT_INDEX_SETTINGS.programId)} target="_blank" rel="noreferrer">Program ↗</a>
             </p>
           </div>
+
+          <ActivityFeed pot={p} />
         </section>
 
         {/* Right: actions */}
