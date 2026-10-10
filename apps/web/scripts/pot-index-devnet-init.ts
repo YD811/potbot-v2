@@ -154,7 +154,7 @@ async function main() {
   }
   for (const p of POTS) {
     if (pots[p.symbol]) continue
-    const vanity = takeVanityKeypair() ?? (await grindKeypair(INDEX_MINT_PREFIX))
+    const vanity = takeVanityKeypair() ?? (await grindKeypair(INDEX_MINT_PREFIX, { maxMs: 300_000 }))
     const { indexMint, instructions } = await buildCreatePot(program, admin.publicKey, usdc, {
       name: p.name,
       symbol: p.symbol,
