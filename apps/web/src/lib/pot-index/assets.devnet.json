@@ -3,13 +3,13 @@
   "programId": "DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr",
   "usdcMint": "AYLYmXfkfveAAU3gZwjHqFXePi459yumVw4NYJhHVjeN",
   "treasury": "JHV4qhTEhEKMkugYXuPURzwunYBiCUVji9ZrRiA5rvG",
-  "flagship": "FRweserJ2ttgk17MDdLqgM2aH5yyiz1t6XCVA1rbaeQC",
+  "flagship": "PotSvA4ynuxbMFUA8SJSbULHhuTY1JcL5RaxnQz5FmM",
   "pots": {
-    "SBC": "FRweserJ2ttgk17MDdLqgM2aH5yyiz1t6XCVA1rbaeQC",
-    "SOLN": "FxSqaayUe6ZxQsU9VZ2jiVJ1UmpKgkbi7xgi35tfcggm",
-    "MJR5": "2PX18HkJx8soQVrY1zZuWv7CySc2jvKf6qUjRTordeHh",
-    "WSTS": "8yPwdAM6HDc3gyqdH7q6KcT3KfZ428YQgNZZeZQYxkva",
-    "DGSL": "Fa9HjHLNLUH5yedmq7JawEMzdNpWHixaEcJQdJfFJ72u"
+    "SBC": "PotSvA4ynuxbMFUA8SJSbULHhuTY1JcL5RaxnQz5FmM",
+    "SOLN": "Potgd4gqWzJgiNZXxE5Avx3TB7fQyjd6gQMeqjL92vb",
+    "MJR5": "PotgdAtLnYS28VpCnRdAsbtjprYWKhMYCDj2SE5erAE",
+    "WSTS": "PotsmdsvLcZGToyYs9XKcL9vVpGMbSV3UaFaA9EUZHH",
+    "DGSL": "Potsts7jB8dQPUN1MLU4TfqCPGkJTfwtrAVcHRBdp1q"
   },
   "assets": {
     "SOL": {

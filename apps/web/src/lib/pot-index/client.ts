@@ -21,6 +21,7 @@ import {
   getAssociatedTokenAddressSync,
 } from '@solana/spl-token'
 import idl from './idl.json'
+import { grindKeypair, INDEX_MINT_PREFIX } from './vanity'
 
 export const POT_INDEX_PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_POT_INDEX_PROGRAM_ID ?? (idl as { address: string }).address,
@@ -151,10 +152,10 @@ export async function fetchAllPots(connection: Connection): Promise<PotView[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const all = await (program.account as any).pot.all()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  // Finalized Pots only. A paused Pot that never took a deposit is retired — keep it off the list.
+  // Finalized, non-paused Pots. Paused (retired) Pots stay reachable by direct link so holders can still exit.
   return all
     .map((x: any) => toPotView(x.publicKey, x.account))
-    .filter((p: PotView) => p.finalized && !(p.paused && p.totalDepositsUsd === 0))
+    .filter((p: PotView) => p.finalized && !p.paused)
 }
 
 export async function fetchConfig(connection: Connection) {
@@ -196,6 +197,8 @@ export interface CreatePotArgs {
   depositCapUsd?: number // whole USD, 0 = none
   slippageBps?: number
   maxTradeBps?: number
+  /** Progress callback while grinding the POT… vanity mint (browser only). */
+  onGrind?: (tries: number) => void
 }
 
 /**
@@ -208,8 +211,10 @@ export async function buildCreatePot(
   creator: PublicKey,
   usdcMint: PublicKey,
   args: CreatePotArgs,
+  opts: { indexMint?: Keypair; onGrind?: (tries: number) => void } = {},
 ): Promise<{ indexMint: Keypair; instructions: TransactionInstruction[] }> {
-  const indexMint = Keypair.generate()
+  // Vanity mint: every POTfolio token address starts with "Pot".
+  const indexMint = opts.indexMint ?? (await grindKeypair(INDEX_MINT_PREFIX, { onProgress: opts.onGrind }))
   const pot = potPda(indexMint.publicKey)
   const sum = args.legs.reduce((s, l) => s + l.weightBps, 0)
   if (sum !== 10_000) throw new Error('weights must sum to 10000 bps')

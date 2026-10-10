@@ -16,10 +16,21 @@ import { Connection, Keypair, PublicKey, SystemProgram, Transaction, sendAndConf
 import { createMint, getOrCreateAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 import idl from '../src/lib/pot-index/idl.json'
 import { assetPda, buildCreatePot, configPda, feedIdToBytes, potPda } from '../src/lib/pot-index/client'
+import { grindKeypair, INDEX_MINT_PREFIX } from '../src/lib/pot-index/vanity'
 
 const RPC = process.env.POT_INDEX_RPC ?? 'https://api.devnet.solana.com'
 const KEYPAIR = process.env.POT_INDEX_ADMIN_KEYPAIR ?? path.join(os.homedir(), '.config/solana/id.json')
 const OUT = path.join(__dirname, '../src/lib/pot-index/assets.devnet.json')
+// Pre-ground vanity mints (solana-keygen grind --starts-with Pot:N) in $POT_INDEX_VANITY_DIR; consumed one per Pot.
+const VANITY_DIR = process.env.POT_INDEX_VANITY_DIR
+function takeVanityKeypair(): Keypair | null {
+  if (!VANITY_DIR || !fs.existsSync(VANITY_DIR)) return null
+  const f = fs.readdirSync(VANITY_DIR).find((n) => n.startsWith('Pot') && n.endsWith('.json'))
+  if (!f) return null
+  const kp = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(fs.readFileSync(path.join(VANITY_DIR, f), 'utf8'))))
+  fs.renameSync(path.join(VANITY_DIR, f), path.join(VANITY_DIR, f + '.used'))
+  return kp
+}
 
 // Devnet asset table: test mints with REAL Pyth feed ids. Only feeds entitled on the free Pyth tier
 // (checked Oct 10: majors, SOL/JitoSOL/PYTH, DOGE, TSLA, QQQ). Others (JUP, BONK, WIF, NVDA…) need the paid tier.
@@ -130,8 +141,20 @@ async function main() {
   // 5. Showcase Pots (idempotent by symbol; the first one is the flagship).
   const pots: Record<string, string> = { ...(existing?.pots ?? {}) }
   if (existing?.flagship && !existing?.assets?.JUP && !pots.SBC) pots.SBC = existing.flagship
+  // Recreate any showcase Pot whose mint does not carry the POT… vanity prefix (retire the old one).
+  for (const [sym, m] of Object.entries(pots)) {
+    if (m.startsWith(INDEX_MINT_PREFIX)) continue
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const old = await (program.account as any).pot.fetchNullable(potPda(new PublicKey(m)))
+    if (old && !old.paused) {
+      await program.methods.setPotParams({ paused: true, depositCapUsd: null }).accounts({ creator: admin.publicKey, pot: potPda(new PublicKey(m)) }).rpc()
+      console.log('paused non-vanity pot', sym, m)
+    }
+    delete pots[sym]
+  }
   for (const p of POTS) {
     if (pots[p.symbol]) continue
+    const vanity = takeVanityKeypair() ?? (await grindKeypair(INDEX_MINT_PREFIX))
     const { indexMint, instructions } = await buildCreatePot(program, admin.publicKey, usdc, {
       name: p.name,
       symbol: p.symbol,
@@ -139,7 +162,7 @@ async function main() {
       depositCapUsd: 0,
       slippageBps: 100,
       maxTradeBps: p.maxTradeBps ?? 2500,
-    })
+    }, { indexMint: vanity })
     // ≤3 legs fits one tx; otherwise split (create+2 legs, rest+finalize).
     if (p.legs.length <= 3) {
       await sendAndConfirmTransaction(connection, new Transaction().add(...instructions), [admin, indexMint])

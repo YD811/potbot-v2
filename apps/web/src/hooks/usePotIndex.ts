@@ -219,7 +219,7 @@ export function usePotIndexActions() {
   const createPot = useCallback(
     async (args: CreatePotArgs) => {
       if (!program || !pubkey) throw new Error('Connect a wallet first')
-      const { indexMint, instructions } = await buildCreatePot(program, pubkey, new PublicKey(POT_INDEX_SETTINGS.usdcMint), args)
+      const { indexMint, instructions } = await buildCreatePot(program, pubkey, new PublicKey(POT_INDEX_SETTINGS.usdcMint), args, { onGrind: args.onGrind })
       // create + legs + finalize: keep legs ≤ 3 in one tx, otherwise split finalize off.
       const metaUri = `${window.location.origin}/api/pot-index/meta/${indexMint.publicKey.toBase58()}`
       const metadata = await buildSetIndexMetadata(program, pubkey, indexMint.publicKey, metaUri)

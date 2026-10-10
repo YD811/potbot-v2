@@ -19,74 +19,78 @@ interface Section {
 
 const SECTIONS: Section[] = [
   {
+    tier: 'live',
+    title: 'Where we come from: three hackathons',
+    blurb: 'PotBot v1 (group trading from one wallet) at our first Colosseum, PotBot v2 vaults (governance, garden, MCP) at Frontier, and now POTfolio: the vault wrapped into one liquid token.',
+    features: [
+      { name: 'Vaults (PotBot v2)', desc: 'Group treasury with votes, strategies, garden mode and an MCP server. Public vaults on devnet, private vaults (STAMPPOT) in development.', doc: '/vaults' },
+      { name: 'POTfolio (PotBot v3)', desc: 'A basket of Solana assets as one index token. New pot_index program, built during Crypto World\'s Fair.', doc: '/worldsfair' },
+    ],
+  },
+  {
     tier: 'devnet',
-    title: '1 · Hackathon core — Pots & the index token',
-    blurb: 'Built from scratch during Colosseum Crypto World\'s Fair (Sept 14 – Oct 12, 2026). New `pot_index` program, deployed to devnet.',
+    title: '1 · POTfolio core, live on devnet',
+    blurb: 'Built from scratch Sept 14 to Oct 12, 2026. Program DfKKe9…iUxr, five showcase POTfolios, keeper running.',
     features: [
-      { emoji: '🧺', name: 'Create a Pot', desc: '2–5 allowlisted assets with fixed target weights. Weights lock at creation; depositors always know what they hold.' },
-      { emoji: '🪙', name: 'Index token at NAV', desc: 'Deposit USDC, mint one SPL index token at Pyth-priced NAV. 0.30% entry fee split 40/40/20 between referrer, creator and protocol.' },
-      { emoji: '🔓', name: 'Exit in kind, always', desc: 'Burn the token and receive your share of every asset. No oracle, no pause, no swaps. 0.50% stays with remaining holders. There is no withdraw instruction for anyone.' },
-      { emoji: '⚖️', name: 'Bounded permissionless rebalancing', desc: 'Anyone can rebalance toward target weights in a same-transaction open/close pair. Enforced on-chain: only overweight → underweight, never past target, per-trade cap, Pyth slippage band, deadband, cooldown.' },
-      { emoji: '🔗', name: 'Referral links', desc: 'Every Pot page has a referral link; referred deposits pay the referrer 40% of the entry fee, on-chain, at deposit time.' },
-      { emoji: '🛡️', name: 'Security pass', desc: 'Conservative Pyth pricing (price ± conf), 300 s max price age, first-depositor protection, two-step admin transfer, LiteSVM end-to-end tests.' },
+      { name: 'Create a POTfolio', desc: 'Up to 5 assets from the registry (crypto majors, Solana natives, tokenized stocks, memes) with fixed target weights. Token address starts with Pot…' },
+      { name: 'Mint at NAV, one signature', desc: 'Deposit USDC, receive the index token at the current basket value. Pyth prices posted in the same transaction. 0.30% entry fee split 40/40/20 creator / referrer / protocol.' },
+      { name: 'Exit in kind, always', desc: 'Burn the token, receive your share of every asset. No oracle, no pause, nothing sold on other holders. 0.50% stays with remaining holders.' },
+      { name: 'Keepers inside on-chain rules', desc: 'Independent bots rebalance toward target. The program allows only moves toward target, max 25% per trade, inside the Pyth band; under-delivery reverts.' },
+      { name: 'Token metadata, activity feed, referral links', desc: 'Name and logo in wallets via Metaplex; every deposit, rebalance and exit on the Pot page with Explorer links; share-to-earn links.' },
+      { name: 'Market-hours aware', desc: 'Stock POTfolios refuse stale prices: minting opens with US markets, exits always work.' },
     ],
   },
   {
     tier: 'phase-2',
-    title: '2 · Guarded mainnet — target Q4 2026',
-    blurb: 'One flagship Pot with a TVL cap and a security review. First creators and depositors from Y-DAO and Superteam NL.',
+    title: '2 · Right after the Fair',
+    blurb: 'Four weeks of product work before real money.',
     features: [
-      { emoji: '🚀', name: 'Flagship Pot on mainnet', desc: 'SOL + LSTs + stables, TVL-capped, honest "unaudited beta" label. This is also the funded grant milestone.' },
-      { emoji: '🔁', name: 'Jupiter-routed keeper', desc: 'Open-source keeper that fills bounded rebalances through Jupiter. Anyone can run one.' },
-      { emoji: '🏦', name: 'Squads multisig admin', desc: 'Protocol admin and upgrade authority move to a Squads v4 multisig before any real TVL.' },
+      { name: 'Dashboard and P&L', desc: 'Your positions across POTfolios, cost basis, profit and loss, creator and referral earnings. Price history and 24h / 7d charts.' },
+      { name: 'Comments and callouts', desc: 'Wallet-signed comments under every POTfolio, holder badges, activity-ranked feed.' },
+      { name: 'Up to 10 assets, paste any CA', desc: 'Bigger baskets; paste a token address and add it if a price feed exists, request listing if not.' },
+      { name: 'Long-tail prices', desc: 'Paid Pyth tier and Switchboard On-Demand for JUP, JTO, BONK, WIF and the rest of Solana.' },
     ],
   },
   {
     tier: 'phase-2',
-    title: '3 · Creator economy',
-    blurb: 'Run a Pot as a business — the Hyperliquid vault-leader model, applied to portfolios.',
+    title: '3 · Guarded mainnet, Q4 2026',
+    blurb: 'One flagship POTfolio with a TVL cap, then invited creators.',
     features: [
-      { emoji: '💸', name: 'Management & performance fees', desc: 'Creator-set fees above a high-water mark, paid in index tokens. Protocol takes a cut.' },
-      { emoji: '🏆', name: 'Leaderboard', desc: 'Pots ranked by NAV performance and AUM. Public track records, like Hyperliquid vaults.' },
-      { emoji: '🆔', name: '.potbot.sol per Pot', desc: 'Readable on-chain identity for every Pot (already selling as subdomains).' },
+      { name: 'Flagship on mainnet', desc: 'Real USDC, cbBTC, WETH, SOL. TVL-capped, labelled unaudited beta. This is also the funded grant milestone.' },
+      { name: 'Jupiter keeper, partner keepers', desc: 'Open-source keeper routing through Jupiter. Partner rebalancing engines can fill the same instruction.' },
+      { name: 'Squads multisig', desc: 'Upgrade authority and treasury on a Squads multisig before any real TVL. Helius RPC and webhooks.' },
+      { name: 'Secondary market', desc: 'POTfolio / USDC pool on Meteora so tokens trade on Jupiter, Photon and inside wallets. Mint and burn at NAV keep the pool honest.' },
     ],
   },
   {
     tier: 'phase-3',
-    title: '4 · DeFi layer — the token works everywhere',
-    blurb: 'The index token becomes a first-class DeFi asset.',
+    title: '4 · Three kinds of POTfolio',
+    blurb: 'From index to managed strategy to community-run basket.',
     features: [
-      { emoji: '🏛️', name: 'Borrow against your Pot token', desc: 'Index tokens as collateral on lending markets; lend them out; LP them. Liquidity for Pot tokens on spot venues.' },
-      { emoji: '🌾', name: 'Yield on idle assets', desc: 'Assets inside a Pot earn staking and lending yield (LSTs, lending vaults) without leaving the Pot.' },
-      { emoji: '📐', name: 'Smart rules & Mandates', desc: 'DCA-in, buy-the-dip, limit-style rebalances; an AI agent that proposes trades strictly inside on-chain limits.' },
+      { name: 'Fixed', desc: 'What ships today: weights locked at creation.' },
+      { name: 'Managed', desc: 'Creator adjusts weights inside a public mandate (asset list, caps) with a timelock, and earns management and performance fees above a high-water mark.' },
+      { name: 'Community', desc: 'Holders stake the token to vote on adding or removing assets; timelocked execution.' },
+      { name: 'Launch with a floor', desc: 'Creator tokens launched on a bonding curve and backed by a POTfolio: a price floor equal to the basket, upside from the market.' },
     ],
   },
   {
     tier: 'phase-3',
-    title: '5 · Open portfolios — stocks, T-bills, RWAs',
-    blurb: 'The open version of Ondo × BlackRock: anyone builds the portfolio.',
+    title: '5 · DeFi layer and real-world assets',
+    blurb: 'The token works everywhere; every asset class fits inside.',
     features: [
-      { emoji: '📈', name: 'Tokenized stocks & T-bills in baskets', desc: 'xStocks, tokenized treasuries and yield-bearing stables as Pot legs, with issuer, oracle and market-hours rules.' },
-      { emoji: '🪪', name: 'Compliant Pots', desc: 'Token-2022 + Token ACL (MPL-3643-compatible) index tokens that only eligible wallets can hold.' },
+      { name: 'Collateral and yield', desc: 'POTfolio tokens as collateral on lending markets; LSTs and lending vaults earn inside the basket.' },
+      { name: 'Tokenized stocks and T-bills', desc: 'xStocks, treasuries and yield stables as legs, with market-hours rules already in place.' },
+      { name: 'Compliant POTfolios', desc: 'MPL-3643 permissioned tokens for regulated assets, liquidity on Meteora.' },
+      { name: 'Smart rules and agents', desc: 'DCA-in, buy-the-dip, limit-style rebalances; an AI agent that proposes trades strictly inside on-chain limits (MCP).' },
     ],
   },
   {
     tier: 'vision',
-    title: '6 · Space — your Pot in your own corner of the internet',
-    blurb: 'Vision. Pots become the vault layer for personal spaces, Y-DAO and SOLO Wallet.',
+    title: '6 · Space',
+    blurb: 'Your POTfolio as the treasury of a personal space you own.',
     features: [
-      { emoji: '🏠', name: 'Space', desc: 'A personal web space on your own hardware, opened with an NFC card, designed with an AI terminal. Your Pot is its treasury, settled on Solana.' },
-      { emoji: '🌐', name: 'Y-DAO & SOLO Wallet', desc: 'Community treasuries and a wallet that unifies it all.' },
-    ],
-  },
-  {
-    tier: 'live',
-    title: 'Experimental & legacy (still in the repo)',
-    blurb: 'Earlier PotBot v2 features — group vaults with governance, AI proposals, Blinks, MCP server, Money Tree, Duels, STAMPPOT. Kept as supporting layers; not part of the Portfolios MVP promise.',
-    features: [
-      { emoji: '🗳️', name: 'Group vaults with on-chain governance (pot_vault)', desc: 'Proposal → vote → execute via Jupiter CPI. Devnet program GJap9D…AmiK.', doc: '/docs/architecture/program' },
-      { emoji: '🤖', name: '@potbot/mcp', desc: '18 tools so any LLM can drive a vault. Will be pointed at Pots next.' },
-      { emoji: '🌱', name: 'Money Tree, Duels, STAMPPOT privacy', desc: 'Gamification and ZK privacy experiments from earlier hackathons.' },
+      { name: 'Space', desc: 'A personal web space on your own hardware, opened with an NFC card, designed with an AI terminal. Your POTfolio is its treasury, settled on Solana.' },
+      { name: 'Y-DAO and SOLO Wallet', desc: 'Community treasuries and a wallet that unifies it all.' },
     ],
   },
 ]
@@ -96,13 +100,12 @@ export default function RoadmapPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-12">
       <header>
         <div className="flex items-center gap-3 mb-3 flex-wrap">
-          <span className="text-3xl">🗺️</span>
-          <h1 className="text-3xl sm:text-4xl font-black text-white">PotBot — Full Roadmap</h1>
+                    <h1 className="text-3xl sm:text-4xl font-black text-white">PotBot Roadmap</h1>
         </div>
         <p className="text-pot-muted text-sm sm:text-base leading-relaxed max-w-2xl">
-          From one small, shippable thing — a Pot and its index token — to portfolios that work
-          across all of DeFi, and finally to your own corner of the internet. Every stage plugs into the
-          same token. Chips say honestly what is live, on devnet, next, or still on paper.
+          From one shippable thing, a POTfolio and its index token, to portfolios that work across DeFi,
+          and finally to your own corner of the internet. Every stage plugs into the same token. Chips say
+          what is live, on devnet, next, or still on paper.
         </p>
         <div className="flex flex-wrap items-center gap-2 mt-4">
           <StatusBadge tier="live" compact />
@@ -114,7 +117,7 @@ export default function RoadmapPage() {
       </header>
 
       {SECTIONS.map((section) => (
-        <section key={section.tier}>
+        <section key={section.title}>
           <div className="flex items-center gap-3 mb-2 flex-wrap">
             <h2 className="text-xl sm:text-2xl font-bold text-white">{section.title}</h2>
             <StatusBadge tier={section.tier} compact />

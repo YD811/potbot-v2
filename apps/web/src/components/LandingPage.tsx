@@ -788,127 +788,26 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS — actual 4-step pot lifecycle. ── */}
-      <section className="relative py-20 sm:py-24 px-4 overflow-hidden">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-3 mb-6">
-              <span className="h-px w-6 bg-gradient-to-r from-transparent to-pot-muted/60" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-muted">
-                How it works
-              </span>
-              <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-muted/60" />
-            </div>
-            <h2 className="text-3xl sm:text-5xl font-bold text-white leading-[1.15] tracking-tight">
-              {isLight ? 'From sign-in to trade, ' : 'From deposit to execution, '}
-              <span className="bg-gradient-to-r from-pot-green to-pot-accent bg-clip-text text-transparent">
-                {isLight ? 'all in one place.' : 'fully onchain.'}
-              </span>
-            </h2>
+      {/* ── Vaults vs POTfolios: two products, one protocol ── */}
+      <section className="max-w-6xl mx-auto px-4 pb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="card p-6">
+            <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-pot-green mb-2">POTfolio · new</div>
+            <h3 className="text-xl font-bold text-white mb-2">A basket as one token</h3>
+            <p className="text-sm text-white/75 leading-relaxed">
+              Fixed assets and weights, one liquid index token. Deposit USDC to mint, burn to take your share of every asset back.
+              Creators earn on every deposit. Live on devnet.
+            </p>
+            <Link href="/portfolios" className="mt-4 inline-block text-sm font-semibold text-pot-green hover:text-white">Open POTfolios →</Link>
           </div>
-
-          {/* Desktop dotted connector */}
-          <div className="relative">
-            <div
-              aria-hidden
-              className="hidden md:block absolute top-12 left-[12.5%] right-[12.5%] h-px pointer-events-none"
-              style={{
-                background:
-                  'repeating-linear-gradient(to right, rgba(255,255,255,0.18) 0 6px, transparent 6px 12px)',
-              }}
-            />
-
-            <div className="relative grid grid-cols-1 md:grid-cols-4 gap-5">
-              {(isLight
-                ? [
-                    {
-                      n: '01',
-                      title: 'Add money',
-                      desc: 'Put money into the shared pot with your group. Everyone gets a slice that matches what they put in.',
-                      color: '#14F195',
-                      border: 'border-pot-green/30',
-                    },
-                    {
-                      n: '02',
-                      title: 'Suggest a trade',
-                      desc: 'Anyone (or the AI helper) writes up a trade idea — what to buy, what to sell, how much. Nothing happens yet.',
-                      color: '#9945FF',
-                      border: 'border-pot-accent/30',
-                    },
-                    {
-                      n: '03',
-                      title: 'Decide together',
-                      desc: 'The group votes yes or no. The bigger your slice, the bigger your vote.',
-                      color: '#FCD34D',
-                      border: 'border-amber-300/30',
-                    },
-                    {
-                      n: '04',
-                      title: 'Trade happens',
-                      desc: 'If the group says yes, the trade runs automatically. No one person can move the money on their own.',
-                      color: '#FFFFFF',
-                      border: 'border-pot-border',
-                    },
-                  ]
-                : [
-                    {
-                      n: '01',
-                      title: 'Deposit SOL',
-                      desc: 'Pool capital with your group in a single program-controlled vault. Each member gets shares proportional to their deposit.',
-                      color: '#14F195',
-                      border: 'border-pot-green/30',
-                    },
-                    {
-                      n: '02',
-                      title: 'Propose a swap',
-                      desc: 'Anyone (or the AI agent) drafts a Jupiter swap with input mint, output mint and amount. Nothing moves yet.',
-                      color: '#9945FF',
-                      border: 'border-pot-accent/30',
-                    },
-                    {
-                      n: '03',
-                      title: 'Vote',
-                      desc: 'Members vote yes/no with their shares. Quorum and approval thresholds are governance settings the pot picks at creation.',
-                      color: '#FCD34D',
-                      border: 'border-amber-300/30',
-                    },
-                    {
-                      n: '04',
-                      title: 'Execute onchain',
-                      desc: 'Once a proposal passes, anyone can trigger the onchain execution. The vault PDA signs the Jupiter v6 CPI itself — no human keypair holds the funds.',
-                      color: '#FFFFFF',
-                      border: 'border-pot-border',
-                    },
-                  ]
-              ).map((step) => (
-                <div
-                  key={step.n}
-                  className={`relative rounded-2xl border ${step.border} bg-pot-card/50 backdrop-blur-sm p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-pot-card/70`}
-                >
-                  {/* Step bullet on the connector */}
-                  <div
-                    className="hidden md:flex absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full items-center justify-center text-[10px] font-black"
-                    style={{
-                      background: 'var(--c-bg, #0D1117)',
-                      border: `1.5px solid ${step.color}`,
-                      color: step.color,
-                      boxShadow: `0 0 16px ${step.color}40`,
-                    }}
-                  >
-                    ●
-                  </div>
-
-                  <div
-                    className="text-xs font-black tracking-widest mb-3"
-                    style={{ color: step.color }}
-                  >
-                    {step.n}
-                  </div>
-                  <h3 className="text-white font-bold text-lg mb-2 leading-tight">{step.title}</h3>
-                  <p className="text-white/75 text-sm leading-relaxed">{step.desc}</p>
-                </div>
-              ))}
-            </div>
+          <div className="card p-6">
+            <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-pot-accent mb-2">Vault · PotBot v2</div>
+            <h3 className="text-xl font-bold text-white mb-2">A treasury your group runs together</h3>
+            <p className="text-sm text-white/75 leading-relaxed">
+              Pool capital, vote on trades, grow the garden. Public vaults on devnet, private vaults (STAMPPOT) in development.
+              The POTfolio token is built on the same program family.
+            </p>
+            <Link href="/vaults" className="mt-4 inline-block text-sm font-semibold text-pot-accent hover:text-white">Explore vaults →</Link>
           </div>
         </div>
       </section>
@@ -993,9 +892,9 @@ export default function LandingPage() {
               <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-green/60" />
             </div>
             <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold text-white leading-[1.15] tracking-tight">
-              {isLight ? 'Open or private. ' : 'Social-Fi or Privacy. '}
+              {isLight ? 'Open or private vaults. ' : 'Public or private vaults. '}
               <span className="bg-gradient-to-r from-pot-green to-pot-accent bg-clip-text text-transparent">
-                {isLight ? 'Your call.' : 'Pick per pot.'}
+                {isLight ? 'Your call.' : 'Pick per vault.'}
               </span>
             </h2>
           </div>
@@ -1030,7 +929,7 @@ export default function LandingPage() {
                 </span>
               </div>
               <div className="text-xl font-extrabold mb-1" style={{ color: '#14F195' }}>
-                {isLight ? 'Open POT' : 'Public POT'}
+                {isLight ? 'Open vault' : 'Public vault'}
               </div>
               <p className="text-base text-white/80 leading-relaxed mb-4">
                 {isLight
@@ -1075,11 +974,11 @@ export default function LandingPage() {
                   className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full border"
                   style={{ background: 'rgba(153,69,255,.12)', borderColor: 'rgba(153,69,255,.3)', color: '#9945FF' }}
                 >
-                  {isLight ? 'Private' : 'Privacy layer'}
+                  In development
                 </span>
               </div>
               <div className="text-xl font-extrabold mb-1" style={{ color: '#9945FF' }}>
-                {isLight ? 'Private POT' : 'Private POT (STAMPPOT)'}
+                {isLight ? 'Private vault' : 'Private vault (STAMPPOT)'}
               </div>
               <p className="text-base text-white/80 leading-relaxed mb-4">
                 {isLight
@@ -1087,7 +986,7 @@ export default function LandingPage() {
                   : "For groups that want their strategy to stay theirs. Deposits and members are hidden behind ZK proofs, so the alpha doesn't leak the moment you open the pot."}
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {['🔐 ZK proofs', '🚫 No wallet doxxing', '🤝 Invite-only', '🛡 PrivacyCash', '📜 Auditor view'].map((f) => (
+                {['ZK proofs', 'No wallet doxxing', 'Invite-only', 'PrivacyCash', 'Auditor view'].map((f) => (
                   <span
                     key={f}
                     className="text-xs font-semibold px-2 py-1 rounded-full border"
@@ -1147,7 +1046,6 @@ export default function LandingPage() {
                   className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                   style={{ boxShadow: '0 0 40px rgba(153,69,255,0.10)' }}
                 />
-                <div className="text-2xl mb-3">{item.icon}</div>
                 <div className="font-bold text-white text-lg mb-1 group-hover:text-pot-accent transition">{item.title}</div>
                 <div className="text-sm text-white/75 leading-relaxed">{item.desc}</div>
                 <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-pot-accent opacity-0 group-hover:opacity-100 transition">

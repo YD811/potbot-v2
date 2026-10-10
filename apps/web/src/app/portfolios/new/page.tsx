@@ -27,6 +27,7 @@ export default function NewPotPage() {
   const [ca, setCa] = useState('')
   const [caMsg, setCaMsg] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [grind, setGrind] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -60,6 +61,7 @@ export default function NewPotPage() {
         depositCapUsd: cap,
         slippageBps: 100,
         maxTradeBps: 1000,
+        onGrind: setGrind,
       })
       router.push(`/portfolios/${res.indexMint.toBase58()}?created=1`)
     } catch (e) {
@@ -206,7 +208,7 @@ export default function NewPotPage() {
           <div className="[&>button]:!w-full [&>button]:!justify-center"><ConnectButton /></div>
         ) : (
           <button type="button" className="btn-primary w-full" disabled={!valid || busy} onClick={submit}>
-            {busy ? 'Creating…' : 'Create POTfolio'}
+            {busy ? (grind > 0 ? `Minting a Pot… address (${Math.round(grind / 1000)}k tries)` : 'Creating…') : 'Create POTfolio'}
           </button>
         )}
       </div>
