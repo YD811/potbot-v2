@@ -210,24 +210,14 @@ export default function FAQPage() {
       <div className="mt-10 p-6 rounded-2xl border border-pot-border bg-pot-card/50 text-center">
         <p className="text-sm text-pot-muted mb-3">Still have questions?</p>
         <div className="flex flex-wrap gap-3 justify-center">
-          <a
-            href="https://t.me/Trade_pot_bot"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-secondary text-sm py-2 px-5"
-          >
-            💬 Telegram Bot
+          <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm py-2 px-5">
+            Ask on X
           </a>
-          <a
-            href="https://x.com/PotBot_sol"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-secondary text-sm py-2 px-5"
-          >
-            𝕏 Twitter
-          </a>
-          <Link href="/create" className="btn-primary text-sm py-2 px-5">
-            🪴 Try PotBot
+          <Link href="/learn" className="btn-secondary text-sm py-2 px-5">
+            Read Learn
+          </Link>
+          <Link href="/portfolios" className="btn-primary text-sm py-2 px-5">
+            Open the POTfolios
           </Link>
         </div>
       </div>
@@ -236,7 +226,7 @@ export default function FAQPage() {
       <div className="mt-8 p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20">
         <p className="text-xs text-pot-muted leading-relaxed space-y-1">
           <strong className="text-amber-400/80 block mb-2">Risk Disclosures</strong>
-          PotBot is non-custodial software. You retain full custody of your funds via the smart contract. Crypto assets are volatile — you may lose some or all of the funds you deposit. Past performance does not predict future results. PotBot is not investment advice. Members make their own decisions through on-chain voting. Use of PotBot may be restricted in certain jurisdictions; by using this app you confirm compliance with your local laws.
+          PotBot is non-custodial software: assets sit in program-owned accounts with no withdraw instruction. Crypto assets are volatile; you may lose some or all of the value you deposit. Past performance does not predict future results. PotBot is not investment advice. This build runs on Solana devnet with test tokens. Use of PotBot may be restricted in certain jurisdictions; by using this app you confirm compliance with your local laws.
         </p>
       </div>
     </div>
