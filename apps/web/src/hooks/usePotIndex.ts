@@ -303,7 +303,35 @@ export function usePotIndexActions() {
     [program, pubkey, sendLegacy],
   )
 
-  return { createPot, deposit, exit, connected: !!pubkey, pubkey }
+  /** Exit straight to USDC. Devnet: the server builds the bundle with the market maker's fill
+   *  (program enforces the minimum on-chain); the holder signs everything in one prompt. */
+  const exitUsdc = useCallback(
+    async (pot: PotView, shares: number) => {
+      if (!wallet || !pubkey) throw new Error('Connect a wallet first')
+      const res = await fetch('/api/pot-index/exit-usdc', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ wallet: pubkey.toBase58(), mint: pot.indexMint.toBase58(), shares: String(shares) }),
+      })
+      const data = (await res.json()) as { ok?: boolean; txs?: string[]; error?: string }
+      if (!res.ok || !data.txs) throw new Error(data.error ?? 'market maker unavailable')
+      const vtxs = data.txs.map((b64) => VersionedTransaction.deserialize(Buffer.from(b64, 'base64')))
+      const signed = wallet.signAllTransactions
+        ? ((await wallet.signAllTransactions(vtxs)) as VersionedTransaction[])
+        : await Promise.all(vtxs.map(async (v) => (await wallet.signTransaction(v)) as VersionedTransaction))
+      const sigs: string[] = []
+      for (const v of signed) {
+        const sig = await connection.sendRawTransaction(v.serialize(), { maxRetries: 5 })
+        await connection.confirmTransaction(sig, 'confirmed')
+        sigs.push(sig)
+      }
+      await invalidate()
+      return sigs
+    },
+    [wallet, pubkey, connection],
+  )
+
+  return { createPot, deposit, exit, exitUsdc, connected: !!pubkey, pubkey }
 }
 
 export { assetByMint, POT_INDEX_ASSETS, POT_INDEX_SETTINGS }

@@ -80,6 +80,19 @@ pub mod pot_index {
         instructions::exit::handle_exit(ctx, shares, min_usdc_out)
     }
 
+    /// Exit straight to USDC: burn, receive legs in kind, sell them in the same transaction,
+    /// `exit_usdc_close` enforces the minimum and takes the conversion fee.
+    pub fn exit_usdc_open<'info>(
+        ctx: Context<'info, ExitUsdcOpen<'info>>,
+        shares: u64,
+        min_usdc_out: u64,
+    ) -> Result<()> {
+        instructions::exit_usdc::handle_exit_usdc_open(ctx, shares, min_usdc_out)
+    }
+    pub fn exit_usdc_close(ctx: Context<ExitUsdcClose>) -> Result<()> {
+        instructions::exit_usdc::handle_exit_usdc_close(ctx)
+    }
+
     // ---- keepers (anyone)
     pub fn rebalance_open<'info>(
         ctx: Context<'info, RebalanceOpen<'info>>,

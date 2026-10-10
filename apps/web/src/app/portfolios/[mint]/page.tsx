@@ -44,7 +44,7 @@ export default function PotPage() {
   }, [pot.data, publishTimes.data])
   const myShares = useMyIndexBalance(pot.data)
   const myUsdc = useMyUsdcBalance()
-  const { deposit, exit, connected, pubkey } = usePotIndexActions()
+  const { deposit, exit, exitUsdc, connected, pubkey } = usePotIndexActions()
 
   const [tab, setTab] = useState<'deposit' | 'exit'>('deposit')
   const [amount, setAmount] = useState('100')
@@ -229,7 +229,7 @@ export default function PotPage() {
                     onClick={() => setExitMode('usdc')}
                     className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${exitMode === 'usdc' ? 'bg-pot-green text-pot-dark' : 'text-white/70 hover:text-white'}`}
                   >
-                    Get USDC <span className="ml-1 rounded-full border border-current px-1.5 text-[10px] font-bold uppercase">soon</span>
+                    Get USDC
                   </button>
                 </div>
 
@@ -269,9 +269,12 @@ export default function PotPage() {
                     ))}
                   </div>
                 )}
-                {exitMode === 'usdc' && (
+                {exitPreview && exitMode === 'usdc' && (
                   <div className="rounded-lg bg-pot-dark p-3 text-xs text-white/70">
-                    Exit straight to USDC is in development: the Pot sells your share through a keeper in the same transaction, with a 0.10% conversion fee on top of the exit fee. For now choose &ldquo;Get the assets&rdquo;.
+                    <p className="mb-1 text-white">You receive USDC:</p>
+                    <div className="flex justify-between"><span>Your share, sold at market</span><span>≈ ${(exitPreview.usdc + exitPreview.legs.reduce((a, l) => a + l.usd, 0)).toFixed(2)}</span></div>
+                    <div className="flex justify-between"><span>Conversion fee 0.10% (on the sold part)</span><span>−${(exitPreview.legs.reduce((a, l) => a + l.usd, 0) * 0.001).toFixed(2)}</span></div>
+                    <p className="mt-1">Sold in the same transaction. If the sale gives less than the on-chain minimum, nothing happens and you keep your tokens.{stalePrices ? ' Market closed: live prices needed, choose "Get the assets" meanwhile.' : ''}</p>
                   </div>
                 )}
                 {!connected ? (
@@ -280,10 +283,14 @@ export default function PotPage() {
                 <button
                   type="button"
                   className="btn-primary w-full"
-                  disabled={!connected || busy || exitMode === 'usdc' || sharesInNum <= 0 || sharesInNum > myShareNum + 1e-9}
-                  onClick={() => run(() => exit(p, Math.floor(sharesInNum * 1e6)), `Redeemed ${sharesInNum.toFixed(4)} $${p.symbol}`)}
+                  disabled={!connected || busy || sharesInNum <= 0 || sharesInNum > myShareNum + 1e-9 || (exitMode === 'usdc' && stalePrices)}
+                  onClick={() =>
+                    exitMode === 'usdc'
+                      ? run(() => exitUsdc(p, Math.floor(sharesInNum * 1e6)), `Redeemed ${sharesInNum.toFixed(4)} $${p.symbol} for USDC`)
+                      : run(() => exit(p, Math.floor(sharesInNum * 1e6)), `Redeemed ${sharesInNum.toFixed(4)} $${p.symbol}`)
+                  }
                 >
-                  {busy ? 'Confirm in wallet…' : exitMode === 'usdc' ? 'Get USDC (soon)' : `Redeem ${exitPct}% for the assets`}
+                  {busy ? 'Confirm in wallet…' : exitMode === 'usdc' ? `Redeem ${exitPct}% for USDC` : `Redeem ${exitPct}% for the assets`}
                 </button>
                 )}
                 <p className="text-xs text-white/70">Always available, no oracle, no pause. {EXIT_FEE_BPS / 100}% stays in the Pot for the holders who remain.</p>

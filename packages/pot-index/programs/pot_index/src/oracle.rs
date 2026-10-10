@@ -81,7 +81,7 @@ pub fn read_price(
 /// feed id, age and confidence. Nothing here is trusted from the client.
 pub fn snapshot_legs<'info>(
     pot: &Pot,
-    remaining: &'info [AccountInfo<'info>],
+    remaining: &[AccountInfo<'info>],
     clock: &Clock,
     max_age_secs: u64,
 ) -> Result<Vec<LegSnapshot>> {
@@ -94,7 +94,11 @@ pub fn snapshot_legs<'info>(
         let vault_info = &remaining[i * 2];
         let price_info = &remaining[i * 2 + 1];
         require_keys_eq!(vault_info.key(), leg.vault, PotError::VaultMismatch);
-        let vault = Account::<TokenAccount>::try_from(vault_info)?;
+        require_keys_eq!(*vault_info.owner, anchor_spl::token::ID, PotError::TokenOwnerMismatch);
+        let vault = {
+            let data = vault_info.try_borrow_data()?;
+            TokenAccount::try_deserialize(&mut &data[..])?
+        };
         require_keys_eq!(vault.mint, leg.mint, PotError::TokenMintMismatch);
         let (price, conf, expo) = read_price(price_info, &leg.feed_id, clock, max_age_secs)?;
         let conf_i = i64::try_from(conf).map_err(|_| PotError::MathOverflow)?;

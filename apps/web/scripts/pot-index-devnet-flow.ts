@@ -15,10 +15,10 @@ import os from 'node:os'
 import path from 'node:path'
 import { AnchorProvider, Program, Wallet, type Idl } from '@coral-xyz/anchor'
 import { Connection, Keypair, PublicKey, Transaction, sendAndConfirmTransaction, type VersionedTransaction } from '@solana/web3.js'
-import { getAssociatedTokenAddressSync, getOrCreateAssociatedTokenAccount, mintTo } from '@solana/spl-token'
+import { createMintToInstruction, getAssociatedTokenAddressSync, getOrCreateAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 import idl from '../src/lib/pot-index/idl.json'
 import registry from '../src/lib/pot-index/assets.devnet.json'
-import { buildDeposit, buildExit, fetchPot, fetchPotBalances, navUsd } from '../src/lib/pot-index/client'
+import { buildDeposit, buildExit, buildExitUsdcPair, fetchPot, fetchPotBalances, navUsd } from '../src/lib/pot-index/client'
 import { buildWithPythUpdates, fetchHermesPrices } from '../src/lib/pot-index/pyth-post'
 
 const RPC = process.env.POT_INDEX_RPC ?? 'https://api.devnet.solana.com'
@@ -99,7 +99,38 @@ async function main() {
     return status()
   }
 
-  console.error('usage: deposit <usdc> [mint] [--ref <pubkey>] | exit all|<shares> [mint] | mint-usdc <wallet> [amount] | status [mint]')
+  if (cmd === 'exit-usdc') {
+    // Same bundle the web app gets from /api/pot-index/exit-usdc, built here with this wallet as both
+    // holder and devnet market maker (it is the test-USDC mint authority).
+    const myAta = getAssociatedTokenAddressSync(indexMint, kp.publicKey)
+    const have = BigInt((await connection.getTokenAccountBalance(myAta)).value.amount)
+    const shares = positional[0] === 'all' || !positional[0] ? have : BigInt(Math.round(Number(positional[0]) * 1e6))
+    const bal = await fetchPotBalances(connection, pot)
+    const prices = await fetchHermesPrices(feedIds)
+    const legOut = pot.legs.map((l, i) => ((BigInt(bal.legs[i]) * shares) / BigInt(bal.supply)) * 9950n / 10000n)
+    let pay = 0n
+    pot.legs.forEach((l, i) => { pay += BigInt(Math.floor((Number(legOut[i]) / 10 ** l.decimals) * (prices[l.feedId]?.price ?? 0) * 1e6)) })
+    const usdcBefore = Number((await connection.getTokenAccountBalance(getAssociatedTokenAddressSync(USDC, kp.publicKey))).value.amount)
+    const txs = await buildWithPythUpdates(connection, wallet, feedIds, async (priceUpdates) => {
+      const { pre, open, close } = await buildExitUsdcPair(program, { pot, user: kp.publicKey, usdcMint: USDC, treasury: TREASURY, shares: Number(shares), priceUpdates })
+      // Market maker = this wallet: it already holds the legs after `open`, so the sale is just the USDC payment.
+      const payIx = createMintToInstruction(USDC, getAssociatedTokenAddressSync(USDC, kp.publicKey), kp.publicKey, pay)
+      return [...pre, open, payIx, close]
+    })
+    let last = ''
+    for (const { tx, signers } of txs) {
+      if (signers.length) tx.sign(signers as never[])
+      tx.sign([kp])
+      last = await connection.sendRawTransaction(tx.serialize(), { maxRetries: 5 })
+      await connection.confirmTransaction(last, 'confirmed')
+      console.log('tx', explorer(last))
+    }
+    const usdcAfter = Number((await connection.getTokenAccountBalance(getAssociatedTokenAddressSync(USDC, kp.publicKey))).value.amount)
+    console.log(`redeemed ${Number(shares) / 1e6} ${pot.symbol} for USDC: +${((usdcAfter - usdcBefore) / 1e6).toFixed(6)} USDC (sale paid ${Number(pay) / 1e6} at mid, cash share + sale − 0.10% fee)`)
+    return status()
+  }
+
+  console.error('usage: deposit <usdc> [mint] [--ref <pubkey>] | exit all|<shares> [mint] | exit-usdc all|<shares> [mint] | mint-usdc <wallet> [amount] | status [mint]')
   process.exit(1)
 }
 

@@ -590,6 +590,184 @@
       ]
     },
     {
+      "name": "exit_usdc_close",
+      "discriminator": [
+        225,
+        247,
+        11,
+        34,
+        186,
+        154,
+        202,
+        118
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pot",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pot.index_mint",
+                "account": "Pot"
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "user_usdc",
+          "docs": [
+            "`dup`: the treasury may redeem its own position, in which case this is also `protocol_usdc`."
+          ],
+          "writable": true
+        },
+        {
+          "name": "protocol_usdc",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "exit_usdc_open",
+      "docs": [
+        "Exit straight to USDC: burn, receive legs in kind, sell them in the same transaction,",
+        "`exit_usdc_close` enforces the minimum and takes the conversion fee."
+      ],
+      "discriminator": [
+        117,
+        181,
+        5,
+        172,
+        6,
+        180,
+        177,
+        228
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pot",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pot.index_mint",
+                "account": "Pot"
+              }
+            ]
+          }
+        },
+        {
+          "name": "index_mint",
+          "writable": true
+        },
+        {
+          "name": "user_index_ata",
+          "writable": true
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "cash_vault",
+          "writable": true
+        },
+        {
+          "name": "user_usdc",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "instructions",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "shares",
+          "type": "u64"
+        },
+        {
+          "name": "min_usdc_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "finalize_pot",
       "discriminator": [
         65,
@@ -1225,6 +1403,32 @@
       ]
     },
     {
+      "name": "ExitUsdcClosed",
+      "discriminator": [
+        99,
+        93,
+        81,
+        199,
+        174,
+        40,
+        69,
+        243
+      ]
+    },
+    {
+      "name": "ExitUsdcOpened",
+      "discriminator": [
+        124,
+        37,
+        129,
+        213,
+        228,
+        5,
+        223,
+        236
+      ]
+    },
+    {
       "name": "Exited",
       "discriminator": [
         219,
@@ -1681,6 +1885,66 @@
           },
           {
             "name": "nav_before",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExitUsdcClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_from_sale",
+            "type": "u64"
+          },
+          {
+            "name": "conversion_fee",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExitUsdcOpened",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "shares",
+            "type": "u64"
+          },
+          {
+            "name": "cash_out",
+            "type": "u64"
+          },
+          {
+            "name": "legs_value_usd",
+            "type": "u64"
+          },
+          {
+            "name": "min_usdc_from_sale",
+            "type": "u64"
+          },
+          {
+            "name": "conversion_fee",
             "type": "u64"
           }
         ]

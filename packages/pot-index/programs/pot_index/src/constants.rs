@@ -44,6 +44,12 @@ pub const MAX_CONF_BPS: u64 = 200; // 2%
 /// Sentinel leg index meaning "the USDC cash leg".
 pub const CASH_LEG: u8 = u8::MAX;
 
+/// Marker in `RebalanceState.leg_out` for an open exit-to-USDC window (see instructions::exit_usdc).
+pub const EXIT_LEG: u8 = u8::MAX - 1;
+
+/// Conversion fee on the USDC produced by an exit-to-USDC sale, paid to the protocol treasury.
+pub const CONVERSION_FEE_BPS: u64 = 10; // 0.10%
+
 /// Hard upper bound on the oracle age any config may allow (pull oracle: clients post fresh updates).
 pub const MAX_PRICE_AGE_SECS_LIMIT: u64 = 300;
 
