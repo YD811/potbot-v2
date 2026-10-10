@@ -46,7 +46,9 @@ export function ActivityFeed({ pot }: { pot: PotView }) {
                 <>
                   <span className="font-semibold text-pot-accent">Exit</span>{' '}
                   <span className="text-white">{e.shares.toLocaleString(undefined, { maximumFractionDigits: 4 })} ${pot.symbol}</span>
-                  <span className="text-pot-muted"> burned → share of every asset in kind · by {short(e.user)}</span>
+                  <span className="text-pot-muted">
+                    {e.toUsdc ? <> redeemed → {e.usdcOut.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC</> : <> redeemed → share of every asset in kind</>} · by {short(e.user)}
+                  </span>
                 </>
               )}
               {e.kind === 'rebalance' && (

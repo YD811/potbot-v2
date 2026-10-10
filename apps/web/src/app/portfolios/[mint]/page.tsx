@@ -16,6 +16,8 @@ import { estimateShares, EXIT_FEE_BPS, ENTRY_FEE_BPS, MIN_DEPOSIT_USDC } from '@
 import { assetByMint, explorerAddress, explorerTx, POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
 import { CompositionBar } from '@/components/pot-index/CompositionBar'
 import { ActivityFeed } from '@/components/pot-index/ActivityFeed'
+import { NavChart } from '@/components/pot-index/NavChart'
+import { PositionCard } from '@/components/pot-index/PositionCard'
 import { PlantBadge } from '@/components/pot-index/PlantBadge'
 import { STAGES, stageForUsd } from '@/lib/pot-index/garden'
 import { ConnectButton } from '@/components/ConnectButton'
@@ -163,6 +165,8 @@ export default function PotPage() {
             <Stat label="Index price" value={stats.data ? `$${stats.data.indexPrice.toFixed(4)}` : '—'} />
             <Stat label="Supply" value={stats.data ? `${stats.data.supply.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${p.symbol}` : '—'} />
           </div>
+
+          <NavChart mint={p.indexMint.toBase58()} symbol={p.symbol} />
 
           <div className="card p-5">
             <h2 className="mb-3 font-semibold text-white">Composition</h2>
@@ -360,6 +364,8 @@ export default function PotPage() {
               </button>
             </div>
           </div>
+
+          {connected && <PositionCard pot={p} sharesBase={myShares.data} indexPrice={stats.data?.indexPrice} />}
 
           {POT_INDEX_SETTINGS.cluster !== 'mainnet-beta' && <DevnetFaucet />}
         </aside>

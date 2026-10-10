@@ -18,6 +18,7 @@ import {
   fetchPot,
   fetchPotActivity,
   fetchPotBalances,
+  fetchWalletPosition,
   makePotIndexProgram,
   navUsd,
   type CreatePotArgs,
@@ -176,6 +177,52 @@ export function useMyIndexBalance(pot: PotView | null | undefined) {
       }
     },
     refetchInterval: 15_000,
+  })
+}
+
+export interface NavPoint { t: number; price: number; nav: number; supply: number }
+export interface NavStats { last: number | null; change24h: number | null; change7d: number | null; changeRange: number | null; since: number | null; points: number }
+
+/** NAV history from the server (Supabase snapshots). Opening a page also records a snapshot if the last one is old. */
+export function useNavHistory(mint: string | null | undefined, range: '24h' | '7d' | '30d' | 'all') {
+  return useQuery({
+    queryKey: ['pot-index', 'nav', mint, range],
+    enabled: !!mint,
+    staleTime: 60_000,
+    refetchInterval: 5 * 60_000,
+    queryFn: async () => {
+      // Fire-and-forget: ask the server to snapshot now (it skips if the last point is < 10 min old).
+      fetch('/api/pot-index/nav', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ mint }) }).catch(() => undefined)
+      const r = await fetch(`/api/pot-index/nav?mint=${mint}&range=${range}`)
+      if (!r.ok) throw new Error('nav history unavailable')
+      return (await r.json()) as { points: NavPoint[]; stats: NavStats }
+    },
+  })
+}
+
+/** 7-day series for every Pot, for list cards. */
+export function useNavHistoryAll() {
+  return useQuery({
+    queryKey: ['pot-index', 'nav-all'],
+    staleTime: 120_000,
+    refetchInterval: 5 * 60_000,
+    queryFn: async () => {
+      const r = await fetch('/api/pot-index/nav?all=1')
+      if (!r.ok) throw new Error('nav history unavailable')
+      return ((await r.json()) as { series: Record<string, NavPoint[]> }).series
+    },
+  })
+}
+
+/** The connected wallet's cost basis in this Pot, from its own deposit / exit history. */
+export function useWalletPosition(pot: PotView | null | undefined) {
+  const { connection, pubkey } = usePotIndexProgram()
+  return useQuery({
+    queryKey: ['pot-index', 'position', pot?.indexMint.toBase58(), pubkey?.toBase58()],
+    enabled: !!pot && !!pubkey,
+    staleTime: 30_000,
+    refetchInterval: 45_000,
+    queryFn: () => fetchWalletPosition(connection, pot!, pubkey!),
   })
 }
 
