@@ -1,0 +1,7 @@
+{
+  "name": "Solana Native",
+  "symbol": "SOLN",
+  "description": "PotBot POTfolio index token: SOL 50% / JitoSOL 30% / PYTH 20%. Mint at NAV, exit in kind. Devnet.",
+  "image": "https://potbot-v2-git-feat-pot-index-y-dao.vercel.app/token-meta/potbot-512.png",
+  "external_url": "https://potbot.fun/portfolios"
+}

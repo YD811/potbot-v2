@@ -4,27 +4,93 @@
   "usdcMint": "AYLYmXfkfveAAU3gZwjHqFXePi459yumVw4NYJhHVjeN",
   "treasury": "JHV4qhTEhEKMkugYXuPURzwunYBiCUVji9ZrRiA5rvG",
   "flagship": "FRweserJ2ttgk17MDdLqgM2aH5yyiz1t6XCVA1rbaeQC",
+  "pots": {
+    "SBC": "FRweserJ2ttgk17MDdLqgM2aH5yyiz1t6XCVA1rbaeQC",
+    "SOLN": "FxSqaayUe6ZxQsU9VZ2jiVJ1UmpKgkbi7xgi35tfcggm",
+    "MJR5": "2PX18HkJx8soQVrY1zZuWv7CySc2jvKf6qUjRTordeHh",
+    "WSTS": "8yPwdAM6HDc3gyqdH7q6KcT3KfZ428YQgNZZeZQYxkva",
+    "DGSL": "Fa9HjHLNLUH5yedmq7JawEMzdNpWHixaEcJQdJfFJ72u"
+  },
   "assets": {
     "SOL": {
       "symbol": "SOL",
       "name": "Solana (test)",
       "mint": "CXpssYfBep8R3eC8nQc3CgxBFk66iLC6AXi3L6REfRRq",
       "decimals": 9,
-      "feedId": "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d"
+      "feedId": "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
+      "category": "solana"
     },
     "BTC": {
       "symbol": "BTC",
       "name": "Bitcoin (test)",
       "mint": "D414Sdzss3UH5T2APCTNe69t62aSf4TXKvtPeyUW8LYc",
       "decimals": 8,
-      "feedId": "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
+      "feedId": "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+      "category": "crypto"
     },
     "ETH": {
       "symbol": "ETH",
       "name": "Ethereum (test)",
       "mint": "Dhfs2yY92iJx1Rpw8XDKEzh4dpyKxxuJwxsC1xLB8dVy",
       "decimals": 8,
-      "feedId": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
+      "feedId": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+      "category": "crypto"
+    },
+    "BNB": {
+      "symbol": "BNB",
+      "name": "BNB (test)",
+      "mint": "FUmcmrwNvzx73BwjRLyR5vc8Kyg1XrcUA2yRuEi6aQaF",
+      "decimals": 8,
+      "feedId": "0x2f95862b045670cd22bee3114c39763a4a08beeb663b145d283c31d7d1101c4f",
+      "category": "crypto"
+    },
+    "XRP": {
+      "symbol": "XRP",
+      "name": "XRP (test)",
+      "mint": "9Tv4WAkknCfStFDXSHZYzYVDNYLCSaCeu3EPneQMABiH",
+      "decimals": 6,
+      "feedId": "0xec5d399846a9209f3fe5881d70aae9268c94339ff9817e8d18ff19fa05eea1c8",
+      "category": "crypto"
+    },
+    "JITOSOL": {
+      "symbol": "JITOSOL",
+      "name": "Jito Staked SOL (test)",
+      "mint": "3oTDhLzo4U2C91xpEN8QLN9i7ZpyoGriekt5JLw7GYVS",
+      "decimals": 9,
+      "feedId": "0x67be9f519b95cf24338801051f9a808eff0a578ccb388db73b7f6fe1de019ffb",
+      "category": "solana"
+    },
+    "PYTH": {
+      "symbol": "PYTH",
+      "name": "Pyth Network (test)",
+      "mint": "DZ5R9TC4osA6m3htWsJ5rJsJLv1a6cUehfd2ywWBuJR9",
+      "decimals": 6,
+      "feedId": "0x0bbf28e9a841a1cc788f6a361b17ca072d0ea3098a1e5df1c3922d06719579ff",
+      "category": "solana"
+    },
+    "DOGE": {
+      "symbol": "DOGE",
+      "name": "Dogecoin (test)",
+      "mint": "Fy5fX96WUDMjKgghwxZdWdwUr8hf97CNxC8jzLEr2GNQ",
+      "decimals": 8,
+      "feedId": "0xdcef50dd0a4cd2dcc17e45df1676dcb336a11a61c69df7a0299b0150c672d25c",
+      "category": "meme"
+    },
+    "TSLAX": {
+      "symbol": "TSLAX",
+      "name": "Tesla (xStock) (test)",
+      "mint": "HJeXjKhC3uxJzVQbxjHu7zWpHXdcQXK3Z4XvM2gg68gQ",
+      "decimals": 8,
+      "feedId": "0x16dad506d7db8da01c87581c87ca897a012a153557d4d578c3b9c9e1bc0632f1",
+      "category": "stock"
+    },
+    "QQQX": {
+      "symbol": "QQQX",
+      "name": "Nasdaq-100 (xStock) (test)",
+      "mint": "EtnovNhDUShZmodz1v5nZbPymBNwP2B2UMpjbWPisXuU",
+      "decimals": 8,
+      "feedId": "0x9695e2b96ea7b3859da9ed25b7a46a920a776e2fdae19a7bcfdf2b219230452d",
+      "category": "stock"
     }
   }
 }

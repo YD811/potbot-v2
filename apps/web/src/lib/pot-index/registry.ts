@@ -13,6 +13,7 @@ interface Registry {
   usdcMint: string
   treasury: string
   flagship: string | null
+  pots?: Record<string, string>
   assets: Record<string, AssetInfo>
 }
 
@@ -24,6 +25,7 @@ export const POT_INDEX_SETTINGS = {
   usdcMint: REGISTRY.usdcMint,
   treasury: REGISTRY.treasury,
   flagship: REGISTRY.flagship,
+  showcasePots: REGISTRY.pots ?? {},
   explorerCluster: cluster === 'mainnet-beta' || cluster === 'mainnet' ? '' : `?cluster=${cluster}`,
 }
 

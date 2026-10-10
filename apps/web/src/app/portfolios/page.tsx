@@ -1,15 +1,36 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { usePots, useAssetPrices } from '@/hooks/usePotIndex'
 import { PotCard } from '@/components/pot-index/PotCard'
 import { ProtocolStats } from '@/components/pot-index/ProtocolStats'
-import { POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
+import { POT_INDEX_SETTINGS, assetByMint } from '@/lib/pot-index/registry'
+import type { PotView } from '@/lib/pot-index/client'
+
+const CATS = [
+  { id: 'all', label: 'All' },
+  { id: 'crypto', label: 'Crypto majors' },
+  { id: 'solana', label: 'Solana native' },
+  { id: 'stock', label: 'Stocks (xStocks)' },
+  { id: 'meme', label: 'Memes' },
+] as const
+
+/** A Pot's category = the category carrying the most weight. */
+function potCategory(p: PotView): string {
+  const w: Record<string, number> = {}
+  for (const l of p.legs) {
+    const c = assetByMint(l.mint.toBase58())?.category ?? 'crypto'
+    w[c] = (w[c] ?? 0) + l.weightBps
+  }
+  return Object.entries(w).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'crypto'
+}
 
 export default function PortfoliosPage() {
   const pots = usePots()
   const prices = useAssetPrices()
+  const [cat, setCat] = useState<string>('all')
+  const shown = useMemo(() => (pots.data ?? []).filter((p) => cat === 'all' || potCategory(p) === cat), [pots.data, cat])
 
   useEffect(() => {
     document.title = 'Portfolios — PotBot'
@@ -40,6 +61,20 @@ export default function PortfoliosPage() {
       )}
 
       {pots.data && pots.data.length > 0 && <ProtocolStats pots={pots.data} />}
+      {pots.data && pots.data.length > 0 && (
+        <div className="mb-5 flex flex-wrap gap-2">
+          {CATS.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setCat(c.id)}
+              className={`rounded-full border px-3 py-1 text-sm transition ${cat === c.id ? 'border-pot-green bg-pot-green/15 text-pot-green' : 'border-pot-border text-pot-muted hover:text-white'}`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      )}
       {pots.isLoading && <p className="text-pot-muted">Loading Pots from chain…</p>}
       {pots.isError && <p className="text-red-400">Could not load Pots: {String(pots.error)}</p>}
       {pots.data && pots.data.length === 0 && (
@@ -48,7 +83,7 @@ export default function PortfoliosPage() {
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
-        {pots.data?.map((p) => <PotCard key={p.address.toBase58()} pot={p} prices={prices.data ?? {}} />)}
+        {shown.map((p) => <PotCard key={p.address.toBase58()} pot={p} prices={prices.data ?? {}} />)}
       </div>
     </div>
   )

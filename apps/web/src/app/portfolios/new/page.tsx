@@ -24,6 +24,8 @@ export default function NewPotPage() {
     POT_INDEX_ASSETS.slice(0, 2).map((a, i) => ({ mint: a.mint, weight: i === 0 ? 60 : 40 })),
   )
   const [cap, setCap] = useState<number>(0)
+  const [ca, setCa] = useState('')
+  const [caMsg, setCaMsg] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -141,8 +143,22 @@ export default function NewPotPage() {
               )
             })}
           </div>
-          <div className="mt-3 flex items-center justify-between">
+          <div className="mt-3 flex items-center justify-between gap-3">
             <span className={`text-sm ${total === 100 ? 'text-pot-green' : 'text-yellow-300'}`}>Total {total}%{total !== 100 && ' — must be 100%'}</span>
+            <input
+              className="input w-44 px-2 py-1.5 font-mono text-xs"
+              placeholder="paste token CA"
+              value={ca}
+              onChange={(e) => setCa(e.target.value.trim())}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return
+                const a = POT_INDEX_ASSETS.find((x) => x.mint === ca)
+                if (!a) { setCaMsg('Not listed yet — assets need a Pyth feed. Request listing.'); return }
+                if (rows.some((r) => r.mint === a.mint)) { setCaMsg('Already in the basket.'); return }
+                if (rows.length >= 5) { setCaMsg('Max 5 assets.'); return }
+                setRows((rs) => [...rs, { mint: a.mint, weight: 0 }]); setCa(''); setCaMsg(null)
+              }}
+            />
             {available.length > 0 && rows.length < 5 && (
               <select
                 className="input w-auto px-3 py-1.5 text-sm"
@@ -150,15 +166,26 @@ export default function NewPotPage() {
                 onChange={(e) => e.target.value && setRows((rs) => [...rs, { mint: e.target.value, weight: 0 }])}
               >
                 <option value="">+ Add asset</option>
-                {available.map((a) => (
-                  <option key={a.mint} value={a.mint}>
-                    {a.symbol} — {a.name}
-                  </option>
-                ))}
+                {(['solana', 'crypto', 'stock', 'meme'] as const).map((c) => {
+                  const group = available.filter((a) => (a.category ?? 'crypto') === c)
+                  if (group.length === 0) return null
+                  const label = { solana: 'Solana native', crypto: 'Crypto majors', stock: 'Stocks (xStocks)', meme: 'Memes' }[c]
+                  return (
+                    <optgroup key={c} label={label}>
+                      {group.map((a) => (
+                        <option key={a.mint} value={a.mint}>
+                          {a.symbol} — {a.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )
+                })}
               </select>
             )}
           </div>
         </div>
+
+        {caMsg && <p className="-mt-3 text-xs text-yellow-300">{caMsg}</p>}
 
         <label className="block">
           <span className="mb-1 block text-sm text-pot-muted">Deposit cap (USD, 0 = none)</span>

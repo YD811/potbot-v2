@@ -10,6 +10,7 @@ import {
   usePot,
   usePotIndexActions,
   usePotStats,
+  useAssetPublishTimes,
 } from '@/hooks/usePotIndex'
 import { estimateShares, EXIT_FEE_BPS, ENTRY_FEE_BPS, MIN_DEPOSIT_USDC } from '@/lib/pot-index/client'
 import { assetByMint, explorerAddress, explorerTx, POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
@@ -32,6 +33,13 @@ export default function PotPage() {
   const referrer = safePubkey(search.get('ref'))
   const pot = usePot(mint)
   const stats = usePotStats(pot.data)
+  const publishTimes = useAssetPublishTimes()
+  // Any leg whose Pyth feed is older than the program's max age (300 s) blocks deposits — stocks outside market hours.
+  const stalePrices = useMemo(() => {
+    if (!pot.data || !publishTimes.data) return false
+    const now = Date.now() / 1000
+    return pot.data.legs.some((l) => now - (publishTimes.data![l.mint.toBase58()] ?? 0) > 300)
+  }, [pot.data, publishTimes.data])
   const myShares = useMyIndexBalance(pot.data)
   const myUsdc = useMyUsdcBalance()
   const { deposit, exit, connected, pubkey } = usePotIndexActions()
@@ -111,6 +119,7 @@ export default function PotPage() {
                 ${p.symbol}
               </span>
               {p.paused && <span className="rounded-full bg-yellow-500/20 px-2 py-0.5 text-xs text-yellow-200">deposits paused</span>}
+              {stalePrices && !p.paused && <span className="rounded-full bg-sky-500/20 px-2 py-0.5 text-xs text-sky-200">market closed — deposits reopen with live prices, exits always open</span>}
             </div>
             <p className="mt-1 text-sm text-pot-muted">
               by {p.creator.toBase58().slice(0, 4)}…{p.creator.toBase58().slice(-4)} · created{' '}
@@ -182,10 +191,10 @@ export default function PotPage() {
                 <button
                   type="button"
                   className="btn-primary w-full"
-                  disabled={!connected || busy || amountNum < MIN_DEPOSIT_USDC || p.paused}
+                  disabled={!connected || busy || amountNum < MIN_DEPOSIT_USDC || p.paused || stalePrices}
                   onClick={() => run(() => deposit(p, amountNum, referrer && !referrer.equals(pubkey!) ? referrer : null), `Deposited ${amountNum} USDC`)}
                 >
-                  {busy ? 'Confirm in wallet…' : `Deposit & mint $${p.symbol}`}
+                  {stalePrices ? 'Market closed — mint opens with live prices' : busy ? 'Confirm in wallet…' : `Deposit & mint $${p.symbol}`}
                 </button>
                 )}
                 <p className="text-[11px] text-pot-muted">One wallet signature covers 3–5 transactions: post Pyth prices → deposit & mint at NAV → refund the price-account rent. Min {MIN_DEPOSIT_USDC} USDC.</p>

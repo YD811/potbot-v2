@@ -74,6 +74,20 @@ export function useAssetPrices() {
   })
 }
 
+/** Publish time (unix s) per mint — equity feeds stop outside US market hours, which blocks mint/rebalance. */
+export function useAssetPublishTimes() {
+  return useQuery({
+    queryKey: ['pot-index', 'publish-times'],
+    queryFn: async () => {
+      const byFeed = await fetchHermesPrices(POT_INDEX_ASSETS.map((a) => a.feedId))
+      const out: Record<string, number> = {}
+      for (const a of POT_INDEX_ASSETS) out[a.mint] = byFeed[a.feedId]?.publishTime ?? 0
+      return out
+    },
+    refetchInterval: 60_000,
+  })
+}
+
 /** Recent on-chain events for a Pot (deposits, exits, rebalances). */
 export function usePotActivity(pot: PotView | null | undefined) {
   const { connection } = useConnection()

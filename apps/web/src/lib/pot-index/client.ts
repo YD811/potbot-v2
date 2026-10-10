@@ -44,6 +44,7 @@ export interface AssetInfo {
   decimals: number
   feedId: string // 0x-prefixed Pyth feed id
   logo?: string
+  category?: 'crypto' | 'solana' | 'stock' | 'meme'
 }
 
 export interface LegView {

@@ -35,14 +35,17 @@ const dry = args.includes('--dry')
 const loopIdx = args.indexOf('--loop')
 const loopSecs = loopIdx >= 0 ? Number(args[loopIdx + 1]) : 0
 const mintArg = args.find((a) => !a.startsWith('--') && a !== String(loopSecs))
-const mintStr = mintArg ?? registry.flagship
-if (!mintStr) {
-  console.error('no Pot given and assets.devnet.json has no flagship yet — run pot-index-devnet-init.ts first or pass an index mint')
+// Pots to serve: an explicit mint, or every showcase Pot from the registry (falls back to the flagship).
+const TARGETS: PublicKey[] = mintArg
+  ? [new PublicKey(mintArg)]
+  : Object.values((registry as { pots?: Record<string, string> }).pots ?? {}).map((m) => new PublicKey(m))
+if (TARGETS.length === 0 && registry.flagship) TARGETS.push(new PublicKey(registry.flagship))
+if (TARGETS.length === 0) {
+  console.error('no Pots in assets.devnet.json — run pot-index-devnet-init.ts first or pass an index mint')
   process.exit(1)
 }
-const INDEX_MINT = new PublicKey(mintStr)
 
-async function step(connection: Connection, program: Program, keeper: Keypair): Promise<string> {
+async function step(connection: Connection, program: Program, keeper: Keypair, INDEX_MINT: PublicKey): Promise<string> {
   const pot = await fetchPot(connection, INDEX_MINT)
   if (!pot) throw new Error(`pot not found for index mint ${INDEX_MINT.toBase58()}`)
   const bal = await fetchPotBalances(connection, pot)
@@ -147,13 +150,16 @@ async function main() {
   const connection = new Connection(RPC, 'confirmed')
   const provider = new AnchorProvider(connection, new Wallet(keeper), { commitment: 'confirmed' })
   const program = new Program(idl as Idl, provider)
-  console.log('keeper', keeper.publicKey.toBase58(), 'pot index mint', INDEX_MINT.toBase58())
+  console.log('keeper', keeper.publicKey.toBase58(), 'pots', TARGETS.map((t) => t.toBase58().slice(0, 6)).join(','))
 
   for (;;) {
-    try {
-      console.log(await step(connection, program, keeper))
-    } catch (e) {
-      console.error('step failed:', e instanceof Error ? e.message : e)
+    for (const mint of TARGETS) {
+      try {
+        console.log(await step(connection, program, keeper, mint))
+      } catch (e) {
+        console.error(mint.toBase58().slice(0, 6), 'step failed:', (e instanceof Error ? e.message : String(e)).split('\n')[0].slice(0, 160))
+      }
+      await new Promise((r) => setTimeout(r, 3000))
     }
     if (!loopSecs) break
     await new Promise((r) => setTimeout(r, loopSecs * 1000))
