@@ -50,7 +50,19 @@ Program `DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr` ([Explorer](https://explo
 | Wall St on Solana `$WSTS` | TSLAx 40 / QQQx 40 / SOL 20 | [`Potsmds…`](https://potbot.fun/portfolios/PotsmdsvLcZGToyYs9XKcL9vVpGMbSV3UaFaA9EUZHH) |
 | Doge & Sol `$DGSL` | DOGE 60 / SOL 40 | [`Potsts7…`](https://potbot.fun/portfolios/Potsts7jB8dQPUN1MLU4TfqCPGkJTfwtrAVcHRBdp1q) |
 
-Try it: connect a devnet wallet (or sign in with email), click **Get test USDC** on any POTfolio, deposit, watch the basket get bought, redeem for the assets or for USDC. Every step shows up in the activity feed and on Explorer.
+Try it: connect a devnet wallet (or sign in with email), click **Get test USDC** on any POTfolio (it also sends a little SOL for fees to an empty wallet), deposit, watch the basket get bought, redeem for the assets or for USDC. Every step shows up in the activity feed and on Explorer; the page keeps index price history and your cost basis and P&L.
+
+A clean "judge run" from a wallet that had nothing, through the same server routes the UI calls, is scripted in `apps/web/scripts/pot-index-route-flow.ts`:
+
+```bash
+cd apps/web
+POT_INDEX_WALLET_KEYPAIR=judge.json POT_INDEX_BASE_URL=https://potbot.fun \
+  npx tsx scripts/pot-index-route-flow.ts faucet                      # 1,000 tUSDC + 0.1 SOL
+npm run pot-index:flow -- deposit 100 --ref <referrer>                 # mint at NAV, fee split
+npx tsx scripts/pot-index-route-flow.ts allocate  <mint>               # buy the basket leg by leg
+npm run pot-index:flow -- exit 50                                      # half back in kind
+npx tsx scripts/pot-index-route-flow.ts exit-usdc <mint> <shares>      # the rest as USDC, on-chain minimum
+```
 
 ## Repository map
 
@@ -58,9 +70,9 @@ Try it: connect a devnet wallet (or sign in with email), click **Get test USDC**
 packages/pot-index/        pot_index Anchor program (the POTfolio protocol) + LiteSVM tests      ← start here
 apps/web/                  Next.js app: landing, /portfolios, /portfolios/new, /portfolios/[mint], /learn, /roadmap, /worldsfair, /mainnet
   src/lib/pot-index/       client builders, Pyth helpers, registry, garden levels
-  src/app/api/pot-index/   Hermes proxy, faucet, devnet market maker (exit to USDC, allocate), token metadata
+  src/app/api/pot-index/   Hermes proxy, faucet, devnet market maker (exit to USDC, allocate), NAV history, token metadata
   scripts/                 devnet init, keeper, flow (deposit / exit / exit-usdc / allocate), metadata
-docs/potfolio/             overview, program reference, fees, keepers, garden mode, operations, FAQ
+docs/potfolio/             overview, program reference, fees, keepers, garden mode, security review, landscape, operations, FAQ
 packages/program/          pot_vault (PotBot v2 vaults, previous hackathon)      apps/potbot-mcp/  MCP server for AI agents
 packages/sdk/  apps/api/  apps/keeper/  apps/bot/                               PotBot v2 supporting services
 ```
