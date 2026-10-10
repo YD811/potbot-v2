@@ -54,7 +54,7 @@ const SECTIONS: Section[] = [
   {
     tier: 'phase-2',
     title: '3 · Guarded mainnet, Q4 2026',
-    blurb: 'One flagship POTfolio with a TVL cap, then invited creators.',
+    blurb: 'One flagship POTfolio with a TVL cap, then invited creators. Details on /mainnet.',
     features: [
       { name: 'Flagship on mainnet', desc: 'Real USDC, cbBTC, WETH, SOL. TVL-capped, labelled unaudited beta. This is also the funded grant milestone.' },
       { name: 'Jupiter keeper, partner keepers', desc: 'Open-source keeper routing through Jupiter. Partner rebalancing engines can fill the same instruction.' },

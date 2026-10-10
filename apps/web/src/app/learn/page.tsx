@@ -152,6 +152,7 @@ export default function LearnPage() {
           <Link href="/portfolios" className="btn-primary">See live POTfolios</Link>
           <Link href="/portfolios/new" className="btn-secondary">Create a POTfolio</Link>
           <Link href="/roadmap" className="btn-secondary">Roadmap</Link>
+          <Link href="/mainnet" className="btn-secondary">Mainnet plan</Link>
         </div>
       </Section>
     </div>

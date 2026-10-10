@@ -143,7 +143,8 @@ export default function WorldsFairPage() {
           <li>Guarded mainnet after the Fair: flagship Pot with a cap, upgrade authority on a Squads multisig, Jupiter keeper.</li>
         </ul>
         <p>
-          Full roadmap on <Link href="/roadmap" className="text-pot-green underline">/roadmap</Link>.
+          Full roadmap on <Link href="/roadmap" className="text-pot-green underline">/roadmap</Link>, mainnet plan on{' '}
+          <Link href="/mainnet" className="text-pot-green underline">/mainnet</Link>.
         </p>
       </Section>
 
