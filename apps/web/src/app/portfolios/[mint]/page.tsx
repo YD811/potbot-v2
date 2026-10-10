@@ -16,6 +16,10 @@ import { estimateShares, EXIT_FEE_BPS, ENTRY_FEE_BPS, MIN_DEPOSIT_USDC } from '@
 import { assetByMint, explorerAddress, explorerTx, POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
 import { CompositionBar } from '@/components/pot-index/CompositionBar'
 import { ActivityFeed } from '@/components/pot-index/ActivityFeed'
+import { friendlyError } from '@/lib/pot-index/errors'
+import { DevnetFaucet } from '@/components/pot-index/DevnetFaucet'
+import { NavChart } from '@/components/pot-index/NavChart'
+import { PositionCard } from '@/components/pot-index/PositionCard'
 import { PlantBadge } from '@/components/pot-index/PlantBadge'
 import { STAGES, stageForUsd } from '@/lib/pot-index/garden'
 import { ConnectButton } from '@/components/ConnectButton'
@@ -106,7 +110,7 @@ export default function PotPage() {
       const sig = Array.isArray(r) ? r[r.length - 1] : r
       setMsg({ ok: true, text: typeof okText === 'function' ? okText(r) : okText, sig })
     } catch (e) {
-      setMsg({ ok: false, text: e instanceof Error ? e.message : String(e) })
+      setMsg({ ok: false, text: friendlyError(e, { devnet: POT_INDEX_SETTINGS.cluster !== 'mainnet-beta' }) })
     } finally {
       setBusy(false)
     }
@@ -163,6 +167,8 @@ export default function PotPage() {
             <Stat label="Index price" value={stats.data ? `$${stats.data.indexPrice.toFixed(4)}` : '—'} />
             <Stat label="Supply" value={stats.data ? `${stats.data.supply.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${p.symbol}` : '—'} />
           </div>
+
+          <NavChart mint={p.indexMint.toBase58()} symbol={p.symbol} />
 
           <div className="card p-5">
             <h2 className="mb-3 font-semibold text-white">Composition</h2>
@@ -222,7 +228,7 @@ export default function PotPage() {
                 <button
                   type="button"
                   className="btn-primary w-full"
-                  disabled={!connected || busy || amountNum < MIN_DEPOSIT_USDC || p.paused || stalePrices}
+                  disabled={!connected || busy || amountNum < MIN_DEPOSIT_USDC || p.paused || stalePrices || (myUsdc.data !== undefined && amountNum > myUsdc.data)}
                   onClick={() =>
                     run(
                       () => deposit(p, amountNum, referrer && !referrer.equals(pubkey!) ? referrer : null),
@@ -235,6 +241,9 @@ export default function PotPage() {
                 >
                   {stalePrices ? 'Market closed: mint opens with live prices' : busy ? 'Confirm in wallet…' : `Deposit & mint $${p.symbol}`}
                 </button>
+                )}
+                {connected && myUsdc.data !== undefined && amountNum > myUsdc.data && (
+                  <p className="text-xs text-yellow-200">You have {myUsdc.data.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC in this wallet.{POT_INDEX_SETTINGS.cluster !== 'mainnet-beta' ? ' Get test USDC below.' : ''}</p>
                 )}
                 <p className="text-xs text-white/70">One wallet prompt: prices are posted, your tokens are minted at the current value, and the basket is bought in the same go. Min {MIN_DEPOSIT_USDC} USDC.</p>
               </div>
@@ -335,11 +344,7 @@ export default function PotPage() {
             )}
           </div>
 
-          <div className="card p-5">
-            <h3 className="font-semibold text-white">Your position</h3>
-            <p className="mt-1 text-2xl font-bold text-white">{myShareNum.toFixed(4)} <span className="text-base text-white/70">${p.symbol}</span></p>
-            <p className="text-sm text-white/70">≈ ${stats.data ? (myShareNum * stats.data.indexPrice).toFixed(2) : '—'}</p>
-          </div>
+          <PositionCard pot={p} sharesBase={myShares.data} indexPrice={stats.data?.indexPrice} connected={connected} />
 
           <div className="card p-5">
             <h3 className="font-semibold text-white">Share & earn</h3>
@@ -370,42 +375,10 @@ export default function PotPage() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="card p-4">
+    <div className="card p-3 sm:p-4">
       <p className="text-xs text-white/70">{label}</p>
-      <p className="mt-1 truncate text-lg font-bold text-white">{value}</p>
+      <p className="mt-1 break-words text-sm font-bold text-white sm:text-lg">{value}</p>
     </div>
   )
 }
 
-function DevnetFaucet() {
-  const { pubkey } = usePotIndexActions()
-  const [state, setState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle')
-  const [err, setErr] = useState('')
-  return (
-    <div className="card p-5">
-      <h3 className="font-semibold text-white">Devnet faucet</h3>
-      <p className="mt-1 text-xs text-white/70">Get 1,000 test USDC to try this Pot. Devnet only, no real value.</p>
-      <button
-        type="button"
-        className="btn-secondary mt-2 w-full text-sm"
-        disabled={!pubkey || state === 'busy'}
-        onClick={async () => {
-          setState('busy')
-          setErr('')
-          try {
-            const r = await fetch('/api/pot-index/faucet', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ wallet: pubkey!.toBase58() }) })
-            const j = await r.json()
-            if (!r.ok) throw new Error(j.error ?? 'faucet failed')
-            setState('done')
-          } catch (e) {
-            setErr(e instanceof Error ? e.message : String(e))
-            setState('error')
-          }
-        }}
-      >
-        {state === 'busy' ? 'Sending…' : state === 'done' ? 'Sent 1,000 tUSDC ✓' : 'Get test USDC'}
-      </button>
-      {err && <p className="mt-2 text-xs text-red-300">{err}</p>}
-    </div>
-  )
-}

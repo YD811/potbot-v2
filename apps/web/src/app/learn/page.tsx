@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { HowAPotWorks } from '@/components/pot-index/HowAPotWorks'
+import { FeeCalculator } from '@/components/pot-index/FeeCalculator'
 import { STAGES } from '@/lib/pot-index/garden'
 
 export const metadata: Metadata = {
@@ -16,7 +17,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: 'Who holds the assets?',
-    a: 'Program-owned accounts (PDAs). They have no private key and the program has no withdraw instruction. Not the creator, not PotBot, not a keeper can take assets out. The only way out is burning the token for your share.',
+    a: 'Program-owned accounts (PDAs). They have no private key and the program has no withdraw instruction. Not the creator, not PotBot, not a keeper can take assets out. The only way out is redeeming the token for your share, in assets or in USDC.',
   },
   {
     q: 'What do I get when I exit?',
@@ -59,7 +60,7 @@ export default function LearnPage() {
       <h1 className="mt-2 text-3xl font-black text-white sm:text-5xl">What is a POTfolio?</h1>
       <p className="mt-4 text-lg text-white/85">
         A basket of Solana assets issued as one liquid token. Create a portfolio, hold the token. Deposit USDC to mint it at the
-        current value of the basket, burn it any time to take your share of every asset back. No one can withdraw.
+        current value of the basket, redeem it any time for every asset inside or for USDC. No one can withdraw.
       </p>
 
       <Section title="The four moves">
@@ -97,6 +98,7 @@ export default function LearnPage() {
           Example: a $10,000 deposit pays $30 at entry ($12 to the creator, $12 to the referrer, $6 to the protocol) and mints $9,970 of
           tokens. Exiting $10,000 later leaves $50 in the Pot and returns $9,950 in assets.
         </p>
+        <FeeCalculator />
       </Section>
 
       <Section title="Garden mode">
@@ -129,7 +131,7 @@ export default function LearnPage() {
               <Row k="What it is" a="A basket as one liquid token" b="A group treasury with votes" />
               <Row k="Who is in" a="Holders of the token, anyone can buy in" b="Members, invited or public" />
               <Row k="Decisions" a="Fixed weights, program-bounded keepers" b="Proposals and votes, program executes" />
-              <Row k="Leaving" a="Burn the token, get your share in kind" b="Withdraw your share per vault rules" />
+              <Row k="Leaving" a="Redeem the token for every asset in kind, or for USDC" b="Withdraw your share per vault rules" />
               <Row k="Status" a="Live on devnet" b="Devnet, UI being reworked" />
             </tbody>
           </table>

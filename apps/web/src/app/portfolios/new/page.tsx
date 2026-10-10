@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PublicKey } from '@solana/web3.js'
+import { POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
+import { friendlyError } from '@/lib/pot-index/errors'
+import { DevnetFaucet } from '@/components/pot-index/DevnetFaucet'
 import { usePotIndexActions, useAssetPrices, usePotIndexConfig } from '@/hooks/usePotIndex'
 import { POT_INDEX_ASSETS } from '@/lib/pot-index/registry'
 import { legColor } from '@/components/pot-index/CompositionBar'
@@ -73,7 +76,7 @@ export default function NewPotPage() {
       })
       router.push(`/portfolios/${res.indexMint.toBase58()}?created=1`)
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(friendlyError(e, { devnet: true }))
     } finally {
       setBusy(false)
     }
@@ -259,6 +262,8 @@ export default function NewPotPage() {
             {busy ? (grind > 0 ? 'Picking a Pot… address' : 'Creating…') : 'Create POTfolio'}
           </button>
         )}
+        <p className="text-xs text-white/60">Creating is one transaction and costs about 0.03 SOL in account rent. {POT_INDEX_SETTINGS.cluster !== 'mainnet-beta' ? 'On devnet the faucet below also sends SOL to an empty wallet.' : ''}</p>
+        {connected && POT_INDEX_SETTINGS.cluster !== 'mainnet-beta' && <DevnetFaucet compact />}
       </div>
     </div>
   )

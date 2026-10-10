@@ -29,6 +29,8 @@ When reporting, include:
 
 ## Scope
 
+In scope first: the `pot_index` program (`packages/pot-index`, devnet `DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr`): deposit/mint math, exits (in kind and to USDC), rebalance bounds and transaction introspection, fee split, admin paths. Then the web app routes under `apps/web/src/app/api/pot-index` and the `pot_vault` program.
+
 In scope:
 
 - The `pot_vault` and `pot_duel` Anchor programs (`packages/program/`)

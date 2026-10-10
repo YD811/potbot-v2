@@ -1,8 +1,9 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
-const STORAGE_KEY = 'potbot-onboarding-v2'
+const STORAGE_KEY = 'potbot-onboarding-v3'
 
 interface Step {
   id: number
@@ -18,29 +19,22 @@ const STEPS: Step[] = [
     id: 0,
     emoji: '🪴',
     title: 'Welcome to PotBot',
-    body: 'A Pot is a basket of Solana assets with fixed target weights, issued as one liquid index token. Hold the basket as a single token, send it, trade it.',
-    highlight: 'Non-custodial. No one, not even the creator, can withdraw the assets.',
+    body: 'A POTfolio is a basket of up to 5 Solana assets held as one token. Deposit USDC, receive the token, hold it in any wallet, redeem it any time.',
+    highlight: 'Nobody can withdraw the assets: not the creator, not PotBot. There is no such instruction.',
   },
   {
     id: 1,
-    emoji: '🧺',
-    title: 'Create a Pot',
-    body: 'Pick 2–5 assets, set the weights, publish. Takes a minute. Share your link: every deposit through it pays you a slice of the entry fee.',
-    highlight: 'Entry fee 0.30%: 40% creator, 40% referrer, 20% protocol.',
+    emoji: '🪴',
+    title: 'Deposit, then redeem your way',
+    body: 'Deposit USDC: the token is minted at NAV from Pyth prices in the same transaction and the basket is bought in the same wallet prompt. Redeem for every asset in kind, or for USDC in one transaction with an on-chain minimum.',
+    highlight: 'Devnet build: click Get test USDC on any POTfolio, then Deposit.',
   },
   {
     id: 2,
-    emoji: '💵',
-    title: 'Deposit USDC, mint the token',
-    body: 'Deposit USDC and the Pot mints index tokens at the current NAV, priced by Pyth in the same transaction. Anyone can rebalance the Pot toward its targets within on-chain limits.',
-    highlight: 'Devnet build: test USDC from the faucet, real Pyth prices.',
-  },
-  {
-    id: 3,
-    emoji: '🔓',
-    title: 'Exit in kind, any time',
-    body: 'Burn your tokens and receive your share of every asset in the basket. No oracle needed, never pausable. 0.5% stays in the Pot for remaining holders.',
-    highlight: 'Built for Colosseum Crypto World\'s Fair. See /worldsfair.',
+    emoji: '🪴',
+    title: 'Create your own, earn on every deposit',
+    body: 'Pick the assets and weights, publish in one transaction, share your link. Every deposit through it pays the creator and the referrer a share of the 0.30% entry fee. No custody, no liability.',
+    highlight: 'Built for Colosseum Crypto World\'s Fair. Judges: see /worldsfair.',
   },
 ]
 
@@ -66,11 +60,17 @@ export function OnboardingTutorial({ forceShow = false }: OnboardingTutorialProp
   const [step, setStep] = useState(0)
   const [animating, setAnimating] = useState(false)
 
+  const pathname = usePathname()
   useEffect(() => {
     if (forceShow) { setVisible(true); return }
-    const seen = localStorage.getItem(STORAGE_KEY)
-    if (!seen) setVisible(true)
-  }, [forceShow])
+    if (!pathname || !pathname.startsWith('/portfolios')) return
+    try {
+      const seen = localStorage.getItem(STORAGE_KEY)
+      if (!seen) setVisible(true)
+    } catch {
+      /* storage blocked: never show */
+    }
+  }, [forceShow, pathname])
 
   if (!visible) return null
 

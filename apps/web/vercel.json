@@ -13,6 +13,10 @@
     {
       "path": "/api/cron/agent-poll",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/potfolio-nav",
+      "schedule": "*/15 * * * *"
     }
   ],
 

@@ -486,7 +486,7 @@ export function estimateShares(amountUsdc: number, navUsd: number, supplyBase: n
 
 export type PotEvent =
   | { kind: 'deposit'; sig: string; time: number | null; user: string; amountUsdc: number; feeUsdc: number; shares: number }
-  | { kind: 'exit'; sig: string; time: number | null; user: string; shares: number; usdcOut: number }
+  | { kind: 'exit'; sig: string; time: number | null; user: string; shares: number; usdcOut: number; toUsdc?: boolean }
   | { kind: 'rebalance'; sig: string; time: number | null; keeper: string; legOut: number; legIn: number; amountOut: number; received: number }
   | { kind: 'created'; sig: string; time: number | null }
 
@@ -506,11 +506,14 @@ export async function fetchPotActivity(connection: Connection, pot: PotView, lim
   const program = readonlyProgram(connection)
   const parser = new EventParser(program.programId, program.coder)
   const out: PotEvent[] = []
+  // Batched RPC responses can come back in a different order than requested: take the signature
+  // and time from the transaction itself, never from the index.
   txs.forEach((tx, i) => {
-    const sig = sigs[i].signature
-    const time = sigs[i].blockTime ?? null
     if (!tx || tx.meta?.err || !tx.meta?.logMessages) return
+    const sig = tx.transaction.signatures[0] ?? sigs[i].signature
+    const time = tx.blockTime ?? null
     let opened: { keeper: string; legOut: number; legIn: number; amountOut: number } | null = null
+    let exitUsdc: { user: string; shares: number; cashOut: number } | null = null
     let any = false
     for (const ev of parser.parseLogs(tx.meta.logMessages)) {
       any = true
@@ -521,6 +524,12 @@ export async function fetchPotActivity(connection: Connection, pot: PotView, lim
         out.push({ kind: 'deposit', sig, time, user: d.user.toBase58(), amountUsdc: Number(d.amountUsdc) / 1e6, feeUsdc: Number(d.feeUsdc) / 1e6, shares: Number(d.shares) / 1e6 })
       } else if (name === 'exited') {
         out.push({ kind: 'exit', sig, time, user: d.user.toBase58(), shares: Number(d.shares) / 1e6, usdcOut: Number(d.usdcOut) / 1e6 })
+      } else if (name === 'exitusdcopened') {
+        exitUsdc = { user: d.user.toBase58(), shares: Number(d.shares) / 1e6, cashOut: Number(d.cashOut) / 1e6 }
+      } else if (name === 'exitusdcclosed' && exitUsdc) {
+        const usdcOut = exitUsdc.cashOut + (Number(d.usdcFromSale) - Number(d.conversionFee)) / 1e6
+        out.push({ kind: 'exit', sig, time, user: exitUsdc.user, shares: exitUsdc.shares, usdcOut, toUsdc: true })
+        exitUsdc = null
       } else if (name === 'rebalanceopened') {
         opened = { keeper: d.keeper.toBase58(), legOut: d.legOut, legIn: d.legIn, amountOut: Number(d.amountOut) }
       } else if (name === 'rebalanceclosed' && opened) {
@@ -528,7 +537,92 @@ export async function fetchPotActivity(connection: Connection, pot: PotView, lim
         opened = null
       }
     }
-    if (!any && i === txs.length - 1) out.push({ kind: 'created', sig, time })
+    if (!any && sig === sigs[sigs.length - 1].signature) out.push({ kind: 'created', sig, time })
   })
+  out.sort((a, b) => (b.time ?? 0) - (a.time ?? 0))
   return out
+}
+
+// ---------------------------------------------------------------------------
+// Wallet position: cost basis from the wallet's own deposits / exits (average cost)
+// ---------------------------------------------------------------------------
+
+export interface WalletPosition {
+  shares: number // index tokens held now (display units)
+  costUsd: number // average-cost basis of the shares still held (includes entry fees paid)
+  depositedUsd: number
+  withdrawnUsd: number // USDC received from exits (asset exits count 0 here)
+  realizedUsd: number // from USDC exits only
+  events: number
+}
+
+/**
+ * Reads the transaction history of the wallet's index-token account and folds deposits and exits
+ * into an average-cost position. In-kind exits reduce shares and cost but realize nothing (the
+ * holder keeps the assets); realized P&L only reflects exits to USDC.
+ */
+export async function fetchWalletPosition(connection: Connection, pot: PotView, wallet: PublicKey, limit = 200): Promise<WalletPosition> {
+  const empty: WalletPosition = { shares: 0, costUsd: 0, depositedUsd: 0, withdrawnUsd: 0, realizedUsd: 0, events: 0 }
+  const account = ata(wallet, pot.indexMint)
+  let sigs: Awaited<ReturnType<Connection['getSignaturesForAddress']>> = []
+  try {
+    sigs = await connection.getSignaturesForAddress(account, { limit }, 'confirmed')
+  } catch {
+    return empty
+  }
+  if (sigs.length === 0) return empty
+  const txs: Awaited<ReturnType<Connection['getParsedTransactions']>> = []
+  for (let i = 0; i < sigs.length; i += 10) {
+    const chunk = await connection.getParsedTransactions(
+      sigs.slice(i, i + 10).map((s) => s.signature),
+      { maxSupportedTransactionVersion: 0, commitment: 'confirmed' },
+    )
+    txs.push(...chunk)
+  }
+  const program = readonlyProgram(connection)
+  const parser = new EventParser(program.programId, program.coder)
+  const me = wallet.toBase58()
+  type Ev = { t: number; kind: 'deposit' | 'exit' | 'exitUsdc'; shares: number; usdc: number }
+  const evs: Ev[] = []
+  txs.forEach((tx) => {
+    if (!tx || tx.meta?.err || !tx.meta?.logMessages) return
+    const t = tx.blockTime ?? 0 // from the tx itself: batched RPC results are not always in request order
+    let exitUsdc: { shares: number; cashOut: number } | null = null
+    for (const ev of parser.parseLogs(tx.meta.logMessages)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const d = ev.data as any
+      const name = ev.name.toLowerCase()
+      if (name === 'deposited' && d.user.toBase58() === me) {
+        evs.push({ t, kind: 'deposit', shares: Number(d.shares) / 1e6, usdc: Number(d.amountUsdc) / 1e6 })
+      } else if (name === 'exited' && d.user.toBase58() === me) {
+        evs.push({ t, kind: 'exit', shares: Number(d.shares) / 1e6, usdc: Number(d.usdcOut) / 1e6 })
+      } else if (name === 'exitusdcopened' && d.user.toBase58() === me) {
+        exitUsdc = { shares: Number(d.shares) / 1e6, cashOut: Number(d.cashOut) / 1e6 }
+      } else if (name === 'exitusdcclosed' && exitUsdc) {
+        evs.push({ t, kind: 'exitUsdc', shares: exitUsdc.shares, usdc: exitUsdc.cashOut + (Number(d.usdcFromSale) - Number(d.conversionFee)) / 1e6 })
+        exitUsdc = null
+      }
+    }
+  })
+  evs.sort((a, b) => a.t - b.t)
+  const pos = { ...empty, events: evs.length }
+  for (const e of evs) {
+    if (e.kind === 'deposit') {
+      pos.shares += e.shares
+      pos.costUsd += e.usdc
+      pos.depositedUsd += e.usdc
+    } else {
+      const frac = pos.shares > 0 ? Math.min(1, e.shares / pos.shares) : 0
+      const costOut = pos.costUsd * frac
+      pos.shares = Math.max(0, pos.shares - e.shares)
+      pos.costUsd = Math.max(0, pos.costUsd - costOut)
+      if (e.kind === 'exitUsdc') {
+        pos.withdrawnUsd += e.usdc
+        pos.realizedUsd += e.usdc - costOut
+      }
+      // In-kind exits: the assets are still the holder's, so nothing is realized here (the small
+      // USDC cash share they receive is ignored for P&L).
+    }
+  }
+  return pos
 }

@@ -23,6 +23,8 @@ Anchor 1.2.1, Solana CLI 4.3. Source: `packages/pot-index/programs/pot_index/src
 | `set_pot_params(paused, deposit_cap_usd)` | creator | the only two things a creator can change |
 | `deposit(amount, min_shares_out)` + remaining accounts: Pyth price updates per leg | anyone | fee split, mint at NAV |
 | `exit(shares, min_usdc_out)` | holder | burn, pro-rata transfer of cash + every leg |
+| `exit_usdc_open(shares, min_usdc_out)` + remaining `[vault_i, pyth_update_i, user_ata_i, mint_i]` | holder | burn, cash share to the holder, legs to the holder's accounts, records the minimum USDC the sale must produce; requires `exit_usdc_close` later in the same transaction for the same Pot and USDC account |
+| `exit_usdc_close` | holder | checks the holder's USDC grew by at least the minimum, transfers the 0.10% conversion fee to the treasury |
 | `rebalance_open(leg_out, leg_in, amount_out)` | keeper | moves `amount_out` from the out-vault to the keeper, records expected `min_in`, requires a matching `rebalance_close` later in the same transaction (Instructions sysvar introspection) |
 | `rebalance_close` | keeper | verifies the in-vault received at least `min_in`, closes the window |
 
@@ -31,8 +33,9 @@ Anchor 1.2.1, Solana CLI 4.3. Source: `packages/pot-index/programs/pot_index/src
 - Exit fee 50 bps, stays in the Pot.
 - 2 to 5 legs. Index decimals 6. Minimum deposit 1 USDC.
 - Virtual shares/assets 1 token / $1 against first-depositor inflation.
-- Oracle: max confidence 2%, max age `max_price_age_secs` capped at 300 s. Pot values what it holds or gives at `price + conf`, what it receives at `price - conf`.
-- Rebalance: deadband 0.5% of NAV, cooldown 150 slots, max slippage 1%, max trade 25% of NAV per transaction; only from an overweight leg (or cash) toward an underweight leg, never past target on either side.
+- Oracle: max confidence 2%, max age `max_price_age_secs` capped at 300 s, update account posted within 150 slots. Pot values what it holds or gives at `price + conf`, what it receives at `price - conf`.
+- Rebalance: deadband 0.5% of NAV, cooldown 150 slots (asset→asset only; cash deployment has none), max slippage 1%, max trade 25% of NAV per transaction; only from an overweight leg (or cash) toward an underweight leg, never past target on either side.
+- Exit to USDC: minimum = Σ legs at (price − conf) × (1 − slippage_bps) − 0.10% conversion fee; the open/close window reuses `Pot.rebalance` with `leg_out == EXIT_LEG (254)`, so no account layout change.
 
 ## Errors
 `Unauthorized, ProtocolPaused, PotPaused, PotNotFinalized, PotAlreadyFinalized, TooManyLegs, TooFewLegs, WeightsDoNotSum, InvalidWeight, DuplicateLeg, AssetDisabled, NameTooLong, InvalidParams, RemainingAccountsMismatch, VaultMismatch, BadOracleOwner, StalePrice, OracleConfidence, NonPositivePrice, MathOverflow, DepositTooSmall, DepositCapExceeded, SlippageShares, SlippageAssets, ZeroShares, SelfReferral, TokenOwnerMismatch, TokenMintMismatch, RebalanceOpen, RebalanceNotOpen, RebalanceWrongSlot, CpiNotAllowed, MissingClose, InvalidLeg, NotOverweight, OvershootOut, OvershootIn, TradeTooLarge, RebalanceSlippage, ZeroAmount`.
@@ -40,7 +43,9 @@ Anchor 1.2.1, Solana CLI 4.3. Source: `packages/pot-index/programs/pot_index/src
 Common ones in the UI: `StalePrice` (stock feeds stop on weekends: deposits wait, exits work), `DepositTooSmall` (< 1 USDC), `SlippageShares` (price moved between quote and execution; retry).
 
 ## Events
-`Deposited`, `Exited`, `RebalanceOpened`, `RebalanceClosed` (camelCase in the Anchor event parser). The activity feed on each POTfolio page reads them.
+`Deposited`, `Exited`, `ExitUsdcOpened`, `ExitUsdcClosed`, `RebalanceOpened`, `RebalanceClosed` (camelCase in the Anchor event parser). The activity feed on each POTfolio page reads them.
 
 ## Security notes
+
+Full review log: [security.md](security.md).
 No withdraw instruction. Exit cannot be paused and does not read the oracle. Keeper trades are atomic: an `open` without a `close` in the same transaction fails; under-delivery reverts both. Admin is two-step and will be a Squads multisig on mainnet. Known, accepted: a depositor can self-refer from a second wallet (mitigated later with registered referrers); keeper slippage up to 1% is the implicit rebalance cost.

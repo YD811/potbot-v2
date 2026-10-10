@@ -1,16 +1,20 @@
 import { NextResponse } from 'next/server'
-import { Connection, Keypair, PublicKey } from '@solana/web3.js'
+import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, sendAndConfirmTransaction } from '@solana/web3.js'
 import { getOrCreateAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 import registry from '@/lib/pot-index/assets.devnet.json'
 
 /**
  * POST /api/pot-index/faucet  { wallet }
- * Devnet only: mints 1,000 test USDC to the wallet. Signer comes from POT_INDEX_FAUCET_KEYPAIR
- * (JSON array secret key) — the mint authority of the test USDC mint.
+ * Devnet only: mints 1,000 test USDC to the wallet and, when the wallet holds less than
+ * SOL_MIN, tops it up with SOL_TOPUP so a fresh (email / embedded) wallet can pay fees and the
+ * refundable rent of posted Pyth accounts. Signer comes from POT_INDEX_FAUCET_KEYPAIR (JSON array
+ * secret key) — the mint authority of the test USDC mint.
  */
 export const runtime = 'nodejs'
 
 const AMOUNT = 1_000n * 1_000_000n
+const SOL_MIN = 0.05 * LAMPORTS_PER_SOL
+const SOL_TOPUP = 0.1 * LAMPORTS_PER_SOL
 const recent = new Map<string, number>()
 
 export async function POST(req: Request) {
@@ -36,7 +40,18 @@ export async function POST(req: Request) {
     const acc = await getOrCreateAssociatedTokenAccount(connection, payer, mint, wallet)
     const sig = await mintTo(connection, payer, mint, acc.address, payer, AMOUNT)
     recent.set(wallet.toBase58(), Date.now())
-    return NextResponse.json({ ok: true, sig })
+    let solSig: string | null = null
+    try {
+      const lamports = await connection.getBalance(wallet)
+      const payerLamports = await connection.getBalance(payer.publicKey)
+      if (lamports < SOL_MIN && payerLamports > SOL_TOPUP * 5) {
+        const tx = new Transaction().add(SystemProgram.transfer({ fromPubkey: payer.publicKey, toPubkey: wallet, lamports: SOL_TOPUP }))
+        solSig = await sendAndConfirmTransaction(connection, tx, [payer], { commitment: 'confirmed' })
+      }
+    } catch {
+      // USDC already landed; a failed SOL top-up is reported as null and the UI points to the airdrop button.
+    }
+    return NextResponse.json({ ok: true, sig, solSig, sol: solSig ? SOL_TOPUP / LAMPORTS_PER_SOL : 0 })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 })
   }

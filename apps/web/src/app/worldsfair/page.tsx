@@ -31,9 +31,20 @@ export default function WorldsFairPage() {
 
       <div className="mt-8 grid gap-3 sm:grid-cols-3">
         <Link href="/portfolios" className="btn-primary text-center">Open the live POTfolios</Link>
-        <a href="https://github.com/YD811/potbot-v2/tree/feat/pot-index/packages/pot-index" target="_blank" rel="noreferrer" className="btn-secondary text-center">Program source</a>
+        <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noreferrer" className="btn-secondary text-center">Source on GitHub</a>
         <a href={explorer} target="_blank" rel="noreferrer" className="btn-secondary text-center">Program on Explorer</a>
       </div>
+
+      <Section title="Try it in two minutes">
+        <ol className="list-decimal space-y-2 pl-5">
+          <li>Open <Link href="/portfolios/PotSvA4ynuxbMFUA8SJSbULHhuTY1JcL5RaxnQz5FmM" className="text-pot-green underline">Solana Blue Chips</Link>. Connect a wallet in devnet mode, or sign in with email (a wallet is created for you).</li>
+          <li>Click <b className="text-white">Get test USDC</b>: 1,000 test USDC and a little SOL for fees land in the wallet.</li>
+          <li><b className="text-white">Deposit 100</b>. One wallet prompt: Pyth prices are posted, your tokens are minted at NAV, and the basket is bought leg by leg. The activity feed shows every transaction.</li>
+          <li><b className="text-white">Redeem</b>: move the slider, choose <i>Get the assets</i> (every asset in kind) or <i>Get USDC</i> (sold in the same transaction with an on-chain minimum). Your position card shows cost basis and P&amp;L.</li>
+          <li>Optional: <Link href="/portfolios/new" className="text-pot-green underline">create your own POTfolio</Link> in one transaction and open it through your referral link from a second wallet.</li>
+        </ol>
+        <p className="text-xs">Everything above is a real devnet transaction on program <code className="break-all">{PROGRAM}</code>. Test tokens, live Pyth prices.</p>
+      </Section>
 
       <Section title="Three hackathons, one idea">
         <ol className="space-y-3">
@@ -48,8 +59,8 @@ export default function WorldsFairPage() {
           </li>
           <li>
             <b className="text-white">Hackathon 3: the token.</b> This time we wrapped the vault into a single liquid token. A POTfolio
-            is a basket you can hold in your wallet, send to a friend, sell on a DEX or post as collateral, and burn any time to take your
-            share of every asset back. That makes PotBot a launchpad for portfolios, and it is what we keep building after the Fair.
+            is a basket you can hold in your wallet, send to a friend, sell on a DEX or post as collateral, and redeem any time for
+            every asset inside or for USDC. That makes PotBot a launchpad for portfolios, and it is what we keep building after the Fair.
           </li>
         </ol>
       </Section>
@@ -61,9 +72,9 @@ export default function WorldsFairPage() {
             (NAV). The basket grows or falls with its assets, the token follows.
           </li>
           <li>
-            <b>No exit liquidity games.</b> Leaving means burning your tokens and receiving your pro-rata share of every asset, in
-            kind. Nothing is sold into the market, nobody is left holding the bag, and 0.5% of what leaves stays in the Pot for the
-            holders who remain.
+            <b>No exit liquidity games.</b> Leaving means redeeming your tokens for your pro-rata share of every asset, in kind, or
+            for USDC in one transaction with a minimum the program enforces. Nothing depends on a market maker, nobody is left holding
+            the bag, and 0.5% of what leaves stays in the Pot for the holders who remain.
           </li>
           <li>
             <b>Nobody can withdraw.</b> Assets sit in accounts owned by the program (PDAs): no private key, no withdraw
@@ -93,6 +104,18 @@ export default function WorldsFairPage() {
         <HowAPotWorks compact />
       </Section>
 
+      <Section title="Where it sits">
+        <p>
+          Baskets on Solana are not new. What is new is a basket that is a token anyone can hold, with an exit nobody can pause and
+          keepers bounded by code instead of trust.
+        </p>
+        <CompetitorTable />
+        <p className="text-xs">
+          From public docs and product pages, Oct 2026. Corrections welcome at{' '}
+          <a className="text-pot-green underline" href="https://x.com/PotBot_sol" target="_blank" rel="noreferrer">@PotBot_sol</a>.
+        </p>
+      </Section>
+
       <Section title="Why now">
         <p>
           On Sept 24, 2026 Ondo launched Intelligent Portfolios &ldquo;Powered by BlackRock&rdquo;: a whole model portfolio as one onchain
@@ -106,8 +129,8 @@ export default function WorldsFairPage() {
       <Section title="Built during the Fair (Sept 14 to Oct 12)">
         <ul className="list-disc space-y-2 pl-5">
           <li>
-            <b>New Anchor 1.2 program <code>pot_index</code></b>, 14 instructions, written from scratch in its own workspace. Devnet
-            program id <code className="break-all text-pot-green">{PROGRAM}</code>, live since Oct 8.
+            <b>New Anchor 1.2 program <code>pot_index</code></b>, 16 instructions, written from scratch in its own workspace. Devnet
+            program id <code className="break-all text-pot-green">{PROGRAM}</code>, live since Oct 8, upgraded Oct 10 after review.
           </li>
           <li>
             <b>Single-ledger accounting:</b> the SPL index token supply is the only record of ownership. Mint on deposit at Pyth-priced
@@ -119,16 +142,25 @@ export default function WorldsFairPage() {
             matching <code>rebalance_close</code> follows; under-delivery reverts everything. Deadband, cooldown, per-trade cap, slippage band.
           </li>
           <li>
-            <b>Exit in kind, never pausable; referral economics on-chain;</b> creator can only pause deposits or cap size.
+            <b>Exit in kind, never pausable, or exit to USDC in one transaction:</b> <code>exit_usdc_open</code> pays the cash share and
+            hands the legs to the holder, the legs are sold inside the same transaction, <code>exit_usdc_close</code> checks the holder
+            received at least the Pyth-priced minimum and takes a 0.10% conversion fee. Referral economics on-chain; the creator can
+            only pause deposits or cap size.
           </li>
           <li>
-            <b>Five live POTfolios</b> across crypto majors, Solana natives, tokenized stocks and memes; keeper running; faucet for test
-            USDC; one wallet signature per deposit.
+            <b>Deposit and allocate in one prompt:</b> after the deposit, the holder acts as keeper and buys the basket leg by leg
+            inside the same wallet approval. Cash deployments have no cooldown and are priced at mid.
           </li>
           <li>
-            <b>Tests &amp; review:</b> LiteSVM end-to-end suite (fee split, bounded rebalance incl. missing-close / overshoot /
-            under-delivery reverts, in-kind exit, pause, stale and wrong-feed oracle, two-step admin) and a security pass against the
-            Solana Foundation checklist.
+            <b>Five live POTfolios</b> across crypto majors, Solana natives, tokenized stocks and memes; keeper running; faucet with
+            test USDC and SOL; index price history, cost basis and P&amp;L per wallet; Garden mode (every Pot grows a plant with its NAV).
+          </li>
+          <li>
+            <b>Tests &amp; review:</b> LiteSVM end-to-end suite (fee split and referral paths, bounded rebalance incl. missing-close /
+            overshoot / under-delivery reverts, exit to USDC incl. holder minimum and double close, cash deploy without cooldown, stale
+            oracle, two-step admin). Security review against the Solana Foundation checklist on Oct 8 and an independent reviewer
+            pass on Oct 10: no criticals or highs, both mediums fixed before the devnet upgrade.{' '}
+            <a className="text-pot-green underline" href="https://github.com/YD811/potbot-v2/blob/main/docs/potfolio/security.md" target="_blank" rel="noreferrer">Report</a>
           </li>
         </ul>
       </Section>
@@ -136,7 +168,7 @@ export default function WorldsFairPage() {
       <Section title="Honest limits and what comes next">
         <ul className="list-disc space-y-2 pl-5">
           <li>Up to 5 assets per Pot today, 10 next (deposit transactions split across price updates).</li>
-          <li>Deposits land as USDC and are bought into the basket by keepers within minutes; instant allocation in the deposit transaction for small amounts is next.</li>
+          <li>Devnet sells and buys go through a test market maker; on mainnet the same two instructions wrap Jupiter swaps signed by the holder alone.</li>
           <li>Fixed weights now. Next: Managed POTfolios (creator adjusts within a public mandate and a timelock) and Community POTfolios (holders vote with the token).</li>
           <li>Secondary market: a $POT/USDC pool on Meteora so tokens trade on Jupiter, Photon and in wallets; minting and burning at NAV keep the pool honest.</li>
           <li>Long-tail assets via paid Pyth or Switchboard; permissioned stocks via MPL-3643; &ldquo;Launch with a floor&rdquo;, bonding-curve launches backed by a Pot.</li>
@@ -157,6 +189,92 @@ export default function WorldsFairPage() {
           <a className="text-pot-green underline" href="https://x.com/CryptoYDao" target="_blank" rel="noreferrer">@CryptoYDao</a>
         </p>
       </Section>
+    </div>
+  )
+}
+
+const ROWS: { name: string; what: string; token: string; exit: string; keepers: string; create: string; earn: string }[] = [
+  {
+    name: 'PotBot POTfolio',
+    what: 'Basket as one SPL token, fixed weights, up to 5 assets',
+    token: 'Yes, any wallet',
+    exit: 'In kind or USDC, never pausable, on-chain minimum',
+    keepers: 'Anyone; bounded on-chain (toward target, 25% cap, Pyth band, atomic)',
+    create: 'One transaction, no code',
+    earn: '0.30% entry split 40 / 40 / 20 on-chain',
+  },
+  {
+    name: 'Symmetry',
+    what: 'Baskets and funds for builders, V3 mainnet beta',
+    token: 'Yes',
+    exit: 'Via protocol liquidity',
+    keepers: 'Protocol engine',
+    create: 'SDK / UI',
+    earn: 'Manager fees',
+  },
+  {
+    name: 'Cesto',
+    what: 'Thematic baskets bought as a bundle (Frontier winner)',
+    token: 'No, assets in your wallet',
+    exit: 'Sell each asset',
+    keepers: 'None',
+    create: 'Curated',
+    earn: 'No',
+  },
+  {
+    name: 'DiversiFi',
+    what: 'Self-rebalancing vaults',
+    token: 'Vault shares',
+    exit: 'Vault withdraw',
+    keepers: 'Protocol keepers',
+    create: 'Curated',
+    earn: 'No',
+  },
+  {
+    name: 'GLAM',
+    what: 'On-chain asset management for funds and managers',
+    token: 'Fund shares',
+    exit: 'Manager-defined',
+    keepers: 'Manager and integrations',
+    create: 'Manager setup',
+    earn: 'Manager fees',
+  },
+  {
+    name: 'Ondo Intelligent Portfolios',
+    what: 'Model portfolios as one token, designed by BlackRock',
+    token: 'Yes, eligible investors',
+    exit: 'Issuer redemption',
+    keepers: 'Issuer',
+    create: 'Issuer only',
+    earn: 'No',
+  },
+]
+
+function CompetitorTable() {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-pot-border">
+      <table className="w-full min-w-[720px] text-left text-xs">
+        <thead className="bg-white/5 text-white">
+          <tr>
+            {['', 'What', 'Holdable token', 'Exit', 'Rebalancing', 'Creating', 'Creators earn'].map((h) => (
+              <th key={h} className="px-3 py-2 font-semibold">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {ROWS.map((r, i) => (
+            <tr key={r.name} className={`border-t border-pot-border align-top ${i === 0 ? 'bg-pot-green/5' : ''}`}>
+              <td className={`px-3 py-2 font-semibold ${i === 0 ? 'text-pot-green' : 'text-white'}`}>{r.name}</td>
+              <td className="px-3 py-2">{r.what}</td>
+              <td className="px-3 py-2">{r.token}</td>
+              <td className="px-3 py-2">{r.exit}</td>
+              <td className="px-3 py-2">{r.keepers}</td>
+              <td className="px-3 py-2">{r.create}</td>
+              <td className="px-3 py-2">{r.earn}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

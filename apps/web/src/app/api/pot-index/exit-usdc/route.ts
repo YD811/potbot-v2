@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import { AnchorProvider, Program, type Idl, type Wallet } from '@coral-xyz/anchor'
-import { Connection, Keypair, PublicKey, type VersionedTransaction } from '@solana/web3.js'
+import { Connection, Keypair, PublicKey, TransactionMessage, VersionedTransaction, type TransactionInstruction } from '@solana/web3.js'
 import { createAssociatedTokenAccountIdempotentInstruction, createMintToInstruction, createTransferCheckedInstruction, getAssociatedTokenAddressSync } from '@solana/spl-token'
 import idl from '@/lib/pot-index/idl.json'
 import registry from '@/lib/pot-index/assets.devnet.json'
 import { buildExitUsdcPair, fetchPot, fetchPotBalances, EXIT_FEE_BPS } from '@/lib/pot-index/client'
-import { buildWithPythUpdates, fetchHermesPrices } from '@/lib/pot-index/pyth-post'
+import { buildPythSession, fetchHermesPrices } from '@/lib/pot-index/pyth-post'
 
 /**
  * POST /api/pot-index/exit-usdc  { wallet, mint, shares }
@@ -71,28 +71,39 @@ export async function POST(req: Request) {
     })
 
     const program = new Program(idl as Idl, new AnchorProvider(connection, readOnlyWallet(wallet), { commitment: 'confirmed' }))
-    const txs = await buildWithPythUpdates(connection, readOnlyWallet(wallet), feedIds, async (priceUpdates) => {
-      const { pre, open, close } = await buildExitUsdcPair(program, {
-        pot,
-        user: wallet,
-        usdcMint,
-        treasury,
-        shares: Number(shares),
-        minUsdcOut: 0,
-        priceUpdates,
-      })
-      const userUsdc = getAssociatedTokenAddressSync(usdcMint, wallet)
-      const sale = pot.legs.flatMap((l, i) => {
-        if (legOut[i] === 0n) return []
-        const mmAta = getAssociatedTokenAddressSync(l.mint, mm.publicKey)
-        return [
-          createAssociatedTokenAccountIdempotentInstruction(wallet, mmAta, mm.publicKey, l.mint),
-          createTransferCheckedInstruction(getAssociatedTokenAddressSync(l.mint, wallet), l.mint, mmAta, wallet, legOut[i], l.decimals),
-        ]
-      })
-      const pay = payUsdc > 0n ? [createMintToInstruction(usdcMint, userUsdc, mm.publicKey, payUsdc)] : []
-      return [...pre, open, ...sale, ...pay, close]
+    // One Pyth session: post once, consume in the exit transaction, close at the end. The exit
+    // itself must be ONE transaction (open … close, checked on-chain), so it is built by hand rather
+    // than through the Pyth builder, which packs consumer instructions by size and may split them.
+    const session = await buildPythSession(connection, readOnlyWallet(wallet), feedIds)
+    const { pre, open, close } = await buildExitUsdcPair(program, {
+      pot,
+      user: wallet,
+      usdcMint,
+      treasury,
+      shares: Number(shares),
+      minUsdcOut: 0,
+      priceUpdates: session.priceUpdates,
     })
+    const userUsdc = getAssociatedTokenAddressSync(usdcMint, wallet)
+    const setup: TransactionInstruction[] = [...pre]
+    const sale: TransactionInstruction[] = []
+    pot.legs.forEach((l, i) => {
+      if (legOut[i] === 0n) return
+      const mmAta = getAssociatedTokenAddressSync(l.mint, mm.publicKey)
+      setup.push(createAssociatedTokenAccountIdempotentInstruction(wallet, mmAta, mm.publicKey, l.mint))
+      sale.push(createTransferCheckedInstruction(getAssociatedTokenAddressSync(l.mint, wallet), l.mint, mmAta, wallet, legOut[i], l.decimals))
+    })
+    const pay = payUsdc > 0n ? [createMintToInstruction(usdcMint, userUsdc, mm.publicKey, payUsdc)] : []
+    const { blockhash } = await connection.getLatestBlockhash('finalized')
+    const v0 = (ixs: TransactionInstruction[]) =>
+      new VersionedTransaction(new TransactionMessage({ payerKey: wallet, recentBlockhash: blockhash, instructions: ixs }).compileToV0Message())
+    const exitTx = v0([open, ...sale, ...pay, close])
+    const txs: { tx: VersionedTransaction; signers: { publicKey: PublicKey; secretKey: Uint8Array }[] }[] = [
+      ...session.postTxs,
+      ...(setup.length ? [{ tx: v0(setup), signers: [] }] : []),
+      { tx: exitTx, signers: [] },
+      ...session.closeTxs,
+    ]
 
     // Partially sign with the market maker where it is a required signer; the holder signs the rest.
     const out = txs.map(({ tx, signers }) => {

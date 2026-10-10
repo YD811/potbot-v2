@@ -34,7 +34,7 @@ const SECTIONS: Section[] = [
     features: [
       { name: 'Create a POTfolio', desc: 'Up to 5 assets from the registry (crypto majors, Solana natives, tokenized stocks, memes) with fixed target weights. Token address starts with Pot…' },
       { name: 'Mint at NAV, one signature', desc: 'Deposit USDC, receive the index token at the current basket value. Pyth prices posted in the same transaction. 0.30% entry fee split 40/40/20 creator / referrer / protocol.' },
-      { name: 'Exit in kind, always', desc: 'Burn the token, receive your share of every asset. No oracle, no pause, nothing sold on other holders. 0.50% stays with remaining holders.' },
+      { name: 'Exit in kind, always', desc: 'Redeem the token, receive your share of every asset. No oracle, no pause, nothing sold on other holders. 0.50% stays with remaining holders.' },
       { name: 'Keepers inside on-chain rules', desc: 'Independent bots rebalance toward target. The program allows only moves toward target, max 25% per trade, inside the Pyth band; under-delivery reverts.' },
       { name: 'Token metadata, activity feed, referral links', desc: 'Name and logo in wallets via Metaplex; every deposit, rebalance and exit on the Pot page with Explorer links; share-to-earn links.' },
       { name: 'Market-hours aware', desc: 'Stock POTfolios refuse stale prices: minting opens with US markets, exits always work.' },

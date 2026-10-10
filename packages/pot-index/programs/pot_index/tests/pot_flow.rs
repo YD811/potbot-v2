@@ -88,6 +88,14 @@ fn token_amount(svm: &LiteSVM, key: &Pubkey) -> u64 {
 
 fn set_price(svm: &mut LiteSVM, feed: [u8; 32], price: i64, conf: u64, publish_time: i64) -> Pubkey {
     let key = Keypair::new().pubkey();
+    write_price(svm, key, feed, price, conf, publish_time);
+    key
+}
+
+/// (Re)write a price update account at `key`, posted in the current slot (the program refuses
+/// updates posted more than MAX_POSTED_SLOT_AGE slots ago).
+fn write_price(svm: &mut LiteSVM, key: Pubkey, feed: [u8; 32], price: i64, conf: u64, publish_time: i64) {
+    let slot = svm.get_sysvar::<Clock>().slot;
     let upd = PriceUpdateV2 {
         write_authority: Pubkey::default(),
         verification_level: VerificationLevel::Full,
@@ -101,7 +109,7 @@ fn set_price(svm: &mut LiteSVM, feed: [u8; 32], price: i64, conf: u64, publish_t
             ema_price: price,
             ema_conf: conf,
         },
-        posted_slot: 1,
+        posted_slot: slot,
     };
     let mut data = Vec::new();
     upd.try_serialize(&mut data).unwrap();
@@ -110,7 +118,6 @@ fn set_price(svm: &mut LiteSVM, feed: [u8; 32], price: i64, conf: u64, publish_t
         RawAccount { lamports: 10_000_000, data, owner: pyth_solana_receiver_sdk::ID, executable: false, rent_epoch: 0 },
     )
     .unwrap();
-    key
 }
 
 fn send(svm: &mut LiteSVM, ixs: &[Instruction], payer: &Keypair, extra: &[&Keypair]) -> Result<Vec<String>, String> {
@@ -415,11 +422,14 @@ fn spl_transfer(from: &Pubkey, to: &Pubkey, owner: &Pubkey, amount: u64) -> Inst
     )
 }
 
-fn advance_slots(svm: &mut LiteSVM, n: u64) {
-    let mut clock: Clock = svm.get_sysvar();
+/// Move the clock forward and re-post both price feeds in the new slot (as a real caller would).
+fn advance_slots(w: &mut World, n: u64) {
+    let mut clock: Clock = w.svm.get_sysvar();
     clock.slot += n;
-    svm.set_sysvar(&clock);
-    svm.expire_blockhash();
+    w.svm.set_sysvar(&clock);
+    w.svm.expire_blockhash();
+    write_price(&mut w.svm, w.sol_price, SOL_FEED, SOL_PRICE, 10_000_000, NOW - 5);
+    write_price(&mut w.svm, w.jup_price, JUP_FEED, JUP_PRICE, 100_000, NOW - 5);
 }
 
 fn read_pot(svm: &LiteSVM, pot: &Pubkey) -> Pot {
@@ -500,7 +510,7 @@ fn full_flow_create_deposit_rebalance_exit() {
     // deployment in the same slot fails only because the keeper delivers nothing.
     let err = { let v = vec![open_ix(&w, &k, u8::MAX, 0, 240_000_000), close_ix(&w, &k, 0)]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap_err();
     assert!(err.contains("RebalanceSlippage"), "{err}");
-    advance_slots(&mut w.svm, 200);
+    advance_slots(&mut w, 200);
 
     // A second trade inside all bounds (201 + 240 < 599 target, 240 < 25% of NAV) fails only
     // because this keeper delivers nothing: the Pot is never left short.
@@ -508,7 +518,7 @@ fn full_flow_create_deposit_rebalance_exit() {
     assert!(err.contains("RebalanceSlippage"), "{err}");
 
     // Selling SOL (leg 0) into JUP (leg 1): SOL is underweight (201 < 599), so it cannot be sold.
-    advance_slots(&mut w.svm, 200);
+    advance_slots(&mut w, 200);
     set_ata(&mut w.svm, &w.jup, &keeper, 0);
     let err = { let v = vec![open_ix(&w, &k, 0, 1, 100_000_000), close_ix(&w, &k, 1)]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap_err();
     assert!(err.contains("NotOverweight"), "{err}");
@@ -573,7 +583,7 @@ fn rebalance_cannot_overshoot_target() {
         close_ix(&w, &k, 0),
     ]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap_err();
     assert!(err.contains("OvershootIn"), "{err}");
-    advance_slots(&mut w.svm, 200);
+    advance_slots(&mut w, 200);
 
     // 150 USDC is fine.
     { let v = vec![
@@ -701,7 +711,7 @@ fn exit_to_usdc_flow() {
             spl_transfer(&keeper_sol, &k.sol_vault, &keeper, 1_340_000_000),
             close_ix(&w, &k, 0),
         ]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap();
-    advance_slots(&mut w.svm, 5);
+    advance_slots(&mut w, 5);
 
     let supply = token_amount(&w.svm, &ata(&user, &k.index_mint));
     let half = supply / 2;
@@ -758,9 +768,26 @@ fn exit_to_usdc_flow() {
     assert_eq!(token_amount(&w.svm, &k.sol_vault), sol_before - sol_out);
     assert!(!read_pot(&w.svm, &k.pot).rebalance.open);
 
-    // (e) min_usdc_out above what the sale can give → refused up front.
+    // (e) The holder's own min_usdc_out is enforced at close: a floor above what the sale gives
+    // reverts the whole transaction, tokens stay with the holder.
+    let before = token_amount(&w.svm, &ata(&user, &k.index_mint));
     let err = { let v = vec![exit_usdc_open_ix(&w, &k, 1_000_000, u64::MAX / 2), exit_usdc_close_ix(&w, &k, user_usdc)]; send(&mut w.svm, &v, &w.user, &[]) }.unwrap_err();
-    assert!(err.contains("SlippageAssets"), "{err}");
+    assert!(err.contains("RebalanceSlippage"), "{err}");
+    assert_eq!(token_amount(&w.svm, &ata(&user, &k.index_mint)), before);
+
+    // (f) A second close in the same transaction, or a rebalance_close against an exit window, is refused.
+    let supply_now = token_amount(&w.svm, &ata(&user, &k.index_mint));
+    let sol_out1 = exit_share(token_amount(&w.svm, &k.sol_vault), 1_000_000, supply_now);
+    let err = { let v = vec![
+            exit_usdc_open_ix(&w, &k, 1_000_000, 0),
+            spl_transfer(&user_sol, &keeper_sol, &user, sol_out1),
+            spl_transfer(&keeper_usdc, &user_usdc, &keeper, 1_000_000),
+            exit_usdc_close_ix(&w, &k, user_usdc),
+            exit_usdc_close_ix(&w, &k, user_usdc),
+        ]; send(&mut w.svm, &v, &w.user, &[&w.keeper.insecure_clone()]) }.unwrap_err();
+    assert!(err.contains("RebalanceNotOpen"), "{err}");
+    let err = { let v = vec![exit_usdc_open_ix(&w, &k, 1_000_000, 0), close_ix(&w, &k, 0)]; send(&mut w.svm, &v, &w.user, &[&w.keeper.insecure_clone()]) }.unwrap_err();
+    assert!(err.contains("MissingClose"), "{err}");
 
     // In-kind exit still works right after.
     { let i = exit_ix(&w, &k, 1_000_000); send(&mut w.svm, &[i], &w.user, &[]) }.unwrap();
@@ -787,18 +814,16 @@ fn cash_deploys_without_cooldown_rotations_keep_it() {
 
     // Cash → SOL, then cash → JUP one slot later: both pass.
     { let v = vec![open_ix(&w, &k, u8::MAX, 0, 200_000_000), spl_transfer(&keeper_sol, &k.sol_vault, &keeper, 1_340_000_000), close_ix(&w, &k, 0)]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap();
-    advance_slots(&mut w.svm, 1);
+    advance_slots(&mut w, 1);
     { let v = vec![open_ix(&w, &k, u8::MAX, 1, 200_000_000), spl_transfer(&keeper_jup, &k.jup_vault, &keeper, 201_000_000), close_ix(&w, &k, 1)]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap();
     assert_eq!(token_amount(&w.svm, &k.cash_vault), 597_000_000);
 
-    // An asset→asset rotation one slot after the last trade hits the cooldown; after the cooldown
-    // the same call gets past that check (and fails on the bounds instead: SOL is not overweight).
-    advance_slots(&mut w.svm, 1);
-    let err = { let v = vec![open_ix(&w, &k, 0, 1, 100_000_000), spl_transfer(&keeper_jup, &k.jup_vault, &keeper, 31_000_000), close_ix(&w, &k, 1)]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap_err();
-    assert!(err.contains("Cooldown"), "{err}");
-    advance_slots(&mut w.svm, 200);
+    // Cash deploys do not start the rotation cooldown: a rotation one slot later gets past the
+    // cooldown check and fails on the bounds instead (SOL is not overweight).
+    advance_slots(&mut w, 1);
     let err = { let v = vec![open_ix(&w, &k, 0, 1, 100_000_000), spl_transfer(&keeper_jup, &k.jup_vault, &keeper, 31_000_000), close_ix(&w, &k, 1)]; send(&mut w.svm, &v, &w.keeper, &[]) }.unwrap_err();
     assert!(err.contains("NotOverweight"), "{err}");
+    assert_eq!(read_pot(&w.svm, &k.pot).last_rebalance_slot, 0, "cash deploys leave the rotation cooldown untouched");
 }
 
 /// Referral fee paths: exact split, self-referral rejected, referrer == creator stacks, referrer ==

@@ -65,9 +65,12 @@ pub fn handle_rebalance_open<'info>(
     let pot = &ctx.accounts.pot;
     require!(!config.paused, PotError::ProtocolPaused);
     require!(pot.finalized, PotError::PotNotFinalized);
-    require!(!pot.rebalance.open, PotError::RebalanceOpen);
-    require!(amount_out > 0, PotError::ZeroAmount);
     let clock = Clock::get()?;
+    require!(
+        !(pot.rebalance.open && pot.rebalance.slot == clock.slot),
+        PotError::RebalanceOpen
+    );
+    require!(amount_out > 0, PotError::ZeroAmount);
     // Cooldown applies to asset→asset rotations only. Deploying cash (a fresh deposit) into the
     // legs may happen leg after leg in consecutive transactions, so one deposit can be fully
     // allocated in a single wallet prompt.
@@ -166,8 +169,11 @@ pub fn handle_rebalance_open<'info>(
 
     // Minimum to receive: trade value at the Pyth price minus slippage, in bought-token units.
     let min_value = trade_value * ((BPS - pot.slippage_bps as u64) as u128) / (BPS as u128);
-    // Bought asset valued low (price − conf): more units required.
-    let min_in = oracle::usd_to_token_amount(min_value, in_snap.decimals, in_snap.price_lo, in_snap.expo)?;
+    // Bought asset valued low (price − conf): more units required. Deploying a fresh deposit's
+    // cash is priced at the mid price instead: that trade is permissionless and uncooled, so the
+    // keeper's margin on holders' money is the slippage band alone, not slippage plus confidence.
+    let in_price = if leg_out == CASH_LEG { in_snap.price } else { in_snap.price_lo };
+    let min_in = oracle::usd_to_token_amount(min_value, in_snap.decimals, in_price, in_snap.expo)?;
     require!(min_in > 0, PotError::ZeroAmount);
 
     // --- Hand the sold amount to the keeper.
@@ -197,7 +203,10 @@ pub fn handle_rebalance_open<'info>(
         in_vault_before: ctx.accounts.in_vault.amount,
         slot: clock.slot,
     };
-    pot.last_rebalance_slot = clock.slot;
+    // Cash deployment does not start the rotation cooldown, so it cannot be used to keep rotations blocked.
+    if leg_out != CASH_LEG {
+        pot.last_rebalance_slot = clock.slot;
+    }
     emit!(RebalanceOpened {
         pot: pot.key(),
         keeper: ctx.accounts.keeper.key(),

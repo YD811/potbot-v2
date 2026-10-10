@@ -1,0 +1,16 @@
+name: POTfolio NAV snapshots (preview)
+
+# Vercel cron only runs on production. This keeps the preview deployment's NAV history
+# (potbot-v2-git-feat-pot-index) filling every 15 minutes until the branch is merged.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record snapshots
+        run: |
+          curl -sS --max-time 60 https://potbot-v2-git-feat-pot-index-y-dao.vercel.app/api/cron/potfolio-nav

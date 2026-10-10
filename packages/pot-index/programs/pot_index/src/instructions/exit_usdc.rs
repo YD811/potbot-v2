@@ -58,13 +58,16 @@ pub fn handle_exit_usdc_open<'info>(
     let config = &ctx.accounts.config;
     let pot = &ctx.accounts.pot;
     require!(pot.finalized, PotError::PotNotFinalized);
-    require!(!pot.rebalance.open, PotError::RebalanceOpen);
+    let clock = Clock::get()?;
+    require!(
+        !(pot.rebalance.open && pot.rebalance.slot == clock.slot),
+        PotError::RebalanceOpen
+    );
     require!(shares > 0, PotError::ZeroShares);
     require!(
         ctx.remaining_accounts.len() == pot.legs.len() * 4,
         PotError::RemainingAccountsMismatch
     );
-    let clock = Clock::get()?;
 
     // --- Transaction introspection: top-level, and a matching close for this Pot + USDC account follows.
     require!(
@@ -177,9 +180,9 @@ pub fn handle_exit_usdc_open<'info>(
     // 4. Minimum USDC the sale must produce: value × (1 − slippage), minus the conversion fee.
     let after_slip = legs_value * ((BPS - pot.slippage_bps as u64) as u128) / (BPS as u128);
     let conv_fee = after_slip * (CONVERSION_FEE_BPS as u128) / (BPS as u128);
-    let min_from_sale = after_slip; // the holder must receive this much from selling the legs
-    let net_to_holder = (cash_out as u128) + min_from_sale - conv_fee;
-    require!(net_to_holder >= min_usdc_out as u128, PotError::SlippageAssets);
+    // The holder may demand a tighter floor than the Pot's: `close` enforces the larger of the two.
+    let holder_floor = (min_usdc_out as u128).saturating_sub(cash_out as u128) + conv_fee;
+    let min_from_sale = after_slip.max(holder_floor);
 
     // 5. Record the window. Balance snapshot is taken AFTER the cash transfer so only the sale counts.
     let user_usdc_after_cash = ctx.accounts.user_usdc.amount.saturating_add(cash_out);
