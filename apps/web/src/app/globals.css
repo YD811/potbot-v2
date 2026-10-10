@@ -499,3 +499,105 @@ html[data-theme="light"] .pot-range { background: linear-gradient(90deg, #0f9d6a
   border: 3px solid #14F195; box-shadow: 0 2px 10px rgba(0,0,0,0.35); cursor: grab;
 }
 .pot-range:active::-webkit-slider-thumb { cursor: grabbing; transform: scale(1.08); }
+
+/* Approved POTfolio creation layout. Scoped to preserve other pages. */
+.potfolio-create-card {
+  border-radius: 24px;
+  border-color: rgba(20, 241, 149, 0.3);
+  padding: 28px;
+}
+.potfolio-weight-row {
+  display: grid;
+  grid-template-columns: 12px minmax(64px, 1fr) minmax(80px, 2fr) 64px 12px 20px;
+  gap: 12px;
+  align-items: center;
+}
+.potfolio-weight-slider {
+  width: 100%;
+  min-width: 0;
+  accent-color: #14f195;
+}
+.potfolio-weight-input {
+  width: 64px;
+  min-height: 40px;
+}
+.potfolio-weight-total {
+  padding: 12px 16px;
+  border: 1px solid var(--c-border);
+  background: var(--c-card-2);
+  border-radius: 12px;
+  gap: 8px 16px;
+  margin-top: 16px;
+}
+.potfolio-weight-total-valid {
+  color: #14f195;
+  border-color: rgba(20, 241, 149, 0.25);
+  background: rgba(20, 241, 149, 0.06);
+}
+.potfolio-add-asset {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+.potfolio-add-asset > * {
+  width: 100%;
+  min-height: 44px;
+}
+.potfolio-add-asset > :only-child { grid-column: 1 / -1; }
+.potfolio-publishing-summary {
+  background: var(--c-card-2);
+  border-radius: 16px;
+  padding: 20px;
+}
+.potfolio-publishing-summary li {
+  padding: 12px 0;
+  border-top: 1px solid var(--c-border);
+  line-height: 1.7;
+}
+.potfolio-create-wallet .wallet-adapter-dropdown {
+  width: 100%;
+  display: block;
+}
+.potfolio-create-action,
+.potfolio-create-wallet .wallet-adapter-button {
+  width: 100%;
+  min-height: 48px;
+  justify-content: center;
+  background: #14f195 !important;
+  color: #0a0e17 !important;
+}
+.potfolio-create-wallet .wallet-adapter-button:hover {
+  background: #14f195 !important;
+  filter: brightness(1.1);
+}
+html[data-theme="light"] .potfolio-create-card {
+  border-color: rgba(22, 101, 52, 0.25);
+}
+html[data-theme="light"] .potfolio-weight-slider {
+  accent-color: #0f9d6a;
+}
+html[data-theme="light"] .potfolio-weight-total-valid {
+  color: #166534;
+  border-color: rgba(22, 101, 52, 0.25);
+  background: rgba(22, 101, 52, 0.04);
+}
+html[data-theme="light"] .potfolio-create-action,
+html[data-theme="light"] .potfolio-create-wallet .wallet-adapter-button {
+  background: #14f195 !important;
+  color: #0a0e17 !important;
+}
+@media (max-width: 639px) {
+  .potfolio-create-card { padding: 20px; }
+  .potfolio-weight-row {
+    grid-template-columns: 12px minmax(0, 1fr) 64px 12px 20px;
+    gap: 8px;
+    padding: 12px 0;
+  }
+  .potfolio-weight-slider {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    height: 24px;
+  }
+  .potfolio-add-asset { grid-template-columns: 1fr; }
+}
