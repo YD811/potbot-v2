@@ -4,6 +4,16 @@ const require = createRequire(import.meta.url)
 /** @type {import('next').NextConfig} */
 const config = {
   experimental: { externalDir: true },
+  // Old v2 routes: nothing 404s, every old link lands on the live product.
+  async redirects() {
+    return [
+      { source: '/pots', destination: '/vaults', permanent: false },
+      { source: '/dashboard', destination: '/portfolios', permanent: false },
+      { source: '/my-pots', destination: '/portfolios', permanent: false },
+      { source: '/beta', destination: '/signup', permanent: false },
+      { source: '/pricing', destination: '/learn', permanent: false },
+    ]
+  },
   transpilePackages: [
     '@solana/wallet-adapter-react-ui',
     '@solana/wallet-adapter-react',

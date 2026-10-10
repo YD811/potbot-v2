@@ -109,8 +109,11 @@ export default function ForAgentsPage() {
           PotBot for AI Agents
         </h1>
         <p className="text-sm sm:text-lg text-pot-muted max-w-2xl">
-          PotBot exposes its entire vault infrastructure as an MCP server. Any AI agent — Claude, GPT, custom — can list vaults, analyze performance, create governance proposals, and configure automation + delegated voting rules.
+          PotBot ships an MCP server so any AI agent can read and act on the protocol. Today it covers the Vault product (PotBot v2): list vaults, analyze performance, draft governance proposals, set automation rules.
         </p>
+        <div className="mt-4 max-w-2xl rounded-xl border border-pot-green/30 bg-pot-green/5 px-4 py-3 text-sm text-pot-muted">
+          <span className="font-semibold text-pot-green">POTfolio tools are next:</span> read any POTfolio (composition, NAV, index price history), quote a deposit or a redemption, and build the transaction for a wallet to sign. Until then, agents can read every POTfolio from the public API on this site (<code>/api/pot-index/nav</code>) and the program directly. See the <Link href="/roadmap" className="underline hover:text-white">roadmap</Link>.
+        </div>
         <div className="mt-6 flex flex-wrap gap-3">
           <a
             href="https://www.npmjs.com/package/@potbot/mcp"

@@ -76,39 +76,6 @@ const NAV_LINKS: { href: string; emoji: string; term: string }[] = [
   { href: '/roadmap',     emoji: '',     term: 'Roadmap' },
 ]
 
-/** Segmented Home ⇄ Vaults control. Always visible (logged in or not).
- *  Home → landing page "/". Vaults → the /pots dashboard (pot list,
- *  leaderboard, my pots). */
-function HomeVaultsToggle({ pathname }: { pathname: string }) {
-  // "Vaults" view = the /pots dashboard (and individual pot pages, /vaults).
-  const onVaults =
-    pathname.startsWith('/pots') ||
-    pathname.startsWith('/vaults') ||
-    pathname.startsWith('/leaderboard') ||
-    pathname.startsWith('/my-pots') ||
-    pathname.startsWith('/dashboard')
-  return (
-    <div className="flex items-center rounded-lg border border-pot-border bg-pot-card p-0.5 text-sm font-medium">
-      <Link
-        href="/"
-        className={`px-3 py-1 rounded-md transition ${
-          !onVaults ? 'bg-pot-green text-pot-dark' : 'text-gray-400 hover:text-white'
-        }`}
-      >
-        Home
-      </Link>
-      <Link
-        href="/pots"
-        className={`px-3 py-1 rounded-md transition ${
-          onVaults ? 'bg-pot-green text-pot-dark' : 'text-gray-400 hover:text-white'
-        }`}
-      >
-        Vaults
-      </Link>
-    </div>
-  )
-}
-
 export function Navbar() {
   const t = useHumanText()
   const { publicKey } = useWallet()
@@ -136,8 +103,6 @@ export function Navbar() {
         </Link>
 
         <div className="hidden sm:flex items-center gap-1 text-sm font-medium">
-          {/* Home ⇄ Vaults pill toggle — always visible */}
-          <HomeVaultsToggle pathname={pathname} />
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className={`px-3 py-1.5 rounded-lg transition ${
               isActive(link.href) ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
@@ -153,7 +118,7 @@ export function Navbar() {
               href="/signup"
               className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-pot-green px-4 py-1.5 text-sm font-bold text-pot-dark shadow-[0_0_18px_rgba(20,241,149,0.35)] hover:brightness-110 transition whitespace-nowrap"
             >
-              🚀 Waitlist
+              Waitlist
             </Link>
           )}
 
@@ -183,7 +148,7 @@ export function Navbar() {
               onClick={() => setMenuOpen(false)}
               className="flex items-center justify-center gap-1.5 rounded-xl bg-pot-green px-4 py-3 text-sm font-bold text-pot-dark shadow-[0_0_18px_rgba(20,241,149,0.35)] hover:brightness-110 transition mb-2"
             >
-              🚀 Join the Waitlist
+              Join the waitlist
             </Link>
           )}
 
@@ -191,22 +156,16 @@ export function Navbar() {
             className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
               isActive('/') ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
             }`}>Home</Link>
-          <Link href="/pots" onClick={() => setMenuOpen(false)}
-            className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
-              pathname.startsWith('/pots') || pathname.startsWith('/vaults') || pathname.startsWith('/leaderboard') || pathname.startsWith('/my-pots')
-                ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
-            }`}>⚡ Vaults</Link>
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}
               className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
                 isActive(link.href) ? 'text-white bg-pot-card border border-pot-border' : 'text-gray-400 hover:text-white hover:bg-pot-card/50'
               }`}>{navLabel(link)}</Link>
           ))}
-          <div className="pt-2 border-t border-pot-border/50">
-            <Link href="/for-agents" onClick={() => setMenuOpen(false)}
-              className="block px-4 py-2 text-sm text-pot-muted hover:text-pot-green transition">
-              🤖 For AI Agents
-            </Link>
+          <div className="pt-2 border-t border-pot-border/50 grid grid-cols-2 gap-x-2">
+            {[['/faq', 'FAQ'], ['/mainnet', 'Mainnet'], ['/worldsfair', 'For the judges'], ['/vaults', 'Vaults (in development)']].map(([href, label]) => (
+              <Link key={href} href={href} onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-sm text-pot-muted hover:text-pot-green transition">{label}</Link>
+            ))}
           </div>
         </div>
       )}
