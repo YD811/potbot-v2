@@ -11,6 +11,7 @@ import {
   buildCreatePot,
   buildDeposit,
   buildExit,
+  buildSetIndexMetadata,
   fetchAllPots,
   fetchConfig,
   fetchPot,
@@ -168,14 +169,17 @@ export function usePotIndexActions() {
       if (!program || !pubkey) throw new Error('Connect a wallet first')
       const { indexMint, instructions } = await buildCreatePot(program, pubkey, new PublicKey(POT_INDEX_SETTINGS.usdcMint), args)
       // create + legs + finalize: keep legs ≤ 3 in one tx, otherwise split finalize off.
+      const metaUri = `${window.location.origin}/api/pot-index/meta/${indexMint.publicKey.toBase58()}`
+      const metadata = await buildSetIndexMetadata(program, pubkey, indexMint.publicKey, metaUri)
       const sigs: string[] = []
       if (args.legs.length <= 3) {
         sigs.push(await sendLegacy(instructions, [indexMint]))
+        sigs.push(await sendLegacy([metadata]))
       } else {
         const [create, ...rest] = instructions
         const finalize = rest.pop()!
         sigs.push(await sendLegacy([create, ...rest.slice(0, 2)], [indexMint]))
-        sigs.push(await sendLegacy([...rest.slice(2), finalize]))
+        sigs.push(await sendLegacy([...rest.slice(2), finalize, metadata]))
       }
       await invalidate()
       return { indexMint: indexMint.publicKey, sigs }

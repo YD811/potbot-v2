@@ -171,3 +171,65 @@ pub fn handle_set_pot_params(ctx: Context<CreatorOnly>, u: PotUpdate) -> Result<
     }
     Ok(())
 }
+
+// ---------------------------------------------------------------------------
+// Token metadata for the index mint (name / symbol / logo in wallets and explorers).
+// The Pot PDA is the mint authority, so the CPI into Metaplex Token Metadata is signed here.
+// Creator-only, once; the Pot PDA stays update authority so metadata can be refreshed later.
+// ---------------------------------------------------------------------------
+use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3, Metadata};
+
+#[derive(Accounts)]
+pub struct SetIndexMetadata<'info> {
+    #[account(mut)]
+    pub creator: Signer<'info>,
+    #[account(
+        seeds = [POT_SEED, pot.index_mint.as_ref()],
+        bump = pot.bump,
+        has_one = creator @ PotError::Unauthorized,
+        has_one = index_mint,
+    )]
+    pub pot: Account<'info, Pot>,
+    pub index_mint: Account<'info, Mint>,
+    /// CHECK: PDA derived and validated by the Token Metadata program in the CPI.
+    #[account(mut)]
+    pub metadata: UncheckedAccount<'info>,
+    pub token_metadata_program: Program<'info, Metadata>,
+    pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
+}
+
+pub fn handle_set_index_metadata(ctx: Context<SetIndexMetadata>, uri: String) -> Result<()> {
+    require!(uri.len() <= 200, PotError::NameTooLong);
+    let pot = &ctx.accounts.pot;
+    let seeds = pot.seeds();
+    let signer: &[&[&[u8]]] = &[&seeds];
+    create_metadata_accounts_v3(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_metadata_program.key(),
+            CreateMetadataAccountsV3 {
+                metadata: ctx.accounts.metadata.to_account_info(),
+                mint: ctx.accounts.index_mint.to_account_info(),
+                mint_authority: pot.to_account_info(),
+                payer: ctx.accounts.creator.to_account_info(),
+                update_authority: pot.to_account_info(),
+                system_program: ctx.accounts.system_program.to_account_info(),
+                rent: ctx.accounts.rent.to_account_info(),
+            },
+            signer,
+        ),
+        anchor_spl::metadata::mpl_token_metadata::types::DataV2 {
+            name: pot.name.clone(),
+            symbol: pot.symbol.clone(),
+            uri,
+            seller_fee_basis_points: 0,
+            creators: None,
+            collection: None,
+            uses: None,
+        },
+        true,
+        true,
+        None,
+    )?;
+    Ok(())
+}

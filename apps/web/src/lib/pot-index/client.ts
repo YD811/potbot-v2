@@ -6,6 +6,7 @@
  */
 import { AnchorProvider, BN, EventParser, Program, type Idl, type Wallet } from '@coral-xyz/anchor'
 import {
+  SYSVAR_RENT_PUBKEY,
   Connection,
   Keypair,
   PublicKey,
@@ -252,6 +253,30 @@ export async function buildCreatePot(
   )
   const finalize = await program.methods.finalizePot().accounts({ creator, pot }).instruction()
   return { indexMint, instructions: [create, ...legs, finalize] }
+}
+
+export const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
+export function metadataPda(mint: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('metadata'), TOKEN_METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+    TOKEN_METADATA_PROGRAM_ID,
+  )[0]
+}
+
+/** Creator-only: attach Metaplex metadata (name/symbol from the Pot, `uri` → JSON with the logo). */
+export async function buildSetIndexMetadata(program: Program, creator: PublicKey, indexMint: PublicKey, uri: string) {
+  return program.methods
+    .setIndexMetadata(uri)
+    .accounts({
+      creator,
+      pot: potPda(indexMint),
+      indexMint,
+      metadata: metadataPda(indexMint),
+      tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .instruction()
 }
 
 export interface DepositArgs {

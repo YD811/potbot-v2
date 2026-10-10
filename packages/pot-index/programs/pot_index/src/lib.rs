@@ -59,6 +59,11 @@ pub mod pot_index {
         instructions::pot::handle_set_pot_params(ctx, update)
     }
 
+    /// Creator attaches Metaplex token metadata (name/symbol from the Pot, logo via `uri`) to the index mint.
+    pub fn set_index_metadata(ctx: Context<SetIndexMetadata>, uri: String) -> Result<()> {
+        instructions::pot::handle_set_index_metadata(ctx, uri)
+    }
+
     // ---- users
     pub fn deposit<'info>(
         ctx: Context<'info, Deposit<'info>>,

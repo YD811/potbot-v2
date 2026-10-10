@@ -1,0 +1,6 @@
+{
+  "name": "Test SOL (PotBot devnet)",
+  "symbol": "tSOL",
+  "description": "Devnet test asset for PotBot POTfolio. No value.",
+  "image": "https://potbot-v2-git-feat-pot-index-y-dao.vercel.app/token-meta/potbot-512.png"
+}

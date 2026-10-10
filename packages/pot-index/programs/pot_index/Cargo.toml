@@ -21,7 +21,7 @@ custom-panic = []
 
 [dependencies]
 anchor-lang = { version = "1.2.1", features = ["init-if-needed"] }
-anchor-spl = "1.2.1"
+anchor-spl = { version = "1.2.1", features = ["metadata"] }
 pyth-solana-receiver-sdk = "2.0.0"
 
 [dev-dependencies]
