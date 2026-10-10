@@ -12,8 +12,8 @@ POTfolio is a basket of Solana assets issued as one liquid SPL token. Built duri
 | [security.md](security.md) | You want the review findings, what was fixed, what is accepted, and the mainnet list. |
 | [operations.md](operations.md) | You run the devnet deployment: scripts, env vars, upgrade procedure. |
 | [faq.md](faq.md) | You have a question a holder or creator would ask. |
+| [landscape.md](landscape.md) | You want to see where POTfolio sits next to Symmetry, Cesto, DiversiFi, GLAM and Ondo. |
 
 Program id (devnet): `DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr`. Source: [`packages/pot-index`](../../packages/pot-index). Web: [`apps/web/src/app/portfolios`](../../apps/web/src/app/portfolios), [`apps/web/src/lib/pot-index`](../../apps/web/src/lib/pot-index).
 
 Vaults (PotBot v2, group treasuries with votes) are documented under [`../architecture`](../architecture). POTfolio and Vault share the protocol and the brand; they are different products.
-- [landscape.md](landscape.md): where POTfolio sits next to Symmetry, Cesto, DiversiFi, GLAM and Ondo
