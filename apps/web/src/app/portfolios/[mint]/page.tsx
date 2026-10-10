@@ -32,7 +32,24 @@ export default function PotPage() {
   const params = useParams<{ mint: string }>()
   const search = useSearchParams()
   const mint = params.mint
-  const referrer = safePubkey(search.get('ref'))
+  // Referral: first touch wins and is remembered per POTfolio for 30 days, so the referrer is still
+  // paid when the holder comes back later without the link.
+  const [referrer, setReferrer] = useState<PublicKey | null>(null)
+  useEffect(() => {
+    const key = `potbot-ref-${mint}`
+    const fromUrl = safePubkey(search.get('ref'))
+    try {
+      const stored = JSON.parse(localStorage.getItem(key) ?? 'null') as { ref: string; at: number } | null
+      const fresh = stored && Date.now() - stored.at < 30 * 24 * 3600 * 1000 ? safePubkey(stored.ref) : null
+      if (fresh) setReferrer(fresh)
+      else if (fromUrl) {
+        localStorage.setItem(key, JSON.stringify({ ref: fromUrl.toBase58(), at: Date.now() }))
+        setReferrer(fromUrl)
+      }
+    } catch {
+      setReferrer(fromUrl)
+    }
+  }, [mint, search])
   const pot = usePot(mint)
   const stats = usePotStats(pot.data)
   const publishTimes = useAssetPublishTimes()
@@ -81,13 +98,13 @@ export default function PotPage() {
 
   const refLink = typeof window !== 'undefined' && pubkey ? `${window.location.origin}/portfolios/${mint}?ref=${pubkey.toBase58()}` : ''
 
-  const run = async (fn: () => Promise<string | string[]>, okText: string) => {
+  const run = async (fn: () => Promise<string | string[]>, okText: string | ((r: string | string[]) => string)) => {
     setBusy(true)
     setMsg(null)
     try {
       const r = await fn()
       const sig = Array.isArray(r) ? r[r.length - 1] : r
-      setMsg({ ok: true, text: okText, sig })
+      setMsg({ ok: true, text: typeof okText === 'function' ? okText(r) : okText, sig })
     } catch (e) {
       setMsg({ ok: false, text: e instanceof Error ? e.message : String(e) })
     } finally {
@@ -206,12 +223,20 @@ export default function PotPage() {
                   type="button"
                   className="btn-primary w-full"
                   disabled={!connected || busy || amountNum < MIN_DEPOSIT_USDC || p.paused || stalePrices}
-                  onClick={() => run(() => deposit(p, amountNum, referrer && !referrer.equals(pubkey!) ? referrer : null), `Deposited ${amountNum} USDC`)}
+                  onClick={() =>
+                    run(
+                      () => deposit(p, amountNum, referrer && !referrer.equals(pubkey!) ? referrer : null),
+                      (r) => {
+                        const n = (r as unknown as { allocated?: number }).allocated ?? 0
+                        return n > 0 ? `Deposited ${amountNum} USDC and bought ${n} of ${p.legs.length} assets` : `Deposited ${amountNum} USDC (keepers allocate it next)`
+                      },
+                    )
+                  }
                 >
                   {stalePrices ? 'Market closed: mint opens with live prices' : busy ? 'Confirm in wallet…' : `Deposit & mint $${p.symbol}`}
                 </button>
                 )}
-                <p className="text-xs text-white/70">One wallet signature covers 3–5 transactions: post Pyth prices → deposit & mint at NAV → refund the price-account rent. Min {MIN_DEPOSIT_USDC} USDC.</p>
+                <p className="text-xs text-white/70">One wallet prompt: prices are posted, your tokens are minted at the current value, and the basket is bought in the same go. Min {MIN_DEPOSIT_USDC} USDC.</p>
               </div>
             ) : (
               <div className="space-y-3">

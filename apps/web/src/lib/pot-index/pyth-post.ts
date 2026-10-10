@@ -67,3 +67,36 @@ export async function fetchHermesPrices(feedIds: string[]): Promise<Record<strin
   }
   return out
 }
+
+/**
+ * A "price session": post the updates once, use the posted accounts across several of our own
+ * transactions, then reclaim the rent. `postTxs` go first, `closeTxs` last; the caller builds
+ * whatever goes in between with `priceUpdates` (one account per feed id, in order).
+ */
+export async function buildPythSession(
+  connection: Connection,
+  wallet: Wallet,
+  feedIds: string[],
+  opts: { computeUnitPriceMicroLamports?: number } = {},
+): Promise<{ postTxs: PricedTx[]; closeTxs: PricedTx[]; priceUpdates: PublicKey[] }> {
+  const hermes = new HermesClient(HERMES_URL, HERMES_OPTS)
+  const latest = await hermes.getLatestPriceUpdates(feedIds, { encoding: 'base64' })
+  const receiver = new PythSolanaReceiver({ connection, wallet })
+  const { postInstructions, priceFeedIdToPriceUpdateAccount, closeInstructions } =
+    await receiver.buildPostPriceUpdateInstructions(latest.binary.data as string[])
+  const fee = { computeUnitPriceMicroLamports: opts.computeUnitPriceMicroLamports ?? 50_000 }
+  const postB = receiver.newTransactionBuilder({ closeUpdateAccounts: false })
+  postB.addInstructions(postInstructions)
+  const closeB = receiver.newTransactionBuilder({ closeUpdateAccounts: false })
+  closeB.addInstructions(closeInstructions)
+  const priceUpdates = feedIds.map((id) => {
+    const k = priceFeedIdToPriceUpdateAccount[id]
+    if (!k) throw new Error(`no price update account for ${id}`)
+    return k
+  })
+  return {
+    postTxs: (await postB.buildVersionedTransactions(fee)) as PricedTx[],
+    closeTxs: (await closeB.buildVersionedTransactions(fee)) as PricedTx[],
+    priceUpdates,
+  }
+}
