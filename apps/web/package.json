@@ -7,13 +7,19 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "pot-index:init": "NODE_OPTIONS=--require=./scripts/_no-jito.cjs tsx scripts/pot-index-devnet-init.ts",
+    "pot-index:keeper": "NODE_OPTIONS=--require=./scripts/_no-jito.cjs tsx scripts/pot-index-devnet-keeper.ts",
+    "pot-index:flow": "NODE_OPTIONS=--require=./scripts/_no-jito.cjs tsx scripts/pot-index-devnet-flow.ts",
+    "pot-index:metadata": "NODE_OPTIONS=--require=./scripts/_no-jito.cjs tsx scripts/pot-index-devnet-metadata.ts"
   },
   "dependencies": {
     "@bonfida/spl-name-service": "^3.0.21",
     "@coral-xyz/anchor": "^0.30.1",
     "@potbot/sdk": "*",
     "@privy-io/react-auth": "^3.23.1",
+    "@pythnetwork/hermes-client": "^3.1.0",
+    "@pythnetwork/pyth-solana-receiver": "^0.16.0",
     "@solana-program/memo": "^0.11.0",
     "@solana-program/system": "^0.12.0",
     "@solana-program/token": "^0.13.0",

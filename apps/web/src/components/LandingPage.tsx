@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { HowAPotWorks } from '@/components/pot-index/HowAPotWorks'
+import { GardenMode } from '@/components/pot-index/GardenMode'
 import { useState } from 'react'
 import { usePots } from '@/hooks/usePots'
 import { useSolPrice } from '@/lib/prices'
@@ -459,7 +461,7 @@ function AskClaudeChat() {
 }
 
 function CountUp({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
-  if (value === 0) return <span className="text-pot-muted">—</span>
+  if (value === 0) return <span className="text-white/70">—</span>
   return <>{prefix}{value >= 1000 ? (value / 1000).toFixed(1) + 'K' : value.toLocaleString()}{suffix}</>
 }
 
@@ -478,10 +480,6 @@ export default function LandingPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const potRows = (pots ?? []) as any[]
-  const totalTvlSol = potRows.reduce((s, p) => s + p.balance, 0)
-  const totalTvlUsd = solPrice ? totalTvlSol * solPrice : 0
-  const totalMembers = potRows.reduce((s, p) => s + p.memberCount, 0)
-  const totalTrades = potRows.reduce((s, p) => s + p.tradeCount, 0)
   const topVaults = [...potRows].sort((a, b) => b.balance - a.balance).slice(0, 3)
 
   return (
@@ -507,62 +505,59 @@ export default function LandingPage() {
           <div className="text-7xl mb-6 mt-2 animate-float" aria-hidden="true">🪴</div>
 
           <h1
-            className="whitespace-nowrap font-black text-white leading-[1.05] tracking-tight mb-6"
-            style={{ fontSize: 'clamp(1.5rem, 5.5vw, 4rem)' }}
+            className="font-black text-white leading-[1.05] tracking-tight mb-6"
+            style={{ fontSize: 'clamp(1.75rem, 5.5vw, 4rem)' }}
           >
-            A vault for{' '}
-            <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">
-              anything
-            </span>{' '}
-            on{' '}
-            <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">
-              Solana
-            </span>
-            .
+            Pot<span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">Bot</span>
+            <br />
+            Any basket of Solana assets. One liquid token.
           </h1>
 
           <p className="text-lg sm:text-2xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
             {isLight ? (
               <>
-                A shared money pot for any group online.
+                Invest and stay liquid.
                 <br />
-                Everyone votes. An AI helps. The money stays safe.
+                No rugs, no exit liquidity.
               </>
             ) : (
               <>
-                Programmable treasuries for internet communities.
+                Invest and stay liquid.
                 <br />
-                Owned by the group, run by an AI agent.
+                No rugs, no exit liquidity.
               </>
             )}
           </p>
 
           <div className="flex flex-wrap gap-4 justify-center">
             <Link
-              href="/vaults"
+              href="/portfolios/new"
               className="btn-primary text-base px-6 py-3 glow-green flex items-center gap-2"
             >
-              Explore Vaults
+              Create a POTfolio
             </Link>
             <Link
-              href="/learn"
+              href="/portfolios"
               className="btn-secondary text-base px-6 py-3 flex items-center gap-2"
             >
-              New? Learn more
+              Explore POTfolios
             </Link>
           </div>
+
         </div>
       </section>
 
-      {/* ── Top vaults — directly under the hero CTA as social proof.
-           No top padding so buttons + vaults read as one block. ── */}
-      {topVaults.length > 0 && (
+      {/* ── How a Pot works — the four moves, right under the hero ── */}
+      <HowAPotWorks />
+
+      {/* ── Legacy top vaults (pot_vault mock) — hidden on the Portfolios landing ── */}
+      {false && topVaults.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 pb-12">
           <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
             <div>
               <div className="inline-flex items-center gap-3 mb-4">
                 <span className="h-px w-6 bg-gradient-to-r from-transparent to-pot-green/60" />
-                <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-green">
+                <span className="text-xs font-bold uppercase tracking-[0.4em] text-pot-green">
                   Live on devnet
                 </span>
               </div>
@@ -600,50 +595,24 @@ export default function LandingPage() {
                     <span className="text-3xl group-hover:animate-float">{pot.emoji}</span>
                     <div className="min-w-0">
                       <div className="font-bold text-white truncate">{pot.name}</div>
-                      <div className="text-xs text-pot-muted">{pot.memberCount} members</div>
+                      <div className="text-xs text-white/70">{pot.memberCount} members</div>
                     </div>
                   </div>
                   <div className="text-2xl font-black text-pot-green">{pot.balance.toFixed(2)} SOL</div>
                   {balanceUsd > 0 && (
-                    <div className="text-xs text-pot-muted mt-0.5">≈ ${balanceUsd >= 1000 ? (balanceUsd / 1000).toFixed(1) + 'K' : balanceUsd.toFixed(0)}</div>
+                    <div className="text-xs text-white/70 mt-0.5">≈ ${balanceUsd >= 1000 ? (balanceUsd / 1000).toFixed(1) + 'K' : balanceUsd.toFixed(0)}</div>
                   )}
                   <div className="flex gap-2 mt-4">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-pot-green/10 border border-pot-green/20 text-pot-green">
+                    <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-pot-green/10 border border-pot-green/20 text-pot-green">
                       {pot.isPublic ? 'Public' : 'Private'}
                     </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-pot-card border border-pot-border text-pot-muted">
+                    <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-pot-card border border-pot-border text-white/70">
                       L{pot.governanceLevel} Gov
                     </span>
                   </div>
                 </Link>
               )
             })}
-          </div>
-        </section>
-      )}
-
-      {/* ── Live protocol stats — proof block right next to Top vaults,
-           only shown when data is real ── */}
-      {totalTvlSol > 0 && (
-        <section className="px-4 pb-8 text-center">
-          <div className="inline-flex flex-wrap items-center gap-0 bg-pot-card border border-pot-border rounded-2xl overflow-hidden shadow-xl">
-            {[
-              {
-                label: 'Total Value Locked',
-                value: totalTvlUsd > 0
-                  ? `$${totalTvlUsd >= 1000 ? (totalTvlUsd / 1000).toFixed(1) + 'K' : totalTvlUsd.toFixed(0)}`
-                  : `${totalTvlSol.toFixed(1)} SOL`,
-                color: 'text-pot-green',
-              },
-              { label: 'Active Vaults', value: String(pots?.length ?? 0), color: 'text-white' },
-              { label: 'Members', value: String(totalMembers), color: 'text-white' },
-              { label: 'Total Trades', value: String(totalTrades), color: 'text-pot-accent' },
-            ].map((s, i, arr) => (
-              <div key={s.label} className={`px-6 py-4 text-center ${i < arr.length - 1 ? 'border-r border-pot-border' : ''}`}>
-                <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
-                <div className="text-xs text-pot-muted mt-0.5">{s.label}</div>
-              </div>
-            ))}
           </div>
         </section>
       )}
@@ -663,7 +632,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-3 mb-10">
             <span className="h-px w-8 bg-gradient-to-r from-transparent to-pot-green/60" />
-            <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-green">
+            <span className="text-xs font-bold uppercase tracking-[0.4em] text-pot-green">
               Our mission
             </span>
             <span className="h-px w-8 bg-gradient-to-l from-transparent to-pot-green/60" />
@@ -679,484 +648,72 @@ export default function LandingPage() {
             </p>
           ) : (
             <p className="text-3xl sm:text-5xl md:text-6xl font-bold text-white leading-[1.15] tracking-tight">
-              Unite <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">people</span> and{' '}
-              <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">capital</span>{' '}
-              across every direction Solana offers,
+              Bring <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">people</span> and{' '}
+              <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">capital</span> together.
               <br className="hidden sm:block" />
-              as <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">vault infrastructure</span> for tokenized funds,
-              <br className="hidden sm:block" />
-              built natively for <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">AI agents</span>.
+              <span className="bg-gradient-to-r from-pot-accent to-pot-accent/80 bg-clip-text text-transparent">Simple, honest, safe.</span>
             </p>
           )}
         </div>
       </section>
 
-      {/* ── POT / BOT definitions — right after the mission, so the terms
-           are introduced before "How it works" uses them. ── */}
+      {/* ── Garden mode: one plant grows with deposits, six-stage ladder below ── */}
+      <GardenMode />
+
+      {/* ── POT + BOT: the two halves of the name ── */}
       <section className="relative py-20 sm:py-24 px-4 overflow-hidden">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-3">
               <span className="h-px w-6 bg-gradient-to-r from-transparent to-pot-green/60" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-green">
-                Pot+Bot
-              </span>
+              <span className="text-xs font-bold uppercase tracking-[0.4em] text-pot-green">Pot + Bot</span>
               <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-green/60" />
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
-            <div
-              className="group relative flex flex-col min-h-[300px] rounded-3xl p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
-              style={{
-                background: 'linear-gradient(135deg, rgba(20,241,149,0.06), rgba(20,241,149,0.01))',
-                border: '1px solid rgba(20,241,149,0.25)',
-              }}
-            >
-              <div
-                aria-hidden
-                className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                style={{ boxShadow: '0 0 50px rgba(20,241,149,0.12), inset 0 0 0 1px rgba(20,241,149,0.4)' }}
-              />
-              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
-                <span className="text-2xl font-black text-pot-green">POT</span>
-                <span className="text-sm font-semibold text-white">
-                  Programmable On-chain Treasury
-                </span>
-              </div>
-              <div className="text-[11px] text-pot-muted uppercase tracking-wider mb-2">
-                the container
-              </div>
-              <p className="text-base text-white/80 leading-relaxed">
-                {isLight ? (
-                  'A shared pot your group owns together. Add money, hold a share, take it out any time. Nobody else can touch it.'
-                ) : (
-                  <>
-                    A program-controlled vault.
-                    <br />
-                    Drop in SOL, receive index-token.
-                    <br />
-                    Members hold shares, the vault holds the assets.
-                  </>
-                )}
-              </p>
-              <Link
-                href="/learn"
-                className="mt-auto pt-4 text-sm font-semibold text-pot-green hover:text-white transition flex items-center gap-1 self-start"
-              >
-                See details
-                <span aria-hidden>→</span>
-              </Link>
-            </div>
-            <div
-              className="group relative flex flex-col min-h-[300px] rounded-3xl p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
-              style={{
-                background: 'linear-gradient(135deg, rgba(153,69,255,0.06), rgba(153,69,255,0.01))',
-                border: '1px solid rgba(153,69,255,0.25)',
-              }}
-            >
-              <div
-                aria-hidden
-                className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                style={{ boxShadow: '0 0 50px rgba(153,69,255,0.12), inset 0 0 0 1px rgba(153,69,255,0.4)' }}
-              />
-              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1">
-                <span className="text-2xl font-black text-pot-accent">BOT</span>
-                <span className="text-sm font-semibold text-white">
-                  Blockchain Orchestration Tool
-                </span>
-              </div>
-              <div className="text-[11px] text-pot-muted uppercase tracking-wider mb-2">
-                the AI agent
-              </div>
-              <p className="text-base text-white/80 leading-relaxed">
-                {isLight
-                  ? 'An AI helper that suggests trades and runs them once the group says yes. Or set rules and let it vote for you.'
-                  : 'Suggests trades, posts proposals, executes once the vote passes. Delegate it to vote on your behalf based on rules you set, or keep it advisory.'}
-              </p>
-              <Link
-                href="/for-agents"
-                className="mt-auto pt-4 text-sm font-semibold text-pot-accent hover:text-white transition flex items-center gap-1 self-start"
-              >
-                See details
-                <span aria-hidden>→</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS — actual 4-step pot lifecycle. ── */}
-      <section className="relative py-20 sm:py-24 px-4 overflow-hidden">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-3 mb-6">
-              <span className="h-px w-6 bg-gradient-to-r from-transparent to-pot-muted/60" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-muted">
-                How it works
-              </span>
-              <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-muted/60" />
-            </div>
-            <h2 className="text-3xl sm:text-5xl font-bold text-white leading-[1.15] tracking-tight">
-              {isLight ? 'From sign-in to trade, ' : 'From deposit to execution, '}
-              <span className="bg-gradient-to-r from-pot-green to-pot-accent bg-clip-text text-transparent">
-                {isLight ? 'all in one place.' : 'fully onchain.'}
-              </span>
-            </h2>
-          </div>
-
-          {/* Desktop dotted connector */}
-          <div className="relative">
-            <div
-              aria-hidden
-              className="hidden md:block absolute top-12 left-[12.5%] right-[12.5%] h-px pointer-events-none"
-              style={{
-                background:
-                  'repeating-linear-gradient(to right, rgba(255,255,255,0.18) 0 6px, transparent 6px 12px)',
-              }}
-            />
-
-            <div className="relative grid grid-cols-1 md:grid-cols-4 gap-5">
-              {(isLight
-                ? [
-                    {
-                      n: '01',
-                      title: 'Add money',
-                      desc: 'Put money into the shared pot with your group. Everyone gets a slice that matches what they put in.',
-                      color: '#14F195',
-                      border: 'border-pot-green/30',
-                    },
-                    {
-                      n: '02',
-                      title: 'Suggest a trade',
-                      desc: 'Anyone (or the AI helper) writes up a trade idea — what to buy, what to sell, how much. Nothing happens yet.',
-                      color: '#9945FF',
-                      border: 'border-pot-accent/30',
-                    },
-                    {
-                      n: '03',
-                      title: 'Decide together',
-                      desc: 'The group votes yes or no. The bigger your slice, the bigger your vote.',
-                      color: '#FCD34D',
-                      border: 'border-amber-300/30',
-                    },
-                    {
-                      n: '04',
-                      title: 'Trade happens',
-                      desc: 'If the group says yes, the trade runs automatically. No one person can move the money on their own.',
-                      color: '#FFFFFF',
-                      border: 'border-pot-border',
-                    },
-                  ]
-                : [
-                    {
-                      n: '01',
-                      title: 'Deposit SOL',
-                      desc: 'Pool capital with your group in a single program-controlled vault. Each member gets shares proportional to their deposit.',
-                      color: '#14F195',
-                      border: 'border-pot-green/30',
-                    },
-                    {
-                      n: '02',
-                      title: 'Propose a swap',
-                      desc: 'Anyone (or the AI agent) drafts a Jupiter swap with input mint, output mint and amount. Nothing moves yet.',
-                      color: '#9945FF',
-                      border: 'border-pot-accent/30',
-                    },
-                    {
-                      n: '03',
-                      title: 'Vote',
-                      desc: 'Members vote yes/no with their shares. Quorum and approval thresholds are governance settings the pot picks at creation.',
-                      color: '#FCD34D',
-                      border: 'border-amber-300/30',
-                    },
-                    {
-                      n: '04',
-                      title: 'Execute onchain',
-                      desc: 'Once a proposal passes, anyone can trigger the onchain execution. The vault PDA signs the Jupiter v6 CPI itself — no human keypair holds the funds.',
-                      color: '#FFFFFF',
-                      border: 'border-pot-border',
-                    },
-                  ]
-              ).map((step) => (
-                <div
-                  key={step.n}
-                  className={`relative rounded-2xl border ${step.border} bg-pot-card/50 backdrop-blur-sm p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-pot-card/70`}
-                >
-                  {/* Step bullet on the connector */}
-                  <div
-                    className="hidden md:flex absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full items-center justify-center text-[10px] font-black"
-                    style={{
-                      background: 'var(--c-bg, #0D1117)',
-                      border: `1.5px solid ${step.color}`,
-                      color: step.color,
-                      boxShadow: `0 0 16px ${step.color}40`,
-                    }}
-                  >
-                    ●
-                  </div>
-
-                  <div
-                    className="text-xs font-black tracking-widest mb-3"
-                    style={{ color: step.color }}
-                  >
-                    {step.n}
-                  </div>
-                  <h3 className="text-white font-bold text-lg mb-2 leading-tight">{step.title}</h3>
-                  <p className="text-white/75 text-sm leading-relaxed">{step.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Live vault mockup — "See your vault at a glance" ── */}
-      <LiveVaultMockup />
-
-      {/* ── Tamagotchi gamification — labelled section so the "Watch your vault grow"
-           strip reads as a feature, not a random plant rail ── */}
-      <section className="relative py-20 sm:py-24 px-4 overflow-hidden">
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(20,241,149,0.05), transparent 60%)' }}
-        />
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-3 mb-6">
-              <span className="h-px w-6 bg-gradient-to-r from-transparent to-pot-green/60" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-green">
-                Garden mode
-              </span>
-              <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-green/60" />
-            </div>
-            <h2 className="text-3xl sm:text-5xl font-bold text-white leading-[1.15] tracking-tight mb-4">
-              Watch your vault{' '}
-              <span className="bg-gradient-to-r from-pot-green to-pot-accent bg-clip-text text-transparent">
-                grow.
-              </span>
-            </h2>
-            <p className="text-white/70 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-              Every deposit, vote, and member feeds the plant.
-              Six stages. The streak you don&apos;t want to break.
-            </p>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4 max-w-4xl mx-auto">
-            {[
-              { emoji: '🌱', label: 'Seedling', tier: 'L1' },
-              { emoji: '🌿', label: 'Sprout', tier: 'L2' },
-              { emoji: '🍀', label: 'Bud', tier: 'L3' },
-              { emoji: '🌾', label: 'Bloom', tier: 'L4' },
-              { emoji: '🌺', label: 'Full Bloom', tier: 'L5' },
-              { emoji: '🌳', label: 'Mature Tree', tier: 'L6' },
-            ].map((stage, i) => (
-              <div key={stage.label} className="flex flex-col items-center gap-2">
-                <div
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl transition-transform hover:scale-110"
-                  style={{
-                    background: `rgba(20,241,149,${0.04 + i * 0.015})`,
-                    border: `1px solid rgba(20,241,149,${0.15 + i * 0.04})`,
-                    boxShadow: i >= 4 ? '0 0 24px rgba(20,241,149,0.25)' : 'none',
-                  }}
-                >
-                  {stage.emoji}
-                </div>
-                <div className="text-xs font-bold text-white">{stage.label}</div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-pot-muted">{stage.tier}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Two pot modes — placed after Garden mode, right before the
-           MCP/agents section. ── */}
-      <section className="relative py-20 sm:py-24 px-4 overflow-hidden">
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(ellipse 40% 40% at 25% 50%, rgba(20,241,149,0.05), transparent 60%), radial-gradient(ellipse 40% 40% at 75% 50%, rgba(153,69,255,0.05), transparent 60%)',
-          }}
-        />
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14 max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-3 mb-6">
-              <span className="h-px w-6 bg-gradient-to-r from-transparent to-pot-green/60" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-green">
-                Two pot modes
-              </span>
-              <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-green/60" />
-            </div>
-            <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold text-white leading-[1.15] tracking-tight">
-              {isLight ? 'Open or private. ' : 'Social-Fi or Privacy. '}
-              <span className="bg-gradient-to-r from-pot-green to-pot-accent bg-clip-text text-transparent">
-                {isLight ? 'Your call.' : 'Pick per pot.'}
-              </span>
-            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* PUBLIC / Social-Fi */}
-            <div
-              className="group relative rounded-3xl p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
-              style={{
-                background: 'linear-gradient(135deg, rgba(20,241,149,0.06), rgba(20,241,149,0.01))',
-                border: '1px solid rgba(20,241,149,0.25)',
-                boxShadow: '0 0 0 transparent',
-              }}
-            >
+            {[
+              {
+                word: 'POT',
+                full: 'Programmable On-chain Treasury',
+                role: 'holds the assets',
+                color: '#14F195',
+                rgb: '20,241,149',
+                text: 'A wallet owned by code, not by a person. It holds the basket, mints the token and lets every holder leave with their share. Nobody can withdraw.',
+                href: '/learn',
+                cta: 'How it works',
+              },
+              {
+                word: 'BOT',
+                full: 'Blockchain Orchestration Tool',
+                role: 'does the work',
+                color: '#9945FF',
+                rgb: '153,69,255',
+                text: 'Keeps the basket balanced, lets AI agents read and act on every Pot through MCP, and soon tells your group what grew, what fell and why.',
+                href: '/for-agents',
+                cta: 'For AI agents',
+              },
+            ].map((c) => (
               <div
-                aria-hidden
-                className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                style={{ boxShadow: '0 0 60px rgba(20,241,149,0.12), inset 0 0 0 1px rgba(20,241,149,0.4)' }}
-              />
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                  style={{ background: 'rgba(20,241,149,.12)', boxShadow: '0 0 24px rgba(20,241,149,.2)' }}
-                >
-                  🌐
-                </div>
-                <span
-                  className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full border"
-                  style={{ background: 'rgba(20,241,149,.12)', borderColor: 'rgba(20,241,149,.3)', color: '#14F195' }}
-                >
-                  {isLight ? 'Open' : 'Social-Fi'}
-                </span>
-              </div>
-              <div className="text-xl font-extrabold mb-1" style={{ color: '#14F195' }}>
-                {isLight ? 'Open POT' : 'Public POT'}
-              </div>
-              <p className="text-base text-white/80 leading-relaxed mb-4">
-                {isLight
-                  ? 'Anyone can join. Real people, real money in. You can see who is in and how the pot is doing.'
-                  : 'Open to anyone. Real members, real deposits, visible on the leaderboard. The proof that people actually use it is the thing that pulls more in.'}
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {['🏆 Leaderboard', '⚔️ Duels', '🔗 Referrals', '📊 Strategy Share', '👥 Community'].map((f) => (
-                  <span
-                    key={f}
-                    className="text-xs font-semibold px-2 py-1 rounded-full border"
-                    style={{ background: 'rgba(20,241,149,.08)', borderColor: 'rgba(20,241,149,.2)', color: '#14F195' }}
-                  >
-                    {f}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* PRIVATE / Privacy layer */}
-            <div
-              className="group relative rounded-3xl p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
-              style={{
-                background: 'linear-gradient(135deg, rgba(153,69,255,0.06), rgba(153,69,255,0.01))',
-                border: '1px solid rgba(153,69,255,0.25)',
-                boxShadow: '0 0 0 transparent',
-              }}
-            >
-              <div
-                aria-hidden
-                className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                style={{ boxShadow: '0 0 60px rgba(153,69,255,0.12), inset 0 0 0 1px rgba(153,69,255,0.4)' }}
-              />
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                  style={{ background: 'rgba(153,69,255,.12)', boxShadow: '0 0 24px rgba(153,69,255,.25)' }}
-                >
-                  🥷
-                </div>
-                <span
-                  className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full border"
-                  style={{ background: 'rgba(153,69,255,.12)', borderColor: 'rgba(153,69,255,.3)', color: '#9945FF' }}
-                >
-                  {isLight ? 'Private' : 'Privacy layer'}
-                </span>
-              </div>
-              <div className="text-xl font-extrabold mb-1" style={{ color: '#9945FF' }}>
-                {isLight ? 'Private POT' : 'Private POT (STAMPPOT)'}
-              </div>
-              <p className="text-base text-white/80 leading-relaxed mb-4">
-                {isLight
-                  ? 'For groups who want to keep their strategy to themselves. Members and amounts stay hidden, only the group can see inside.'
-                  : "For groups that want their strategy to stay theirs. Deposits and members are hidden behind ZK proofs, so the alpha doesn't leak the moment you open the pot."}
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {['🔐 ZK proofs', '🚫 No wallet doxxing', '🤝 Invite-only', '🛡 PrivacyCash', '📜 Auditor view'].map((f) => (
-                  <span
-                    key={f}
-                    className="text-xs font-semibold px-2 py-1 rounded-full border"
-                    style={{ background: 'rgba(153,69,255,.08)', borderColor: 'rgba(153,69,255,.2)', color: '#9945FF' }}
-                  >
-                    {f}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── For AI Agents & Developers (MCP) — promoted up the page so the
-           agent-native angle lands right after the Tamagotchi strip and
-           before any of the deeper "why now" prose. ── */}
-      <section className="relative py-20 sm:py-24 px-4 overflow-hidden">
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(153,69,255,0.06), transparent 60%)' }}
-        />
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-3 mb-6">
-              <span className="h-px w-6 bg-gradient-to-r from-transparent to-pot-accent/60" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-accent">
-                MCP-native protocol
-              </span>
-              <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-accent/60" />
-            </div>
-            <h2 className="text-3xl sm:text-5xl font-bold text-white leading-[1.15] tracking-tight mb-4">
-              {isLight ? 'Built for ' : 'Built for the '}
-              <span className="bg-gradient-to-r from-pot-accent to-pot-green bg-clip-text text-transparent">
-                {isLight ? 'AI helpers.' : 'agent economy.'}
-              </span>
-            </h2>
-            <p className="text-white/75 max-w-xl mx-auto text-base sm:text-lg leading-relaxed">
-              {isLight
-                ? 'AI tools like ChatGPT and Claude can read your pot, suggest trades, and run them once the group says yes. Just install once.'
-                : 'Any LLM can read, propose against, and execute on a POT through the MCP server. Claude, GPT, or your own agent — 60+ onchain actions, one install away.'}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-12">
-            {FOR_BUILDERS.map((item) => (
-              <a
-                key={item.title}
-                href={item.href}
-                target={item.href.startsWith('http') ? '_blank' : undefined}
-                rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
-                className="group relative bg-pot-card/40 backdrop-blur-sm border border-pot-border rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:border-pot-accent/40 hover:bg-pot-card/70"
+                key={c.word}
+                className="relative flex flex-col items-center rounded-3xl p-8 text-center transition-all duration-300 hover:-translate-y-0.5"
+                style={{
+                  background: `linear-gradient(135deg, rgba(${c.rgb},0.08), rgba(${c.rgb},0.01))`,
+                  border: `1px solid rgba(${c.rgb},0.3)`,
+                }}
               >
-                <div
-                  aria-hidden
-                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                  style={{ boxShadow: '0 0 40px rgba(153,69,255,0.10)' }}
-                />
-                <div className="text-2xl mb-3">{item.icon}</div>
-                <div className="font-bold text-white text-lg mb-1 group-hover:text-pot-accent transition">{item.title}</div>
-                <div className="text-sm text-white/75 leading-relaxed">{item.desc}</div>
-                <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-pot-accent opacity-0 group-hover:opacity-100 transition">
-                  Open <span aria-hidden>→</span>
+                <div className="text-5xl font-black tracking-tight" style={{ color: c.color, textShadow: `0 0 32px rgba(${c.rgb},0.45)` }}>
+                  {c.word}
                 </div>
-              </a>
+                <div className="mt-3 text-lg font-bold text-white">{c.full}</div>
+                <div className="mt-1 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: c.color }}>{c.role}</div>
+                <p className="mt-4 max-w-sm text-base leading-relaxed text-white/80">{c.text}</p>
+                <Link href={c.href} className="mt-6 text-sm font-semibold hover:text-white transition" style={{ color: c.color }}>
+                  {c.cta} →
+                </Link>
+              </div>
             ))}
           </div>
-
-          {/* Ask Claude — expanded into a real chat UI */}
-          <AskClaudeChat />
         </div>
       </section>
 
@@ -1175,26 +732,26 @@ export default function LandingPage() {
           <h2 className="text-4xl sm:text-6xl font-bold text-white leading-[1.1] tracking-tight mb-6">
             Ready to{' '}
             <span className="bg-gradient-to-r from-pot-green to-pot-accent bg-clip-text text-transparent">
-              tokenize your community?
+              hold your portfolio as one token?
             </span>
           </h2>
           <p className="text-white/80 text-base sm:text-lg max-w-xl mx-auto mb-10 leading-relaxed">
             {isLight
-              ? 'Set up your shared pot in under a minute. No coding. Free to try in test mode.'
-              : 'Spin up your treasury in under a minute. No coding required. Open source and free to use on Solana devnet.'}
+              ? 'Create a portfolio, hold the token. No coding. Free to try on devnet.'
+              : 'Create a portfolio, hold the token. No coding. Open source and free to try on Solana devnet.'}
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <Link
               href="/signup"
               className="px-7 py-4 rounded-xl bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold transition text-base shadow-[0_0_50px_rgba(20,241,149,0.3)]"
             >
-              🚀 Get Early Access
+              Get early access
             </Link>
             <Link
-              href="/create"
-              className="px-7 py-4 rounded-xl bg-pot-card/80 backdrop-blur border border-pot-accent/40 hover:border-pot-accent text-white font-bold transition text-base"
+              href="/portfolios/new"
+              className="px-7 py-4 rounded-xl bg-pot-card/80 border border-pot-accent/40 hover:border-pot-accent text-white font-bold transition text-base"
             >
-              🪴 {t('Create your vault')}
+              Create a POTfolio
             </Link>
             <a
               href="https://github.com/YD811/potbot-v2"
@@ -1202,7 +759,7 @@ export default function LandingPage() {
               rel="noreferrer"
               className="px-7 py-4 rounded-xl bg-pot-card/80 backdrop-blur border border-pot-border hover:border-white/30 text-white font-bold transition text-base"
             >
-              ⭐ Star on GitHub
+              Star on GitHub
             </a>
           </div>
         </div>

@@ -12,6 +12,7 @@ import { calculatePlantStats, plantInputFromMockPot } from '@/lib/tamagotchi/pla
 import { seasonScoreFromMockPot, fmtSeasonScore } from '@/lib/season-score'
 import { useHumanText } from '@/hooks/useHumanText'
 import { SolPrice } from '@/components/SolPrice'
+import { VaultsPreviewBanner } from '@/components/VaultsPreviewBanner'
 
 type SortKey = 'tvl' | 'pnl' | 'apy' | 'trades' | 'members' | 'season'
 
@@ -86,7 +87,7 @@ export default function LeaderboardPage() {
   const [snsNames, setSnsNames] = useState<Record<string, string>>({})
 
   const publicPots = useMemo(
-    () => (pots as any[]).filter((p: any) => p.isPublic),
+    () => (pots as any[]).filter((p: any) => p.isPublic && p.trustLevel === 'institutional' && p.verifiedBy === 'PotBot'),
     [pots]
   )
   const pubkeys = useMemo(() => publicPots.map((p: any) => p.pubkey as string), [publicPots])
@@ -162,6 +163,7 @@ export default function LeaderboardPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      <VaultsPreviewBanner />
 
       {/* ── Season Prize Pool ────────────────────────────────────────────── */}
       <SeasonPrizeCard />

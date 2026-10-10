@@ -26,6 +26,9 @@ const config = {
       // Farcaster mini-app integration. We don't ship that surface, so
       // stub it out to keep webpack from failing the build.
       '@farcaster/mini-app-solana': false,
+      // @pythnetwork/solana-utils pulls jito-ts for optional Jito bundles; its nested
+      // web3.js breaks the webpack build and we never send bundles from the browser.
+      'jito-ts': false,
     }
     config.resolve.fallback = {
       ...config.resolve.fallback,

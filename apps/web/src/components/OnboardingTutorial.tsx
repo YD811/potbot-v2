@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-const STORAGE_KEY = 'potbot-onboarding-v1'
+const STORAGE_KEY = 'potbot-onboarding-v2'
 
 interface Step {
   id: number
@@ -18,29 +18,29 @@ const STEPS: Step[] = [
     id: 0,
     emoji: '🪴',
     title: 'Welcome to PotBot',
-    body: 'PotBot is a group trading vault on Solana. Pool capital with your crew, vote on swaps together, and grow a living plant that tracks your group\'s health.',
-    highlight: 'Not a fund manager. Not a custodial platform. A coordination tool.',
+    body: 'A Pot is a basket of Solana assets with fixed target weights, issued as one liquid index token. Hold the basket as a single token, send it, trade it.',
+    highlight: 'Non-custodial. No one, not even the creator, can withdraw the assets.',
   },
   {
     id: 1,
-    emoji: '💰',
-    title: 'Create or Join a POT',
-    body: 'Create a new vault in seconds and invite members via referral link. Or deposit into any public POT to join the community. Your share is always proportional to your deposit.',
-    highlight: 'Your funds are non-custodial — controlled by Solana smart contract.',
+    emoji: '🧺',
+    title: 'Create a Pot',
+    body: 'Pick 2–5 assets, set the weights, publish. Takes a minute. Share your link: every deposit through it pays you a slice of the entry fee.',
+    highlight: 'Entry fee 0.30%: 40% creator, 40% referrer, 20% protocol.',
   },
   {
     id: 2,
-    emoji: '🗳️',
-    title: 'Propose → Vote → Execute',
-    body: 'Any member can propose a token swap. Members vote YES or NO. When quorum is reached, any member can execute the trade on Jupiter. No single person has control.',
-    highlight: 'Every trade requires group consensus.',
+    emoji: '💵',
+    title: 'Deposit USDC, mint the token',
+    body: 'Deposit USDC and the Pot mints index tokens at the current NAV, priced by Pyth in the same transaction. Anyone can rebalance the Pot toward its targets within on-chain limits.',
+    highlight: 'Devnet build: test USDC from the faucet, real Pyth prices.',
   },
   {
     id: 3,
-    emoji: '🌱',
-    title: 'Grow Your Plant',
-    body: 'Your pot\'s plant grows with community activity — deposits, votes, proposals, and new members all boost plant health. Top 3 plants on the Season 1 leaderboard win prize pool rewards.',
-    highlight: 'Plant health is activity-based. NFT mint + duels ship in later phases.',
+    emoji: '🔓',
+    title: 'Exit in kind, any time',
+    body: 'Burn your tokens and receive your share of every asset in the basket. No oracle needed, never pausable. 0.5% stays in the Pot for remaining holders.',
+    highlight: 'Built for Colosseum Crypto World\'s Fair. See /worldsfair.',
   },
 ]
 

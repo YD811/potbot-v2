@@ -1,0 +1,7 @@
+{
+  "name": "Wall St on Solana",
+  "symbol": "WSTS",
+  "description": "PotBot POTfolio index token: TSLAx 40% / QQQx 40% / SOL 20%. Mint at NAV, exit in kind. Devnet.",
+  "image": "https://potbot-v2-git-feat-pot-index-y-dao.vercel.app/token-meta/potbot-512.png",
+  "external_url": "https://potbot.fun/portfolios"
+}

@@ -8,6 +8,7 @@ import { useVaultAnalyticsBatch } from '@/hooks/useAnalytics'
 import { useHumanText } from '@/hooks/useHumanText'
 import { TrustBadge } from '@/components/TrustBadge'
 import { VerifiedModal } from '@/components/VerifiedModal'
+import { VaultsPreviewBanner } from '@/components/VaultsPreviewBanner'
 
 // Target APY ranges per yield strategy NUMBER (matches the Strategy Autopilot
 // presets on /create). Used only for display on the featured cards.
@@ -141,9 +142,10 @@ export default function VaultsPage() {
 
   return (
     <div className="min-h-screen">
+      <VaultsPreviewBanner />
       {/* Page header — small breadcrumb + create CTA */}
       <div className="max-w-[1400px] mx-auto px-3 sm:px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2 text-xs text-pot-muted">
+        <div className="flex items-center gap-2 text-xs text-white/70">
           <Link href="/" className="hover:text-white transition">Home</Link>
           <span>/</span>
           <span className="text-white font-semibold">{t('Vaults')}</span>
@@ -163,7 +165,7 @@ export default function VaultsPage() {
             <span className="text-lg">⭐</span>
             <h2 className="text-xl sm:text-2xl font-bold text-white">Featured by PotBot</h2>
           </div>
-          <p className="text-xs text-pot-muted mb-4">
+          <p className="text-xs text-white/70 mb-4">
             Institutional-grade vaults managed by PotBot AI.
           </p>
 
@@ -211,12 +213,13 @@ export default function VaultsPage() {
         </section>
       )}
 
-      {/* ════════════════════ COMMUNITY POTS ════════════════════ */}
+      {/* Community vaults hidden until the vault UI is reworked: only PotBot-featured vaults show as examples. */}
+      {false && (
       <section className="max-w-[1400px] mx-auto px-3 sm:px-6 pt-2 pb-12">
         {/* Divider */}
         <div className="flex items-center gap-3 mb-5">
           <div className="h-px flex-1 bg-pot-border" />
-          <span className="text-xs font-bold uppercase tracking-wider text-pot-muted">Community Pots</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-white/70">Community Pots</span>
           <div className="h-px flex-1 bg-pot-border" />
         </div>
 
@@ -233,7 +236,7 @@ export default function VaultsPage() {
                   className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-semibold transition ${
                     active
                       ? 'bg-pot-green text-pot-dark'
-                      : 'border border-pot-border text-pot-muted hover:text-white hover:border-pot-muted'
+                      : 'border border-pot-border text-white/70 hover:text-white hover:border-pot-muted'
                   }`}
                 >
                   {f.label}
@@ -248,7 +251,7 @@ export default function VaultsPage() {
               className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-semibold transition ${
                 profitableOnly
                   ? 'bg-pot-green text-pot-dark'
-                  : 'border border-pot-border text-pot-muted hover:text-white hover:border-pot-muted'
+                  : 'border border-pot-border text-white/70 hover:text-white hover:border-pot-muted'
               }`}
             >
               📈 Profitable
@@ -259,7 +262,7 @@ export default function VaultsPage() {
         <div className="flex items-end justify-between gap-3 mb-4 flex-wrap">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-white">{t('Public vaults')}</h2>
-            <p className="text-xs text-pot-muted mt-0.5">
+            <p className="text-xs text-white/70 mt-0.5">
               {potsLoading ? 'Loading…' : `${otherVaults.length} active pot${otherVaults.length === 1 ? '' : 's'}`}
             </p>
           </div>
@@ -269,7 +272,7 @@ export default function VaultsPage() {
               placeholder="Search…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="px-3 py-1.5 rounded-lg bg-pot-card border border-pot-border text-sm text-white placeholder:text-pot-muted focus:outline-none focus:border-pot-accent w-40"
+              className="px-3 py-1.5 rounded-lg bg-pot-card border border-pot-border text-sm text-white placeholder:text-white/70 focus:outline-none focus:border-pot-accent w-40"
             />
             <select
               value={sortBy}
@@ -294,7 +297,7 @@ export default function VaultsPage() {
             <div className="bg-pot-card border border-pot-border rounded-2xl p-8 text-center">
               <div className="text-3xl mb-2">🔍</div>
               <p className="text-white font-semibold mb-1">No pots match these filters</p>
-              <p className="text-pot-muted text-sm mb-4">Try widening your search — or clear everything and browse all pots.</p>
+              <p className="text-white/70 text-sm mb-4">Try widening your search — or clear everything and browse all pots.</p>
               <button
                 type="button"
                 onClick={clearFilters}
@@ -307,7 +310,7 @@ export default function VaultsPage() {
             <div className="bg-pot-card border border-pot-border rounded-2xl p-8 text-center">
               <div className="text-3xl mb-2">🌱</div>
               <p className="text-white font-semibold mb-1">No public pots yet</p>
-              <p className="text-pot-muted text-sm mb-4">Be first — create one in 30 seconds.</p>
+              <p className="text-white/70 text-sm mb-4">Be first — create one in 30 seconds.</p>
               <Link
                 href="/create"
                 className="inline-block px-4 py-2 rounded-xl bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold text-sm transition"
@@ -337,7 +340,7 @@ export default function VaultsPage() {
                           <TrustBadge level={p.trustLevel} verifiedBy={p.verifiedBy} showLabel={false} onClick={openVerified} />
                         )}
                       </div>
-                      <p className="text-[10px] text-pot-muted font-mono truncate">
+                      <p className="text-[10px] text-white/70 font-mono truncate">
                         {p.pubkey.slice(0, 6)}…{p.pubkey.slice(-6)}
                       </p>
                     </div>
@@ -357,7 +360,7 @@ export default function VaultsPage() {
             })}
           </div>
         )}
-      </section>
+      </section>)}
 
       {/* ════════════════════ AI agents banner — slim ════════════════════ */}
       <section className="max-w-[1400px] mx-auto px-3 sm:px-6 pb-12">
@@ -370,7 +373,7 @@ export default function VaultsPage() {
               <span className="text-2xl shrink-0">🤖</span>
               <div className="min-w-0">
                 <p className="text-white font-semibold text-sm sm:text-base">PotBot is MCP-native</p>
-                <p className="text-xs text-pot-muted">Any AI agent — Claude, GPT — can list vaults, propose swaps, vote.</p>
+                <p className="text-xs text-white/70">Any AI agent — Claude, GPT — can list vaults, propose swaps, vote.</p>
               </div>
             </div>
             <span className="text-pot-accent text-xs font-bold shrink-0">For AI Agents →</span>
@@ -386,7 +389,7 @@ export default function VaultsPage() {
 function Mini({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-pot-dark/60 rounded-lg px-2 py-1.5">
-      <div className="text-[9px] uppercase tracking-wider text-pot-muted">{label}</div>
+      <div className="text-[9px] uppercase tracking-wider text-white/70">{label}</div>
       <div className="text-xs font-bold text-white tabular-nums">{value}</div>
     </div>
   )
