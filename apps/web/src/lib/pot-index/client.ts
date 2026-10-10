@@ -418,13 +418,14 @@ export async function fetchPotActivity(connection: Connection, pot: PotView, lim
       any = true
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const d = ev.data as any
-      if (ev.name === 'Deposited') {
+      const name = ev.name.toLowerCase() // anchor 0.30 returns camelCase ('deposited', 'rebalanceOpened')
+      if (name === 'deposited') {
         out.push({ kind: 'deposit', sig, time, user: d.user.toBase58(), amountUsdc: Number(d.amountUsdc) / 1e6, feeUsdc: Number(d.feeUsdc) / 1e6, shares: Number(d.shares) / 1e6 })
-      } else if (ev.name === 'Exited') {
+      } else if (name === 'exited') {
         out.push({ kind: 'exit', sig, time, user: d.user.toBase58(), shares: Number(d.shares) / 1e6, usdcOut: Number(d.usdcOut) / 1e6 })
-      } else if (ev.name === 'RebalanceOpened') {
+      } else if (name === 'rebalanceopened') {
         opened = { keeper: d.keeper.toBase58(), legOut: d.legOut, legIn: d.legIn, amountOut: Number(d.amountOut) }
-      } else if (ev.name === 'RebalanceClosed' && opened) {
+      } else if (name === 'rebalanceclosed' && opened) {
         out.push({ kind: 'rebalance', sig, time, ...opened, received: Number(d.received) })
         opened = null
       }
