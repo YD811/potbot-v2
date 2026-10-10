@@ -268,12 +268,16 @@ html[data-theme="light"] .text-white { color: var(--pot-ink) !important; }
 /* Opacity-modified white (text-white/60–90) reads as ~white in light mode
    because the underlying color stays rgb(255 255 255 / N). Remap to the
    dark-ink palette with a matching alpha so body copy stays legible. */
+html[data-theme="light"] .text-white\/95 { color: rgba(13, 17, 23, 0.97) !important; }
 html[data-theme="light"] .text-white\/90 { color: rgba(13, 17, 23, 0.95) !important; }
+html[data-theme="light"] .text-white\/85 { color: rgba(13, 17, 23, 0.9) !important; }
 html[data-theme="light"] .text-white\/80 { color: rgba(13, 17, 23, 0.88) !important; }
 html[data-theme="light"] .text-white\/75 { color: rgba(13, 17, 23, 0.85) !important; }
 html[data-theme="light"] .text-white\/70 { color: rgba(13, 17, 23, 0.80) !important; }
 html[data-theme="light"] .text-white\/60 { color: rgba(13, 17, 23, 0.72) !important; }
 html[data-theme="light"] .text-white\/50 { color: rgba(13, 17, 23, 0.64) !important; }
+html[data-theme="light"] .text-white\/40 { color: rgba(13, 17, 23, 0.56) !important; }
+html[data-theme="light"] .text-white\/30 { color: rgba(13, 17, 23, 0.45) !important; }
 html[data-theme="light"] .text-pot-muted { color: var(--pot-ink-muted) !important; }
 html[data-theme="light"] .text-pot-muted\/70 { color: rgba(31, 41, 55, 0.95) !important; }
 html[data-theme="light"] .text-pot-muted\/50 { color: rgba(31, 41, 55, 0.8) !important; }
