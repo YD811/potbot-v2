@@ -375,9 +375,9 @@ export default function PotPage() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="card p-4">
+    <div className="card p-3 sm:p-4">
       <p className="text-xs text-white/70">{label}</p>
-      <p className="mt-1 truncate text-lg font-bold text-white">{value}</p>
+      <p className="mt-1 break-words text-sm font-bold text-white sm:text-lg">{value}</p>
     </div>
   )
 }
