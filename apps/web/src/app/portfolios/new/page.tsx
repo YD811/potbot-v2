@@ -256,7 +256,7 @@ export default function NewPotPage() {
           <div className="potfolio-create-wallet"><ConnectButton /></div>
         ) : (
           <button type="button" className="potfolio-create-action btn-primary w-full" disabled={!valid || busy} onClick={submit}>
-            {busy ? (grind > 0 ? `Minting a Pot… address (${Math.round(grind / 1000)}k tries)` : 'Creating…') : 'Create POTfolio'}
+            {busy ? (grind > 0 ? 'Picking a Pot… address' : 'Creating…') : 'Create POTfolio'}
           </button>
         )}
       </div>
