@@ -80,7 +80,8 @@ export function usePotActivity(pot: PotView | null | undefined) {
     queryKey: ['pot-index', 'activity', pot?.address.toBase58()],
     queryFn: () => fetchPotActivity(connection, pot!),
     enabled: !!pot,
-    refetchInterval: 20_000,
+    refetchInterval: 45_000,
+    staleTime: 30_000,
   })
 }
 
@@ -198,12 +199,24 @@ export function usePotIndexActions() {
           priceUpdates,
         }),
       )
+      // One wallet prompt for the whole bundle (post prices → deposit → refund rent): fresh blockhash
+      // on every tx right before signing, sign all at once, then send strictly in order.
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
+      const vtxs = txs.map(({ tx }) => {
+        const v = tx as VersionedTransaction
+        v.message.recentBlockhash = blockhash
+        return v
+      })
+      txs.forEach(({ signers }, i) => {
+        if (signers.length) vtxs[i].sign(signers as never[])
+      })
+      const signed = wallet.signAllTransactions
+        ? ((await wallet.signAllTransactions(vtxs)) as VersionedTransaction[])
+        : await Promise.all(vtxs.map(async (v) => (await wallet.signTransaction(v)) as VersionedTransaction))
       const sigs: string[] = []
-      for (const { tx, signers } of txs) {
-        if (signers.length) tx.sign(signers as never[])
-        const signed = (await wallet.signTransaction(tx as VersionedTransaction)) as VersionedTransaction
-        const sig = await connection.sendRawTransaction(signed.serialize())
-        await connection.confirmTransaction(sig, 'confirmed')
+      for (const v of signed) {
+        const sig = await connection.sendRawTransaction(v.serialize(), { maxRetries: 5 })
+        await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed')
         sigs.push(sig)
       }
       await invalidate()

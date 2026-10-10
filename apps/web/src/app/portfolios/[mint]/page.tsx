@@ -188,7 +188,7 @@ export default function PotPage() {
                   {busy ? 'Confirm in wallet…' : `Deposit & mint $${p.symbol}`}
                 </button>
                 )}
-                <p className="text-[11px] text-pot-muted">Posts fresh Pyth prices in the same transaction, then mints at NAV. Min {MIN_DEPOSIT_USDC} USDC.</p>
+                <p className="text-[11px] text-pot-muted">One wallet signature covers 3–5 transactions: post Pyth prices → deposit & mint at NAV → refund the price-account rent. Min {MIN_DEPOSIT_USDC} USDC.</p>
               </div>
             ) : (
               <div className="space-y-3">

@@ -12,7 +12,8 @@ export function ProtocolStats({ pots }: { pots: PotView[] }) {
   const q = useQuery({
     queryKey: ['pot-index', 'protocol-stats', pots.map((p) => p.address.toBase58()).join(','), !!prices.data],
     enabled: pots.length > 0,
-    refetchInterval: 30_000,
+    refetchInterval: 90_000,
+    staleTime: 60_000,
     queryFn: async () => {
       const px = prices.data ?? {}
       let tvl = 0
@@ -20,7 +21,7 @@ export function ProtocolStats({ pots }: { pots: PotView[] }) {
       let depositVolume = 0
       const wallets = new Set<string>()
       for (const p of pots) {
-        const [bal, events] = await Promise.all([fetchPotBalances(connection, p), fetchPotActivity(connection, p, 100)])
+        const [bal, events] = await Promise.all([fetchPotBalances(connection, p), fetchPotActivity(connection, p, 40)])
         tvl += navUsd(p, bal, px)
         for (const e of events) {
           if (e.kind === 'deposit') {

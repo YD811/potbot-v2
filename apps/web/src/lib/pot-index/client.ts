@@ -398,13 +398,18 @@ export type PotEvent =
   | { kind: 'created'; sig: string; time: number | null }
 
 /** Last `limit` events for a Pot, newest first. Reads the Pot account's transaction history. */
-export async function fetchPotActivity(connection: Connection, pot: PotView, limit = 30): Promise<PotEvent[]> {
+export async function fetchPotActivity(connection: Connection, pot: PotView, limit = 20): Promise<PotEvent[]> {
   const sigs = await connection.getSignaturesForAddress(pot.address, { limit }, 'confirmed')
   if (sigs.length === 0) return []
-  const txs = await connection.getParsedTransactions(
-    sigs.map((s) => s.signature),
-    { maxSupportedTransactionVersion: 0, commitment: 'confirmed' },
-  )
+  // Public RPCs rate-limit big batches: fetch in chunks of 10.
+  const txs: Awaited<ReturnType<Connection['getParsedTransactions']>> = []
+  for (let i = 0; i < sigs.length; i += 10) {
+    const chunk = await connection.getParsedTransactions(
+      sigs.slice(i, i + 10).map((s) => s.signature),
+      { maxSupportedTransactionVersion: 0, commitment: 'confirmed' },
+    )
+    txs.push(...chunk)
+  }
   const program = readonlyProgram(connection)
   const parser = new EventParser(program.programId, program.coder)
   const out: PotEvent[] = []
