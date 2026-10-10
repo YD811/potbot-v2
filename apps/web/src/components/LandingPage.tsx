@@ -508,7 +508,7 @@ export default function LandingPage() {
             className="font-black text-white leading-[1.05] tracking-tight mb-6"
             style={{ fontSize: 'clamp(1.75rem, 5.5vw, 4rem)' }}
           >
-            PotBot <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">POTfolio</span>
+            Pot<span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">Bot</span>
             <br />
             Any basket of Solana assets. One liquid token.
           </h1>
@@ -702,13 +702,10 @@ export default function LandingPage() {
                   border: `1px solid rgba(${c.rgb},0.3)`,
                 }}
               >
-                <div
-                  className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl text-2xl font-black"
-                  style={{ background: `rgba(${c.rgb},0.14)`, color: c.color, boxShadow: `0 0 28px rgba(${c.rgb},0.25)` }}
-                >
+                <div className="text-5xl font-black tracking-tight" style={{ color: c.color, textShadow: `0 0 32px rgba(${c.rgb},0.45)` }}>
                   {c.word}
                 </div>
-                <div className="text-lg font-bold text-white">{c.full}</div>
+                <div className="mt-3 text-lg font-bold text-white">{c.full}</div>
                 <div className="mt-1 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: c.color }}>{c.role}</div>
                 <p className="mt-4 max-w-sm text-base leading-relaxed text-white/80">{c.text}</p>
                 <Link href={c.href} className="mt-6 text-sm font-semibold hover:text-white transition" style={{ color: c.color }}>

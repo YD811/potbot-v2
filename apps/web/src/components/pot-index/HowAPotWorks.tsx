@@ -9,10 +9,10 @@ const PATH: Record<Audience, { title: string; steps: { title: string; body: stri
   holders: {
     title: 'You hold the token',
     steps: [
-      { title: 'Pick a POTfolio', body: 'A basket someone put together: crypto, Solana natives, stocks, memes. The assets and weights are public and fixed.' },
+      { title: 'Pick a POTfolio', body: 'A basket someone put together: tokens, stocks, RWA, memes.' },
       { title: 'Deposit USDC, get the token', body: 'One signature. You receive tokens worth exactly what you put in.' },
-      { title: 'Hold it, watch it grow', body: 'The token follows the basket. Keep it in your wallet, send it, trade it. No managing, no clicking.' },
-      { title: 'Leave any time', body: 'Redeem the token for your share of every asset inside. Or just sell it.' },
+      { title: 'Hold it, stay liquid', body: 'One token, many assets inside. It is never locked: keep it in your wallet, send it, use it. The value follows the basket.' },
+      { title: 'Leave any time', body: 'Redeem the token and choose: every asset of the basket, or plain USDC.' },
     ],
     benefits: [
       'No rug: the token price is backed by the assets inside, one to one.',
@@ -24,9 +24,9 @@ const PATH: Record<Audience, { title: string; steps: { title: string; body: stri
     title: 'You create the POTfolio',
     steps: [
       { title: 'Build the basket', body: 'Pick up to 5 assets and their weights. Name it, give it a ticker.' },
-      { title: 'Publish it', body: 'One transaction. Your POTfolio gets its own token, page and link.' },
-      { title: 'Share your expertise', body: 'People deposit into your basket. The protocol keeps it balanced, you keep nothing to manage.' },
-      { title: 'Earn on every deposit', body: '0.12% of every deposit goes to you, paid instantly on-chain. Another 0.12% to whoever brought the depositor.' },
+      { title: 'Publish it', body: 'One transaction. Your portfolio becomes a token with its own page and link.' },
+      { title: 'Share your expertise', body: 'People deposit into your basket. The protocol keeps it balanced and holds the assets, so there is nothing for you to run.' },
+      { title: 'Earn on every deposit', body: 'A share of every deposit is paid to you instantly, on-chain. Referrers who bring depositors earn too.' },
     ],
     benefits: [
       'Your track record is public and on-chain.',
