@@ -3,7 +3,7 @@
   "programId": "DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr",
   "usdcMint": "AYLYmXfkfveAAU3gZwjHqFXePi459yumVw4NYJhHVjeN",
   "treasury": "JHV4qhTEhEKMkugYXuPURzwunYBiCUVji9ZrRiA5rvG",
-  "flagship": "9NRBAd3RdoBiuArZvQMQiM7NiyYY9Sm5E5CiSrhz9yx",
+  "flagship": "FRweserJ2ttgk17MDdLqgM2aH5yyiz1t6XCVA1rbaeQC",
   "assets": {
     "SOL": {
       "symbol": "SOL",
@@ -19,12 +19,12 @@
       "decimals": 8,
       "feedId": "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
     },
-    "JUP": {
-      "symbol": "JUP",
-      "name": "Jupiter (test)",
-      "mint": "2iWo2JhqbGecWeP2euFzQXVbXpZaz5NzFncBGQK99N8i",
-      "decimals": 6,
-      "feedId": "0x0a0408d619e9380abad35060f9192039ed5042fa6f82301d0e48bb52be830996"
+    "ETH": {
+      "symbol": "ETH",
+      "name": "Ethereum (test)",
+      "mint": "Dhfs2yY92iJx1Rpw8XDKEzh4dpyKxxuJwxsC1xLB8dVy",
+      "decimals": 8,
+      "feedId": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
     }
   }
 }

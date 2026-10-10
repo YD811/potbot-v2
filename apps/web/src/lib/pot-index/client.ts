@@ -149,7 +149,10 @@ export async function fetchAllPots(connection: Connection): Promise<PotView[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const all = await (program.account as any).pot.all()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return all.map((x: any) => toPotView(x.publicKey, x.account)).filter((p: PotView) => p.finalized)
+  // Finalized Pots only. A paused Pot that never took a deposit is retired — keep it off the list.
+  return all
+    .map((x: any) => toPotView(x.publicKey, x.account))
+    .filter((p: PotView) => p.finalized && !(p.paused && p.totalDepositsUsd === 0))
 }
 
 export async function fetchConfig(connection: Connection) {

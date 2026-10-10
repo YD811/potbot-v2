@@ -482,6 +482,9 @@
         },
         {
           "name": "creator_usdc",
+          "docs": [
+            "`dup`: may legitimately equal `user_usdc` (creator depositing into their own Pot) or `protocol_usdc`."
+          ],
           "writable": true
         },
         {

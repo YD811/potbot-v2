@@ -4,7 +4,7 @@
  *   npx tsx scripts/pot-index-devnet-init.ts
  *
  * Needs: deployed program (anchor deploy), a funded keypair at $POT_INDEX_ADMIN_KEYPAIR
- * (default ~/.config/solana/id.json). Creates test mints (tUSDC, tSOL, tJUP, tBTC), initializes
+ * (default ~/.config/solana/id.json). Creates test mints (tUSDC, tSOL, tETH, tBTC), initializes
  * the config, registers assets with real Pyth feed ids, creates the flagship Pot, and writes
  * src/lib/pot-index/assets.devnet.json for the web app.
  */
@@ -15,7 +15,7 @@ import { AnchorProvider, Program, Wallet, type Idl } from '@coral-xyz/anchor'
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction, sendAndConfirmTransaction } from '@solana/web3.js'
 import { createMint, getOrCreateAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 import idl from '../src/lib/pot-index/idl.json'
-import { assetPda, buildCreatePot, configPda, feedIdToBytes } from '../src/lib/pot-index/client'
+import { assetPda, buildCreatePot, configPda, feedIdToBytes, potPda } from '../src/lib/pot-index/client'
 
 const RPC = process.env.POT_INDEX_RPC ?? 'https://api.devnet.solana.com'
 const KEYPAIR = process.env.POT_INDEX_ADMIN_KEYPAIR ?? path.join(os.homedir(), '.config/solana/id.json')
@@ -24,7 +24,8 @@ const OUT = path.join(__dirname, '../src/lib/pot-index/assets.devnet.json')
 const FEEDS = {
   SOL: '0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d',
   BTC: '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43',
-  JUP: '0x0a0408d619e9380abad35060f9192039ed5042fa6f82301d0e48bb52be830996',
+  ETH: '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace',
+  // JUP (0x0a0408…) is not entitled on the free Pyth key tier — kept out of the flagship.
 }
 
 async function main() {
@@ -49,7 +50,7 @@ async function main() {
   }
   const usdc = await mk('USDC', 6)
   const sol = await mk('SOL', 9)
-  const jup = await mk('JUP', 6)
+  const eth = await mk('ETH', 8)
   const btc = await mk('BTC', 8)
 
   // 2. Config.
@@ -68,7 +69,7 @@ async function main() {
   // 3. Assets.
   for (const [sym, mint] of [
     ['SOL', sol],
-    ['JUP', jup],
+    ['ETH', eth],
     ['BTC', btc],
   ] as const) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,7 +86,7 @@ async function main() {
   for (const [mint, amt] of [
     [usdc, 1_000_000n * 1_000_000n],
     [sol, 10_000n * 1_000_000_000n],
-    [jup, 1_000_000n * 1_000_000n],
+    [eth, 1_000n * 100_000_000n],
     [btc, 100n * 100_000_000n],
   ] as const) {
     const acc = await getOrCreateAssociatedTokenAccount(connection, admin, mint, admin.publicKey)
@@ -93,7 +94,29 @@ async function main() {
   }
 
   // 5. Flagship Pot.
+  // Retire the v1 flagship (JUP leg, not priceable on the free Pyth tier): disable the asset, pause the Pot.
+  if (existing?.assets?.JUP?.mint) {
+    const jupMint = new PublicKey(existing.assets.JUP.mint)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const a = await (program.account as any).assetConfig.fetchNullable(assetPda(jupMint))
+    if (a?.enabled) {
+      await program.methods.setAssetEnabled(false).accounts({ admin: admin.publicKey, config: configPda(), asset: assetPda(jupMint) }).rpc()
+      console.log('disabled asset JUP')
+    }
+    if (existing.flagship) {
+      const oldMint = new PublicKey(existing.flagship)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const oldPot = await (program.account as any).pot.fetchNullable(potPda(oldMint))
+      if (oldPot && !oldPot.paused) {
+        await program.methods.setPotParams({ paused: true, depositCapUsd: null }).accounts({ creator: admin.publicKey, pot: potPda(oldMint) }).rpc()
+        console.log('paused old flagship', existing.flagship)
+      }
+    }
+  }
+
+  // Flagship v2 (SOL/BTC/ETH). Re-create if the stored one still has the old JUP leg.
   let flagship = existing?.flagship as string | undefined
+  if (flagship && existing?.assets?.JUP) flagship = undefined
   if (!flagship) {
     const { indexMint, instructions } = await buildCreatePot(program, admin.publicKey, usdc, {
       name: 'Solana Blue Chips',
@@ -101,7 +124,7 @@ async function main() {
       legs: [
         { mint: sol, weightBps: 5000 },
         { mint: btc, weightBps: 3000 },
-        { mint: jup, weightBps: 2000 },
+        { mint: eth, weightBps: 2000 },
       ],
       depositCapUsd: 0,
       slippageBps: 100,
@@ -122,7 +145,7 @@ async function main() {
     assets: {
       SOL: { symbol: 'SOL', name: 'Solana (test)', mint: sol.toBase58(), decimals: 9, feedId: FEEDS.SOL },
       BTC: { symbol: 'BTC', name: 'Bitcoin (test)', mint: btc.toBase58(), decimals: 8, feedId: FEEDS.BTC },
-      JUP: { symbol: 'JUP', name: 'Jupiter (test)', mint: jup.toBase58(), decimals: 6, feedId: FEEDS.JUP },
+      ETH: { symbol: 'ETH', name: 'Ethereum (test)', mint: eth.toBase58(), decimals: 8, feedId: FEEDS.ETH },
     },
   }
   fs.writeFileSync(OUT, JSON.stringify(out, null, 2))

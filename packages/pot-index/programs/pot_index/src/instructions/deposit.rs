@@ -24,12 +24,13 @@ pub struct Deposit<'info> {
     pub user_usdc: Account<'info, TokenAccount>,
     #[account(mut, address = pot.cash_vault)]
     pub cash_vault: Account<'info, TokenAccount>,
-    #[account(mut, token::mint = usdc_mint, token::authority = pot.creator)]
+    /// `dup`: may legitimately equal `user_usdc` (creator depositing into their own Pot) or `protocol_usdc`.
+    #[account(mut, dup, token::mint = usdc_mint, token::authority = pot.creator)]
     pub creator_usdc: Account<'info, TokenAccount>,
-    #[account(mut, token::mint = usdc_mint, token::authority = config.treasury)]
+    #[account(mut, dup, token::mint = usdc_mint, token::authority = config.treasury)]
     pub protocol_usdc: Account<'info, TokenAccount>,
     /// Optional referrer USDC account. If absent, the referrer share goes to the creator.
-    #[account(mut, token::mint = usdc_mint)]
+    #[account(mut, dup, token::mint = usdc_mint)]
     pub referrer_usdc: Option<Account<'info, TokenAccount>>,
     pub token_program: Program<'info, Token>,
 }
