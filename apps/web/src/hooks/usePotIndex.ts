@@ -123,6 +123,44 @@ export function usePotStats(pot: PotView | null | undefined) {
   })
 }
 
+/** Per-Pot stats for the whole list in one query: TVL, price, performance since launch, holders. */
+export interface PotListStats {
+  navUsd: number
+  supply: number
+  indexPrice: number
+  perf: number // index price − 1 (every token starts at $1.00)
+  holders: number
+}
+export function useAllPotStats(pots: PotView[] | undefined) {
+  const { connection } = useConnection()
+  const prices = useAssetPrices()
+  const key = (pots ?? []).map((p) => p.address.toBase58()).join(',')
+  return useQuery({
+    queryKey: ['pot-index', 'list-stats', key, prices.dataUpdatedAt],
+    enabled: !!pots && pots.length > 0 && !!prices.data,
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const out: Record<string, PotListStats> = {}
+      for (const p of pots!) {
+        const bal = await fetchPotBalances(connection, p)
+        const nav = navUsd(p, bal, prices.data!)
+        const supply = bal.supply / 1e6
+        const indexPrice = supply > 0 ? nav / supply : 1
+        let holders = 0
+        try {
+          const largest = await connection.getTokenLargestAccounts(p.indexMint)
+          holders = largest.value.filter((a) => Number(a.amount) > 0).length
+        } catch {
+          holders = 0
+        }
+        out[p.address.toBase58()] = { navUsd: nav, supply, indexPrice, perf: indexPrice - 1, holders }
+      }
+      return out
+    },
+  })
+}
+
 export function useMyIndexBalance(pot: PotView | null | undefined) {
   const { connection, pubkey } = usePotIndexProgram()
   return useQuery({

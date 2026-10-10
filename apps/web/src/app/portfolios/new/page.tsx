@@ -74,7 +74,7 @@ export default function NewPotPage() {
       <h1 className="text-3xl font-black text-white sm:text-4xl">Create a POTfolio</h1>
       <p className="mt-2 text-pot-muted">
         Pick up to 5 assets, set target weights, publish. You get an index token that anyone can mint by depositing USDC.
-        Weights are locked at creation — depositors know exactly what they are buying.
+        Weights are locked at creation, so depositors know exactly what they are buying.
       </p>
 
       {config.data === null && (
@@ -144,7 +144,7 @@ export default function NewPotPage() {
             })}
           </div>
           <div className="mt-3 flex items-center justify-between gap-3">
-            <span className={`text-sm ${total === 100 ? 'text-pot-green' : 'text-yellow-300'}`}>Total {total}%{total !== 100 && ' — must be 100%'}</span>
+            <span className={`text-sm ${total === 100 ? 'text-pot-green' : 'text-yellow-300'}`}>Total {total}%{total !== 100 && ': must be 100%'}</span>
             <input
               className="input w-44 px-2 py-1.5 font-mono text-xs"
               placeholder="paste token CA"
@@ -153,7 +153,7 @@ export default function NewPotPage() {
               onKeyDown={(e) => {
                 if (e.key !== 'Enter') return
                 const a = POT_INDEX_ASSETS.find((x) => x.mint === ca)
-                if (!a) { setCaMsg('Not listed yet — assets need a Pyth feed. Request listing.'); return }
+                if (!a) { setCaMsg('Not listed yet: assets need a Pyth price feed. Request listing.'); return }
                 if (rows.some((r) => r.mint === a.mint)) { setCaMsg('Already in the basket.'); return }
                 if (rows.length >= 5) { setCaMsg('Max 5 assets.'); return }
                 setRows((rs) => [...rs, { mint: a.mint, weight: 0 }]); setCa(''); setCaMsg(null)
@@ -174,7 +174,7 @@ export default function NewPotPage() {
                     <optgroup key={c} label={label}>
                       {group.map((a) => (
                         <option key={a.mint} value={a.mint}>
-                          {a.symbol} — {a.name}
+                          {a.symbol} · {a.name}
                         </option>
                       ))}
                     </optgroup>

@@ -1,12 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { usePotStats } from '@/hooks/usePotIndex'
+import { usePotStats, type PotListStats } from '@/hooks/usePotIndex'
 import type { PotView } from '@/lib/pot-index/client'
 import { CompositionBar } from './CompositionBar'
 
-export function PotCard({ pot }: { pot: PotView; prices: Record<string, number> }) {
+export function PotCard({ pot, list }: { pot: PotView; prices: Record<string, number>; list?: PotListStats }) {
   const stats = usePotStats(pot)
+  const perf = list?.perf
+  const perfCls = perf === undefined ? 'text-pot-muted' : perf >= 0 ? 'text-pot-green' : 'text-red-400'
   const mint = pot.indexMint.toBase58()
   return (
     <Link href={`/portfolios/${mint}`} className="card block p-5 transition hover:border-pot-green/60">
@@ -16,10 +18,11 @@ export function PotCard({ pot }: { pot: PotView; prices: Record<string, number> 
           <p className="font-mono text-xs text-pot-green">${pot.symbol}</p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-pot-muted">NAV</p>
+          <p className="text-xs text-pot-muted">TVL</p>
           <p className="font-semibold text-white">
-            {stats.data ? `$${stats.data.navUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '—'}
+            {stats.data ? `$${stats.data.navUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}
           </p>
+          <p className={`text-xs ${perfCls}`}>{perf === undefined ? '' : `${perf >= 0 ? '+' : ''}${(perf * 100).toFixed(2)}% since launch`}</p>
         </div>
       </div>
       <div className="mt-4">
@@ -30,7 +33,7 @@ export function PotCard({ pot }: { pot: PotView; prices: Record<string, number> 
           Index price{' '}
           <span className="text-white">{stats.data ? `$${stats.data.indexPrice.toFixed(4)}` : '—'}</span>
         </span>
-        <span>{pot.paused ? 'Deposits paused' : 'Open'}</span>
+        <span>{list ? `${list.holders} holder${list.holders === 1 ? '' : 's'}` : ''}{pot.paused ? ' · paused' : ''}</span>
       </div>
     </Link>
   )

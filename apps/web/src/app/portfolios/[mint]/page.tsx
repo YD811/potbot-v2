@@ -106,7 +106,7 @@ export default function PotPage() {
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       {search.get('created') && (
         <div className="mb-6 rounded-xl border border-pot-green/40 bg-pot-green/10 px-4 py-3 text-sm text-white">
-          Your Pot is live. Share the link below — every deposit through it pays you the referral share.
+          Your POTfolio is live. Share the link below: every deposit through it pays you the referral share.
         </div>
       )}
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
@@ -119,7 +119,7 @@ export default function PotPage() {
                 ${p.symbol}
               </span>
               {p.paused && <span className="rounded-full bg-yellow-500/20 px-2 py-0.5 text-xs text-yellow-200">deposits paused</span>}
-              {stalePrices && !p.paused && <span className="rounded-full bg-sky-500/20 px-2 py-0.5 text-xs text-sky-200">market closed — deposits reopen with live prices, exits always open</span>}
+              {stalePrices && !p.paused && <span className="rounded-full bg-sky-500/20 px-2 py-0.5 text-xs text-sky-200">market closed: deposits reopen with live prices, exits always open</span>}
             </div>
             <p className="mt-1 text-sm text-pot-muted">
               by {p.creator.toBase58().slice(0, 4)}…{p.creator.toBase58().slice(-4)} · created{' '}
@@ -143,12 +143,12 @@ export default function PotPage() {
           </div>
 
           <div className="card p-5 text-sm text-pot-muted">
-            <h2 className="mb-2 font-semibold text-white">How this Pot works</h2>
+            <h2 className="mb-2 font-semibold text-white">How this POTfolio works</h2>
             <ul className="list-disc space-y-1 pl-5">
               <li>Deposit USDC → the Pot mints ${p.symbol} at the current NAV per token. Entry fee {ENTRY_FEE_BPS / 100}%.</li>
               <li>Burn ${p.symbol} → you receive your share of every asset inside, in kind. {EXIT_FEE_BPS / 100}% stays for remaining holders.</li>
               <li>The index token is a normal SPL token: hold it, send it, trade it.</li>
-              <li>Nobody — not the creator, not PotBot — can withdraw the assets. There is no such instruction.</li>
+              <li>Nobody, not the creator and not PotBot, can withdraw the assets. There is no such instruction.</li>
             </ul>
             <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
               <a className="text-pot-green hover:underline" href={explorerAddress(p.address.toBase58())} target="_blank" rel="noreferrer">Pot account ↗</a>
@@ -194,7 +194,7 @@ export default function PotPage() {
                   disabled={!connected || busy || amountNum < MIN_DEPOSIT_USDC || p.paused || stalePrices}
                   onClick={() => run(() => deposit(p, amountNum, referrer && !referrer.equals(pubkey!) ? referrer : null), `Deposited ${amountNum} USDC`)}
                 >
-                  {stalePrices ? 'Market closed — mint opens with live prices' : busy ? 'Confirm in wallet…' : `Deposit & mint $${p.symbol}`}
+                  {stalePrices ? 'Market closed: mint opens with live prices' : busy ? 'Confirm in wallet…' : `Deposit & mint $${p.symbol}`}
                 </button>
                 )}
                 <p className="text-[11px] text-pot-muted">One wallet signature covers 3–5 transactions: post Pyth prices → deposit & mint at NAV → refund the price-account rent. Min {MIN_DEPOSIT_USDC} USDC.</p>
@@ -229,7 +229,7 @@ export default function PotPage() {
                   {busy ? 'Confirm in wallet…' : 'Burn & receive assets'}
                 </button>
                 )}
-                <p className="text-[11px] text-pot-muted">Always available — no oracle, no pause. {EXIT_FEE_BPS / 100}% stays in the Pot.</p>
+                <p className="text-[11px] text-pot-muted">Always available, no oracle, no pause. {EXIT_FEE_BPS / 100}% stays in the Pot.</p>
               </div>
             )}
 

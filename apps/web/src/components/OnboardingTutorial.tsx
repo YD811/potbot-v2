@@ -19,7 +19,7 @@ const STEPS: Step[] = [
     emoji: '🪴',
     title: 'Welcome to PotBot',
     body: 'A Pot is a basket of Solana assets with fixed target weights, issued as one liquid index token. Hold the basket as a single token, send it, trade it.',
-    highlight: 'Non-custodial. No one — not even the creator — can withdraw the assets.',
+    highlight: 'Non-custodial. No one, not even the creator, can withdraw the assets.',
   },
   {
     id: 1,
@@ -40,7 +40,7 @@ const STEPS: Step[] = [
     emoji: '🔓',
     title: 'Exit in kind, any time',
     body: 'Burn your tokens and receive your share of every asset in the basket. No oracle needed, never pausable. 0.5% stays in the Pot for remaining holders.',
-    highlight: 'Built for Colosseum Crypto World\'s Fair — see /worldsfair.',
+    highlight: 'Built for Colosseum Crypto World\'s Fair. See /worldsfair.',
   },
 ]
 

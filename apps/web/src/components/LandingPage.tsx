@@ -525,7 +525,7 @@ export default function LandingPage() {
               </>
             ) : (
               <>
-                Crypto, Solana natives, tokenized stocks, memes — pick the assets and weights, get one index token.
+                Crypto, Solana natives, tokenized stocks, memes: pick the assets and weights, get one index token.
                 <br />
                 Hold it, send it, trade it. Burn it to take your share of every asset back. No one can withdraw.
               </>
@@ -548,8 +548,8 @@ export default function LandingPage() {
           </div>
 
           <p className="mt-8 text-sm text-pot-muted max-w-xl mx-auto">
-            BlackRock and Ondo just put model portfolios onchain as single tokens — for eligible investors only.
-            PotBot is the open version: anyone builds the portfolio, anyone holds the token.
+            Institutional-grade portfolios as a single token, now for degens, creators and communities.
+            Build one, share it, let your people hold it.
           </p>
         </div>
       </section>
