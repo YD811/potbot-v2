@@ -30,7 +30,7 @@ export default function NewPotPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    document.title = 'Create a Pot — PotBot'
+    document.title = 'Create a POTfolio — PotBot'
   }, [])
 
   const total = rows.reduce((s, r) => s + r.weight, 0)
@@ -71,9 +71,9 @@ export default function NewPotPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-      <h1 className="text-3xl font-black text-white sm:text-4xl">Create a Pot</h1>
+      <h1 className="text-3xl font-black text-white sm:text-4xl">Create a POTfolio</h1>
       <p className="mt-2 text-pot-muted">
-        Pick 2–5 assets, set target weights, publish. You get an index token that anyone can mint by depositing USDC.
+        Pick up to 5 assets, set target weights, publish. You get an index token that anyone can mint by depositing USDC.
         Weights are locked at creation — depositors know exactly what they are buying.
       </p>
 
@@ -206,7 +206,7 @@ export default function NewPotPage() {
           <div className="[&>button]:!w-full [&>button]:!justify-center"><ConnectButton /></div>
         ) : (
           <button type="button" className="btn-primary w-full" disabled={!valid || busy} onClick={submit}>
-            {busy ? 'Creating…' : 'Create Pot'}
+            {busy ? 'Creating…' : 'Create POTfolio'}
           </button>
         )}
       </div>

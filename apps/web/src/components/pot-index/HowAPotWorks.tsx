@@ -3,26 +3,26 @@ import Link from 'next/link'
 const STEPS = [
   {
     n: '01',
-    title: 'Create a Pot',
-    body: 'Pick 2–5 Solana assets and target weights. The program issues an empty index token. Weights are locked — depositors know exactly what they buy.',
-    tag: 'creator · 60 seconds',
+    title: 'Create a POTfolio',
+    body: 'Pick the assets — crypto, Solana natives, tokenized stocks, memes — and the target weights. The program issues the index token. Weights are locked, so depositors know exactly what they buy.',
+    tag: 'creator',
   },
   {
     n: '02',
     title: 'Deposit USDC, mint the token',
     body: 'USDC goes into the Pot; you receive index tokens at the current NAV, priced by Pyth in the same transaction. 0.30% entry fee is split between creator, referrer and protocol on-chain.',
-    tag: 'anyone · one transaction',
+    tag: 'anyone · one signature',
   },
   {
     n: '03',
-    title: 'Keepers rebalance within limits',
-    body: 'Anyone can move the Pot toward its targets, but the program enforces the box: overweight → underweight only, never past target, capped per trade, inside a Pyth price band. Under-delivery reverts the whole transaction.',
-    tag: 'permissionless · bounded',
+    title: 'Anyone rebalances, the program sets the limits',
+    body: 'Keepers buy the basket toward its targets. The program allows only moves toward target, never past it, max 25% of the Pot per trade, inside the Pyth price band — and reverts the whole transaction if a keeper delivers less than promised.',
+    tag: 'open to any keeper',
   },
   {
     n: '04',
     title: 'Exit in kind, any time',
-    body: 'Burn the token and receive your share of every asset inside. No oracle, no pause switch. 0.50% stays in the Pot for the holders who remain. Or just sell the token.',
+    body: 'Burn the token and receive your share of every asset inside — nothing is dumped on other holders. No oracle, no pause switch. 0.50% stays in the Pot for those who remain. Or simply sell the token.',
     tag: 'holder · always open',
   },
 ]
@@ -34,7 +34,7 @@ export function HowAPotWorks({ compact = false }: { compact?: boolean }) {
         <div className="mb-10 text-center">
           <div className="mb-3 inline-flex items-center gap-3">
             <span className="h-px w-6 bg-gradient-to-r from-transparent to-pot-green/60" />
-            <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-green">How a Pot works</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-pot-green">How a POTfolio works</span>
             <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-green/60" />
           </div>
           <h2 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-5xl">Four moves. No withdraw button.</h2>
@@ -54,7 +54,7 @@ export function HowAPotWorks({ compact = false }: { compact?: boolean }) {
       </ol>
       {!compact && (
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link href="/portfolios" className="btn-primary">See live Pots</Link>
+          <Link href="/portfolios" className="btn-primary">See live POTfolios</Link>
           <Link href="/worldsfair" className="btn-secondary">What we built for the World&apos;s Fair</Link>
         </div>
       )}

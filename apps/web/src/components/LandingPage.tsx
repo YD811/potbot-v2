@@ -511,11 +511,9 @@ export default function LandingPage() {
             className="font-black text-white leading-[1.05] tracking-tight mb-6"
             style={{ fontSize: 'clamp(1.75rem, 5.5vw, 4rem)' }}
           >
-            Any basket of Solana assets.
+            PotBot <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">POTfolio</span>
             <br />
-            <span className="bg-gradient-to-r from-pot-green to-pot-green/80 bg-clip-text text-transparent">
-              One liquid index token.
-            </span>
+            Any basket of Solana assets. One liquid token.
           </h1>
 
           <p className="text-lg sm:text-2xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
@@ -527,9 +525,9 @@ export default function LandingPage() {
               </>
             ) : (
               <>
-                Create a Pot in 60 seconds: assets, target weights, done.
+                Crypto, Solana natives, tokenized stocks, memes — pick the assets and weights, get one index token.
                 <br />
-                Depositors mint the index token at NAV and exit in kind. No one can withdraw the assets.
+                Hold it, send it, trade it. Burn it to take your share of every asset back. No one can withdraw.
               </>
             )}
           </p>
@@ -539,13 +537,13 @@ export default function LandingPage() {
               href="/portfolios/new"
               className="btn-primary text-base px-6 py-3 glow-green flex items-center gap-2"
             >
-              Create a Pot
+              Create a POTfolio
             </Link>
             <Link
               href="/portfolios"
               className="btn-secondary text-base px-6 py-3 flex items-center gap-2"
             >
-              Explore portfolios
+              Explore POTfolios
             </Link>
           </div>
 

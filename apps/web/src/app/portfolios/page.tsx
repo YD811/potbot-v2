@@ -33,21 +33,21 @@ export default function PortfoliosPage() {
   const shown = useMemo(() => (pots.data ?? []).filter((p) => cat === 'all' || potCategory(p) === cat), [pots.data, cat])
 
   useEffect(() => {
-    document.title = 'Portfolios — PotBot'
+    document.title = 'POTfolios — PotBot'
   }, [])
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-black text-white sm:text-4xl">Portfolios</h1>
+          <h1 className="text-3xl font-black text-white sm:text-4xl">POTfolios</h1>
           <p className="mt-2 max-w-2xl text-pot-muted">
-            Every Pot is a basket of Solana assets with fixed target weights and one index token. Deposit USDC to mint
-            it, burn it to get your share of every asset back. No one can withdraw the assets directly.
+            A POTfolio is a basket of Solana assets — crypto, Solana natives, tokenized stocks, memes — issued as one index token.
+            Deposit USDC to mint it, burn it to get your share of every asset back. No one can withdraw the assets directly.
           </p>
         </div>
         <Link href="/portfolios/new" className="btn-primary whitespace-nowrap">
-          + Create a Pot
+          + Create a POTfolio
         </Link>
       </header>
 
