@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { PageHeader } from '@/components/PageHeader'
 
 interface FAQItem {
   q: string
@@ -19,112 +20,120 @@ const FAQ_DATA: FAQCategory[] = [
   {
     id: 'basics',
     label: 'Basics',
-    icon: '🪴',
+    icon: '',
     items: [
       {
         q: 'What is PotBot?',
-        a: 'PotBot lets a group of people pool funds into a shared on-chain treasury and decide together which trades to make. Each member\'s deposit is recorded as "shares" in the vault. Members propose token swaps and vote on them. If a proposal passes, the smart contract executes the swap via Jupiter. Members can withdraw their proportional share at any time.',
+        a: 'PotBot turns a basket of Solana assets into one token. A creator picks up to 5 assets and their weights, publishes the POTfolio in one transaction, and the program issues a token that mirrors the whole basket. Anyone can deposit USDC to receive that token, hold it in any wallet, and redeem it any time for every asset inside or for USDC.',
       },
       {
-        q: 'What is a "Pot"?',
-        a: 'A Pot is a smart contract on Solana that holds the group\'s funds and enforces the voting rules. Nobody — not even the pot creator — can move funds out except through the rules everyone agreed to.',
+        q: 'What is a POTfolio?',
+        a: 'A POTfolio is one basket with fixed target weights and its own token (for example Solana Blue Chips, $SBC: SOL 50 / BTC 30 / ETH 20). The assets sit in accounts owned by the program. The token supply is the only record of who owns what: there are no shares tables, no issuer, nothing off-chain.',
       },
       {
-        q: 'What are Shares?',
-        a: 'Shares represent your proportion of the pot. If you deposit 1 SOL into a pot that holds 9 SOL after your deposit, you own 11.1% of it. If the pot\'s total value goes up or down, your shares move with it. Shares are tracked on-chain.',
+        q: 'Is a POTfolio a fund? Does someone manage my money?',
+        a: 'No. Nobody manages your money. The basket and its weights are written on-chain when the POTfolio is created and do not change. The program mints and redeems the token; keepers only move the basket toward those weights, inside limits the program enforces.',
       },
       {
-        q: 'What is a Proposal?',
-        a: 'A Proposal is a request to perform an action on behalf of the pot — most commonly, "swap X of token A into token B". Members vote yes or no, weighted by their shares. If the vote meets the pot\'s quorum and approval thresholds, the swap executes automatically.',
+        q: 'What is the index token?',
+        a: 'A normal SPL token with 6 decimals, a name, a symbol and a logo in your wallet. It starts at $1.00 and follows the value of the basket. You can hold it, send it to a friend, or trade it like any other token. Redeeming it is always possible, so its value stays tied to what is inside.',
       },
       {
-        q: 'What is the AI Agent?',
-        a: 'The AI Agent is an optional feature that monitors price and balance conditions and creates proposals automatically based on rules the pot members configure. The agent can only propose — it cannot vote or execute. All trades still require member voting.',
+        q: 'What is a Vault, and how is it different?',
+        a: 'Vaults are PotBot v2: group treasuries where members deposit, propose trades and vote. They are in development while the interface is reworked. POTfolio (v3) is the live product: one basket, one token, no votes, fixed weights, exit any time.',
+      },
+      {
+        q: 'What is the Bot?',
+        a: 'The Bot is the PotBot Telegram side, where the project started: group chats following a POTfolio, digests of what moved and why. For this release the web app is the product; the digest is on the roadmap.',
       },
     ],
   },
   {
     id: 'money',
-    label: 'Money',
-    icon: '💰',
+    label: 'Deposits and redemptions',
+    icon: '',
     items: [
       {
-        q: 'How does PotBot make money?',
-        a: 'PotBot charges a 0.30% protocol fee on every swap executed through a pot. There are no subscription fees, no fees on deposits or withdrawals, and no fees if your pot doesn\'t trade.',
+        q: 'How does a deposit work?',
+        a: 'You deposit USDC. In the same wallet approval the current Pyth prices are posted on-chain, the program values the basket (NAV), mints your tokens at that value, and then buys the basket leg by leg with your cash. One prompt, several transactions, everything visible in the activity feed and on Explorer.',
       },
       {
-        q: 'Where do the fees go?',
-        a: 'Of the 0.30% swap fee: 59% goes to the protocol treasury, 20% to the referrer of the depositing user, 20% to development and operations, and 1% to the Season Trading Competition Treasury.',
+        q: 'How do I redeem?',
+        a: 'Two ways. Get the assets: your tokens are redeemed for your share of every asset in kind; this needs no oracle, no keeper, no permission, and cannot be paused. Get USDC: the same, but the assets are sold in the same transaction and you receive USDC; the program checks you received at least a minimum computed from Pyth prices, or the whole transaction is reverted.',
       },
       {
-        q: 'How do members earn?',
-        a: 'Members earn — or lose — based on the trading decisions the group makes. If voted-on swaps gain value, withdrawing members receive more than they deposited. If swaps lose value, withdrawing members receive less. Members may also earn through the referral program and Season prize distributions.',
+        q: 'What are the fees?',
+        a: 'Entry 0.30% on every deposit, split on-chain: 40% to the creator, 40% to the referrer, 20% to the protocol. Exit 0.50%, which stays inside the POTfolio for the holders who remain. Redeeming to USDC adds a 0.10% conversion fee. No management fee, no performance fee.',
       },
       {
-        q: 'How do referrals work?',
-        a: 'When you refer a new user who deposits at least 0.1 SOL, you earn 20% of all swap fees they generate, paid in real-time to your wallet, for as long as they use PotBot.',
+        q: 'Why do I deposit USDC and not SOL or other tokens?',
+        a: 'USDC keeps the price math simple: the basket is valued in USD with Pyth and the token is minted at that value. The 1 USDC minimum only stops dust deposits that would cost more in rent and fees than they are worth. Depositing other assets directly is in development.',
       },
       {
-        q: 'Are returns guaranteed?',
-        a: 'No. PotBot is not a yield product. The vault is a coordination tool — outcomes depend entirely on the swap decisions members vote on, and on the volatile crypto markets those swaps occur in. You can lose part or all of your deposit.',
+        q: 'Why does a stock POTfolio sometimes refuse deposits?',
+        a: 'Tokenized stocks are priced by Pyth equity feeds, which stop publishing when US markets are closed. The program refuses to mint on a price older than 5 minutes, so deposits reopen when the market opens. Redeeming for assets always works.',
+      },
+      {
+        q: 'What do I see on the POTfolio page?',
+        a: 'NAV, index price and supply live from the chain; the index price history; the composition against target weights; every deposit, redemption and rebalance in the activity feed; and, with a wallet connected, your holding, cost basis and P&L computed from your own on-chain history.',
       },
     ],
   },
   {
     id: 'safety',
     label: 'Safety',
-    icon: '🔒',
+    icon: '',
     items: [
       {
-        q: 'Who controls the funds in a pot?',
-        a: 'The smart contract does. No human — including the PotBot team and the pot creator — has the ability to move funds in ways the contract doesn\'t permit. Any movement requires a passing vote according to the pot\'s rules.',
+        q: 'Can the creator run away with my money?',
+        a: 'No. The assets sit in program-owned accounts (PDAs) that have no private key, and the program has no withdraw instruction. The creator can only pause new deposits or cap the size of the POTfolio. Not the creator, not PotBot, not a keeper can take assets out.',
       },
       {
-        q: 'Can the pot creator run away with my money?',
-        a: 'No. The smart contract does not give the creator unilateral withdrawal rights. Creators set up the pot\'s parameters (quorum, voting window, etc.) at creation, but the funds inside the vault are protected by code, not trust.',
+        q: 'Who are keepers and what can they do?',
+        a: 'Keepers are bots that keep the basket at its target weights: ours, partners, or your own. The program bounds every trade: toward the target only, never past it, at most 25% of the POTfolio per trade, inside the Pyth price band, and opened and closed in the same transaction. If a keeper delivers less than the minimum, the whole transaction is reverted.',
       },
       {
-        q: 'What are the actual risks?',
-        a: 'Three main categories. (1) Market risk — token prices move and your pot can lose value. (2) Smart contract risk — although our code is open-source and audited, no smart contract is provably bug-free. (3) Group decision risk — you\'re trusting the collective judgment of pot members. Choose pots whose strategy and members you understand.',
+        q: 'What if the price oracle is wrong or stale?',
+        a: 'Deposits use Pyth pull prices posted in the same transaction, at most 5 minutes old, with a confidence band no wider than 2%, and the program prices conservatively (price minus confidence in favour of the POTfolio). If any of that fails, the deposit is refused. Redeeming for assets needs no price at all.',
       },
       {
-        q: 'Can I withdraw at any time?',
-        a: 'Yes. Withdrawals are pro-rata against your shares and execute immediately on-chain. There is no lock-up period, no admin approval, no waiting list.',
+        q: 'Has the program been audited?',
+        a: 'Reviewed twice against the Solana Foundation program-security checklist (Oct 8 and Oct 10, 2026, the second by an independent reviewer): no criticals or highs, both mediums fixed before the devnet upgrade. A third-party audit, a multisig on the upgrade authority and a capped flagship are on the mainnet path. The report is in the repository under docs/potfolio/security.md.',
       },
       {
-        q: 'Is PotBot regulated?',
-        a: 'PotBot is a non-custodial software tool. We do not hold customer funds. Users are responsible for compliance with their local laws. Use of PotBot is restricted in certain jurisdictions — see our Terms of Service.',
+        q: 'What are the real risks?',
+        a: 'The assets inside can lose value, and the token follows them. A POTfolio of memes is as risky as the memes. Smart-contract risk exists in any program; the devnet build is for testing. Keeper slippage up to 1% per rebalance is the cost of keeping the basket at target.',
+      },
+      {
+        q: 'Is this live on mainnet?',
+        a: 'Not yet. Everything on this site runs on Solana devnet with test tokens and real Pyth prices. The mainnet plan (capped flagship, multisig, Jupiter for swaps) is on /mainnet.',
       },
     ],
   },
   {
-    id: 'season',
-    label: 'Season',
-    icon: '🌱',
+    id: 'creators',
+    label: 'Creators and referrals',
+    icon: '',
     items: [
       {
-        q: 'What is a Season?',
-        a: 'Seasons are quarterly community events that introduce themed activities, points, and a competition prize pool. Season 1 is "The Garden" — every pot gets a virtual plant that grows based on member activity.',
+        q: 'How do I create a POTfolio?',
+        a: 'Open Create, give it a name (the ticker suggests itself), pick up to 5 assets from the listed set, set the weights to 100%, and confirm one transaction. The POTfolio and its token exist immediately with a Pot... address. Creating costs about 0.03 SOL in account rent.',
       },
       {
-        q: 'What is the Tamagotchi (plant)?',
-        a: "Each pot has a virtual plant that visualizes the pot's community health. The plant gains health from member actions like voting, depositing, and creating proposals — and loses health from inactivity. The plant is purely cosmetic and is not tied to financial performance.",
+        q: 'How do creators and referrers earn?',
+        a: 'Every deposit pays 0.30%: 40% to the creator, 40% to whoever referred the depositor, 20% to the protocol. It is paid inside the deposit transaction; nothing to claim. Share your POTfolio link: the referral is remembered for 30 days. The calculator on /learn shows what that adds up to.',
       },
       {
-        q: 'What is the Trading Competition Treasury?',
-        a: '1% of all protocol swap fees during the season accumulate in a transparent on-chain treasury. At season end, the top 3 pots on the leaderboard receive 50% / 30% / 20% of the treasury, distributed pro-rata to those pots\' members.',
+        q: 'Can I change the weights later?',
+        a: 'Not in this version: weights are fixed at creation, which is what makes the token predictable for holders. Managed POTfolios (creator adjusts inside a public mandate with a timelock) and Community POTfolios (holders vote with the token) are on the roadmap.',
       },
       {
-        q: 'How is the leaderboard ranked?',
-        a: 'Pots are ranked by Season Score, calculated as: season trading volume × member count × pet health score. This formula rewards activity, growth, and engagement — not raw trading P&L. The exact formula and inputs are visible on the leaderboard page.',
+        q: 'Which assets can go in?',
+        a: 'Any asset the protocol has listed with a Pyth price feed. On devnet that is a set of majors, Solana natives and tokenized stocks. Mainnet adds the long tail by configuration.',
       },
       {
-        q: 'What are points?',
-        a: 'Points are rewards for taking actions on the platform — creating pots, voting, referring users, completing quests. Points unlock immediate quest rewards and may inform future protocol incentives. Points are recorded off-chain in our database and are not transferable.',
-      },
-      {
-        q: 'What are quests?',
-        a: 'Quests are time-limited tasks (often marketing-related — sharing about PotBot, inviting members, exploring new features) that award bonus points. New quests rotate weekly.',
+        q: 'What is Garden mode?',
+        a: 'Every POTfolio is a plant. Its level is a function of the value held inside, read from on-chain supply and price, so it cannot be faked. Deposits water it, redemptions dry it out. Levels run from Seedling (first deposit) to Mature Tree (from $1M).',
       },
     ],
   },
@@ -164,19 +173,13 @@ export default function FAQPage() {
   const category = FAQ_DATA.find((c) => c.id === activeCategory) ?? FAQ_DATA[0]
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 text-sm text-pot-muted mb-3">
-          <Link href="/" className="hover:text-white transition">Home</Link>
-          <span>/</span>
-          <span className="text-white">FAQ</span>
-        </div>
-        <h1 className="text-3xl font-black text-white mb-2">Frequently Asked Questions</h1>
-        <p className="text-pot-muted">
-          Everything you need to know about PotBot — plain language, no hype.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="FAQ"
+        title="Questions, answered"
+        lede={<>POTfolio in plain words. Longer explanations live on <Link href="/learn" className="text-pot-green underline">Learn</Link>, the mechanics in the <a href="https://github.com/YD811/potbot-v2/tree/main/docs/potfolio" target="_blank" rel="noreferrer" className="text-pot-green underline">docs</a>.</>}
+      />
 
       {/* Category tabs */}
       <div className="flex gap-2 flex-wrap mb-6">
@@ -190,7 +193,6 @@ export default function FAQPage() {
                 : 'bg-pot-card border border-pot-border text-pot-muted hover:text-white'
             }`}
           >
-            <span>{cat.icon}</span>
             <span>{cat.label}</span>
           </button>
         ))}
@@ -203,24 +205,14 @@ export default function FAQPage() {
       <div className="mt-10 p-6 rounded-2xl border border-pot-border bg-pot-card/50 text-center">
         <p className="text-sm text-pot-muted mb-3">Still have questions?</p>
         <div className="flex flex-wrap gap-3 justify-center">
-          <a
-            href="https://t.me/Trade_pot_bot"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-secondary text-sm py-2 px-5"
-          >
-            💬 Telegram Bot
+          <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm py-2 px-5">
+            Ask on X
           </a>
-          <a
-            href="https://x.com/PotBot_sol"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-secondary text-sm py-2 px-5"
-          >
-            𝕏 Twitter
-          </a>
-          <Link href="/create" className="btn-primary text-sm py-2 px-5">
-            🪴 Try PotBot
+          <Link href="/learn" className="btn-secondary text-sm py-2 px-5">
+            Read Learn
+          </Link>
+          <Link href="/portfolios" className="btn-primary text-sm py-2 px-5">
+            Open the POTfolios
           </Link>
         </div>
       </div>
@@ -229,7 +221,7 @@ export default function FAQPage() {
       <div className="mt-8 p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20">
         <p className="text-xs text-pot-muted leading-relaxed space-y-1">
           <strong className="text-amber-400/80 block mb-2">Risk Disclosures</strong>
-          PotBot is non-custodial software. You retain full custody of your funds via the smart contract. Crypto assets are volatile — you may lose some or all of the funds you deposit. Past performance does not predict future results. PotBot is not investment advice. Members make their own decisions through on-chain voting. Use of PotBot may be restricted in certain jurisdictions; by using this app you confirm compliance with your local laws.
+          PotBot is non-custodial software: assets sit in program-owned accounts with no withdraw instruction. Crypto assets are volatile; you may lose some or all of the value you deposit. Past performance does not predict future results. PotBot is not investment advice. This build runs on Solana devnet with test tokens. Use of PotBot may be restricted in certain jurisdictions; by using this app you confirm compliance with your local laws.
         </p>
       </div>
     </div>
