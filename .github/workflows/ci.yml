@@ -85,6 +85,30 @@ jobs:
           name: pot_vault-idl
           path: packages/program/target/idl/pot_vault.json
 
+  pot-index-test:
+    name: pot_index — build + LiteSVM tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install Solana CLI (Agave)
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v4.3.0/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            packages/pot-index/target
+          key: ${{ runner.os }}-pot-index-${{ hashFiles('packages/pot-index/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pot-index-
+      - name: Build (SBPF v0) + test
+        run: cd packages/pot-index && ./test.sh
+
   security-audit:
     name: npm audit
     runs-on: ubuntu-latest
