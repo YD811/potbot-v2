@@ -10,23 +10,22 @@ const PATH: Record<Audience, { title: string; steps: { title: string; body: stri
     title: 'You hold the token',
     steps: [
       { title: 'Pick a POTfolio', body: 'A basket someone put together: tokens, stocks, RWA, memes.' },
-      { title: 'Deposit USDC, get the token', body: 'One signature. You receive tokens worth exactly what you put in.' },
-      { title: 'Hold it, stay liquid', body: 'One token, many assets inside. It is never locked: keep it in your wallet, send it, use it. The value follows the basket.' },
+      { title: 'Deposit USDC, get the token', body: 'You invest in the portfolio and receive a token that mirrors everything inside it.' },
+      { title: 'Hold it, stay liquid', body: 'It is never locked. Keep it in your wallet, send it, use it anywhere a token works. The value follows the basket.' },
       { title: 'Leave any time', body: 'Redeem the token and choose: every asset of the basket, or plain USDC.' },
     ],
     benefits: [
-      'No rug: the token price is backed by the assets inside, one to one.',
-      'No exit liquidity: everyone leaves at the same fair value, nobody is sold on.',
-      'Nobody can withdraw the assets. Not the creator, not PotBot.',
+      'No rug: the token is backed one to one by the assets inside, and the creator cannot touch them.',
+      'Everyone leaves at the same fair value. No one is left holding the bag.',
     ],
   },
   creators: {
     title: 'You create the POTfolio',
     steps: [
       { title: 'Build the basket', body: 'Pick up to 5 assets and their weights. Name it, give it a ticker.' },
-      { title: 'Publish it', body: 'One transaction. Your portfolio becomes a token with its own page and link.' },
-      { title: 'Share your expertise', body: 'People deposit into your basket. The protocol keeps it balanced and holds the assets, so there is nothing for you to run.' },
-      { title: 'Earn on every deposit', body: 'A share of every deposit is paid to you instantly, on-chain. Referrers who bring depositors earn too.' },
+      { title: 'Publish it', body: 'Your portfolio becomes a token.' },
+      { title: 'Share your idea', body: 'People see what you believe in and back it by holding your token.' },
+      { title: 'Earn every time', body: 'Every deposit into your POTfolio pays you, instantly and on-chain. Those who bring new holders earn too.' },
     ],
     benefits: [
       'Your track record is public and on-chain.',
