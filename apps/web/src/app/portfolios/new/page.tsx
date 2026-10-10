@@ -74,7 +74,7 @@ export default function NewPotPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
       <h1 className="text-3xl font-black text-white sm:text-4xl">Create a POTfolio</h1>
-      <p className="mt-2 text-pot-muted">
+      <p className="mt-2 text-white/70">
         Pick up to 5 assets, set target weights, publish. You get an index token that anyone can mint by depositing USDC.
         Weights are locked at creation, so depositors know exactly what they are buying.
       </p>
@@ -88,18 +88,18 @@ export default function NewPotPage() {
       <div className="card mt-8 space-y-6 p-6">
         <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
           <label className="block">
-            <span className="mb-1 block text-sm text-pot-muted">Name</span>
+            <span className="mb-1 block text-sm text-white/70">Name</span>
             <input className="input" maxLength={32} value={name} onChange={(e) => setName(e.target.value)} placeholder="Solana Blue Chips" />
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm text-pot-muted">Ticker</span>
+            <span className="mb-1 block text-sm text-white/70">Ticker</span>
             <input className="input font-mono uppercase" maxLength={10} value={symbol} onChange={(e) => setSymbol(e.target.value)} placeholder="SBC" />
           </label>
         </div>
 
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-sm text-pot-muted">Assets & target weights</span>
+            <span className="text-sm text-white/70">Assets & target weights</span>
             <button type="button" onClick={equalize} className="text-xs text-pot-green hover:underline">
               Equal weights
             </button>
@@ -113,7 +113,7 @@ export default function NewPotPage() {
                   <span className="inline-block h-3 w-3 rounded-full" style={{ background: legColor(i) }} />
                   <div className="w-24">
                     <div className="font-semibold text-white">{a.symbol}</div>
-                    <div className="text-xs text-pot-muted">{px ? `$${px.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : a.name}</div>
+                    <div className="text-xs text-white/70">{px ? `$${px.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : a.name}</div>
                   </div>
                   <input
                     type="range"
@@ -131,12 +131,12 @@ export default function NewPotPage() {
                     onChange={(e) => setWeight(i, Number(e.target.value))}
                     className="input w-20 px-2 py-1.5 text-right"
                   />
-                  <span className="text-pot-muted">%</span>
+                  <span className="text-white/70">%</span>
                   <button
                     type="button"
                     disabled={rows.length <= 2}
                     onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}
-                    className="text-pot-muted hover:text-red-400 disabled:opacity-30"
+                    className="text-white/70 hover:text-red-400 disabled:opacity-30"
                     aria-label="Remove"
                   >
                     ✕
@@ -146,7 +146,28 @@ export default function NewPotPage() {
             })}
           </div>
           <div className="mt-3 flex items-center justify-between gap-3">
-            <span className={`text-sm ${total === 100 ? 'text-pot-green' : 'text-yellow-300'}`}>Total {total}%{total !== 100 && ': must be 100%'}</span>
+            <span className={`flex items-center gap-2 text-sm ${total === 100 ? 'text-pot-green' : 'text-yellow-300'}`}>
+              Total {total}%
+              {total !== 100 && (
+                <>
+                  <span>{total > 100 ? `· remove ${total - 100}%` : `· add ${100 - total}%`}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (total <= 0) return
+                      setRows((rs) => {
+                        const scaled = rs.map((r) => Math.round((r.weight / total) * 100))
+                        const diff = 100 - scaled.reduce((a, b) => a + b, 0)
+                        return rs.map((r, i) => ({ ...r, weight: scaled[i] + (i === 0 ? diff : 0) }))
+                      })
+                    }}
+                    className="rounded-full border border-yellow-300/50 px-2 py-0.5 text-xs text-yellow-200 hover:bg-yellow-300/10"
+                  >
+                    Scale to 100%
+                  </button>
+                </>
+              )}
+            </span>
             <input
               className="input w-44 px-2 py-1.5 font-mono text-xs"
               placeholder="paste token CA"
@@ -190,11 +211,11 @@ export default function NewPotPage() {
         {caMsg && <p className="-mt-3 text-xs text-yellow-300">{caMsg}</p>}
 
         <label className="block">
-          <span className="mb-1 block text-sm text-pot-muted">Deposit cap (USD, 0 = none)</span>
+          <span className="mb-1 block text-sm text-white/70">Max POTfolio size in USD (optional). Deposits stop once the Pot holds this much. 0 = no limit.</span>
           <input type="number" min={0} className="input" value={cap} onChange={(e) => setCap(Number(e.target.value))} />
         </label>
 
-        <div className="rounded-xl border border-pot-border bg-pot-dark p-4 text-sm text-pot-muted">
+        <div className="rounded-xl border border-pot-border bg-pot-dark p-4 text-sm text-white/70">
           <p className="mb-1 font-semibold text-white">What you are publishing</p>
           <ul className="list-disc space-y-1 pl-5">
             <li>Entry fee 0.30% on every deposit: 40% to you, 40% to the referrer (or you), 20% to the protocol.</li>

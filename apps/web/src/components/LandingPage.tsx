@@ -678,7 +678,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
             <div
-              className="group relative flex flex-col min-h-[300px] rounded-3xl p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
+              className="group relative flex flex-col min-h-[300px] rounded-3xl p-7 transition-all duration-300 hover:-translate-y-0.5"
               style={{
                 background: 'linear-gradient(135deg, rgba(20,241,149,0.06), rgba(20,241,149,0.01))',
                 border: '1px solid rgba(20,241,149,0.25)',
@@ -720,7 +720,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <div
-              className="group relative flex flex-col min-h-[300px] rounded-3xl p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
+              className="group relative flex flex-col min-h-[300px] rounded-3xl p-7 transition-all duration-300 hover:-translate-y-0.5"
               style={{
                 background: 'linear-gradient(135deg, rgba(153,69,255,0.06), rgba(153,69,255,0.01))',
                 border: '1px solid rgba(153,69,255,0.25)',
@@ -818,7 +818,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* PUBLIC / Social-Fi */}
             <div
-              className="group relative rounded-3xl p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
+              className="group relative rounded-3xl p-7 transition-all duration-300 hover:-translate-y-0.5"
               style={{
                 background: 'linear-gradient(135deg, rgba(20,241,149,0.06), rgba(20,241,149,0.01))',
                 border: '1px solid rgba(20,241,149,0.25)',
@@ -867,7 +867,7 @@ export default function LandingPage() {
 
             {/* PRIVATE / Privacy layer */}
             <div
-              className="group relative rounded-3xl p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
+              className="group relative rounded-3xl p-7 transition-all duration-300 hover:-translate-y-0.5"
               style={{
                 background: 'linear-gradient(135deg, rgba(153,69,255,0.06), rgba(153,69,255,0.01))',
                 border: '1px solid rgba(153,69,255,0.25)',
@@ -991,26 +991,26 @@ export default function LandingPage() {
           <h2 className="text-4xl sm:text-6xl font-bold text-white leading-[1.1] tracking-tight mb-6">
             Ready to{' '}
             <span className="bg-gradient-to-r from-pot-green to-pot-accent bg-clip-text text-transparent">
-              tokenize your community?
+              hold your portfolio as one token?
             </span>
           </h2>
           <p className="text-white/80 text-base sm:text-lg max-w-xl mx-auto mb-10 leading-relaxed">
             {isLight
-              ? 'Set up your shared pot in under a minute. No coding. Free to try in test mode.'
-              : 'Spin up your treasury in under a minute. No coding required. Open source and free to use on Solana devnet.'}
+              ? 'Create a portfolio, hold the token. No coding. Free to try on devnet.'
+              : 'Create a portfolio, hold the token. No coding. Open source and free to try on Solana devnet.'}
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <Link
               href="/signup"
               className="px-7 py-4 rounded-xl bg-pot-green hover:bg-pot-green/90 text-pot-dark font-bold transition text-base shadow-[0_0_50px_rgba(20,241,149,0.3)]"
             >
-              🚀 Get Early Access
+              Get early access
             </Link>
             <Link
-              href="/create"
-              className="px-7 py-4 rounded-xl bg-pot-card/80 backdrop-blur border border-pot-accent/40 hover:border-pot-accent text-white font-bold transition text-base"
+              href="/portfolios/new"
+              className="px-7 py-4 rounded-xl bg-pot-card/80 border border-pot-accent/40 hover:border-pot-accent text-white font-bold transition text-base"
             >
-              🪴 {t('Create your vault')}
+              Create a POTfolio
             </Link>
             <a
               href="https://github.com/YD811/potbot-v2"
@@ -1018,7 +1018,7 @@ export default function LandingPage() {
               rel="noreferrer"
               className="px-7 py-4 rounded-xl bg-pot-card/80 backdrop-blur border border-pot-border hover:border-white/30 text-white font-bold transition text-base"
             >
-              ⭐ Star on GitHub
+              Star on GitHub
             </a>
           </div>
         </div>

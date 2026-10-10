@@ -27,16 +27,20 @@ function fmtUsd(v: number) {
   return `$${v}`
 }
 
-export function GardenMode({ series = 'pink' }: { series?: PlantSeries }) {
+const SERIES_LOOP: PlantSeries[] = ['pink', 'purple', 'blue', 'coral']
+
+export function GardenMode({ series: fixed }: { series?: PlantSeries }) {
   const [stage, setStage] = useState<PlantStage>(1)
+  const [seriesIdx, setSeriesIdx] = useState(0)
+  const series = fixed ?? SERIES_LOOP[seriesIdx]
   const [pulse, setPulse] = useState(false)
 
   useEffect(() => {
     let t: ReturnType<typeof setTimeout>
     const next = () => {
       setStage((s) => {
-        const n = (s >= 6 ? 1 : s + 1) as PlantStage
-        return n
+        if (s >= 6) setSeriesIdx((i) => (i + 1) % SERIES_LOOP.length) // a different plant each loop
+        return (s >= 6 ? 1 : s + 1) as PlantStage
       })
       setPulse(true)
       setTimeout(() => setPulse(false), 500)
