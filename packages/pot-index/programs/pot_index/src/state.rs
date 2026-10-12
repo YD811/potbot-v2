@@ -14,10 +14,13 @@ pub struct Config {
     pub usdc_mint: Pubkey,
     /// Oldest Pyth price accepted, in seconds.
     pub max_price_age_secs: u64,
-    /// Global stop for deposits and rebalances. Exits are never paused.
+    /// Global stop for new Pots, deposits and rebalances. Exits are never paused.
     pub paused: bool,
     pub pot_count: u64,
     pub bump: u8,
+    /// Last slot at which `pending_admin` may accept. Appended after `bump` so `migrate_config`
+    /// can grow a v1.1 account in place: the old bytes stay where they are, the new field reads 0.
+    pub pending_admin_expiry_slot: u64,
 }
 
 /// Allowlisted asset. PDA: ["asset", mint].
@@ -79,8 +82,8 @@ pub struct Pot {
     pub max_trade_bps: u16,
     pub rebalance: RebalanceState,
     pub last_rebalance_slot: u64,
+    /// USDC deposited, net of the entry fee. Statistics only: nothing in the program reads it.
     pub total_deposits_usd: u64,
-    pub total_exits_usd: u64,
     pub created_at: i64,
     pub bump: u8,
 }

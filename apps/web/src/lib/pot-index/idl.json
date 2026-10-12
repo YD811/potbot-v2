@@ -1,5 +1,5 @@
 {
-  "address": "DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr",
+  "address": "7bULMGNu443EVE48Cmfp42rvAaW2CJbKLv8fsPZBSRsV",
   "metadata": {
     "name": "pot_index",
     "version": "0.1.0",
@@ -849,7 +849,15 @@
           }
         },
         {
-          "name": "usdc_mint"
+          "name": "usdc_mint",
+          "address": "AYLYmXfkfveAAU3gZwjHqFXePi459yumVw4NYJhHVjeN"
+        },
+        {
+          "name": "program",
+          "address": "7bULMGNu443EVE48Cmfp42rvAaW2CJbKLv8fsPZBSRsV"
+        },
+        {
+          "name": "program_data"
         },
         {
           "name": "system_program",
@@ -866,6 +874,56 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "migrate_config",
+      "docs": [
+        "One-off: grow a v1.1 `Config` to the current layout. Run right after upgrading."
+      ],
+      "discriminator": [
+        92,
+        131,
+        58,
+        105,
+        210,
+        154,
+        224,
+        193
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "docs": [
+            "discriminator and admin are checked in the handler."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
     },
     {
       "name": "rebalance_close",
@@ -1061,6 +1119,12 @@
           "name": "mint"
         },
         {
+          "name": "price_update",
+          "docs": [
+            "checked by `oracle::read_price` in the handler."
+          ]
+        },
+        {
           "name": "asset",
           "writable": true,
           "pda": {
@@ -1096,75 +1160,6 @@
               32
             ]
           }
-        }
-      ]
-    },
-    {
-      "name": "set_asset_enabled",
-      "discriminator": [
-        23,
-        10,
-        133,
-        70,
-        92,
-        118,
-        68,
-        186
-      ],
-      "accounts": [
-        {
-          "name": "admin",
-          "signer": true,
-          "relations": [
-            "config"
-          ]
-        },
-        {
-          "name": "config",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "asset",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  97,
-                  115,
-                  115,
-                  101,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "asset.mint",
-                "account": "AssetConfig"
-              }
-            ]
-          }
-        }
-      ],
-      "args": [
-        {
-          "name": "enabled",
-          "type": "bool"
         }
       ]
     },
@@ -1347,6 +1342,89 @@
       ]
     },
     {
+      "name": "update_asset",
+      "docs": [
+        "Enable / disable an asset for new legs, or repoint its Pyth feed."
+      ],
+      "discriminator": [
+        56,
+        126,
+        238,
+        138,
+        192,
+        118,
+        228,
+        172
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "asset",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  115,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "asset.mint",
+                "account": "AssetConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "price_update",
+          "docs": [
+            "checked by `oracle::read_price` in the handler."
+          ],
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "update",
+          "type": {
+            "defined": {
+              "name": "AssetUpdate"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "update_index_metadata",
       "docs": [
         "Creator-only: repoint the index token's metadata URI (logo, description, thesis)."
@@ -1451,6 +1529,58 @@
     }
   ],
   "events": [
+    {
+      "name": "AdminAccepted",
+      "discriminator": [
+        174,
+        12,
+        76,
+        139,
+        158,
+        99,
+        110,
+        254
+      ]
+    },
+    {
+      "name": "AssetRegistered",
+      "discriminator": [
+        252,
+        56,
+        47,
+        89,
+        8,
+        180,
+        249,
+        254
+      ]
+    },
+    {
+      "name": "AssetUpdated",
+      "discriminator": [
+        205,
+        81,
+        132,
+        139,
+        249,
+        35,
+        249,
+        127
+      ]
+    },
+    {
+      "name": "ConfigUpdated",
+      "discriminator": [
+        40,
+        241,
+        230,
+        122,
+        11,
+        19,
+        198,
+        194
+      ]
+    },
     {
       "name": "Deposited",
       "discriminator": [
@@ -1748,21 +1878,72 @@
     },
     {
       "code": 6043,
-      "name": "PriceAgeTooLong",
-      "msg": "max_price_age_secs above the protocol limit"
+      "name": "PriceAgeOutOfRange",
+      "msg": "max_price_age_secs must be between 1 and the protocol limit"
     },
     {
       "code": 6044,
-      "name": "BadUsdcDecimals",
-      "msg": "USDC mint must have 6 decimals"
+      "name": "BadUsdcMint",
+      "msg": "Not the USDC mint this build accepts"
     },
     {
       "code": 6045,
       "name": "NotPendingAdmin",
       "msg": "No pending admin, or signer is not the pending admin"
+    },
+    {
+      "code": 6046,
+      "name": "NothingToUpdate",
+      "msg": "Update changes nothing"
+    },
+    {
+      "code": 6047,
+      "name": "PendingAdminExpired",
+      "msg": "Admin proposal expired; propose again"
+    },
+    {
+      "code": 6048,
+      "name": "MissingPriceUpdate",
+      "msg": "A feed change needs a price update account for the new feed"
+    },
+    {
+      "code": 6049,
+      "name": "ConfigAlreadyMigrated",
+      "msg": "Config is already in the current layout"
+    },
+    {
+      "code": 6050,
+      "name": "NotUpgradeAuthority",
+      "msg": "Signer is not the program upgrade authority"
+    },
+    {
+      "code": 6051,
+      "name": "FreezableMint",
+      "msg": "Mint has a freeze authority; v1 does not list freezable assets"
+    },
+    {
+      "code": 6052,
+      "name": "InsufficientVaultBalance",
+      "msg": "Amount exceeds the vault balance"
     }
   ],
   "types": [
+    {
+      "name": "AdminAccepted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "previous_admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
     {
       "name": "AssetConfig",
       "docs": [
@@ -1798,6 +1979,77 @@
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AssetRegistered",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "feed_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AssetUpdate",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "enabled",
+            "type": {
+              "option": "bool"
+            }
+          },
+          {
+            "name": "feed_id",
+            "type": {
+              "option": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AssetUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "enabled",
+            "type": "bool"
+          },
+          {
+            "name": "feed_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           }
         ]
       }
@@ -1842,7 +2094,7 @@
           {
             "name": "paused",
             "docs": [
-              "Global stop for deposits and rebalances. Exits are never paused."
+              "Global stop for new Pots, deposits and rebalances. Exits are never paused."
             ],
             "type": "bool"
           },
@@ -1853,6 +2105,14 @@
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "pending_admin_expiry_slot",
+            "docs": [
+              "Last slot at which `pending_admin` may accept. Appended after `bump` so `migrate_config`",
+              "can grow a v1.1 account in place: the old bytes stay where they are, the new field reads 0."
+            ],
+            "type": "u64"
           }
         ]
       }
@@ -1885,6 +2145,38 @@
             "type": {
               "option": "pubkey"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConfigUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "max_price_age_secs",
+            "type": "u64"
+          },
+          {
+            "name": "treasury",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_admin_expiry_slot",
+            "type": "u64"
           }
         ]
       }
@@ -2162,10 +2454,9 @@
           },
           {
             "name": "total_deposits_usd",
-            "type": "u64"
-          },
-          {
-            "name": "total_exits_usd",
+            "docs": [
+              "USDC deposited, net of the entry fee. Statistics only: nothing in the program reads it."
+            ],
             "type": "u64"
           },
           {

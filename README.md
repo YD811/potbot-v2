@@ -9,7 +9,7 @@ Pick up to 5 assets and weights. Holders deposit USDC and get a token that mirro
 [potbot.fun](https://potbot.fun) · [Live POTFolios](https://potbot.fun/portfolios) · [How it works](https://potbot.fun/learn) · [Roadmap](https://potbot.fun/roadmap) · [Docs](docs/potfolio)
 
 [![CI](https://github.com/YD811/potbot-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/YD811/potbot-v2/actions/workflows/ci.yml)
-[![Solana](https://img.shields.io/badge/Solana-devnet-9945FF?style=flat-square)](https://explorer.solana.com/address/DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr?cluster=devnet)
+[![Solana](https://img.shields.io/badge/Solana-devnet-9945FF?style=flat-square)](https://explorer.solana.com/address/7bULMGNu443EVE48Cmfp42rvAaW2CJbKLv8fsPZBSRsV?cluster=devnet)
 [![Anchor](https://img.shields.io/badge/Anchor-1.2-blue?style=flat-square)](https://anchor-lang.com)
 [![Pyth](https://img.shields.io/badge/Oracle-Pyth%20pull-7142CF?style=flat-square)](https://pyth.network)
 [![Tests](https://img.shields.io/badge/LiteSVM-12%2F12-14F195?style=flat-square)](packages/pot-index/tests)
@@ -92,15 +92,15 @@ Program reference with every instruction, account, limit and error code: [progra
 
 ## Live on devnet
 
-Program `DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr` ([Explorer](https://explorer.solana.com/address/DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr?cluster=devnet)), 17 instructions, v1.1 since Oct 12. Five showcase POTFolios with live Pyth prices and test tokens:
+Program `7bULMGNu443EVE48Cmfp42rvAaW2CJbKLv8fsPZBSRsV` ([Explorer](https://explorer.solana.com/address/7bULMGNu443EVE48Cmfp42rvAaW2CJbKLv8fsPZBSRsV?cluster=devnet)), 18 instructions, v1.2 since Oct 13 (v1.1 stays live at `7bULMGNu443EVE48Cmfp42rvAaW2CJbKLv8fsPZBSRsV`). Five showcase POTFolios with live Pyth prices and test tokens:
 
 | POTFolio | Basket | Mint |
 |---|---|---|
-| Solana Blue Chips `$SBC` | SOL 50 / BTC 30 / ETH 20 | [`PotSvA4…`](https://potbot.fun/portfolios/PotSvA4ynuxbMFUA8SJSbULHhuTY1JcL5RaxnQz5FmM) |
-| Solana Native `$SOLN` | SOL 50 / JitoSOL 30 / PYTH 20 | [`Potgd4g…`](https://potbot.fun/portfolios/Potgd4gqWzJgiNZXxE5Avx3TB7fQyjd6gQMeqjL92vb) |
-| Majors 5 `$MJR5` | BTC 35 / ETH 25 / SOL 20 / BNB 10 / XRP 10 | [`PotgdAt…`](https://potbot.fun/portfolios/PotgdAtLnYS28VpCnRdAsbtjprYWKhMYCDj2SE5erAE) |
-| Wall St on Solana `$WSTS` | TSLAx 40 / QQQx 40 / SOL 20 | [`Potsmds…`](https://potbot.fun/portfolios/PotsmdsvLcZGToyYs9XKcL9vVpGMbSV3UaFaA9EUZHH) |
-| Doge & Sol `$DGSL` | DOGE 60 / SOL 40 | [`Potsts7…`](https://potbot.fun/portfolios/Potsts7jB8dQPUN1MLU4TfqCPGkJTfwtrAVcHRBdp1q) |
+| Solana Blue Chips `$SBC` | SOL 50 / BTC 30 / ETH 20 | [`Pot6gaQ…`](https://potbot.fun/portfolios/Pot6gaQTW8NeMckGDWg4MRGvMaq5QNYimj1xRwQKVka) |
+| Solana Native `$SOLN` | SOL 50 / JitoSOL 30 / PYTH 20 | [`PotzuWS…`](https://potbot.fun/portfolios/PotzuWSUkEkJg4u8dSTPG9dZVmdydPoiuD5W3TWGDYH) |
+| Majors 5 `$MJR5` | BTC 35 / ETH 25 / SOL 20 / BNB 10 / XRP 10 | [`PotdDQX…`](https://potbot.fun/portfolios/PotdDQXTGbL1x3ZyKXJY4ktZkR26idc8fk7kAwtd7yy) |
+| Wall St on Solana `$WSTS` | TSLAx 40 / QQQx 40 / SOL 20 | [`Potqvh3…`](https://potbot.fun/portfolios/Potqvh3mnU3TfiKRqQg93D6xTqA24NFpFape2Wf4TBP) |
+| Doge & Sol `$DGSL` | DOGE 60 / SOL 40 | [`PotaoNk…`](https://potbot.fun/portfolios/PotaoNkiqtR4m9g5v63veF9X1NrbNEH6i6LERtR7NPf) |
 
 Anyone can create their own at [potbot.fun/portfolios/new](https://potbot.fun/portfolios/new). Devnet legs are test mints priced from real Pyth feeds; swaps run against a PotBot market maker. On mainnet the legs are the real tokens and the swaps go through Jupiter.
 
@@ -124,8 +124,8 @@ Before the first mainnet deposit: Squads 2-of-3 multisig with a timelock on upgr
 
 ```text
 packages/pot-index/            pot_index Anchor program (the POTFolio protocol) + LiteSVM tests      ← start here
-  programs/pot_index/src/      lib.rs (17 instructions), instructions/, state/, oracle.rs, constants.rs
-  tests/pot_flow.rs            12 end-to-end tests
+  programs/pot_index/src/      lib.rs (18 instructions), instructions/, state/, oracle.rs, constants.rs
+  tests/                       40 end-to-end tests: pot_flow, guards, invariants
 apps/web/                      Next.js app: landing, /portfolios, /portfolios/new, /portfolios/[mint], /dashboard, /learn, /roadmap, /mainnet
   src/lib/pot-index/           client builders, Pyth helpers, registry, operator (server), garden levels
   src/app/api/pot-index/       tx/prepare + tx/submit (one-signature flow), faucet, NAV history, token metadata
@@ -141,7 +141,7 @@ packages/sdk/  apps/api/  apps/keeper/  apps/bot/  apps/potbot-mcp/      PotBot 
 ```bash
 # program (Anchor 1.2.1, Solana CLI 4.3, Rust 1.89)
 cd packages/pot-index
-./test.sh                                  # SBPF build + LiteSVM suite, 12 tests
+./test.sh                                  # SBPF build + LiteSVM suite, 40 tests, mainnet and devnet builds
 anchor build                               # deployable artifact + IDL
 
 # web

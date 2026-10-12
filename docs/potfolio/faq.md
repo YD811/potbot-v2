@@ -4,7 +4,7 @@
 
 **Who holds the assets?** Program-owned accounts with no private key. There is no withdraw instruction.
 
-**What do I get when I leave?** Your choice: every asset of the basket in kind, or USDC in one transaction (the legs are sold in the same transaction, the program enforces a minimum from Pyth and takes 0.10% on the sold part). Either way 0.50% stays in the Pot.
+**What do I get when I leave?** Your choice: every asset of the basket in kind, or USDC in one transaction (the legs are sold in the same transaction, the program enforces a minimum from Pyth and takes 0.10% on the sold part). Either way 0.50% stays in the Pot for the holders who remain; the last holder out pays none.
 
 **Can the creator change the basket?** No. The creator can only pause deposits or cap the size. Managed and Community POTFolios come after the Fair.
 

@@ -144,8 +144,13 @@ pub fn shares_for_deposit(net_usd: u128, nav_before: u128, supply: u64) -> Resul
 }
 
 /// Pro-rata amount of one leg for `shares` out of `supply`, after the exit fee stays in the Pot.
+/// Burning the whole supply takes the whole balance: with nobody left to accrue to, a kept fee would
+/// be stranded and go to whoever deposits next.
 pub fn exit_amount(balance: u64, shares: u64, supply: u64) -> Result<u64> {
     require!(supply > 0, PotError::ZeroShares);
+    if shares == supply {
+        return Ok(balance);
+    }
     let gross = (balance as u128)
         .checked_mul(shares as u128)
         .ok_or(PotError::MathOverflow)?
@@ -182,5 +187,39 @@ mod tests {
     fn exit_fee_kept() {
         let out = exit_amount(1_000_000, 50, 100).unwrap(); // half the balance minus 0.5%
         assert_eq!(out, 497_500);
+    }
+
+    #[test]
+    fn values_across_exponents_and_decimals() {
+        // 1 BTC (8 decimals) at $65,000 quoted with expo -5.
+        assert_eq!(token_value_usd(100_000_000, 8, 6_500_000_000, -5).unwrap(), 65_000_000_000);
+        assert_eq!(usd_to_token_amount(65_000_000_000, 8, 6_500_000_000, -5).unwrap(), 100_000_000);
+        // 1 SOL (9 decimals) at $150 quoted with expo -10.
+        assert_eq!(token_value_usd(1_000_000_000, 9, 1_500_000_000_000, -10).unwrap(), 150_000_000);
+        assert_eq!(usd_to_token_amount(150_000_000, 9, 1_500_000_000_000, -10).unwrap(), 1_000_000_000);
+        // 1 token with 6 decimals at $1 quoted with expo -8.
+        assert_eq!(token_value_usd(1_000_000, 6, 100_000_000, -8).unwrap(), 1_000_000);
+        // Rounding is down, i.e. in the Pot's favour, both ways.
+        assert_eq!(token_value_usd(1, 9, 15_000_000_000, -8).unwrap(), 0);
+        assert_eq!(usd_to_token_amount(1, 9, 15_000_000_000, -8).unwrap(), 6);
+    }
+
+    #[test]
+    fn extreme_amounts_are_errors_not_panics() {
+        // u64::MAX tokens at i64::MAX fits u128 before it is scaled down.
+        assert!(token_value_usd(u64::MAX, 9, i64::MAX, -8).is_ok());
+        // Scaling up past u128, or a result past u64, is an error.
+        assert!(token_value_usd(u64::MAX, 0, i64::MAX, 0).is_err());
+        assert!(usd_to_token_amount(u128::MAX / 2, 9, 1, -8).is_err());
+        assert!(usd_to_token_amount(u64::MAX as u128 * 2, 6, 100_000_000, -8).is_err());
+        // Non-positive prices.
+        assert!(token_value_usd(1, 6, 0, -8).is_err());
+        assert!(usd_to_token_amount(1, 6, -1, -8).is_err());
+    }
+
+    #[test]
+    fn last_holder_takes_everything() {
+        assert_eq!(exit_amount(1_000_001, 100, 100).unwrap(), 1_000_001);
+        assert_eq!(exit_amount(1_000_001, 99, 100).unwrap(), 985_050); // 99% minus 0.5%, floored
     }
 }

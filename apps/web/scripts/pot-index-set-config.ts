@@ -3,6 +3,7 @@
  *
  *   npx tsx scripts/pot-index-set-config.ts price-age 30     # max_price_age_secs (cap: 60)
  *   npx tsx scripts/pot-index-set-config.ts show
+ *   npx tsx scripts/pot-index-set-config.ts migrate          # one-off, right after upgrading a v1.1 deployment
  *
  * Signer: $POT_INDEX_ADMIN_KEYPAIR (default ~/.config/solana/id.json), must be config.admin.
  */
@@ -10,7 +11,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { AnchorProvider, BN, Program, Wallet, type Idl } from '@coral-xyz/anchor'
-import { Connection, Keypair } from '@solana/web3.js'
+import { Connection, Keypair, SystemProgram } from '@solana/web3.js'
 import idl from '../src/lib/pot-index/idl.json'
 import { configPda, fetchConfig } from '../src/lib/pot-index/client'
 
@@ -37,7 +38,15 @@ async function main() {
     console.log('set max_price_age_secs =', secs, sig)
     return show()
   }
-  throw new Error('usage: show | price-age <secs>')
+  if (cmd === 'migrate') {
+    const sig = await program.methods
+      .migrateConfig()
+      .accounts({ admin: admin.publicKey, config: configPda(), systemProgram: SystemProgram.programId })
+      .rpc()
+    console.log('config migrated', sig)
+    return show()
+  }
+  throw new Error('usage: show | price-age <secs> | migrate')
 }
 
 main().catch((e) => {

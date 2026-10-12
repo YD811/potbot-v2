@@ -22,7 +22,8 @@ pub const FEE_SHARE_REFERRER_BPS: u64 = 4_000; // 40%
 pub const FEE_SHARE_CREATOR_BPS: u64 = 4_000; // 40%
 pub const FEE_SHARE_PROTOCOL_BPS: u64 = 2_000; // 20%
 
-/// Exit fee kept inside the Pot on every burn: 0.50%.
+/// Exit fee kept inside the Pot on every burn: 0.50%. It accrues to the holders who stay, so the
+/// last holder (burning the whole supply) pays none: see `oracle::exit_amount`.
 pub const EXIT_FEE_BPS: u64 = 50;
 
 /// Maximum non-cash legs in a Pot.
@@ -45,7 +46,8 @@ pub const MAX_CONF_BPS: u64 = 200; // 2%
 pub const CASH_LEG: u8 = u8::MAX;
 
 /// A Pyth price update account must have been posted within this many slots of the instruction
-/// that reads it, so a caller cannot pick the most favourable tick of the last few minutes.
+/// that reads it. Defence in depth only: an old tick can be posted now, so the real tick-shopping
+/// window is `max_price_age_secs` (review F1).
 pub const MAX_POSTED_SLOT_AGE: u64 = 150; // ~1 minute
 
 /// Marker in `RebalanceState.leg_out` for an open exit-to-USDC window (see instructions::exit_usdc).
@@ -56,9 +58,21 @@ pub const CONVERSION_FEE_BPS: u64 = 10; // 0.10%
 
 /// Hard upper bound on the oracle age any config may allow. Pyth is a pull oracle: any historical
 /// signed update can be posted at any time, so this window is exactly how far back a depositor can
-/// shop for a favourable tick. 60 s keeps that smaller than the entry + exit fee hurdle; the live
-/// config uses 30 s. (Review F1, Oct 11 2026.)
+/// shop for a favourable tick. 60 s keeps that smaller than the entry + exit fee hurdle. (Review F1,
+/// Oct 11 2026.)
 pub const MAX_PRICE_AGE_SECS_LIMIT: u64 = 60;
+
+/// The only USDC mint `init_config` accepts, fixed at build time so the first caller of
+/// `init_config` cannot bind the protocol to a look-alike mint (review F4). Build with
+/// `--features mainnet` for mainnet; the default is the devnet test USDC the LiteSVM tests use.
+#[cfg(feature = "mainnet")]
+pub const USDC_MINT: Pubkey = pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+#[cfg(not(feature = "mainnet"))]
+pub const USDC_MINT: Pubkey = pubkey!("AYLYmXfkfveAAU3gZwjHqFXePi459yumVw4NYJhHVjeN");
+
+/// A proposed admin must accept within this many slots (~1 hour at 400 ms), so a forgotten
+/// proposal cannot be accepted months later by whoever holds that key by then.
+pub const PENDING_ADMIN_TTL_SLOTS: u64 = 9_000;
 
 /// Minimum deposit so fees can never round to zero: 1 USDC.
 pub const MIN_DEPOSIT: u64 = 1_000_000;

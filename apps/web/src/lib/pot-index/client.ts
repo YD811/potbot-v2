@@ -72,7 +72,6 @@ export interface PotView {
   slippageBps: number
   maxTradeBps: number
   totalDepositsUsd: number
-  totalExitsUsd: number
   createdAt: number
 }
 
@@ -136,7 +135,6 @@ function toPotView(address: PublicKey, a: any): PotView {
     slippageBps: a.slippageBps,
     maxTradeBps: a.maxTradeBps,
     totalDepositsUsd: Number(a.totalDepositsUsd),
-    totalExitsUsd: Number(a.totalExitsUsd),
     createdAt: Number(a.createdAt),
   }
 }

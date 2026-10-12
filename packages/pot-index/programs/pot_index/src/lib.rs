@@ -22,7 +22,7 @@ pub use errors::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr");
+declare_id!("7bULMGNu443EVE48Cmfp42rvAaW2CJbKLv8fsPZBSRsV");
 
 #[program]
 pub mod pot_index {
@@ -38,11 +38,16 @@ pub mod pot_index {
     pub fn accept_admin(ctx: Context<AcceptAdmin>) -> Result<()> {
         instructions::admin::handle_accept_admin(ctx)
     }
+    /// One-off: grow a v1.1 `Config` to the current layout. Run right after upgrading.
+    pub fn migrate_config(ctx: Context<MigrateConfig>) -> Result<()> {
+        instructions::admin::handle_migrate_config(ctx)
+    }
     pub fn register_asset(ctx: Context<RegisterAsset>, feed_id: [u8; 32]) -> Result<()> {
         instructions::admin::handle_register_asset(ctx, feed_id)
     }
-    pub fn set_asset_enabled(ctx: Context<SetAsset>, enabled: bool) -> Result<()> {
-        instructions::admin::handle_set_asset_enabled(ctx, enabled)
+    /// Enable / disable an asset for new legs, or repoint its Pyth feed.
+    pub fn update_asset(ctx: Context<UpdateAsset>, update: AssetUpdate) -> Result<()> {
+        instructions::admin::handle_update_asset(ctx, update)
     }
 
     // ---- pot lifecycle (creator)

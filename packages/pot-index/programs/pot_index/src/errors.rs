@@ -88,10 +88,24 @@ pub enum PotError {
     WithinDeadband,
     #[msg("Rebalance cooldown has not elapsed")]
     Cooldown,
-    #[msg("max_price_age_secs above the protocol limit")]
-    PriceAgeTooLong,
-    #[msg("USDC mint must have 6 decimals")]
-    BadUsdcDecimals,
+    #[msg("max_price_age_secs must be between 1 and the protocol limit")]
+    PriceAgeOutOfRange,
+    #[msg("Not the USDC mint this build accepts")]
+    BadUsdcMint,
     #[msg("No pending admin, or signer is not the pending admin")]
     NotPendingAdmin, // 6045
+    #[msg("Update changes nothing")]
+    NothingToUpdate,
+    #[msg("Admin proposal expired; propose again")]
+    PendingAdminExpired,
+    #[msg("A feed change needs a price update account for the new feed")]
+    MissingPriceUpdate,
+    #[msg("Config is already in the current layout")]
+    ConfigAlreadyMigrated,
+    #[msg("Signer is not the program upgrade authority")]
+    NotUpgradeAuthority, // 6050
+    #[msg("Mint has a freeze authority; v1 does not list freezable assets")]
+    FreezableMint,
+    #[msg("Amount exceeds the vault balance")]
+    InsufficientVaultBalance,
 }

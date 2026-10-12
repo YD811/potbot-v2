@@ -14,8 +14,9 @@ Anchor 1.2.1, Solana CLI 4.3. Source: `packages/pot-index/programs/pot_index/src
 ## Instructions
 | Instruction | Signer | Effect |
 |---|---|---|
-| `init_config`, `set_config`, `transfer_admin`, `accept_admin` | admin | protocol settings; admin change is two-step |
-| `register_asset`, `set_asset_enabled` | admin | allowlist of (mint, Pyth feed id) |
+| `init_config`, `set_config`, `accept_admin` | admin | protocol settings (`init_config` by the upgrade authority only); admin change is two-step: `set_config(new_admin)` proposes, the new key accepts within ~1 hour (`PENDING_ADMIN_TTL_SLOTS`) |
+| `migrate_config` | admin | one-off: grows a v1.1 `Config` to the current layout (see operations.md) |
+| `register_asset`, `update_asset` | admin | allowlist of (mint, Pyth feed id); `update_asset` enables/disables an asset or repoints its feed for legs added from then on |
 | `create_pot(name, symbol, deposit_cap_usd, slippage_bps, max_trade_bps)` | creator | creates Pot + index mint |
 | `add_leg(weight_bps)` x 2..5 | creator | adds an asset with its vault |
 | `finalize_pot` | creator | checks weights sum to 10,000 bps, locks the basket |
@@ -30,7 +31,7 @@ Anchor 1.2.1, Solana CLI 4.3. Source: `packages/pot-index/programs/pot_index/src
 
 ## Limits (constants.rs)
 - Entry fee 30 bps: 40% referrer, 40% creator, 20% protocol. No referrer: referrer share goes to the creator.
-- Exit fee 50 bps, stays in the Pot.
+- Exit fee 50 bps, stays in the Pot; the last holder (burning the whole supply) pays none, since nobody is left for it to accrue to.
 - 2 to 5 legs. Index decimals 6. Minimum deposit 1 USDC.
 - Virtual shares/assets 1 token / $1 against first-depositor inflation.
 - Oracle: max confidence 2%, max age `max_price_age_secs` capped at 60 s (`MAX_PRICE_AGE_SECS_LIMIT`), update account posted within 150 slots. Pot values what it holds or gives at `price + conf`, what it receives at `price - conf`.

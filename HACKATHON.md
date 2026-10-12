@@ -6,9 +6,9 @@ Colosseum Crypto World's Fair, Sept 14 to Oct 12, 2026. Entry: **PotBot POTFolio
 
 | | |
 |---|---|
-| Program | `pot_index`, Anchor 1.2, written from scratch during the Fair. 17 instructions. Devnet `DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr`, live since Oct 8, upgraded Oct 10 and Oct 12 after reviews ([Explorer](https://explorer.solana.com/address/DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr?cluster=devnet)) |
-| Tests | 12 LiteSVM end-to-end tests, green in CI on every push |
-| Reviews | 3 security reviews (Oct 8, Oct 10 checklist-based; Oct 11 independent human review by a Solana engineer). No fund-draining path, no critical or high findings. [Report](docs/potfolio/security.md) |
+| Program | `pot_index`, Anchor 1.2, written from scratch during the Fair. 18 instructions. Devnet `7bULMGNu443EVE48Cmfp42rvAaW2CJbKLv8fsPZBSRsV` (v1.2, Oct 13, after an independent review; [Explorer](https://explorer.solana.com/address/7bULMGNu443EVE48Cmfp42rvAaW2CJbKLv8fsPZBSRsV?cluster=devnet)). v1.1, live since Oct 8, stays at `DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr` |
+| Tests | 40 LiteSVM end-to-end tests (flow, guards, invariants), run twice in CI on every push: mainnet and devnet builds |
+| Reviews | 3 security reviews (Oct 8, Oct 10 checklist-based; Oct 10 to 12 independent human review by a Solana engineer: 26 findings, 0 critical, 1 high in the operator, fixed). No fund-draining path. 13 findings fixed in v1.1 and v1.2. [Report](docs/potfolio/security.md), [decisions](docs/potfolio/decisions.md) |
 | Live | 5 showcase POTFolios with real Pyth prices, faucet, keeper, price operator, index price history and P&L per wallet |
 | Code | 86 commits, ~170 files, ~18,500 lines added across program, web app, scripts and docs |
 
@@ -38,7 +38,7 @@ From a terminal, against production, through the same routes the site uses:
 npm install && cd apps/web
 solana-keygen new -o judge.json --no-bip39-passphrase
 export POT_INDEX_WALLET_KEYPAIR=judge.json POT_INDEX_BASE_URL=https://potbot.fun
-MINT=PotSvA4ynuxbMFUA8SJSbULHhuTY1JcL5RaxnQz5FmM          # Solana Blue Chips
+MINT=Pot6gaQTW8NeMckGDWg4MRGvMaq5QNYimj1xRwQKVka          # Solana Blue Chips
 
 npx tsx scripts/pot-index-operator-flow.ts faucet                   # 1,000 tUSDC + 0.1 SOL
 npx tsx scripts/pot-index-operator-flow.ts deposit   $MINT 40       # mint at NAV, basket bought (3 trades)
@@ -56,7 +56,8 @@ Program tests: `cd packages/pot-index && ./test.sh` (Anchor 1.2.1, Solana CLI 4.
 | Oct 8 | `pot_index` on devnet, first POTFolio, first security review |
 | Oct 10 | Second review, v1.0 upgrade, five showcase POTFolios |
 | Oct 11 | Independent human review: the oracle fix was not a fix (pull oracle accepts old ticks). Window set to 60 s with a cap in code, test added |
-| Oct 12 | v1.1 upgrade. One-signature flow for all holder actions. My Dashboard. Production on potbot.fun |
+| Oct 12 | v1.1 upgrade. One-signature flow for all holder actions. My Dashboard. Production on potbot.fun. Independent review: 26 findings, holder pays its own rent (#97) |
+| Oct 13 | v1.2 at a new address after the review: upgrade-authority-only init, live-price check on listing, freezable mints refused, last holder pays no exit fee, admin events, 40 tests |
 
 ## Where to read more
 

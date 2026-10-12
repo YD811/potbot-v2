@@ -149,7 +149,7 @@ pub fn handle_rebalance_open<'info>(
     };
     require_keys_eq!(ctx.accounts.out_vault.key(), out_vault_key, PotError::VaultMismatch);
     require_keys_eq!(ctx.accounts.out_mint.key(), out_mint_key, PotError::TokenMintMismatch);
-    require!(amount_out <= ctx.accounts.out_vault.amount, PotError::ZeroAmount);
+    require!(amount_out <= ctx.accounts.out_vault.amount, PotError::InsufficientVaultBalance);
 
     // Resolve the bought side.
     let in_leg = pot.leg(leg_in).ok_or(PotError::InvalidLeg)?;

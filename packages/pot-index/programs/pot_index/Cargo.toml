@@ -18,6 +18,7 @@ idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 anchor-debug = []
 custom-heap = []
 custom-panic = []
+mainnet = []
 
 [dependencies]
 anchor-lang = { version = "1.2.1", features = ["init-if-needed"] }

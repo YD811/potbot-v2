@@ -11,11 +11,11 @@ A **Pot** is a non-custodial basket of Solana assets with fixed target weights.
 | --- | --- | --- |
 | `create_pot` → `add_leg` × 2–5 → `finalize_pot` | creator | Pot PDA, index mint (6 dec), one vault ATA per asset + a USDC cash vault. Weights lock at finalize. |
 | `deposit(amount, min_shares_out)` | anyone | USDC in; 0.30% fee split 40/40/20 referrer/creator/protocol (no referrer → creator 80%); index tokens minted at NAV. |
-| `exit(shares, min_usdc_out)` | holder | Burn index tokens, receive a pro-rata share of **every** leg in kind. 0.50% stays in the Pot. Never pausable, needs no oracle. |
+| `exit(shares, min_usdc_out)` | holder | Burn index tokens, receive a pro-rata share of **every** leg in kind. 0.50% stays in the Pot for the remaining holders; the last holder (burning the whole supply) pays none. Never pausable, needs no oracle. |
 | `exit_usdc_open(shares, min_usdc_out)` + `exit_usdc_close` | holder | Same burn and in-kind payout, then the holder sells the legs in the SAME transaction (Jupiter on mainnet, devnet market maker here). `open` records the minimum USDC the sale must produce (Pyth price − conf, minus `slippage_bps`, minus the 0.10% conversion fee) and requires a matching `close`; `close` checks the holder's USDC grew by at least that and pays the conversion fee to the treasury. Under-delivery reverts everything. |
 | `rebalance_open` + `rebalance_close` | anyone (keeper) | Same-transaction "flash trade" bounded on-chain: only overweight → underweight, never past target, ≤ `max_trade_bps` of NAV, received ≥ Pyth value × (1 − `slippage_bps`). `rebalance_open` introspects the transaction and refuses unless a matching `rebalance_close` follows. Deploying cash (a fresh deposit) has no cooldown, so one deposit is allocated leg by leg in one wallet prompt; asset→asset rotations keep the ~1 minute cooldown. |
 | `set_pot_params` | creator | Pause deposits, change the deposit cap. Weights are immutable. |
-| `init_config`, `set_config`, `register_asset`, `set_asset_enabled` | admin | Protocol settings and the asset allowlist (mint + Pyth feed id). |
+| `init_config`, `set_config`, `accept_admin`, `register_asset`, `update_asset` | admin | Protocol settings, two-step admin transfer, and the asset allowlist (mint + Pyth feed id). `init_config` only by the program upgrade authority; `register_asset` / `update_asset` need a live price for the feed. |
 
 There is **no withdraw instruction**. Assets leave a Pot only as a proportional share.
 

@@ -77,7 +77,6 @@ pub fn handle_create_pot(ctx: Context<CreatePot>, p: CreatePotParams) -> Result<
     pot.rebalance = RebalanceState::default();
     pot.last_rebalance_slot = 0;
     pot.total_deposits_usd = 0;
-    pot.total_exits_usd = 0;
     pot.created_at = Clock::get()?.unix_timestamp;
     pot.bump = ctx.bumps.pot;
 
@@ -174,7 +173,7 @@ pub fn handle_set_pot_params(ctx: Context<CreatorOnly>, u: PotUpdate) -> Result<
 // ---------------------------------------------------------------------------
 // Token metadata for the index mint (name / symbol / logo in wallets and explorers).
 // The Pot PDA is the mint authority, so the CPI into Metaplex Token Metadata is signed here.
-// Creator-only, once; the Pot PDA stays update authority so metadata can be refreshed later.
+// Creator-only; the Pot PDA stays update authority, so `update_index_metadata` can repoint the URI.
 // ---------------------------------------------------------------------------
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3, Metadata};
 

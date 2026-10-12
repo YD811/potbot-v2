@@ -195,7 +195,6 @@ pub fn handle_exit_usdc_open<'info>(
         in_vault_before: user_usdc_after_cash,
         slot: clock.slot,
     };
-    pot.total_exits_usd = pot.total_exits_usd.saturating_add(cash_out);
     emit!(ExitUsdcOpened {
         pot: pot.key(),
         user: user_key,
@@ -264,7 +263,6 @@ pub fn handle_exit_usdc_close(ctx: Context<ExitUsdcClose>) -> Result<()> {
 
     let pot = &mut ctx.accounts.pot;
     pot.rebalance = RebalanceState::default();
-    pot.total_exits_usd = pot.total_exits_usd.saturating_add(received);
     emit!(ExitUsdcClosed {
         pot: pot.key(),
         user: ctx.accounts.user.key(),

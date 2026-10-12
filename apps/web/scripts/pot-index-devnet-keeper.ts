@@ -18,12 +18,12 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { AnchorProvider, Program, Wallet, type Idl } from '@coral-xyz/anchor'
-import { Connection, Keypair, PublicKey, type VersionedTransaction } from '@solana/web3.js'
+import { Connection, Keypair, PublicKey, TransactionMessage, VersionedTransaction } from '@solana/web3.js'
 import { createTransferCheckedInstruction, getAssociatedTokenAddressSync } from '@solana/spl-token'
 import idl from '../src/lib/pot-index/idl.json'
 import registry from '../src/lib/pot-index/assets.devnet.json'
 import { CASH_LEG, buildRebalancePair, fetchPot, fetchPotBalances } from '../src/lib/pot-index/client'
-import { buildWithPythUpdates, fetchHermesPrices } from '../src/lib/pot-index/pyth-post'
+import { buildPythSession, fetchHermesPrices } from '../src/lib/pot-index/pyth-post'
 
 const RPC = process.env.POT_INDEX_RPC ?? 'https://api.devnet.solana.com'
 const KEYPAIR = process.env.POT_INDEX_KEEPER_KEYPAIR ?? path.join(os.homedir(), '.config/solana/id.json')
@@ -119,29 +119,33 @@ async function step(connection: Connection, program: Program, keeper: Keypair, I
   }
 
   const wallet = new Wallet(keeper)
-  const txs = await buildWithPythUpdates(connection, wallet, feedIds, async (priceUpdates) => {
-    const { open, close } = await buildRebalancePair(program, {
-      pot,
-      keeper: keeper.publicKey,
-      usdcMint: new PublicKey(registry.usdcMint),
-      legOut,
-      legIn,
-      amountOut,
-      priceUpdates,
-    })
-    // Mock market maker fills the in-leg from the keeper's inventory.
-    const fill = createTransferCheckedInstruction(keeperInAta, inLeg.mint, inLeg.vault, keeper.publicKey, BigInt(amountIn), inLeg.decimals)
-    return [open, fill, close]
-  })
-
-  let last = ''
-  for (const { tx, signers } of txs) {
+  // Post the prices in their own transactions, then open + fill + close in ONE transaction:
+  // rebalance_open requires rebalance_close in the same transaction, and the Pyth builder
+  // would otherwise split the three across packets.
+  const session = await buildPythSession(connection, wallet, feedIds)
+  const send = async (tx: VersionedTransaction, signers: { publicKey: PublicKey; secretKey: Uint8Array }[] = []) => {
     if (signers.length) tx.sign(signers as never[])
-    const signed = (await wallet.signTransaction(tx as VersionedTransaction)) as VersionedTransaction
-    last = await connection.sendRawTransaction(signed.serialize(), { skipPreflight: false })
-    await connection.confirmTransaction(last, 'confirmed')
-    console.log('tx', last)
+    tx.sign([keeper])
+    const sig = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: false, maxRetries: 5 })
+    await connection.confirmTransaction(sig, 'confirmed')
+    console.log('tx', sig)
+    return sig
   }
+  for (const t of session.postTxs) await send(t.tx, t.signers)
+  const { open, close } = await buildRebalancePair(program, {
+    pot,
+    keeper: keeper.publicKey,
+    usdcMint: new PublicKey(registry.usdcMint),
+    legOut,
+    legIn,
+    amountOut,
+    priceUpdates: session.priceUpdates,
+  })
+  // Mock market maker fills the in-leg from the keeper's inventory.
+  const fill = createTransferCheckedInstruction(keeperInAta, inLeg.mint, inLeg.vault, keeper.publicKey, BigInt(amountIn), inLeg.decimals)
+  const { blockhash } = await connection.getLatestBlockhash('confirmed')
+  const last = await send(new VersionedTransaction(new TransactionMessage({ payerKey: keeper.publicKey, recentBlockhash: blockhash, instructions: [open, fill, close] }).compileToV0Message()))
+  for (const t of session.closeTxs) await send(t.tx, t.signers)
   return `rebalanced: ${last}`
 }
 

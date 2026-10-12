@@ -7,9 +7,9 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-pot_index = "DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr"
+pot_index = "7bULMGNu443EVE48Cmfp42rvAaW2CJbKLv8fsPZBSRsV"
 [programs.devnet]
-pot_index = "DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr"
+pot_index = "7bULMGNu443EVE48Cmfp42rvAaW2CJbKLv8fsPZBSRsV"
 
 [provider]
 cluster = "devnet"

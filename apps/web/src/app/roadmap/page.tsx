@@ -140,7 +140,7 @@ export default function RoadmapPage() {
 
       <footer className="border-t border-pot-border pt-8 text-sm text-pot-muted">
         <p className="break-words">
-          Portfolios program (devnet): <code className="font-mono text-pot-green text-xs break-all">DfKKe9oiPb8E98qxZ95otU3D5y1L1U3L2Eh3A7HQiUxr</code>
+          Portfolios program (devnet): <code className="font-mono text-pot-green text-xs break-all">7bULMGNu443EVE48Cmfp42rvAaW2CJbKLv8fsPZBSRsV</code>
         </p>
         <p className="mt-2">
           Hackathon build: <Link href="/worldsfair" className="text-pot-accent hover:text-white">/worldsfair</Link> ·

@@ -3,7 +3,7 @@
 | Event | Fee | Where it goes |
 |---|---|---|
 | Deposit | 0.30% of the deposit | 0.12% creator, 0.12% referrer, 0.06% protocol treasury, paid in the deposit transaction to USDC token accounts. No referrer: creator receives 0.24%. |
-| Exit (in kind) | 0.50% of the redeemed share | stays in the Pot, i.e. accrues to remaining holders |
+| Exit (in kind) | 0.50% of the redeemed share | stays in the Pot, i.e. accrues to remaining holders; waived for the last holder, since nobody remains |
 | Exit to USDC | 0.50% exit + 0.10% conversion on the sold part | conversion fee to the protocol treasury, enforced by `exit_usdc_close`; the cash share carries no conversion fee. This is an **interface fee**, not a protocol fee: any front end can call `exit` and swap the assets itself without it (review F13). Revenue projections count entry and in-Pot exit only. |
 | Holding | 0% | no management or performance fee |
 | Rebalance | up to the Pot's slippage band per trade vs Pyth (default 0.5%) | implicit; the band is a floor a third-party keeper can take in full, see keepers.md |

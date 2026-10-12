@@ -117,7 +117,6 @@ pub fn handle_exit<'info>(
     }
 
     let pot = &mut ctx.accounts.pot;
-    pot.total_exits_usd = pot.total_exits_usd.saturating_add(usdc_out);
     emit!(Exited {
         pot: pot.key(),
         user: user_key,
