@@ -116,7 +116,7 @@ Known and accepted on devnet: a depositor can self-refer from a second wallet (r
 
 ## Limits today and the path to mainnet
 
-Fixed weights. Up to 5 assets. Devnet swaps through a PotBot market maker, not Jupiter. One operator key.
+Fixed weights. Up to 5 assets. Devnet swaps through a PotBot market maker, not Jupiter. One operator key. Stocks limited to the Pyth feeds open to us (TSLA, QQQ); more equities, such as a Micron / SK Hynix / SanDisk memory basket, wait on a Pyth equity entitlement.
 
 Before the first mainnet deposit: Squads 2-of-3 multisig with a timelock on upgrade authority, admin and asset registration; deploy and `init_config` in one transaction; verified build on Explorer; external audit of the final version; Jupiter for exits to USDC; a capped flagship POTFolio. Then: Managed POTFolios (creator adjusts inside a public mandate with a timelock), Community POTFolios (holders vote with the token), 10 assets, a POTFolio/USDC pool on Meteora, Creator POTFolios built from a public profile. Live roadmap: [potbot.fun/roadmap](https://potbot.fun/roadmap) · [mainnet checklist](https://potbot.fun/mainnet).
 
