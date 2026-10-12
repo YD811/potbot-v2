@@ -153,9 +153,11 @@ export async function fetchAllPots(connection: Connection): Promise<PotView[]> {
   const all = await (program.account as any).pot.all()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   // Finalized, non-paused Pots. Paused (retired) Pots stay reachable by direct link so holders can still exit.
+  // getProgramAccounts returns accounts in no particular order; sort so every refetch yields the same list.
   return all
     .map((x: any) => toPotView(x.publicKey, x.account))
     .filter((p: PotView) => p.finalized && !p.paused)
+    .sort((a: PotView, b: PotView) => b.createdAt - a.createdAt || a.address.toBase58().localeCompare(b.address.toBase58()))
 }
 
 export async function fetchConfig(connection: Connection) {

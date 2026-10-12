@@ -29,11 +29,13 @@ export default function PortfoliosPage() {
     const list = (pots.data ?? []).filter((p) => cat === 'all' || potCategory(p) === cat)
     const st = stats.data ?? {}
     const g = (p: PotView) => st[p.address.toBase58()]
+    // Stable order: coarse buckets so cent-level price moves do not swap rows, then creation time, then address.
+    const tie = (a: PotView, b: PotView) => b.createdAt - a.createdAt || a.address.toBase58().localeCompare(b.address.toBase58())
     return [...list].sort((a, b) => {
-      if (sort === 'newest') return b.createdAt - a.createdAt
-      if (sort === 'holders') return (g(b)?.holders ?? 0) - (g(a)?.holders ?? 0)
-      if (sort === 'perf') return (g(b)?.perf ?? -1) - (g(a)?.perf ?? -1)
-      return (g(b)?.navUsd ?? 0) - (g(a)?.navUsd ?? 0)
+      if (sort === 'newest') return tie(a, b)
+      if (sort === 'holders') return (g(b)?.holders ?? 0) - (g(a)?.holders ?? 0) || tie(a, b)
+      if (sort === 'perf') return Math.round(((g(b)?.perf ?? -1) - (g(a)?.perf ?? -1)) * 1000) || tie(a, b)
+      return Math.round((g(b)?.navUsd ?? 0) - (g(a)?.navUsd ?? 0)) || tie(a, b)
     })
   }, [pots.data, cat, sort, stats.data])
 

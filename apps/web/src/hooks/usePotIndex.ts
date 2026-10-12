@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useMemo } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react'
 import { Connection, PublicKey, Transaction, TransactionMessage, VersionedTransaction } from '@solana/web3.js'
 import type { Wallet } from '@coral-xyz/anchor'
@@ -131,6 +131,7 @@ export function usePotStats(pot: PotView | null | undefined) {
   return useQuery({
     queryKey: ['pot-index', 'stats', pot?.address.toBase58(), prices.dataUpdatedAt],
     enabled: !!pot && !!prices.data,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const bal = await fetchPotBalances(connection, pot!)
       const nav = navUsd(pot!, bal, prices.data!)
@@ -162,6 +163,8 @@ export function useAllPotStats(pots: PotView[] | undefined) {
   return useQuery({
     queryKey: ['pot-index', 'list-stats', key, prices.dataUpdatedAt],
     enabled: !!pots && pots.length > 0 && !!prices.data,
+    // The key changes with every price refresh; keep the last stats on screen so the list never collapses to zeros.
+    placeholderData: keepPreviousData,
     staleTime: 20_000,
     refetchInterval: 30_000,
     queryFn: async () => {

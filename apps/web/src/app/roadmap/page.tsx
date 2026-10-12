@@ -51,6 +51,7 @@ const SECTIONS: Section[] = [
       { name: 'Creator earnings', desc: 'What each creator and referrer earned, share cards for X.' },
       { name: 'Live prices, always', desc: 'Our keeper keeps Pyth prices fresh on-chain, so every action is instant.' },
       { name: 'Up to 10 assets', desc: 'Bigger baskets and long-tail tokens.' },
+      { name: 'Stocks beyond Tesla and the Nasdaq', desc: 'A memory basket first: Micron, SK Hynix, SanDisk and USDC as one token, exposure to the chip-memory cycle that nobody holds on Solana today. Needs Pyth equity data: our free feed covers only TSLA and QQQ.' },
     ],
   },
   {
@@ -82,6 +83,18 @@ const SECTIONS: Section[] = [
     features: [
       { name: 'Any asset inside', desc: 'Tokens, stocks, gold, real estate, cars: anything that gets tokenized can sit in a Pot.' },
       { name: 'One token that works everywhere', desc: 'Send it, lend it, borrow against it, stake and restake it.' },
+    ],
+  },
+  {
+    tier: 'phase-2',
+    title: 'What we need',
+    blurb: 'The short list between devnet and a guarded mainnet.',
+    features: [
+      { name: 'Equity price data', desc: 'Pyth entitlement for US stock feeds (Micron, SK Hynix, SanDisk, Nvidia and the rest). Today only TSLA and QQQ are open to us; the paid tier starts at $10k a month, so we are asking Pyth for builder access first.' },
+      { name: 'External audit', desc: 'One audit of the final program before the first real deposit. Three reviews so far, one of them independent.' },
+      { name: 'Jupiter and a market maker', desc: 'Exits to USDC and rebalancing through Jupiter on mainnet; a seeded POTFolio/USDC pool for the flagship.' },
+      { name: 'A second engineer', desc: 'The reviewer who found 26 issues and deployed v1.2 should be on the team, not a volunteer.' },
+      { name: 'Runway', desc: 'Six months of a two-person team, infra, audit and data. Grants and a small round; details in the budget note in the repo.' },
     ],
   },
 ]
