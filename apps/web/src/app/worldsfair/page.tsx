@@ -38,7 +38,7 @@ export default function WorldsFairPage() {
           <dd className="text-pot-muted">Devnet since Oct 8, five POTFolios, one signature per action, exit to assets or USDC, P&amp;L per wallet.</dd>
         </dl>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Link href="/portfolios/PotSvA4ynuxbMFUA8SJSbULHhuTY1JcL5RaxnQz5FmM" className="btn-primary text-center">Try it (2 minutes)</Link>
+          <Link href="/portfolios/Pot6gaQTW8NeMckGDWg4MRGvMaq5QNYimj1xRwQKVka" className="btn-primary text-center">Try it (2 minutes)</Link>
           <a href="https://github.com/YD811/potbot-v2/blob/main/HACKATHON.md" target="_blank" rel="noreferrer" className="btn-secondary text-center">What we built</a>
           <a href={explorer} target="_blank" rel="noreferrer" className="btn-secondary text-center">Program on Explorer</a>
         </div>
@@ -46,8 +46,8 @@ export default function WorldsFairPage() {
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          ['17', 'program instructions'],
-          ['12 / 12', 'end-to-end tests'],
+          ['18', 'program instructions'],
+          ['40 / 40', 'end-to-end tests'],
           ['3', 'security reviews'],
           ['1', 'signature per action'],
         ].map(([v, l]) => (
@@ -60,7 +60,7 @@ export default function WorldsFairPage() {
 
       <Section title="Try it in two minutes" summary="Real devnet transactions, test money." open>
         <ol className="list-decimal space-y-2 pl-5">
-          <li>Open <Link href="/portfolios/PotSvA4ynuxbMFUA8SJSbULHhuTY1JcL5RaxnQz5FmM" className="text-pot-green underline">Solana Blue Chips</Link>. Connect a devnet wallet or sign in with email.</li>
+          <li>Open <Link href="/portfolios/Pot6gaQTW8NeMckGDWg4MRGvMaq5QNYimj1xRwQKVka" className="text-pot-green underline">Solana Blue Chips</Link>. Connect a devnet wallet or sign in with email.</li>
           <li><b className="text-white">Get test USDC.</b> 1,000 tUSDC and a little SOL for fees.</li>
           <li><b className="text-white">Deposit 100.</b> One signature. Tokens minted at NAV, then the basket is bought.</li>
           <li><b className="text-white">Redeem</b> for the assets or for USDC. One signature again.</li>
@@ -129,12 +129,12 @@ export default function WorldsFairPage() {
 
       <Section title="Built during the Fair" summary="Sept 14 to Oct 12: program, app, tests, three reviews.">
         <ul className="list-disc space-y-2 pl-5">
-          <li><b className="text-white">Program <code>pot_index</code></b>, Anchor 1.2, 17 instructions, from scratch. Devnet since Oct 8, upgraded Oct 10 and 12.</li>
+          <li><b className="text-white">Program <code>pot_index</code></b>, Anchor 1.2, 18 instructions, from scratch. Devnet since Oct 8, v1.2 at a new address after an independent review.</li>
           <li><b className="text-white">Honest pricing.</b> Pyth prices max 60 s old (hard cap in code), priced at price ± confidence.</li>
           <li><b className="text-white">Atomic rebalancing.</b> Open and close in one transaction, or nothing happens.</li>
           <li><b className="text-white">Exit to USDC in one transaction</b> with an on-chain minimum.</li>
           <li><b className="text-white">One signature per action.</b> Our operator refreshes prices and submits; the program checks everything.</li>
-          <li><b className="text-white">12 end-to-end tests, three reviews.</b> No fund-draining path, no critical or high findings. One review caught our own oracle fix not working; we fixed it and published everything.{' '}
+          <li><b className="text-white">40 end-to-end tests, three reviews.</b> No fund-draining path, no critical or high findings. One review caught our own oracle fix not working; we fixed it and published everything.{' '}
             <a className="text-pot-green underline" href="https://github.com/YD811/potbot-v2/blob/main/docs/potfolio/security.md" target="_blank" rel="noreferrer">Report</a></li>
         </ul>
       </Section>
