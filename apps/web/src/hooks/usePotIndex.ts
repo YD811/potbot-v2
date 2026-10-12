@@ -324,9 +324,10 @@ export function usePotIndexActions() {
   )
 
   /**
-   * One signature per action. The server builds the transaction on a durable nonce (it does not
-   * expire while the wallet prompt is open), the holder signs it, the server refreshes the Pyth
-   * prices, co-signs and submits. See operator.server.ts.
+   * One wallet prompt per action. The server builds the transaction on a recent blockhash, the
+   * holder signs it, the server refreshes the Pyth prices, co-signs and submits. When the holder's
+   * new token accounts do not fit in that transaction, the server adds a setup transaction that the
+   * holder signs in the same prompt and pays for. See operator.server.ts.
    */
   const viaOperator = useCallback(
     async (kind: 'deposit' | 'exit' | 'exit-usdc', body: Record<string, unknown>) => {
@@ -339,16 +340,24 @@ export function usePotIndexActions() {
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ kind, wallet: pubkey.toBase58(), ...body }),
         }))
-        const built = (await br.json()) as { ok?: boolean; tx?: string; token?: string; error?: string; payUsdc?: string }
+        const built = (await br.json()) as { ok?: boolean; tx?: string; setup?: string; token?: string; error?: string; payUsdc?: string }
         if (!br.ok || !built.tx || !built.token) throw new Error(built.error ?? 'could not build the transaction')
         const tx = VersionedTransaction.deserialize(Buffer.from(built.tx, 'base64'))
+        const setup = built.setup ? VersionedTransaction.deserialize(Buffer.from(built.setup, 'base64')) : null
         const t1 = Date.now()
-        const signed = (await withStage(`${kind}:sign`, wallet.signTransaction(tx))) as VersionedTransaction
+        const [signedSetup, signed]: [VersionedTransaction | null, VersionedTransaction] = setup
+          ? ((await withStage(`${kind}:sign`, wallet.signAllTransactions([setup, tx]))) as [VersionedTransaction, VersionedTransaction])
+          : [null, (await withStage(`${kind}:sign`, wallet.signTransaction(tx))) as VersionedTransaction]
         const t2 = Date.now()
         const sr = await withStage(`${kind}:submit`, fetch('/api/pot-index/tx/submit', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ tx: Buffer.from(signed.serialize()).toString('base64'), token: built.token, timing: { prepareMs: t1 - t0, walletMs: t2 - t1, attempt } }),
+          body: JSON.stringify({
+            tx: Buffer.from(signed.serialize()).toString('base64'),
+            ...(signedSetup ? { setup: Buffer.from(signedSetup.serialize()).toString('base64') } : {}),
+            token: built.token,
+            timing: { prepareMs: t1 - t0, walletMs: t2 - t1, attempt },
+          }),
         }))
         const res = (await sr.json()) as { ok?: boolean; sig?: string; allocated?: string[]; error?: string; expired?: boolean }
         if (sr.ok && res.sig) {

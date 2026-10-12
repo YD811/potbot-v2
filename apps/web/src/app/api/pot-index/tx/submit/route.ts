@@ -17,10 +17,12 @@ export async function POST(req: Request) {
   try {
     assertDevnet()
     const op = operatorKeypair()
-    const b = (await req.json()) as { tx?: string; token?: string; timing?: unknown }
+    const b = (await req.json()) as { tx?: string; setup?: string; token?: string; timing?: unknown }
     if (b.timing) console.log('[potfolio submit] timing', JSON.stringify(b.timing))
     const tx = VersionedTransaction.deserialize(Buffer.from(b.tx ?? '', 'base64'))
-    const t = verifyToken(op, tx, b.token ?? '')
+    // The holder's own setup transaction (its new token accounts, holder pays), when there is one.
+    const setup = b.setup ? VersionedTransaction.deserialize(Buffer.from(b.setup, 'base64')) : null
+    const t = verifyToken(op, tx, b.token ?? '', setup)
     const keysDbg = tx.message.staticAccountKeys.map((k) => k.toBase58().slice(0, 6))
     console.log('[potfolio submit] tx', JSON.stringify({ kind: t.kind, sameBlockhash: tx.message.recentBlockhash === t.blockhash, nIx: tx.message.compiledInstructions.length, programs: tx.message.compiledInstructions.map((ci) => tx.message.staticAccountKeys[ci.programIdIndex].toBase58().slice(0, 8)), sigs: tx.signatures.length, keys: keysDbg.length, alt: tx.message.addressTableLookups.length }))
     const keys = tx.message.staticAccountKeys
@@ -28,6 +30,7 @@ export async function POST(req: Request) {
     const hi = keys.findIndex((k) => k.equals(holder))
     if (hi < 0 || tx.signatures[hi].every((x) => x === 0)) return NextResponse.json({ error: 'not signed by the holder' }, { status: 400 })
     const connection = operatorConnection()
+    if (setup) await sendAndConfirm(connection, setup, { blockhash: t.blockhash, lastValidBlockHeight: t.lastValidBlockHeight })
     if (t.feedIds.length) await refreshPrices(connection, op, t.feedIds)
     const opIndex = keys.findIndex((k) => k.equals(op.publicKey))
     if (opIndex >= 0 && tx.message.isAccountSigner(opIndex)) tx.sign([op])

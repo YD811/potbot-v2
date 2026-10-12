@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
-import { PublicKey, type TransactionInstruction } from '@solana/web3.js'
+import { PACKET_DATA_SIZE, PublicKey, TransactionMessage, VersionedTransaction, type TransactionInstruction } from '@solana/web3.js'
 import { createBurnCheckedInstruction, getAssociatedTokenAddressSync } from '@solana/spl-token'
 import registry from '@/lib/pot-index/assets.devnet.json'
 import { buildDeposit, buildExit, buildExitUsdcPair, fetchPot, fetchPotBalances, EXIT_FEE_BPS } from '@/lib/pot-index/client'
 import {
   assertDevnet,
   buildHolderTx,
-  hoistAtaCreations,
   issueToken,
+  missingAtaCreations,
   mmPayInstruction,
   newTicket,
   operatorConnection,
@@ -15,6 +15,7 @@ import {
   potProgram,
   quoteExitUsdc,
   refreshPrices,
+  txSize,
 } from '@/lib/pot-index/operator.server'
 
 /**
@@ -81,10 +82,23 @@ export async function POST(req: Request) {
       summary = { payUsdc: payUsdc.toString() }
     } else return NextResponse.json({ error: 'kind' }, { status: 400 })
 
-    const rest = await hoistAtaCreations(connection, op, ixs)
-    const { tx, blockhash, lastValidBlockHeight } = await buildHolderTx(connection, op, wallet, rest)
-    const token = issueToken(op, newTicket(kind, wallet, mint, needsPrices ? feedIds : [], tx, { blockhash, lastValidBlockHeight }))
-    return NextResponse.json({ ok: true, tx: Buffer.from(tx.serialize()).toString('base64'), token, ...summary })
+    // The holder pays the rent of its new token accounts (security.md, O1). The creations ride in
+    // the holder's transaction when it fits in one packet; otherwise they go first, in a setup
+    // transaction the holder signs in the same wallet prompt.
+    const { creations, rest } = await missingAtaCreations(connection, wallet, ixs)
+    const built = await buildHolderTx(connection, op, wallet, [...creations, ...rest])
+    const { blockhash, lastValidBlockHeight } = built
+    let tx = built.tx
+    let setup: VersionedTransaction | null = null
+    if (creations.length && txSize(tx) > PACKET_DATA_SIZE) {
+      const v0 = (list: TransactionInstruction[]) =>
+        new VersionedTransaction(new TransactionMessage({ payerKey: wallet, recentBlockhash: blockhash, instructions: list }).compileToV0Message())
+      setup = v0(creations)
+      tx = v0(rest)
+    }
+    const token = issueToken(op, newTicket(kind, wallet, mint, needsPrices ? feedIds : [], tx, { blockhash, lastValidBlockHeight }, setup))
+    const b64 = (v: VersionedTransaction) => Buffer.from(v.serialize()).toString('base64')
+    return NextResponse.json({ ok: true, tx: b64(tx), ...(setup ? { setup: b64(setup) } : {}), token, ...summary })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 })
   }

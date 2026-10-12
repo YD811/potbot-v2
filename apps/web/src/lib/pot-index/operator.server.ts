@@ -170,23 +170,35 @@ export async function refreshPrices(connection: Connection, op: Keypair, feedIds
 // ---------------------------------------------------------------------------------------------
 
 /**
- * Pull the associated-token-account creations out of `ixs`, create the missing ones with the
- * operator paying (rent on devnet), and return the remaining instructions. Keeps the holder's
- * transaction small and its simulation clean.
+ * Split the associated-token-account creations out of `ixs`: keep the ones whose account does not
+ * exist yet, with the holder as payer, and drop the rest. The holder pays the rent for its own new
+ * accounts. When the operator paid it, any caller could close the accounts and keep the rent, an
+ * unbounded drain of the operator (security.md, O1).
  */
-export async function hoistAtaCreations(connection: Connection, op: Keypair, ixs: TransactionInstruction[]): Promise<TransactionInstruction[]> {
+export async function missingAtaCreations(
+  connection: Connection,
+  holder: PublicKey,
+  ixs: TransactionInstruction[],
+): Promise<{ creations: TransactionInstruction[]; rest: TransactionInstruction[] }> {
   const atas = ixs.filter((ix) => ix.programId.equals(ASSOCIATED_TOKEN_PROGRAM_ID))
   const rest = ixs.filter((ix) => !ix.programId.equals(ASSOCIATED_TOKEN_PROGRAM_ID))
-  if (atas.length) {
-    const infos = await connection.getMultipleAccountsInfo(atas.map((ix) => ix.keys[1].pubkey), 'confirmed')
-    const seen = new Set<string>()
-    const missing = atas
-      .filter((ix, i) => !infos[i])
-      .filter((ix) => (seen.has(ix.keys[1].pubkey.toBase58()) ? false : (seen.add(ix.keys[1].pubkey.toBase58()), true)))
-      .map((ix) => ({ ...ix, keys: ix.keys.map((k, j) => (j === 0 ? { ...k, pubkey: op.publicKey } : k)) }) as TransactionInstruction)
-    for (let i = 0; i < missing.length; i += 6) await sendOperatorTx(connection, op, missing.slice(i, i + 6))
+  if (!atas.length) return { creations: [], rest }
+  const infos = await connection.getMultipleAccountsInfo(atas.map((ix) => ix.keys[1].pubkey), 'confirmed')
+  const seen = new Set<string>()
+  const creations = atas
+    .filter((ix, i) => !infos[i])
+    .filter((ix) => (seen.has(ix.keys[1].pubkey.toBase58()) ? false : (seen.add(ix.keys[1].pubkey.toBase58()), true)))
+    .map((ix) => ({ ...ix, keys: ix.keys.map((k, j) => (j === 0 ? { ...k, pubkey: holder } : k)) }) as TransactionInstruction)
+  return { creations, rest }
+}
+
+/** Serialized size, or Infinity when the message does not even serialize. */
+export function txSize(tx: VersionedTransaction): number {
+  try {
+    return tx.serialize().length
+  } catch {
+    return Infinity
   }
-  return rest
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -219,6 +231,8 @@ export interface TxTicket {
   feedIds: string[]
   /** sha256 of the instructions the operator built (see `instructionsHash`). */
   ix: string
+  /** Same, for the holder's setup transaction (new token accounts), when there is one. */
+  setup?: string
   blockhash: string
   lastValidBlockHeight: number
   exp: number
@@ -265,7 +279,7 @@ export function issueToken(op: Keypair, t: TxTicket): string {
 }
 
 /** The token is the operator's own; the transaction must carry exactly the instructions it built. */
-export function verifyToken(op: Keypair, tx: VersionedTransaction, token: string): TxTicket {
+export function verifyToken(op: Keypair, tx: VersionedTransaction, token: string, setup: VersionedTransaction | null = null): TxTicket {
   const [body, mac] = token.split('.')
   if (!body || !mac) throw new Error('bad token')
   const want = crypto.createHmac('sha256', tokenKey(op)).update(body).digest('base64url')
@@ -274,11 +288,34 @@ export function verifyToken(op: Keypair, tx: VersionedTransaction, token: string
   if (Date.now() > t.exp) throw new Error('this request expired, start again')
   if (!tx.message.staticAccountKeys[0].equals(new PublicKey(t.wallet))) throw new Error('fee payer is not the holder')
   if (canonical(holderInstructions(tx)).toString('base64url') !== t.ix) throw new Error('transaction does not match what was built')
+  if (Boolean(setup) !== Boolean(t.setup)) throw new Error('setup transaction does not match what was built')
+  if (setup) {
+    if (!setup.message.staticAccountKeys[0].equals(new PublicKey(t.wallet))) throw new Error('setup fee payer is not the holder')
+    if (canonical(holderInstructions(setup)).toString('base64url') !== t.setup) throw new Error('setup transaction does not match what was built')
+  }
   return t
 }
 
-export function newTicket(kind: string, wallet: PublicKey, mint: PublicKey, feedIds: string[], tx: VersionedTransaction, bh: { blockhash: string; lastValidBlockHeight: number }): TxTicket {
-  return { kind, wallet: wallet.toBase58(), mint: mint.toBase58(), feedIds, ix: instructionsHash(tx), blockhash: bh.blockhash, lastValidBlockHeight: bh.lastValidBlockHeight, exp: Date.now() + TOKEN_TTL_MS }
+export function newTicket(
+  kind: string,
+  wallet: PublicKey,
+  mint: PublicKey,
+  feedIds: string[],
+  tx: VersionedTransaction,
+  bh: { blockhash: string; lastValidBlockHeight: number },
+  setup: VersionedTransaction | null = null,
+): TxTicket {
+  return {
+    kind,
+    wallet: wallet.toBase58(),
+    mint: mint.toBase58(),
+    feedIds,
+    ix: instructionsHash(tx),
+    ...(setup ? { setup: instructionsHash(setup) } : {}),
+    blockhash: bh.blockhash,
+    lastValidBlockHeight: bh.lastValidBlockHeight,
+    exp: Date.now() + TOKEN_TTL_MS,
+  }
 }
 
 // ---------------------------------------------------------------------------------------------
