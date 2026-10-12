@@ -94,7 +94,7 @@ const SECTIONS: Section[] = [
       { name: 'External audit', desc: 'One audit of the final program before the first real deposit. Three reviews so far, one of them independent.' },
       { name: 'Jupiter and a market maker', desc: 'Exits to USDC and rebalancing through Jupiter on mainnet; a seeded POTFolio/USDC pool for the flagship.' },
       { name: 'A second engineer', desc: 'The reviewer who found 26 issues and deployed v1.2 should be on the team, not a volunteer.' },
-      { name: 'Runway', desc: 'Six months of a two-person team, infra, audit and data. Grants and a small round; details in the budget note in the repo.' },
+      { name: 'Runway', desc: 'Six months of a two-person team, infra, audit and data. Grants first, then a small pre-seed round.' },
     ],
   },
 ]
