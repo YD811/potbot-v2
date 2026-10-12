@@ -26,9 +26,9 @@ Judge run against the deployment (fresh keypair, nothing admin-signed): `pot-ind
 
 ## How a holder's transaction flows (Oct 12)
 One signature per action, and the signature never expires:
-1. `POST /api/pot-index/tx/prepare` {kind: deposit | exit | exit-usdc, wallet, mint, amount}. The operator (devnet: the market maker key) creates any missing token accounts, refreshes the Pyth prices into its **persistent price-update accounts** (one per feed, derived from the operator key), builds the holder's transaction on the wallet's **durable nonce** (nonce account per wallet, operator is the authority) and returns it with an HMAC token bound to the exact message bytes.
+1. `POST /api/pot-index/tx/prepare` {kind: deposit | exit | exit-usdc, wallet, mint, amount}. The operator (devnet: the market maker key) creates any missing token accounts, refreshes the Pyth prices into its **persistent price-update accounts** (one per feed, derived from the operator key), builds the holder's transaction on a recent `confirmed` blockhash (the holder has the blockhash lifetime, about a minute, to sign) and returns it with an HMAC token over its instructions; instructions a wallet adds around them (ComputeBudget, Phantom's Lighthouse guard) are ignored. Durable nonces were tried first and dropped: Phantom flags them as high risk.
 2. The holder signs it. However long that takes.
-3. `POST /api/pot-index/tx/submit` {tx, token}. The operator verifies the token, refreshes the prices again, adds its signature (nonce advance, devnet market maker), sends and confirms. After a deposit it deploys the cash into the basket as keeper (permissionless `rebalance_open/close`), so the holder signs nothing else.
+3. `POST /api/pot-index/tx/submit` {tx, token}. The operator verifies the token, refreshes the prices again, adds its own signature when the transaction needs it (devnet market maker), sends and confirms. After a deposit it deploys the cash into the basket as keeper (permissionless `rebalance_open/close`), so the holder signs nothing else.
 Scripts: `scripts/pot-index-operator-flow.ts deposit|exit|exit-usdc|faucet` drives exactly this; `SIGN_DELAY_SECS=90` imitates a slow wallet. The older multi-transaction routes (`/allocate`, `/exit-usdc`, `/prices`, `/cleanup`) stay for the CLI judge run.
 
 ## Deploy history (devnet)

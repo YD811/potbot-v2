@@ -19,9 +19,40 @@ Three passes. Oct 8 (initial program) and Oct 10 (after exit-to-USDC, deposit-an
 | F13 | Info (economic) | The 0.10% exit-to-USDC conversion fee is avoidable: any front end can call `exit` and append swaps. | Accepted and stated in fees-and-economics.md: it is an interface fee, not a protocol fee; revenue projections count only entry and in-Pot exit fees. |
 | F14 | Low (ops) | Token metadata URIs pointed at a Vercel preview deployment, with no update instruction. | New creator-only `update_index_metadata(uri)`; showcase Pots repointed to `potbot.fun`; new Pots use the canonical origin. Token-2022 metadata before mainnet. |
 
-Operational note (Oct 12, after the live-wallet test): with a 60 s window a human wallet prompt is the bottleneck, so the holder's transaction is now built on a durable nonce and the operator refreshes its persistent Pyth price-update accounts right before submitting; the program's checks are unchanged (owner = receiver, full verification, feed id, age ≤ window, confidence). The operator co-signs only message bytes it built itself (HMAC token), and the nonce authority cannot move any holder funds.
+Operational note (Oct 12, after the live-wallet test): with a 60 s window a human wallet prompt is the bottleneck, so the operator posts Pyth prices into persistent price-update accounts and refreshes them right before it submits the holder's signed transaction: the price the program reads is seconds old however long the holder took to sign. The program's checks are unchanged (owner = receiver, full verification, feed id, age ≤ window, confidence). The operator co-signs only transactions whose instructions match what it built (HMAC token). Durable nonces were tried and dropped (wallets flag them).
 
 Not changed on purpose: the monotonic-per-Pot publish time (needs a Pot field, v2 migration), F6 items 1, 3, 4 (same migration), Token-2022 (mainnet).
+
+## Operator flow findings (Oct 12 review, open)
+
+The operator is the server-side key behind `/api/pot-index/tx/{prepare,submit}` (devnet: also the market maker and the test-USDC mint authority). These findings are about that off-chain flow; the program's own checks are unaffected.
+
+### O1 (High): `prepare` pays rent that any caller can take back (fix 1 in #97)
+
+**Flow today.** (1) The browser calls `POST /tx/prepare` with `{kind, wallet, mint, ...}`; there is no authentication and no rate limit. (2) The operator builds the holder's instructions; every "create token account" among them (the holder's USDC and leg accounts for an exit, the index-token account and any `referrer`'s USDC account for a deposit) is moved by `hoistAtaCreations` into separate transactions **paid by the operator**, about 0.00204 SOL of rent each. For deposits and exits to USDC it also posts fresh Pyth prices at its own expense. (3) The holder signs; `POST /tx/submit` verifies the ticket, refreshes prices again, co-signs where needed, sends, and after a deposit deploys the cash as keeper in more operator transactions.
+
+**The drain.** An exit's `prepare` needs only a public Pot address and `shares > 0`: no prices, no balance check. A script loops: new keypair, `prepare` an exit on a 5-leg Pot, close the six empty token accounts the operator just paid for (the owner chooses where the rent goes), repeat. Each loop moves about 0.012 SOL from the operator to the attacker for one transaction fee; deposit `prepare` calls add price posts and an arbitrary `referrer` account on top. Nothing bounds it, so the operator wallet empties, and with it every sponsored action: price refreshes, co-signing, cash deploys. Holders' funds are not at risk (hence High, not Critical), but on mainnet this is a direct, profitable, unbounded loss of protocol SOL plus an outage.
+
+**Fixes, in order of value.**
+1. **The holder pays its own rent.** Keep the idempotent account creations inside the holder's transaction with the holder as payer instead of hoisting them; closing them then only returns the holder's own SOL. This removes the profit. *Implemented in #97*: inside the holder's transaction when it fits, otherwise in a setup transaction signed in the same prompt.
+2. **No per-request spending.** Refresh the operator's price accounts on a schedule (keepers.md already plans every ~20 s) instead of in `prepare`, so a request costs the operator nothing until a signed transaction actually lands.
+3. **Cheap preconditions.** Refuse an exit `prepare` when the wallet holds no index tokens, a deposit when it lacks the USDC, and ignore `referrer` unless it already has a USDC account.
+4. **Rate limits and a budget.** Per-IP and per-wallet limits on both routes, plus a circuit breaker that pauses sponsored actions when the operator's balance falls faster than a set rate.
+5. **Optionally,** a signed wallet message (Sign-In With Solana) before any sponsored action.
+
+### O2 (Medium): exit to USDC on devnet gives the holder a free option on the market maker
+
+**Flow today.** Devnet has no Jupiter liquidity for the test tokens, so the operator acts as market maker. At `prepare`, `quoteExitUsdc` reads Hermes, computes the legs the holder will receive (`legOut`) and their value at the mid price (`payUsdc`), and builds one holder transaction: `exit_usdc_open` (burn the index tokens, legs to the holder) → burn the holder's `legOut` (the simulated sale) → `mintTo(payUsdc)` test USDC from the operator → `exit_usdc_close` (the program checks the USDC received against its own floor and takes the 0.10% fee). The `mintTo` needs the operator's signature, which `submit` adds to any ticketed transaction.
+
+**The bug.** `payUsdc` is inside the bytes the holder signs, so the price is fixed at `prepare`, while the transaction can land up to the blockhash lifetime later (about a minute). The holder can wait and sign only if the legs have fallen in the meantime, when the stale quote overpays: a free option, paid by the market maker. If they rose, the program's floor or the stale quote leaves the holder short, and the holder simply does not sign. On devnet the loss is test USDC, but every exit to USDC on the live demo can be gamed, and the code path is not the one mainnet will run.
+
+**Suggested fix (v2, see decisions.md).** A "last look" in `submit`: the operator has a veto because it must co-sign the `mintTo`. Store `payUsdc` and `legOut` in the ticket; at submit, re-quote from fresh prices and refuse to co-sign if `payUsdc` exceeds the fresh value by more than a small tolerance (for example 0.2%).
+
+**The real fix is to stop testing a devnet-only path.** On mainnet the sale between `exit_usdc_open` and `exit_usdc_close` is a Jupiter route signed by the holder and executed at the price of the moment, so the option does not exist. The program is route-agnostic (`close` only measures the holder's USDC delta), so what needs testing before mainnet is the client building and landing a real route. Jupiter does not route on devnet; test that path against a local fork of mainnet state (for example Surfpool, or `solana-test-validator` with the Jupiter program, the pools and their accounts cloned) and finally with small amounts on mainnet. If the public devnet demo must keep exit to USDC, the least custom option is a real AMM pool on devnet (Orca Whirlpools and Raydium CLMM are deployed there), seeded with the test tokens and kept near the Hermes price by the operator: the holder then swaps at execution time, with no quote to game and no operator co-signature.
+
+### O3 (Medium): the holder's transaction carries no minimum of its own
+
+`tx/prepare` builds deposits with `minSharesOut: 0` and exits to USDC with `minUsdcOut: 0`, and the operator chooses which Pyth update to post after the holder has signed. Within the program's bounds (any price inside `max_price_age_secs`, confidence ≤ 2%), the holder accepts whatever the operator posts: fewer index tokens on a deposit, less USDC on an exit to USDC. The Pot is protected by the program's own floors; the holder is protected only by trusting the operator. Fix, off-chain: set `minSharesOut` and `minUsdcOut` in `prepare` from the quote shown to the holder, minus a tolerance of about 1%, so a worse price fails the transaction instead of filling it.
 
 ## Oct 10 findings and what changed
 

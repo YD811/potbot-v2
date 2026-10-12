@@ -4,14 +4,14 @@
  * Why this exists: a browser wallet can take a minute or more to sign (its own simulation, the
  * person reading the prompt). A Solana transaction built on a recent blockhash lives ~60-90 s and
  * a Pyth price is accepted for 60 s, so anything that depends on "sign quickly" breaks a live demo.
- * Here nothing depends on how long the holder takes:
- *   - the holder's transaction uses a DURABLE NONCE (one per wallet, operator is the authority),
- *     so the signed transaction does not expire;
+ * Here only the blockhash lifetime depends on the holder:
+ *   - the holder's transaction uses a recent blockhash (see `buildHolderTx` for why not a durable
+ *     nonce), so the holder has about a minute to sign;
  *   - the Pyth prices live in PERSISTENT price-update accounts (one per feed, operator is the
  *     write authority) that the operator refreshes right before it submits, so the price the
  *     program reads is seconds old whatever the signing time;
- *   - the operator submits: it adds its signature (nonce authority, devnet market maker) only to a
- *     transaction it built itself (HMAC token), sends it and confirms it.
+ *   - the operator submits: it adds its signature (devnet market maker, when needed) only to a
+ *     transaction whose instructions it built itself (HMAC token), sends it and confirms it.
  * The holder signs exactly one transaction per action. Cash deploys after a deposit are done by
  * the operator acting as keeper (permissionless on-chain), so the holder does not sign those.
  */
@@ -194,7 +194,7 @@ export async function hoistAtaCreations(connection: Connection, op: Keypair, ixs
 // ---------------------------------------------------------------------------------------------
 
 /**
- * The holder's transaction: a plain 'finalized' blockhash (known to every wallet RPC) and nothing
+ * The holder's transaction: a plain recent blockhash ('confirmed', below) and nothing
  * a wallet flags. Durable nonces were tried first: Phantom marks them as high risk ("can be
  * executed later") and appends its own guard instructions, so they are out. A clean single
  * transaction simulates in a second, which leaves the holder the whole blockhash window to sign.

@@ -5,8 +5,8 @@ import { allocateAsKeeper, assertDevnet, operatorConnection, operatorKeypair, re
 
 /**
  * POST /api/pot-index/tx/submit  { tx: base64 (signed by the holder), token }
- * The operator refreshes the Pyth prices the transaction reads, adds its own signature (nonce
- * authority, devnet market maker), sends, confirms. For a deposit it then deploys the cash into
+ * The operator refreshes the Pyth prices the transaction reads, adds its own signature when the
+ * transaction needs it (devnet market maker), sends, confirms. For a deposit it then deploys the cash into
  * the basket as keeper. The token proves the operator built exactly these message bytes, so it
  * never co-signs anything else.
  */

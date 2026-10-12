@@ -22,7 +22,7 @@ import {
  *   { kind: 'deposit', wallet, mint, amountUsdc, referrer? }
  *   { kind: 'exit', wallet, mint, shares }          in kind
  *   { kind: 'exit-usdc', wallet, mint, shares }     sold to the devnet market maker
- * Returns ONE transaction for the holder to sign (durable nonce: it does not expire) and a token
+ * Returns ONE transaction for the holder to sign (recent blockhash: about a minute to sign) and a token
  * for /tx/submit. See operator.server.ts for the why.
  */
 export const runtime = 'nodejs'
@@ -70,8 +70,8 @@ export async function POST(req: Request) {
       const priceUpdates = await refreshPrices(connection, op, feedIds)
       const { pre, open, close } = await buildExitUsdcPair(program, { pot, user: wallet, usdcMint, treasury, shares: Number(shares), minUsdcOut: 0, priceUpdates })
       // Devnet "sale": the legs are test tokens the market maker mints, so selling them to it is
-      // burning them (saves the market maker's three receiving accounts; the transaction has to fit
-      // in one packet together with the durable-nonce advance). Mainnet: Jupiter swaps here.
+      // burning them (saves the market maker's three receiving accounts so the transaction fits in
+      // one packet). Mainnet: Jupiter swaps here.
       const sale: TransactionInstruction[] = []
       pot.legs.forEach((l, i) => {
         if (legOut[i] === 0n) return

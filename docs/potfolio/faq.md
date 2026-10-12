@@ -12,7 +12,7 @@
 
 **Why a 1 USDC minimum?** Dust protection; a smaller deposit would cost more in rent and fees than it is worth.
 
-**Where do prices come from?** Pyth, posted in the same transaction, max 5 minutes old, priced conservatively. Stale prices are refused, so stock POTFolios only take deposits while US markets are open. Exits need no prices.
+**Where do prices come from?** Pyth, posted on-chain seconds before your transaction executes and never more than 60 seconds old, priced conservatively. Stale prices are refused, so stock POTFolios only take deposits while US markets are open. Exits need no prices.
 
 **What is a keeper?** A bot that buys the basket and keeps it balanced inside limits the program checks on every trade. Anyone can run one.
 
