@@ -2,42 +2,33 @@
 
 /**
  * Signature animation: five assets drop into the Pot, one token rises.
- * Pure CSS keyframes, loops every 8 s, stops under prefers-reduced-motion.
+ * Coins and the token are HTML elements (GPU-composited transforms), only
+ * the pot is SVG. Loops every 2.4 s, stops under prefers-reduced-motion.
  */
 const COINS = [
-  { label: 'SOL', color: '#E07A4F', x: 60, delay: 0 },
-  { label: 'JUP', color: '#E9C46A', x: 100, delay: 0.25 },
-  { label: 'TSLA', color: '#9CCB6E', x: 140, delay: 0.5 },
-  { label: 'QQQ', color: '#7FA7C9', x: 180, delay: 0.75 },
-  { label: 'BONK', color: '#B08BC9', x: 220, delay: 1.0 },
+  { label: 'SOL', color: '#E07A4F', left: '14%', delay: 0 },
+  { label: 'JUP', color: '#E9C46A', left: '30%', delay: 0.25 },
+  { label: 'TSLA', color: '#9CCB6E', left: '46%', delay: 0.5 },
+  { label: 'QQQ', color: '#7FA7C9', left: '62%', delay: 0.75 },
+  { label: 'BONK', color: '#B08BC9', left: '78%', delay: 1.0 },
 ]
 
 export function PotAnimation({ className = '' }: { className?: string }) {
   return (
-    <div className={`relative mx-auto w-full max-w-[320px] ${className}`} aria-hidden>
+    <div className={`relative mx-auto aspect-[280/260] w-full max-w-[320px] ${className}`} aria-hidden>
       <style>{`
-        .v3pot-coin { animation: v3-coin 2.4s var(--ease-pot) infinite; transform-origin: center; }
-        .v3pot-token { animation: v3-token 2.4s var(--ease-pot) infinite; transform-origin: center; }
+        .v3pot-coin { position:absolute; top:38%; width:32px; height:32px; margin-left:-16px; border-radius:50%; display:flex; align-items:center; justify-content:center; font:500 9px var(--font-mono), monospace; color:#1A120C; will-change:transform,opacity; animation: v3-coin 2.4s var(--ease-pot) infinite; }
+        .v3pot-token { position:absolute; left:50%; top:66%; width:48px; height:48px; margin:-24px 0 0 -24px; border-radius:50%; background:#E07A4F; box-shadow: inset 0 0 0 2px rgba(26,18,12,.25); display:flex; align-items:center; justify-content:center; font:500 11px var(--font-mono), monospace; color:#1A120C; will-change:transform,opacity; animation: v3-token 2.4s var(--ease-pot) infinite; animation-delay:1.4s; }
         @media (prefers-reduced-motion: reduce) { .v3pot-coin, .v3pot-token { animation: none; opacity: 1; transform: none; } }
       `}</style>
-      <svg viewBox="0 0 280 260" className="h-auto w-full" fill="none">
-        {/* coins */}
-        {COINS.map((c) => (
-          <g key={c.label} className="v3pot-coin" style={{ animationDelay: `${c.delay}s`, transformBox: 'fill-box' }}>
-            <circle cx={c.x} cy={120} r={16} fill={c.color} />
-            <text x={c.x} y={124} textAnchor="middle" fontSize="9" fontFamily="var(--font-mono), monospace" fontWeight="500" fill="#1A120C">{c.label}</text>
-          </g>
-        ))}
-        {/* pot */}
+      <svg viewBox="0 0 280 260" className="absolute inset-0 h-full w-full" fill="none">
         <path d="M70 150 h140 l-10 70 a12 12 0 0 1 -12 10 h-96 a12 12 0 0 1 -12 -10 z" fill="var(--c-card)" stroke="var(--c-border-2)" strokeWidth="2" />
         <rect x="62" y="140" width="156" height="16" rx="8" fill="var(--c-card-2)" stroke="var(--c-border-2)" strokeWidth="2" />
-        {/* token */}
-        <g className="v3pot-token" style={{ animationDelay: '1.4s', transformBox: 'fill-box' }}>
-          <circle cx="140" cy="198" r="22" fill="#E07A4F" />
-          <circle cx="140" cy="198" r="22" stroke="#1A120C" strokeOpacity=".25" strokeWidth="2" />
-          <text x="140" y="203" textAnchor="middle" fontSize="12" fontFamily="var(--font-mono), monospace" fontWeight="500" fill="#1A120C">1 token</text>
-        </g>
       </svg>
+      {COINS.map((c) => (
+        <span key={c.label} className="v3pot-coin" style={{ left: c.left, background: c.color, animationDelay: `${c.delay}s` }}>{c.label}</span>
+      ))}
+      <span className="v3pot-token">1 token</span>
     </div>
   )
 }
