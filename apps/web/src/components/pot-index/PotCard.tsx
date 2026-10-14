@@ -16,18 +16,18 @@ export function PotCard({ pot, list }: { pot: PotView; prices: Record<string, nu
   const perfCls = perf === undefined ? 'text-white/70' : perf >= 0 ? 'text-pot-green' : 'text-red-400'
   const mint = pot.indexMint.toBase58()
   return (
-    <Link href={`/portfolios/${mint}`} className="card block p-5 transition hover:border-pot-green/60">
+    <Link href={`/portfolios/${mint}`} className="card block rounded-3xl p-5 transition duration-200 ease-pot hover:-translate-y-0.5 hover:border-pot-muted/60 hover:shadow-[0_24px_40px_-32px_rgba(0,0,0,.6)]">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <PlantBadge pot={pot} navUsd={stats.data?.navUsd} />
           <div>
-          <h2 className="text-lg font-bold text-white">{pot.name}</h2>
-          <p className="font-mono text-xs text-pot-green">${pot.symbol}</p>
+          <h2 className="font-display text-xl font-semibold text-white">{pot.name}</h2>
+          <p className="font-mono text-xs text-pot-muted">${pot.symbol}</p>
           </div>
         </div>
         <div className="text-right">
           <p className="text-xs text-white/70">TVL</p>
-          <p className="font-semibold text-white">
+          <p className="font-mono font-medium text-white tabular-nums">
             {stats.data ? `$${stats.data.navUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}
           </p>
           <p className={`text-xs ${perfCls}`}>{perf === undefined ? '' : `${perf >= 0 ? '+' : ''}${(perf * 100).toFixed(2)}% since launch`}</p>

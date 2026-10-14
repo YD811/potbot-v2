@@ -5,7 +5,10 @@
 /* ── Base ── */
 @layer base {
   body {
-    @apply bg-pot-dark text-white;
+    @apply bg-pot-dark text-white font-sans;
+  }
+  h1, h2, h3, .font-display {
+    text-wrap: balance;
   }
 
   a,
@@ -34,14 +37,14 @@
   }
 
   .btn-primary {
-    @apply rounded-xl bg-pot-green px-6 py-2.5 font-semibold text-pot-dark
+    @apply rounded-full bg-pot-accent px-6 py-2.5 font-semibold text-pot-dark
            transition hover:brightness-110 active:scale-[0.98]
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pot-green focus-visible:ring-offset-2 focus-visible:ring-offset-pot-dark
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply rounded-xl border border-pot-border bg-pot-card px-6 py-2.5
+    @apply rounded-full border border-pot-border bg-transparent px-6 py-2.5
            font-medium text-white transition hover:border-pot-muted
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-pot-dark
            active:scale-[0.98];
@@ -54,14 +57,9 @@
            focus-visible:ring-2 focus-visible:ring-pot-green focus-visible:ring-offset-2 focus-visible:ring-offset-pot-dark;
   }
 
-  .glow-green {
-    box-shadow: 0 0 20px rgba(0, 255, 136, 0.15),
-                0 0 60px rgba(0, 255, 136, 0.05);
-  }
-
+  .glow-green,
   .glow-purple {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.15),
-                0 0 60px rgba(139, 92, 246, 0.05);
+    box-shadow: none;
   }
 }
 
@@ -87,54 +85,56 @@
 /* ══════════════════════════════════════════════════════════════════ */
 
 :root {
+  color-scheme: dark;
   /* Legacy pot-* tokens used by light-theme overrides below */
-  --pot-ink: #ffffff;
-  --pot-ink-muted: #8B9BB4;
-  --pot-ink-subtle: #6B7A8F;
-  --pot-bg: #0D1117;
-  --pot-bg-2: #111827;
-  --pot-border: #1A2332;
-  --pot-border-strong: #2A3342;
+  --pot-ink: #F2ECE0;
+  --pot-ink-muted: #C9C0B0;
+  --pot-ink-subtle: #8A8276;
+  --pot-bg: #14120F;
+  --pot-bg-2: #1E1B16;
+  --pot-border: #2E2A23;
+  --pot-border-strong: #3E382F;
   /* Inline-style palette (consumed by var(--c-*) in .tsx inline styles) */
-  --c-bg: #0D1117;
-  --c-card: #111827;
-  --c-card-2: #0F1929;
-  --c-border: #1A2332;
-  --c-border-2: #24324A;
-  --c-text: #ffffff;
-  --c-text-soft: #e8edf2;
-  --c-muted: #8B9BB4;
-  --c-brand-green: #14f195;
-  --c-brand-accent: #9945ff;
+  --c-bg: #14120F;
+  --c-card: #1E1B16;
+  --c-card-2: #181611;
+  --c-border: #2E2A23;
+  --c-border-2: #3E382F;
+  --c-text: #F2ECE0;
+  --c-text-soft: #E4DCCB;
+  --c-muted: #C9C0B0;
+  --c-brand-green: #9CCB6E;
+  --c-brand-accent: #E07A4F;
   --c-surface-shadow: rgba(0, 0, 0, 0.45);
+  --ease-pot: cubic-bezier(.2,.8,.2,1);
 }
 
 html[data-theme="light"],
 html.light-theme {
   color-scheme: light;
-  /* Normie-mode palette. Greens darkened (#166534 / #14532D) so they
-     don't vibrate against white. Borders bumped (#cbd5e1) so card
+  /* Normie-mode palette. Greens darkened (#5E8F3A / #4E7A2E) so they
+     don't vibrate against white. Borders bumped (#E3DACB) so card
      edges are actually visible — the old #e5e7eb hairlines were
      basically invisible on the off-white bg. */
-  --pot-ink: #111827;
-  --pot-ink-muted: #1f2937;
-  --pot-ink-subtle: #374151;
-  --pot-bg: #ffffff;
-  --pot-bg-2: #f9fafb;
-  --pot-border: #cbd5e1;
-  --pot-border-strong: #94a3b8;
+  --pot-ink: #1A1712;
+  --pot-ink-muted: #5C554B;
+  --pot-ink-subtle: #7A7164;
+  --pot-bg: #F6F1E8;
+  --pot-bg-2: #FFFFFF;
+  --pot-border: #E3DACB;
+  --pot-border-strong: #C9B9A3;
   /* Inline-style palette flips to light */
-  --c-bg: #ffffff;
-  --c-card: #ffffff;
-  --c-card-2: #f9fafb;
-  --c-border: #cbd5e1;
-  --c-border-2: #94a3b8;
-  --c-text: #111827;
-  --c-text-soft: #1f2937;
-  --c-muted: #374151;
-  --c-brand-green: #166534;
-  --c-brand-accent: #6d28d9;
-  --c-surface-shadow: rgba(15, 23, 42, 0.10);
+  --c-bg: #F6F1E8;
+  --c-card: #FFFFFF;
+  --c-card-2: #FBF8F2;
+  --c-border: #E3DACB;
+  --c-border-2: #C9B9A3;
+  --c-text: #1A1712;
+  --c-text-soft: #3A332A;
+  --c-muted: #5C554B;
+  --c-brand-green: #5E8F3A;
+  --c-brand-accent: #C9623A;
+  --c-surface-shadow: rgba(26, 23, 18, 0.10);
 }
 
 /* Normie mode: kill every neon glow shadow Tailwind shorthand we ship.
@@ -148,15 +148,15 @@ html[data-theme="light"] [class*="shadow-[0_0_"] {
   box-shadow: none !important;
 }
 
-/* Brand green: darker for WCAG-AA on white (#166534 = green-800).
+/* Brand green: darker for WCAG-AA on white (#5E8F3A = green-800).
    Solid fills use green-700 so white text still passes contrast. */
 html.light-theme .bg-pot-green,
 html[data-theme="light"] .bg-pot-green {
-  background-color: #15803d !important; /* green-700 — solid */
+  background-color: #5E8F3A !important; /* green-700 — solid */
 }
 html.light-theme .text-pot-green,
 html[data-theme="light"] .text-pot-green {
-  color: #166534 !important; /* green-800 — text */
+  color: #5E8F3A !important; /* green-800 — text */
 }
 html.light-theme .border-pot-green\/20,
 html.light-theme .border-pot-green\/25,
@@ -166,7 +166,7 @@ html[data-theme="light"] .border-pot-green\/20,
 html[data-theme="light"] .border-pot-green\/25,
 html[data-theme="light"] .border-pot-green\/30,
 html[data-theme="light"] .border-pot-green\/40 {
-  border-color: rgba(22, 101, 52, 0.45) !important;
+  border-color: rgba(94, 143, 58, 0.45) !important;
 }
 html.light-theme .bg-pot-green\/5,
 html.light-theme .bg-pot-green\/8,
@@ -174,7 +174,7 @@ html.light-theme .bg-pot-green\/10,
 html[data-theme="light"] .bg-pot-green\/5,
 html[data-theme="light"] .bg-pot-green\/8,
 html[data-theme="light"] .bg-pot-green\/10 {
-  background-color: rgba(22, 101, 52, 0.08) !important;
+  background-color: rgba(94, 143, 58, 0.08) !important;
 }
 
 /* Card surface fills (bg-pot-card/20..80) — render as solid white with
@@ -195,7 +195,7 @@ html.light-theme .bg-pot-card\/60,
 html.light-theme .bg-pot-card\/70,
 html.light-theme .bg-pot-card\/80 {
   background-color: #ffffff !important;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(203, 213, 225, 0.6) !important;
+  box-shadow: 0 1px 2px rgba(26, 23, 18, 0.04), 0 0 0 1px rgba(227, 218, 203, 0.6) !important;
 }
 
 /* bg-pot-dark and every opacity variant — the dark page-tone reads as
@@ -213,7 +213,7 @@ html.light-theme .bg-pot-dark\/60,
 html.light-theme .bg-pot-dark\/70,
 html.light-theme .bg-pot-dark\/80,
 html.light-theme .bg-pot-dark\/90 {
-  background-color: #f1f5f9 !important;
+  background-color: #F6F1E8 !important;
 }
 
 /* ── Body & scrollbar ── */
@@ -241,11 +241,11 @@ html[data-theme="light"] .bg-pot-dark,
 html[data-theme="light"] .bg-pot-dark\/95,
 html.light-theme .bg-pot-dark,
 html.light-theme .bg-pot-dark\/95 {
-  background-color: #f1f5f9 !important;
+  background-color: #F6F1E8 !important;
 }
 html[data-theme="light"] .bg-pot-card {
   background-color: #ffffff !important;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(203, 213, 225, 0.6);
+  box-shadow: 0 1px 2px rgba(26, 23, 18, 0.04), 0 0 0 1px rgba(227, 218, 203, 0.6);
 }
 html[data-theme="light"] .bg-pot-border {
   background-color: var(--pot-border) !important;
@@ -268,19 +268,19 @@ html[data-theme="light"] .text-white { color: var(--pot-ink) !important; }
 /* Opacity-modified white (text-white/60–90) reads as ~white in light mode
    because the underlying color stays rgb(255 255 255 / N). Remap to the
    dark-ink palette with a matching alpha so body copy stays legible. */
-html[data-theme="light"] .text-white\/95 { color: rgba(13, 17, 23, 0.97) !important; }
-html[data-theme="light"] .text-white\/90 { color: rgba(13, 17, 23, 0.95) !important; }
-html[data-theme="light"] .text-white\/85 { color: rgba(13, 17, 23, 0.9) !important; }
-html[data-theme="light"] .text-white\/80 { color: rgba(13, 17, 23, 0.88) !important; }
-html[data-theme="light"] .text-white\/75 { color: rgba(13, 17, 23, 0.85) !important; }
-html[data-theme="light"] .text-white\/70 { color: rgba(13, 17, 23, 0.80) !important; }
-html[data-theme="light"] .text-white\/60 { color: rgba(13, 17, 23, 0.72) !important; }
-html[data-theme="light"] .text-white\/50 { color: rgba(13, 17, 23, 0.64) !important; }
-html[data-theme="light"] .text-white\/40 { color: rgba(13, 17, 23, 0.56) !important; }
-html[data-theme="light"] .text-white\/30 { color: rgba(13, 17, 23, 0.45) !important; }
+html[data-theme="light"] .text-white\/95 { color: rgba(26, 23, 18, 0.97) !important; }
+html[data-theme="light"] .text-white\/90 { color: rgba(26, 23, 18, 0.95) !important; }
+html[data-theme="light"] .text-white\/85 { color: rgba(26, 23, 18, 0.9) !important; }
+html[data-theme="light"] .text-white\/80 { color: rgba(26, 23, 18, 0.88) !important; }
+html[data-theme="light"] .text-white\/75 { color: rgba(26, 23, 18, 0.85) !important; }
+html[data-theme="light"] .text-white\/70 { color: rgba(26, 23, 18, 0.80) !important; }
+html[data-theme="light"] .text-white\/60 { color: rgba(26, 23, 18, 0.72) !important; }
+html[data-theme="light"] .text-white\/50 { color: rgba(26, 23, 18, 0.64) !important; }
+html[data-theme="light"] .text-white\/40 { color: rgba(26, 23, 18, 0.56) !important; }
+html[data-theme="light"] .text-white\/30 { color: rgba(26, 23, 18, 0.45) !important; }
 html[data-theme="light"] .text-pot-muted { color: var(--pot-ink-muted) !important; }
-html[data-theme="light"] .text-pot-muted\/70 { color: rgba(31, 41, 55, 0.95) !important; }
-html[data-theme="light"] .text-pot-muted\/50 { color: rgba(31, 41, 55, 0.8) !important; }
+html[data-theme="light"] .text-pot-muted\/70 { color: rgba(58, 51, 42, 0.95) !important; }
+html[data-theme="light"] .text-pot-muted\/50 { color: rgba(58, 51, 42, 0.8) !important; }
 html[data-theme="light"] .text-gray-400 { color: var(--pot-ink-muted) !important; }
 html[data-theme="light"] .text-gray-500 { color: var(--pot-ink-muted) !important; }
 html[data-theme="light"] .text-gray-300 { color: var(--pot-ink) !important; }
@@ -292,17 +292,17 @@ html[data-theme="light"] .bg-pot-card\/50,
 html[data-theme="light"] .bg-pot-card\/60,
 html[data-theme="light"] .bg-pot-card\/70,
 html[data-theme="light"] .bg-pot-card\/80 {
-  background-color: rgba(245, 247, 250, 0.95) !important;
+  background-color: rgba(246, 241, 232, 0.95) !important;
 }
 
 /* Hairline divider rules in section kickers — switch from white-fade to
    ink-fade so they remain visible on the light surface. */
 html[data-theme="light"] .from-pot-green\/60,
-html[data-theme="light"] .to-pot-green\/60 { --tw-gradient-from: rgba(6, 122, 70, 0.5) !important; --tw-gradient-to: rgba(6, 122, 70, 0.5) !important; }
+html[data-theme="light"] .to-pot-green\/60 { --tw-gradient-from: rgba(94, 143, 58, 0.5) !important; --tw-gradient-to: rgba(94, 143, 58, 0.5) !important; }
 html[data-theme="light"] .from-pot-accent\/60,
-html[data-theme="light"] .to-pot-accent\/60 { --tw-gradient-from: rgba(109, 40, 217, 0.5) !important; --tw-gradient-to: rgba(109, 40, 217, 0.5) !important; }
+html[data-theme="light"] .to-pot-accent\/60 { --tw-gradient-from: rgba(201, 98, 58, 0.5) !important; --tw-gradient-to: rgba(201, 98, 58, 0.5) !important; }
 html[data-theme="light"] .from-pot-muted\/60,
-html[data-theme="light"] .to-pot-muted\/60 { --tw-gradient-from: rgba(31, 41, 55, 0.4) !important; --tw-gradient-to: rgba(31, 41, 55, 0.4) !important; }
+html[data-theme="light"] .to-pot-muted\/60 { --tw-gradient-from: rgba(58, 51, 42, 0.4) !important; --tw-gradient-to: rgba(58, 51, 42, 0.4) !important; }
 
 /* Dark theme: bump low-contrast mutes a touch for readability */
 html:not([data-theme="light"]) .text-pot-muted\/50 { color: rgba(139, 155, 180, 0.75) !important; }
@@ -310,13 +310,13 @@ html:not([data-theme="light"]) .text-pot-muted\/50 { color: rgba(139, 155, 180, 
 /* pot-green & pot-accent stay vibrant in both themes — no override */
 
 /* ── Gradient stops used by landing ── */
-html[data-theme="light"] .from-pot-accent\/10 { --tw-gradient-from: rgba(139, 92, 246, 0.08) !important; --tw-gradient-to: rgba(139, 92, 246, 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+html[data-theme="light"] .from-pot-accent\/10 { --tw-gradient-from: rgba(201, 98, 58, 0.08) !important; --tw-gradient-to: rgba(201, 98, 58, 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
 html[data-theme="light"] .via-pot-card        { --tw-gradient-via: var(--pot-bg-2) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to) !important; }
-html[data-theme="light"] .to-pot-green\/10    { --tw-gradient-to: rgba(0, 255, 136, 0.08) !important; }
+html[data-theme="light"] .to-pot-green\/10    { --tw-gradient-to: rgba(94, 143, 58, 0.08) !important; }
 html[data-theme="light"] .from-pot-card       { --tw-gradient-from: var(--pot-bg-2) !important; --tw-gradient-to: rgba(255, 255, 255, 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
 html[data-theme="light"] .to-pot-dark         { --tw-gradient-to: var(--pot-bg) !important; }
-html[data-theme="light"] .from-pot-green\/5   { --tw-gradient-from: rgba(0, 200, 110, 0.06) !important; --tw-gradient-to: rgba(0, 200, 110, 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
-html[data-theme="light"] .to-pot-accent\/5    { --tw-gradient-to: rgba(139, 92, 246, 0.06) !important; }
+html[data-theme="light"] .from-pot-green\/5   { --tw-gradient-from: rgba(94, 143, 58, 0.06) !important; --tw-gradient-to: rgba(94, 143, 58, 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+html[data-theme="light"] .to-pot-accent\/5    { --tw-gradient-to: rgba(201, 98, 58, 0.06) !important; }
 
 /* ── Component-level tweaks ── */
 
@@ -324,7 +324,7 @@ html[data-theme="light"] .to-pot-accent\/5    { --tw-gradient-to: rgba(139, 92, 
    which would otherwise become our light bg. Lock ink color. */
 html[data-theme="light"] .btn-primary,
 html[data-theme="light"] .text-pot-dark {
-  color: #0a0e17 !important;
+  color: #1A120C !important;
 }
 
 /* btn-secondary: reverse for readability */
@@ -364,13 +364,13 @@ html[data-theme="light"] .wallet-adapter-modal-list li {
 html[data-theme="light"] nav .text-white { color: var(--pot-ink) !important; }
 
 /* Card hover borders adjust slightly for light contrast */
-html[data-theme="light"] .hover\:border-pot-green\/20:hover { border-color: rgba(0, 200, 110, 0.35) !important; }
-html[data-theme="light"] .hover\:border-pot-green\/30:hover { border-color: rgba(0, 200, 110, 0.4) !important; }
-html[data-theme="light"] .hover\:border-pot-accent\/30:hover { border-color: rgba(139, 92, 246, 0.4) !important; }
+html[data-theme="light"] .hover\:border-pot-green\/20:hover { border-color: rgba(94, 143, 58, 0.35) !important; }
+html[data-theme="light"] .hover\:border-pot-green\/30:hover { border-color: rgba(94, 143, 58, 0.4) !important; }
+html[data-theme="light"] .hover\:border-pot-accent\/30:hover { border-color: rgba(201, 98, 58, 0.4) !important; }
 
 /* Hero glow circles a bit softer in light to avoid milky wash */
-html[data-theme="light"] .bg-pot-green\/5 { background-color: rgba(0, 200, 110, 0.07) !important; }
-html[data-theme="light"] .bg-pot-accent\/5 { background-color: rgba(139, 92, 246, 0.07) !important; }
+html[data-theme="light"] .bg-pot-green\/5 { background-color: rgba(94, 143, 58, 0.07) !important; }
+html[data-theme="light"] .bg-pot-accent\/5 { background-color: rgba(201, 98, 58, 0.07) !important; }
 
 /* ── Smooth theme swap ── */
 html, body, nav, section, footer, .card, .btn-primary, .btn-secondary, .input,
@@ -411,11 +411,11 @@ html[data-theme="light"] .text-red-400 { color: #b91c1c !important; }   /* red-7
 
 /* Greens not-pot-green (status pills) */
 html[data-theme="light"] .text-green-300,
-html[data-theme="light"] .text-green-400 { color: #15803d !important; } /* green-700 */
+html[data-theme="light"] .text-green-400 { color: #5E8F3A !important; } /* green-700 */
 
 /* Purples (governance, premium) */
 html[data-theme="light"] .text-purple-200,
-html[data-theme="light"] .text-purple-300 { color: #6d28d9 !important; } /* violet-700 */
+html[data-theme="light"] .text-purple-300 { color: #C9623A !important; } /* violet-700 */
 
 /* Blues / Cyans (info pills) */
 html[data-theme="light"] .text-blue-300,
@@ -444,13 +444,13 @@ html[data-theme="light"] .bg-blue-500\/10    { background-color: rgba(59, 130, 2
 html[data-theme="light"] .bg-cyan-500\/10    { background-color: rgba(6, 182, 212, 0.14) !important; }
 
 /* pot-accent (purple) on white needs slightly more saturation in pill bg */
-html[data-theme="light"] .bg-pot-accent\/10  { background-color: rgba(139, 92, 246, 0.14) !important; }
-html[data-theme="light"] .bg-pot-accent\/20  { background-color: rgba(139, 92, 246, 0.20) !important; }
+html[data-theme="light"] .bg-pot-accent\/10  { background-color: rgba(201, 98, 58, 0.14) !important; }
+html[data-theme="light"] .bg-pot-accent\/20  { background-color: rgba(201, 98, 58, 0.20) !important; }
 
 /* pot-green pills — chip bg should still read in light mode */
-html[data-theme="light"] .bg-pot-green\/5   { background-color: rgba(0, 200, 110, 0.10) !important; }
-html[data-theme="light"] .bg-pot-green\/10  { background-color: rgba(0, 200, 110, 0.14) !important; }
-html[data-theme="light"] .bg-pot-green\/20  { background-color: rgba(0, 200, 110, 0.18) !important; }
+html[data-theme="light"] .bg-pot-green\/5   { background-color: rgba(94, 143, 58, 0.10) !important; }
+html[data-theme="light"] .bg-pot-green\/10  { background-color: rgba(94, 143, 58, 0.14) !important; }
+html[data-theme="light"] .bg-pot-green\/20  { background-color: rgba(94, 143, 58, 0.18) !important; }
 
 /* Translucent black surfaces (bg-black/40 etc) become invisible on white;
    substitute a light card token. */
@@ -569,27 +569,27 @@ html[data-theme="light"] .pot-range { background: linear-gradient(90deg, #0f9d6a
   min-height: 48px;
   justify-content: center;
   background: #14f195 !important;
-  color: #0a0e17 !important;
+  color: #1A120C !important;
 }
 .potfolio-create-wallet .wallet-adapter-button:hover {
   background: #14f195 !important;
   filter: brightness(1.1);
 }
 html[data-theme="light"] .potfolio-create-card {
-  border-color: rgba(22, 101, 52, 0.25);
+  border-color: rgba(94, 143, 58, 0.25);
 }
 html[data-theme="light"] .potfolio-weight-slider {
   accent-color: #0f9d6a;
 }
 html[data-theme="light"] .potfolio-weight-total-valid {
-  color: #166534;
-  border-color: rgba(22, 101, 52, 0.25);
-  background: rgba(22, 101, 52, 0.04);
+  color: #5E8F3A;
+  border-color: rgba(94, 143, 58, 0.25);
+  background: rgba(94, 143, 58, 0.04);
 }
 html[data-theme="light"] .potfolio-create-action,
 html[data-theme="light"] .potfolio-create-wallet .wallet-adapter-button {
   background: #14f195 !important;
-  color: #0a0e17 !important;
+  color: #1A120C !important;
 }
 @media (max-width: 639px) {
   .potfolio-create-card { padding: 20px; }
@@ -604,4 +604,32 @@ html[data-theme="light"] .potfolio-create-wallet .wallet-adapter-button {
     height: 24px;
   }
   .potfolio-add-asset { grid-template-columns: 1fr; }
+}
+
+
+/* ── v3 additions ─────────────────────────────────────────────── */
+/* Warm ink instead of pure white in the dark theme. */
+html:not(.light-theme) .text-white { color: var(--c-text); }
+html.light-theme .bg-pot-accent,
+html[data-theme="light"] .bg-pot-accent { background-color: #C9623A !important; }
+html.light-theme .text-pot-accent,
+html[data-theme="light"] .text-pot-accent { color: #C9623A !important; }
+html.light-theme .border-pot-accent,
+html[data-theme="light"] .border-pot-accent { border-color: #C9623A !important; }
+
+/* Motion: one easing, nothing longer than 900 ms. */
+.v3-reveal { opacity: 0; transform: translateY(12px); transition: opacity .5s var(--ease-pot), transform .5s var(--ease-pot); }
+.v3-reveal.is-in { opacity: 1; transform: none; }
+.v3-rise { animation: v3-rise .7s var(--ease-pot) both; }
+.v3-line { display: block; overflow: hidden; }
+.v3-line > span { display: block; animation: v3-line .7s var(--ease-pot) both; }
+@keyframes v3-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes v3-line { from { transform: translateY(110%); } to { transform: none; } }
+@keyframes v3-draw { to { stroke-dashoffset: 0; } }
+@keyframes v3-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes v3-coin { 0% { transform: translateY(-120px) scale(.9); opacity: 0; } 15% { opacity: 1; } 70% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(8px) scale(.6); opacity: 0; } }
+@keyframes v3-token { 0%, 60% { transform: translateY(16px) scale(.6); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .v3-reveal { opacity: 1; transform: none; transition: none; }
+  .v3-rise, .v3-line > span, .animate-breathe, .animate-float { animation: none !important; }
 }

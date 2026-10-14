@@ -19,10 +19,10 @@ export function ThemeToggle() {
   useEffect(() => { setMounted(true) }, [])
 
   const label = !mounted
-    ? '🌑 Crypto mode'
+    ? 'Crypto mode'
     : isLight
-      ? '☀️ Normie mode'
-      : '🌑 Crypto mode'
+      ? 'Normie mode'
+      : 'Crypto mode'
 
   return (
     <button
@@ -34,8 +34,8 @@ export function ThemeToggle() {
       className={
         'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ' +
         (isLight
-          ? 'border-pot-border bg-white text-gray-900 hover:border-pot-green'
-          : 'border-pot-border bg-pot-card text-white hover:border-pot-green')
+          ? 'border-pot-border bg-white text-gray-900 hover:border-pot-muted'
+          : 'border-pot-border bg-pot-card text-white hover:border-pot-muted')
       }
     >
       {label}

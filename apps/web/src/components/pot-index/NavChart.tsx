@@ -35,7 +35,7 @@ export function Sparkline({ points, width = 600, height = 160, stroke, fill = tr
   }, [points, width, height, entry])
   if (!d) return null
   const up = points[points.length - 1].price >= points[0].price
-  const color = stroke ?? (up ? 'var(--c-brand-green, #14F195)' : '#ef4444')
+  const color = stroke ?? (up ? 'var(--c-brand-green, #9CCB6E)' : 'var(--c-muted, #C9C0B0)')
   return (
     <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className={className} aria-hidden>
       {fill && <path d={d.area} fill={color} opacity={0.12} />}

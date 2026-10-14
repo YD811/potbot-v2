@@ -42,7 +42,7 @@ export function HowAPotWorks({ compact = false }: { compact?: boolean }) {
     <section className={compact ? '' : 'mx-auto max-w-6xl px-4 py-16'}>
       {!compact && (
         <div className="mb-8 text-center">
-          <h2 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-5xl">How it works</h2>
+          <h2 className="font-display text-4xl font-semibold leading-tight tracking-[-0.02em] text-white sm:text-5xl">How it works</h2>
         </div>
       )}
       <div className="mb-8 flex justify-center">
@@ -52,7 +52,7 @@ export function HowAPotWorks({ compact = false }: { compact?: boolean }) {
               key={a}
               type="button"
               onClick={() => setWho(a)}
-              className={`rounded-full px-5 py-2 text-sm font-semibold transition ${who === a ? 'bg-pot-green text-pot-dark' : 'text-white/70 hover:text-white'}`}
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition ${who === a ? 'bg-pot-accent text-pot-dark' : 'text-white/70 hover:text-white'}`}
             >
               {a === 'holders' ? 'I want to invest' : 'I want to create'}
             </button>
@@ -62,15 +62,15 @@ export function HowAPotWorks({ compact = false }: { compact?: boolean }) {
 
       <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {p.steps.map((s, i) => (
-          <li key={s.title} className="card relative p-5">
-            <span className="mb-3 block font-mono text-xs text-pot-green">0{i + 1}</span>
-            <h3 className="mb-2 font-semibold text-white">{s.title}</h3>
-            <p className="text-sm leading-relaxed text-white/70">{s.body}</p>
+          <li key={s.title} className="card relative rounded-3xl p-6">
+            <span className="mb-3 block font-mono text-xs tracking-[0.12em] text-pot-accent">0{i + 1}</span>
+            <h3 className="mb-2 text-lg font-semibold text-white">{s.title}</h3>
+            <p className="text-[15px] leading-relaxed text-pot-muted">{s.body}</p>
           </li>
         ))}
       </ol>
 
-      <ul className="mx-auto mt-6 flex max-w-4xl flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-white/80">
+      <ul className="mx-auto mt-6 flex max-w-4xl flex-wrap justify-center gap-x-6 gap-y-2 text-[15px] text-pot-muted">
         {p.benefits.map((b) => (
           <li key={b} className="flex items-start gap-2">
             <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-pot-green" />

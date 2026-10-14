@@ -1,6 +1,6 @@
-import LandingPage from '@/components/LandingPage'
+import { LandingV3 } from '@/components/v3/LandingV3'
 
-/** Home is always the landing. The vault dashboard lives on /vaults and /my-pots. */
+/** Home is the v3 landing (design system v3, Oct 2026). The previous landing stays in components/LandingPage.tsx. */
 export default function HomePage() {
-  return <LandingPage />
+  return <LandingV3 />
 }
