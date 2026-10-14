@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePot, usePotStats, useNavHistory } from '@/hooks/usePotIndex'
 import { POT_INDEX_SETTINGS, assetByMint } from '@/lib/pot-index/registry'
-import { plantSrc, potSeries, stageForUsd, STAGES } from '@/lib/pot-index/garden'
 import { legColor } from '@/components/pot-index/CompositionBar'
 import { Sparkline } from '@/components/pot-index/NavChart'
 
@@ -37,22 +36,18 @@ export function FlagshipCard() {
   const price = useCountUp(stats.data?.indexPrice ?? null)
   const change7d = nav.data?.stats.change7d ?? null
   const points = nav.data?.points ?? []
-  const navUsd = stats.data?.navUsd ?? 0
-  const stage = stageForUsd(navUsd)
-  const st = STAGES[stage - 1]
   const p = pot.data
   const up = change7d == null || change7d >= 0
 
   return (
     <div className="v3-rise relative rounded-[28px] border border-pot-border bg-pot-card p-6 shadow-[0_30px_60px_-40px_rgba(0,0,0,.6)] sm:p-7" style={{ animationDelay: '320ms' }}>
-      {p && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={plantSrc(potSeries(p), stage)} alt="" className="animate-breathe absolute -top-12 right-5 w-24 object-contain sm:-top-14 sm:w-28" draggable={false} />
-      )}
+      {/* Brand illustration: the Bloom plant from the deck and the mock, not the live garden level. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/garden/pink-4.png" alt="" className="animate-breathe absolute -top-14 right-4 w-28 object-contain sm:-top-16 sm:w-32" draggable={false} />
       <div className="pr-24">
         <p className="font-display text-2xl font-semibold text-white sm:text-[28px]">{p?.name ?? 'Solana Blue Chips'}</p>
         <p className="mt-1 font-mono text-xs text-pot-muted">
-          {p ? `$${p.symbol} · Level ${st.level} ${st.name}` : 'Reading from the chain'}
+          {p ? `$${p.symbol} · ${p.legs.length} assets · one token` : 'Reading from the chain'}
         </p>
       </div>
       <div className="mt-4 flex items-baseline gap-3">
