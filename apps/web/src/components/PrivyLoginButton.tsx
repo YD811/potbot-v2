@@ -18,7 +18,7 @@ export function PrivyLoginButton() {
       <button
         type="button"
         disabled
-        className="px-4 py-2 rounded-xl bg-gray-100 text-gray-400 text-sm font-semibold border border-gray-200"
+        className="px-4 py-2 rounded-full border border-pot-border bg-pot-card text-pot-muted text-sm font-semibold"
       >
         Loading…
       </button>
@@ -30,7 +30,7 @@ export function PrivyLoginButton() {
       <button
         type="button"
         onClick={() => login()}
-        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition whitespace-nowrap"
+        className="px-4 py-2 rounded-full bg-pot-accent hover:brightness-110 text-pot-dark text-sm font-semibold transition whitespace-nowrap"
       >
         Connect with email or Google
       </button>
@@ -47,7 +47,7 @@ export function PrivyLoginButton() {
     <button
       type="button"
       onClick={() => logout()}
-      className="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-900 text-sm font-semibold transition whitespace-nowrap"
+      className="px-4 py-2 rounded-full border border-pot-border bg-pot-card hover:border-pot-muted text-white text-sm font-semibold transition whitespace-nowrap"
       title="Click to disconnect"
     >
       {display}

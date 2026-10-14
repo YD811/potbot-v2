@@ -34,19 +34,19 @@ export function ConnectButton() {
 
   if (wallet.isConnected) {
     const accentClass = isLight
-      ? 'border-slate-300 bg-white text-gray-900 hover:bg-slate-50 shadow-sm'
-      : 'border-pot-border bg-pot-card text-white hover:border-pot-green/60'
+      ? 'border-pot-border bg-pot-card text-white hover:border-pot-muted'
+      : 'border-pot-border bg-pot-card text-white hover:border-pot-muted'
     return (
       <div className="relative">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-semibold transition whitespace-nowrap ${accentClass}`}
+          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition whitespace-nowrap ${accentClass}`}
           aria-haspopup="menu"
           aria-expanded={open}
           title={wallet.label}
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${isLight ? 'bg-emerald-500' : 'bg-pot-green'} animate-pulse`} />
+          <span className={`w-1.5 h-1.5 rounded-full ${isLight ? 'bg-pot-green' : 'bg-pot-green'} animate-pulse`} />
           <span className="max-w-[140px] truncate">{wallet.label}</span>
           <span className="text-xs text-pot-muted">▾</span>
         </button>
@@ -64,7 +64,7 @@ export function ConnectButton() {
               className={
                 'absolute right-0 mt-2 z-50 w-60 rounded-xl border shadow-2xl p-2 ' +
                 (isLight
-                  ? 'border-slate-300 bg-white text-gray-900'
+                  ? 'border-pot-border bg-pot-card text-white'
                   : 'border-pot-border bg-pot-card text-white')
               }
             >
@@ -91,7 +91,7 @@ export function ConnectButton() {
                   setOpen(false)
                   await wallet.disconnect()
                 }}
-                className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-red-500/10 hover:text-red-400 transition"
+                className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-pot-accent/10 hover:text-pot-accent transition"
               >
                 Disconnect
               </button>
