@@ -5,9 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { useQuery } from '@tanstack/react-query'
 import { useSolPrice } from '@/lib/prices'
-import { healthApi } from '@/lib/api-client'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ConnectButton } from '@/components/ConnectButton'
 import { SeasonPrizePoolModal } from '@/components/SeasonPrizePoolModal'
@@ -16,14 +14,6 @@ import { useHumanText } from '@/hooks/useHumanText'
 function LivePriceTicker() {
   const { price: solPrice } = useSolPrice()
   const [showSeasonModal, setShowSeasonModal] = useState(false)
-
-  const { data: health, isError: apiDown } = useQuery({
-    queryKey: ['api-health'],
-    queryFn:  healthApi.check,
-    refetchInterval: 30_000,
-    retry: 1,
-    staleTime: 25_000,
-  })
 
   return (
     <div className="border-b border-pot-border/60 bg-pot-dark/60">
@@ -37,16 +27,9 @@ function LivePriceTicker() {
             <span className="text-pot-muted">SOL</span>
           </div>
         )}
-        <div className="w-px h-3 bg-pot-border" />
-        <div className="flex items-center gap-1.5 text-[11px]">
-          <span className={`w-1.5 h-1.5 rounded-full ${apiDown ? 'bg-pot-accent' : 'bg-pot-green'}`} />
-          <span className={apiDown ? 'text-pot-muted' : 'text-pot-green'}>
-            {apiDown ? 'Offline' : 'Live'}
-          </span>
-        </div>
         {/* Season 1 ticker — clickable, opens prize-pool modal */}
         <div className="hidden sm:flex items-center gap-1.5 text-[11px]">
-          <span className="text-pot-muted">|</span>
+          <span className="w-px h-3 bg-pot-border" />
           <button
             onClick={() => setShowSeasonModal(true)}
             className="text-pot-muted hover:text-white hover:underline underline-offset-2 transition cursor-pointer"
