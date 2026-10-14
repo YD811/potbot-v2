@@ -10,7 +10,7 @@ export function PlantBadge({ pot, navUsd, size = 44 }: { pot: PotView; navUsd?: 
   return (
     <div
       className="flex shrink-0 items-end justify-center rounded-xl"
-      style={{ width: size, height: size, background: 'rgba(20,241,149,0.06)', border: '1px solid rgba(20,241,149,0.2)' }}
+      style={{ width: size, height: size, background: 'rgba(156,203,110,0.08)', border: '1px solid var(--c-border)' }}
       title={`Level ${st.level} · ${st.name}`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}

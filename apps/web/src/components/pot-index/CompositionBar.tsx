@@ -4,7 +4,7 @@ import { assetByMint } from '@/lib/pot-index/registry'
 import type { PotView } from '@/lib/pot-index/client'
 import { TokenHover } from './TokenHover'
 
-const COLORS = ['#00ff88', '#8b5cf6', '#38bdf8', '#f59e0b', '#f472b6']
+const COLORS = ['#E07A4F', '#E9C46A', '#9CCB6E', '#7FA7C9', '#B08BC9']
 
 export function legColor(i: number) {
   return COLORS[i % COLORS.length]
@@ -15,7 +15,7 @@ export function CompositionBar({ pot, actualUsd, cashUsd, legAmounts }: { pot: P
   const total = (actualUsd?.reduce((s, v) => s + v, 0) ?? 0) + (cashUsd ?? 0)
   return (
     <div>
-      <div className="flex h-3 w-full overflow-hidden rounded-full bg-pot-border">
+      <div className="flex h-2.5 w-full gap-[2px] overflow-hidden rounded-full bg-pot-border">
         {pot.legs.map((l, i) => (
           <div key={l.mint.toBase58()} style={{ width: `${l.weightBps / 100}%`, background: legColor(i) }} />
         ))}

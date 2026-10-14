@@ -62,7 +62,7 @@ export function GardenMode({ series: fixed }: { series?: PlantSeries }) {
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10"
-        style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 45%, rgba(20,241,149,0.07), transparent 60%)' }}
+        style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 45%, rgba(156,203,110,0.07), transparent 60%)' }}
       />
       <div className="mx-auto max-w-6xl">
         <div className="mb-12 text-center">
@@ -71,9 +71,9 @@ export function GardenMode({ series: fixed }: { series?: PlantSeries }) {
             <span className="text-xs font-bold uppercase tracking-[0.4em] text-pot-green">Garden mode</span>
             <span className="h-px w-6 bg-gradient-to-l from-transparent to-pot-green/60" />
           </div>
-          <h2 className="mb-4 text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-5xl">
+          <h2 className="mb-4 font-display text-4xl font-semibold leading-[1.1] tracking-[-0.02em] text-white sm:text-5xl">
             Watch your POTFolio{' '}
-            <span className="bg-gradient-to-r from-pot-green to-pot-accent bg-clip-text text-transparent">grow.</span>
+            <span className="italic text-pot-green">grow.</span>
           </h2>
           <p className="mx-auto max-w-2xl text-base leading-relaxed text-white/80 sm:text-lg">
             Every POTFolio is a plant. Deposits water it, exits dry it out. The level comes from on-chain value, so it cannot be faked.
@@ -99,7 +99,7 @@ export function GardenMode({ series: fixed }: { series?: PlantSeries }) {
               <div
                 aria-hidden
                 className="absolute inset-x-6 bottom-2 h-10 rounded-full blur-2xl transition-opacity duration-500"
-                style={{ background: 'rgba(20,241,149,0.35)', opacity: pulse ? 1 : 0.35 }}
+                style={{ background: 'rgba(156,203,110,0.35)', opacity: pulse ? 1 : 0.35 }}
               />
               {STAGES.map((s) => (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -146,9 +146,9 @@ export function GardenMode({ series: fixed }: { series?: PlantSeries }) {
                   <div
                     className="flex h-20 w-20 items-end justify-center rounded-2xl transition-all duration-500 sm:h-24 sm:w-24"
                     style={{
-                      background: `rgba(20,241,149,${active ? 0.12 : 0.04})`,
-                      border: `1px solid rgba(20,241,149,${active ? 0.7 : 0.18})`,
-                      boxShadow: active ? '0 0 28px rgba(20,241,149,0.35)' : 'none',
+                      background: `rgba(156,203,110,${active ? 0.12 : 0.04})`,
+                      border: `1px solid rgba(156,203,110,${active ? 0.7 : 0.18})`,
+                      boxShadow: 'none',
                       transform: active ? 'translateY(-4px)' : 'none',
                     }}
                   >
@@ -168,7 +168,7 @@ export function GardenMode({ series: fixed }: { series?: PlantSeries }) {
           <div className="mt-6 hidden h-1 w-full rounded-full bg-pot-border sm:block">
             <div
               className="h-1 rounded-full bg-pot-green transition-all duration-700"
-              style={{ width: `${((stage - 1) / 5) * 100}%`, boxShadow: '0 0 12px rgba(20,241,149,0.6)' }}
+              style={{ width: `${((stage - 1) / 5) * 100}%` }}
             />
           </div>
         </div>
