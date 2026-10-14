@@ -627,8 +627,8 @@ html[data-theme="light"] .border-pot-accent { border-color: #C9623A !important; 
 @keyframes v3-line { from { transform: translateY(110%); } to { transform: none; } }
 @keyframes v3-draw { to { stroke-dashoffset: 0; } }
 @keyframes v3-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@keyframes v3-coin { 0% { transform: translateY(-120px) scale(.9); opacity: 0; } 15% { opacity: 1; } 70% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(8px) scale(.6); opacity: 0; } }
-@keyframes v3-token { 0%, 60% { transform: translateY(16px) scale(.6); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+@keyframes v3-coin { 0% { transform: translate3d(0,-120px,0); opacity: 0; } 15% { opacity: 1; } 70% { transform: translate3d(0,0,0); opacity: 1; } 100% { transform: translate3d(0,10px,0); opacity: 0; } }
+@keyframes v3-token { 0%, 60% { transform: translate3d(0,14px,0); opacity: 0; } 100% { transform: translate3d(0,0,0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .v3-reveal { opacity: 1; transform: none; transition: none; }
   .v3-rise, .v3-line > span, .animate-breathe, .animate-float { animation: none !important; }

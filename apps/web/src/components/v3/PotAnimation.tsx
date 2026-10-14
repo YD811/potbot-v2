@@ -17,8 +17,8 @@ export function PotAnimation({ className = '' }: { className?: string }) {
   return (
     <div className={`relative mx-auto aspect-[280/260] w-full max-w-[320px] ${className}`} aria-hidden>
       <style>{`
-        .v3pot-coin { position:absolute; top:38%; width:32px; height:32px; margin-left:-16px; border-radius:50%; display:flex; align-items:center; justify-content:center; font:500 9px var(--font-mono), monospace; color:#1A120C; will-change:transform,opacity; animation: v3-coin 2.4s var(--ease-pot) infinite; }
-        .v3pot-token { position:absolute; left:50%; top:66%; width:48px; height:48px; margin:-24px 0 0 -24px; border-radius:50%; background:#E07A4F; box-shadow: inset 0 0 0 2px rgba(26,18,12,.25); display:flex; align-items:center; justify-content:center; font:500 11px var(--font-mono), monospace; color:#1A120C; will-change:transform,opacity; animation: v3-token 2.4s var(--ease-pot) infinite; animation-delay:1.4s; }
+        .v3pot-coin { position:absolute; top:38%; width:32px; height:32px; margin-left:-16px; border-radius:50%; display:flex; align-items:center; justify-content:center; font:500 9px var(--font-mono), monospace; color:#1A120C; will-change:transform,opacity; backface-visibility:hidden; animation: v3-coin 2.4s var(--ease-pot) infinite; }
+        .v3pot-token { position:absolute; left:50%; top:66%; width:48px; height:48px; margin:-24px 0 0 -24px; border-radius:50%; background:#E07A4F; border:2px solid rgba(26,18,12,.25); display:flex; align-items:center; justify-content:center; font:500 11px var(--font-mono), monospace; color:#1A120C; will-change:transform,opacity; backface-visibility:hidden; transform:translate3d(0,0,0); animation: v3-token 2.4s var(--ease-pot) infinite; animation-delay:1.4s; }
         @media (prefers-reduced-motion: reduce) { .v3pot-coin, .v3pot-token { animation: none; opacity: 1; transform: none; } }
       `}</style>
       <svg viewBox="0 0 280 260" className="absolute inset-0 h-full w-full" fill="none">
