@@ -50,34 +50,36 @@ export function MyPositions({ pots, stats }: { pots: PotView[]; stats: Record<st
   const totalPnl = rows.reduce((a, r) => a + r.pnl, 0)
   const up = totalPnl >= 0
   return (
-    <section id="mine" className="card mb-6 scroll-mt-24 p-5">
+    <section id="mine" className="mb-6 scroll-mt-24 rounded-3xl border border-pot-border bg-pot-card p-5 sm:p-6">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="text-xs uppercase tracking-wider text-white/60">Your positions</div>
-          <div className="text-2xl font-black text-white">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+          <div className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">Your positions</div>
+          <div className="mt-1 font-display text-2xl font-semibold tracking-[-0.02em] text-white">
+            <span className="font-mono tabular-nums">${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+          </div>
         </div>
         {rows.length > 0 && (
-          <div className={`text-sm font-semibold ${up ? 'text-pot-green' : 'text-red-300'}`}>
+          <div className={`font-mono text-sm tabular-nums ${up ? 'text-pot-green' : 'text-red-300'}`}>
             {up ? '+' : '−'}${Math.abs(totalPnl).toFixed(2)} since entry
           </div>
         )}
       </div>
-      {held.isLoading && <p className="text-sm text-white/70">Reading your wallet…</p>}
+      {held.isLoading && <p className="text-sm text-pot-muted">Reading your wallet…</p>}
       {held.data && rows.length === 0 && (
-        <p className="text-sm text-white/70">No POTFolio tokens in this wallet yet. Pick one below, deposit USDC, done in one signature.</p>
+        <p className="text-sm text-pot-muted">No POTFolio tokens in this wallet yet. Pick one below and deposit USDC. One signature.</p>
       )}
       {rows.length > 0 && (
         <div className="divide-y divide-pot-border/60">
           {rows.map((r) => (
-            <Link key={r.pot.address.toBase58()} href={`/portfolios/${r.pot.indexMint.toBase58()}`} className="flex items-center gap-3 py-3 transition hover:bg-white/[0.03]">
+            <Link key={r.pot.address.toBase58()} href={`/portfolios/${r.pot.indexMint.toBase58()}`} className="flex items-center gap-3 py-3 transition duration-200 ease-pot hover:bg-pot-dark/40">
               <img src={r.image} alt="" className="h-9 w-9 rounded-lg object-contain" />
               <div className="min-w-0 flex-1">
-                <div className="truncate font-semibold text-white">{r.pot.name} <span className="text-white/50">${r.pot.symbol}</span></div>
-                <div className="text-xs text-white/60">{r.shares.toLocaleString(undefined, { maximumFractionDigits: 4 })} tokens · avg entry ${r.shares > 0 && r.costUsd > 0 ? (r.costUsd / r.shares).toFixed(4) : '—'}</div>
+                <div className="truncate font-semibold text-white">{r.pot.name} <span className="font-mono text-sm text-pot-muted">${r.pot.symbol}</span></div>
+                <div className="font-mono text-xs tabular-nums text-pot-muted">{r.shares.toLocaleString(undefined, { maximumFractionDigits: 4 })} tokens · avg entry ${r.shares > 0 && r.costUsd > 0 ? (r.costUsd / r.shares).toFixed(4) : '—'}</div>
               </div>
               <div className="text-right">
-                <div className="font-semibold text-white">${r.value.toFixed(2)}</div>
-                <div className={`text-xs font-semibold ${r.pnl >= 0 ? 'text-pot-green' : 'text-red-300'}`}>{r.costUsd > 0 ? `${r.pnl >= 0 ? '+' : '−'}$${Math.abs(r.pnl).toFixed(2)} (${r.pnl >= 0 ? '+' : ''}${r.pct.toFixed(2)}%)` : ''}</div>
+                <div className="font-mono font-semibold tabular-nums text-white">${r.value.toFixed(2)}</div>
+                <div className={`font-mono text-xs tabular-nums ${r.pnl >= 0 ? 'text-pot-green' : 'text-red-300'}`}>{r.costUsd > 0 ? `${r.pnl >= 0 ? '+' : '−'}$${Math.abs(r.pnl).toFixed(2)} (${r.pnl >= 0 ? '+' : ''}${r.pct.toFixed(2)}%)` : ''}</div>
               </div>
             </Link>
           ))}

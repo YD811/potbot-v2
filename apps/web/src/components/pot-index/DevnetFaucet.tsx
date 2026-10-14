@@ -3,19 +3,17 @@
 import { useState } from 'react'
 import { usePotIndexActions } from '@/hooks/usePotIndex'
 
-/** Devnet only: 1,000 test USDC, plus 0.1 SOL when the wallet is nearly empty (fees and rent). */
+/** Test cluster only: 1,000 test USDC, plus 0.1 SOL when the wallet is nearly empty (fees and rent). */
 export function DevnetFaucet({ compact = false }: { compact?: boolean }) {
   const { pubkey } = usePotIndexActions()
   const [state, setState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle')
   const [err, setErr] = useState('')
   const [gotSol, setGotSol] = useState(0)
   return (
-    <div className="card p-5">
-      <h3 className="font-semibold text-white">Devnet faucet</h3>
-      <p className="mt-1 text-xs text-white/70">{compact ? 'Test USDC and a little SOL for fees. Devnet only, no real value.' : 'Get 1,000 test USDC to try this Pot. A fresh wallet also gets a little SOL for fees. Devnet only, no real value.'}</p>
+    <div className={compact ? '' : 'px-1'}>
       <button
         type="button"
-        className="btn-secondary mt-2 w-full text-sm"
+        className="btn-secondary w-full"
         disabled={!pubkey || state === 'busy'}
         onClick={async () => {
           setState('busy')
@@ -32,9 +30,10 @@ export function DevnetFaucet({ compact = false }: { compact?: boolean }) {
           }
         }}
       >
-        {state === 'busy' ? 'Sending…' : state === 'done' ? (gotSol > 0 ? `Sent 1,000 tUSDC + ${gotSol} SOL ✓` : 'Sent 1,000 tUSDC ✓') : 'Get test USDC'}
+        {state === 'busy' ? 'Sending' : state === 'done' ? (gotSol > 0 ? `Sent 1,000 test USDC and ${gotSol} SOL` : 'Sent 1,000 test USDC') : 'Get test USDC'}
       </button>
-      {err && <p className="mt-2 text-xs text-red-300">{err}</p>}
+      {!pubkey && <p className="mt-2 text-xs text-pot-muted">Connect a wallet first.</p>}
+      {err && <p className="mt-2 text-sm text-pot-muted">The faucet could not send. {err}. Try again in a minute.</p>}
     </div>
   )
 }

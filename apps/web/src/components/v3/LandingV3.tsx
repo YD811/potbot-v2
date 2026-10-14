@@ -24,12 +24,12 @@ const PROMISES = [
   { t: 'Creators earn, never hold', b: '40% of every entry fee goes to the creator. Your money never touches their wallet.' },
 ]
 
-const SECURITY = [
-  { t: 'Open source', b: 'Program, SDK and app on GitHub under MIT.', href: 'https://github.com/YD811/potbot-v2', ext: true },
-  { t: 'No withdraw instruction', b: 'The program has no path that moves assets to a person. Holders redeem their own token, nothing else.', href: '/learn' },
-  { t: 'Three security reviews', b: 'Two internal, one independent. Zero critical findings. Every finding and its status is public.', href: '/mainnet' },
-  { t: 'External audit before mainnet', b: 'Mainnet opens after the audit, with a multisig and a capped first POTFolio.', href: '/roadmap' },
+const GROW = [
+  { k: 'Invite and earn', t: 'Share a POTFolio, earn on every deposit', b: '40% of the entry fee goes to whoever brought the holder. Your link is in the dashboard.', cta: 'Get your link', href: '/dashboard' },
+  { k: 'Early access', t: 'Be first when mainnet opens', b: 'One email. We write when real money goes live and when a new POTFolio is featured.', cta: 'Join the waitlist', href: '/signup' },
+  { k: 'Build in public', t: 'Follow the build', b: 'Every change ships to GitHub and to X the same day. No private roadmap.', cta: 'Follow @PotBot_sol', href: 'https://x.com/PotBot_sol', ext: true },
 ]
+
 
 export function LandingV3() {
   const pots = usePots()
@@ -113,24 +113,29 @@ export function LandingV3() {
         <GardenMode />
       </Reveal>
 
-      {/* Security */}
+      {/* Grow with us */}
       <section className="grid gap-10 border-t border-pot-border pb-20 pt-14 lg:grid-cols-[.8fr_1.2fr]">
         <Reveal>
-          <Eyebrow>Security</Eyebrow>
-          <H2 className="mt-3">Open code. No withdraw instruction. Reviewed three times.</H2>
+          <Eyebrow>Community</Eyebrow>
+          <H2 className="mt-3">Growth is paid by the protocol, not by ads.</H2>
+          <p className="mt-4 max-w-[30em] text-base text-pot-muted">Every deposit splits its fee between the creator, the person who invited the holder, and PotBot. The people who grow the garden get paid first.</p>
         </Reveal>
-        <div className="grid gap-3.5 sm:grid-cols-2">
-          {SECURITY.map((s, i) => (
-            <Reveal key={s.t} delay={i * 70}>
-              {s.ext ? (
-                <a href={s.href} target="_blank" rel="noopener noreferrer" className="block h-full rounded-2xl border border-pot-border bg-pot-card p-5 transition duration-200 ease-pot hover:-translate-y-0.5 hover:border-pot-muted/60">
-                  <p className="text-[17px] font-semibold text-white">{s.t}</p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-pot-muted">{s.b}</p>
+        <div className="grid gap-3.5 sm:grid-cols-3">
+          {GROW.map((g, i) => (
+            <Reveal key={g.t} delay={i * 70}>
+              {g.ext ? (
+                <a href={g.href} target="_blank" rel="noopener noreferrer" className="flex h-full flex-col rounded-2xl border border-pot-border bg-pot-card p-5 transition duration-200 ease-pot hover:-translate-y-0.5 hover:border-pot-muted/60">
+                  <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">{g.k}</p>
+                  <p className="mt-2 text-[17px] font-semibold text-white">{g.t}</p>
+                  <p className="mt-1.5 flex-1 text-sm leading-relaxed text-pot-muted">{g.b}</p>
+                  <span className="mt-4 text-sm font-semibold text-white">{g.cta}</span>
                 </a>
               ) : (
-                <Link href={s.href} className="block h-full rounded-2xl border border-pot-border bg-pot-card p-5 transition duration-200 ease-pot hover:-translate-y-0.5 hover:border-pot-muted/60">
-                  <p className="text-[17px] font-semibold text-white">{s.t}</p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-pot-muted">{s.b}</p>
+                <Link href={g.href} className="flex h-full flex-col rounded-2xl border border-pot-border bg-pot-card p-5 transition duration-200 ease-pot hover:-translate-y-0.5 hover:border-pot-muted/60">
+                  <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">{g.k}</p>
+                  <p className="mt-2 text-[17px] font-semibold text-white">{g.t}</p>
+                  <p className="mt-1.5 flex-1 text-sm leading-relaxed text-pot-muted">{g.b}</p>
+                  <span className="mt-4 text-sm font-semibold text-white">{g.cta}</span>
                 </Link>
               )}
             </Reveal>

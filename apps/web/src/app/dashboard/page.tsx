@@ -80,77 +80,116 @@ export default function DashboardPage() {
   const totalPnl = rows.reduce((a, r) => a + r.pnl, 0)
   const totalRealized = rows.reduce((a, r) => a + r.realizedUsd, 0)
   const creatorFees = (data.data?.created ?? []).reduce((a, c) => a + c.feesUsd, 0)
-  const tone = (v: number) => (v >= 0 ? 'text-pot-green' : 'text-red-300')
-  const sign = (v: number) => (v >= 0 ? '+' : '−')
+  const tone = (v: number) => (v >= 0 ? 'text-pot-green' : 'text-pot-accent')
+  const sign = (v: number) => (v >= 0 ? '+' : '-')
+
+  const fmtShares = (v: number) => v.toLocaleString(undefined, { maximumFractionDigits: 4 })
+  const createdCount = data.data?.created.length ?? 0
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <PageHeader eyebrow="My dashboard" title={pubkey ? 'Yours, from the chain' : 'My dashboard'} lede={pubkey ? 'Only what this wallet holds, created and did. Nothing here is stored by PotBot.' : 'Connect a wallet to see your POTFolios, your entry prices and what you earned.'} />
+    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
+      <PageHeader
+        eyebrow="Dashboard"
+        title={pubkey ? 'Yours, from the chain' : 'Your dashboard'}
+        lede={pubkey ? 'Only what this wallet holds, created and did. Nothing here is stored by PotBot.' : 'Connect a wallet to see your POTFolios, your entry prices and what you earned.'}
+        action={pubkey ? undefined : <ConnectButton />}
+      />
 
       {!pubkey && (
-        <div className="card flex flex-col items-start gap-3 p-6">
-          <ConnectButton />
-          <Link href="/portfolios" className="text-sm text-pot-green hover:underline">or browse POTFolios first →</Link>
+        <div className="rounded-3xl border border-pot-border bg-pot-card p-8 text-center">
+          <p className="text-[15px] text-pot-muted">Nothing here yet.</p>
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <Link href="/portfolios" className="btn-primary">Explore POTFolios</Link>
+            <Link href="/portfolios/new" className="btn-secondary">Build your own</Link>
+          </div>
         </div>
       )}
 
       {pubkey && (
         <>
-          <div className="mb-6 grid gap-3 sm:grid-cols-4">
-            <Tile label="Holdings value" value={usd(total)} />
-            <Tile label="Unrealized P&L" value={`${sign(totalPnl)}${usd(Math.abs(totalPnl))}`} tone={tone(totalPnl)} />
-            <Tile label="Realized (to USDC)" value={`${sign(totalRealized)}${usd(Math.abs(totalRealized))}`} tone={tone(totalRealized)} />
-            <Tile label="Creator fees earned" value={usd(creatorFees)} hint={`${CREATOR_SHARE * 100}% of each ${ENTRY_FEE_BPS / 100}% entry fee`} />
+          <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Tile label="Total value" value={usd(total)} />
+            <Tile label="P&L" value={`${sign(totalPnl)}${usd(Math.abs(totalPnl))}`} tone={tone(totalPnl)} hint={`realized ${sign(totalRealized)}${usd(Math.abs(totalRealized))}`} />
+            <Tile label="POTFolios held" value={String(rows.length)} />
+            <Tile label="Created" value={String(createdCount)} hint={`${usd(creatorFees)} earned, ${CREATOR_SHARE * 100}% of each ${ENTRY_FEE_BPS / 100}% entry fee`} />
           </div>
 
-          <section className="card mb-6 p-5">
-            <h2 className="mb-3 font-semibold text-white">Your POTFolios</h2>
-            {data.isLoading && <p className="text-sm text-white/70">Reading your wallet…</p>}
+          <section className="mb-6 rounded-3xl border border-pot-border bg-pot-card p-6">
+            <h2 className="font-display text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">Your POTFolios</h2>
+            {data.isLoading && <p className="mt-3 text-[15px] text-pot-muted">Reading your wallet.</p>}
             {data.data && rows.length === 0 && (
-              <p className="text-sm text-white/70">Nothing yet. Pick a POTFolio, deposit USDC, one signature.</p>
+              <div className="mt-4 rounded-2xl border border-pot-border p-6 text-center">
+                <p className="text-[15px] text-pot-muted">Nothing here yet.</p>
+                <div className="mt-4 flex flex-wrap justify-center gap-3">
+                  <Link href="/portfolios" className="btn-primary">Explore POTFolios</Link>
+                  <Link href="/portfolios/new" className="btn-secondary">Build your own</Link>
+                </div>
+              </div>
             )}
-            <div className="divide-y divide-pot-border/60">
-              {rows.map((r) => {
-                const lvl = stageForUsd(r.nav)
-                return (
-                  <Link key={r.pot.address.toBase58()} href={`/portfolios/${r.pot.indexMint.toBase58()}`} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 py-3 transition hover:bg-white/[0.03] sm:grid-cols-[auto_1fr_auto_auto_auto]">
-                    <img src={plantSrc(potSeries(r.pot), lvl)} alt="" className="h-10 w-10 rounded-lg object-contain" />
-                    <div className="min-w-0">
-                      <div className="truncate font-semibold text-white">{r.pot.name} <span className="text-white/50">${r.pot.symbol}</span></div>
-                      <div className="text-xs text-white/60">{r.shares.toLocaleString(undefined, { maximumFractionDigits: 4 })} tokens · avg entry {r.shares > 0 && r.costUsd > 0 ? usd(r.costUsd / r.shares, 4) : '—'} · Level {lvl} {STAGES[lvl - 1].name}</div>
-                    </div>
-                    <div className="hidden text-right sm:block">
-                      <div className="text-xs text-white/50">your share</div>
-                      <div className="font-semibold text-white">{r.share.toFixed(2)}%</div>
-                    </div>
-                    <div className="hidden text-right sm:block">
-                      <div className="text-xs text-white/50">of {usd(r.nav, 0)}</div>
-                      <div className="font-semibold text-white">{usd(r.value)}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold text-white sm:hidden">{usd(r.value)}</div>
-                      <div className={`text-xs font-semibold ${tone(r.pnl)}`}>{r.costUsd > 0 ? `${sign(r.pnl)}${usd(Math.abs(r.pnl))} (${r.pnl >= 0 ? '+' : ''}${r.pct.toFixed(2)}%)` : ''}</div>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Link href="/portfolios" className="btn-secondary">Browse POTFolios</Link>
-              <Link href="/portfolios/new" className="btn-primary">Create your own</Link>
-            </div>
+            {rows.length > 0 && (
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full text-[15px]">
+                  <thead>
+                    <tr className="text-left font-mono text-xs uppercase tracking-[0.14em] text-pot-muted">
+                      <th className="py-2 pr-4 font-normal">POTFolio</th>
+                      <th className="hidden py-2 pr-4 text-right font-normal sm:table-cell">Tokens</th>
+                      <th className="hidden py-2 pr-4 text-right font-normal sm:table-cell">Share</th>
+                      <th className="py-2 pr-4 text-right font-normal">Value</th>
+                      <th className="py-2 text-right font-normal">P&L</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-pot-border">
+                    {rows.map((r) => {
+                      const lvl = stageForUsd(r.nav)
+                      const href = `/portfolios/${r.pot.indexMint.toBase58()}`
+                      return (
+                        <tr key={r.pot.address.toBase58()} className="transition hover:bg-pot-dark/60">
+                          <td className="py-3 pr-4">
+                            <Link href={href} className="flex items-center gap-3">
+                              <img src={plantSrc(potSeries(r.pot), lvl)} alt="" className="h-10 w-10 shrink-0 rounded-xl object-contain" />
+                              <span className="min-w-0">
+                                <span className="block truncate font-semibold text-white">{r.pot.name} <span className="font-mono text-sm text-pot-muted">${r.pot.symbol}</span></span>
+                                <span className="block text-xs text-pot-muted">
+                                  avg entry <span className="font-mono tabular-nums">{r.shares > 0 && r.costUsd > 0 ? usd(r.costUsd / r.shares, 4) : '-'}</span>, Level {lvl} {STAGES[lvl - 1].name}
+                                </span>
+                              </span>
+                            </Link>
+                          </td>
+                          <td className="hidden py-3 pr-4 text-right font-mono tabular-nums text-white sm:table-cell">{fmtShares(r.shares)}</td>
+                          <td className="hidden py-3 pr-4 text-right font-mono tabular-nums text-white sm:table-cell">{r.share.toFixed(2)}%</td>
+                          <td className="py-3 pr-4 text-right font-mono tabular-nums text-white">
+                            {usd(r.value)}
+                            <span className="block text-xs text-pot-muted">of {usd(r.nav, 0)}</span>
+                          </td>
+                          <td className={`py-3 text-right font-mono tabular-nums ${tone(r.pnl)}`}>
+                            {r.costUsd > 0 ? (
+                              <>
+                                {sign(r.pnl)}{usd(Math.abs(r.pnl))}
+                                <span className="block text-xs">{r.pnl >= 0 ? '+' : ''}{r.pct.toFixed(2)}%</span>
+                              </>
+                            ) : (
+                              <span className="text-pot-muted">-</span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
 
-          <section className="card mb-6 p-5">
-            <h2 className="font-semibold text-white">Invite and earn</h2>
-            <p className="mt-1 text-sm text-white/70">Deposits made through your link pay you {CREATOR_SHARE * 100}% of the {ENTRY_FEE_BPS / 100}% entry fee, on-chain, in the same transaction. One link per POTFolio.</p>
-            <div className="mt-3 space-y-2">
+          <section className="mb-6 rounded-3xl border border-pot-border bg-pot-card p-6">
+            <h2 className="font-display text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">Invite and earn</h2>
+            <p className="mt-2 text-[15px] text-pot-muted">Deposits made through your link pay you <span className="font-mono tabular-nums text-white">{CREATOR_SHARE * 100}%</span> of the <span className="font-mono tabular-nums text-white">{ENTRY_FEE_BPS / 100}%</span> entry fee, on-chain, in the same transaction. One link per POTFolio.</p>
+            <div className="mt-4 space-y-2">
               {(rows.length ? rows.map((r) => r.pot) : (pots.data ?? []).slice(0, 3)).map((p) => {
                 const link = `${typeof window !== 'undefined' ? window.location.origin : 'https://potbot.fun'}/portfolios/${p.indexMint.toBase58()}?ref=${me}`
                 return (
                   <div key={p.address.toBase58()} className="flex items-center gap-2">
-                    <span className="w-24 shrink-0 truncate text-sm text-white">${p.symbol}</span>
-                    <input readOnly value={link} className="input flex-1 truncate text-xs" onFocus={(e) => e.currentTarget.select()} />
+                    <span className="w-24 shrink-0 truncate font-mono text-sm text-white">${p.symbol}</span>
+                    <input readOnly value={link} className="input flex-1 truncate font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
                     <button type="button" className="btn-secondary shrink-0" onClick={() => { void navigator.clipboard.writeText(link); toast.success(`Link for $${p.symbol} copied`) }}>Copy</button>
                   </div>
                 )
@@ -159,21 +198,23 @@ export default function DashboardPage() {
           </section>
 
           {data.data && data.data.created.length > 0 && (
-            <section className="card mb-6 p-5">
-              <h2 className="mb-3 font-semibold text-white">POTFolios you created</h2>
-              <div className="divide-y divide-pot-border/60">
+            <section className="mb-6 rounded-3xl border border-pot-border bg-pot-card p-6">
+              <h2 className="font-display text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">POTFolios you created</h2>
+              <div className="mt-3 divide-y divide-pot-border">
                 {data.data.created.map((c) => {
                   const st = stats.data?.[c.pot.address.toBase58()]
                   return (
-                    <Link key={c.pot.address.toBase58()} href={`/portfolios/${c.pot.indexMint.toBase58()}`} className="flex items-center gap-3 py-3 transition hover:bg-white/[0.03]">
-                      <img src={plantSrc(potSeries(c.pot), stageForUsd(st?.navUsd ?? 0))} alt="" className="h-9 w-9 rounded-lg object-contain" />
+                    <Link key={c.pot.address.toBase58()} href={`/portfolios/${c.pot.indexMint.toBase58()}`} className="flex items-center gap-3 py-3 transition hover:bg-pot-dark/60">
+                      <img src={plantSrc(potSeries(c.pot), stageForUsd(st?.navUsd ?? 0))} alt="" className="h-9 w-9 rounded-xl object-contain" />
                       <div className="min-w-0 flex-1">
-                        <div className="truncate font-semibold text-white">{c.pot.name} <span className="text-white/50">${c.pot.symbol}</span></div>
-                        <div className="text-xs text-white/60">TVL {usd(st?.navUsd ?? 0, 0)} · {st?.holders ?? 0} holders · {c.deposits} deposits</div>
+                        <div className="truncate font-semibold text-white">{c.pot.name} <span className="font-mono text-sm text-pot-muted">${c.pot.symbol}</span></div>
+                        <div className="text-xs text-pot-muted">
+                          TVL <span className="font-mono tabular-nums">{usd(st?.navUsd ?? 0, 0)}</span>, <span className="font-mono tabular-nums">{st?.holders ?? 0}</span> holders, <span className="font-mono tabular-nums">{c.deposits}</span> deposits
+                        </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-xs text-white/50">fees earned</div>
-                        <div className="font-semibold text-pot-green">{usd(c.feesUsd)}</div>
+                        <div className="font-mono text-xs uppercase tracking-[0.14em] text-pot-muted">fees earned</div>
+                        <div className="font-mono font-semibold tabular-nums text-pot-green">{usd(c.feesUsd)}</div>
                       </div>
                     </Link>
                   )
@@ -183,16 +224,19 @@ export default function DashboardPage() {
           )}
 
           {data.data && data.data.activity.length > 0 && (
-            <section className="card p-5">
-              <h2 className="mb-3 font-semibold text-white">Your activity</h2>
-              <ul className="divide-y divide-pot-border/60 text-sm">
+            <section className="rounded-3xl border border-pot-border bg-pot-card p-6">
+              <h2 className="font-display text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">Your activity</h2>
+              <ul className="mt-3 divide-y divide-pot-border text-[15px]">
                 {data.data.activity.map((e) => (
-                  <li key={e.sig} className="flex items-center justify-between gap-3 py-2">
+                  <li key={e.sig} className="flex items-center justify-between gap-3 py-3">
                     <span className="text-white">
-                      {e.kind === 'deposit' ? `Deposited ${usd(e.amountUsdc)} → ${e.shares.toLocaleString(undefined, { maximumFractionDigits: 4 })} $${e.pot.symbol}` : `Redeemed ${e.shares.toLocaleString(undefined, { maximumFractionDigits: 4 })} $${e.pot.symbol}${e.toUsdc ? ` → ${usd(e.usdcOut)}` : ' for the assets'}`}
+                      {e.kind === 'deposit'
+                        ? <>Deposited <span className="font-mono tabular-nums">{usd(e.amountUsdc)}</span> for <span className="font-mono tabular-nums">{fmtShares(e.shares)} ${e.pot.symbol}</span></>
+                        : <>Redeemed <span className="font-mono tabular-nums">{fmtShares(e.shares)} ${e.pot.symbol}</span>{e.toUsdc ? <> for <span className="font-mono tabular-nums">{usd(e.usdcOut)}</span></> : ' for the assets'}</>}
                     </span>
-                    <span className="shrink-0 text-xs text-white/50">
-                      {e.time ? new Date(e.time * 1000).toLocaleString() : ''} <a className="ml-1 text-pot-green hover:underline" href={explorerTx(e.sig)} target="_blank" rel="noreferrer">tx ↗</a>
+                    <span className="shrink-0 font-mono text-xs tabular-nums text-pot-muted">
+                      {e.time ? new Date(e.time * 1000).toLocaleString() : ''}{' '}
+                      <a className="ml-1 text-white underline underline-offset-4" href={explorerTx(e.sig)} target="_blank" rel="noreferrer">tx</a>
                     </span>
                   </li>
                 ))}
@@ -207,10 +251,10 @@ export default function DashboardPage() {
 
 function Tile({ label, value, tone, hint }: { label: string; value: string; tone?: string; hint?: string }) {
   return (
-    <div className="card p-4">
-      <div className="text-xs text-white/60">{label}</div>
-      <div className={`mt-0.5 text-xl font-black ${tone ?? 'text-white'}`}>{value}</div>
-      {hint && <div className="text-[11px] text-white/40">{hint}</div>}
+    <div className="rounded-3xl border border-pot-border bg-pot-card p-5">
+      <div className="font-mono text-xs uppercase tracking-[0.14em] text-pot-muted">{label}</div>
+      <div className={`mt-1 font-mono text-2xl font-semibold tabular-nums ${tone ?? 'text-white'}`}>{value}</div>
+      {hint && <div className="mt-1 text-xs text-pot-muted">{hint}</div>}
     </div>
   )
 }

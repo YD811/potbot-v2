@@ -5,7 +5,7 @@ import { useConnection } from '@solana/wallet-adapter-react'
 import { useAssetPrices } from '@/hooks/usePotIndex'
 import { fetchPotActivity, fetchPotBalances, navUsd, type PotView } from '@/lib/pot-index/client'
 
-/** Devnet-wide counters computed client-side from chain: Pots, deposits, unique wallets, TVL. */
+/** Protocol-wide counters computed client-side from chain: Pots, deposits, unique wallets, TVL. */
 export function ProtocolStats({ pots }: { pots: PotView[] }) {
   const { connection } = useConnection()
   const prices = useAssetPrices()
@@ -38,16 +38,16 @@ export function ProtocolStats({ pots }: { pots: PotView[] }) {
   const d = q.data
   const fmt = (n: number) => `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
   const items = [
-    { label: 'Pots', value: String(pots.length) },
-    { label: 'TVL (devnet)', value: d ? fmt(d.tvl) : '—' },
+    { label: 'POTFolios', value: String(pots.length) },
+    { label: 'Total value', value: d ? fmt(d.tvl) : '—' },
     { label: 'Wallets', value: d ? String(d.wallets) : '—' },
   ]
   return (
-    <div className="mb-6 grid grid-cols-3 gap-3">
+    <div className="mb-6 flex flex-wrap items-baseline gap-x-8 gap-y-2 border-b border-pot-border pb-4">
       {items.map((it) => (
-        <div key={it.label} className="card px-4 py-3">
-          <p className="text-xs text-white/70">{it.label}</p>
-          <p className="text-lg font-bold text-white">{it.value}</p>
+        <div key={it.label} className="flex items-baseline gap-2">
+          <span className="font-mono text-base tabular-nums text-white">{it.value}</span>
+          <span className="font-mono text-xs uppercase tracking-[0.14em] text-pot-muted">{it.label}</span>
         </div>
       ))}
     </div>

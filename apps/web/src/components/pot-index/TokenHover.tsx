@@ -27,26 +27,26 @@ export function TokenHover({ symbol, children }: { symbol: string; children: Rea
   const t = info.data?.[symbol.toUpperCase()]
   return (
     <span className="relative inline-block" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onClick={() => setOpen((o) => !o)}>
-      <span className="cursor-help border-b border-dotted border-white/30">{children}</span>
+      <span className="cursor-help border-b border-dotted border-pot-muted/50">{children}</span>
       {open && t && (
-        <span className="absolute left-0 top-full z-30 mt-2 block w-64 rounded-xl border border-pot-border bg-pot-dark p-3 text-left text-xs shadow-2xl">
+        <span className="absolute left-0 top-full z-30 mt-2 block w-64 rounded-xl border border-pot-border bg-pot-dark p-3 text-left text-xs shadow-lg">
           <span className="flex items-center gap-2">
             <img src={t.image} alt="" className="h-6 w-6 rounded-full" />
             <span className="font-semibold text-white">{t.name}</span>
-            <span className="text-white/50">{t.symbol}</span>
-            {t.rank && <span className="ml-auto rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] text-white/70">#{t.rank}</span>}
+            <span className="text-pot-muted">{t.symbol}</span>
+            {t.rank && <span className="ml-auto rounded-full border border-pot-border px-1.5 py-0.5 text-[10px] text-pot-muted">#{t.rank}</span>}
           </span>
           <span className="mt-2 flex items-baseline justify-between">
             <span className="text-lg font-black text-white">{fmtUsd(t.price, t.price < 1 ? 4 : 2)}</span>
             {t.change24h !== null && (
-              <span className={`font-semibold ${t.change24h >= 0 ? 'text-pot-green' : 'text-red-300'}`}>{t.change24h >= 0 ? '+' : ''}{t.change24h.toFixed(2)}% 24h</span>
+              <span className={`font-semibold ${t.change24h >= 0 ? 'text-pot-green' : 'text-pot-muted'}`}>{t.change24h >= 0 ? '+' : ''}{t.change24h.toFixed(2)}% 24h</span>
             )}
           </span>
-          <span className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-white/70">
+          <span className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-pot-muted">
             <span>Market cap</span><span className="text-right text-white">{fmtUsd(t.marketCap)}</span>
             <span>Volume 24h</span><span className="text-right text-white">{fmtUsd(t.volume24h)}</span>
           </span>
-          <a href={t.url} target="_blank" rel="noreferrer" className="mt-2 block text-pot-green hover:underline" onClick={(e) => e.stopPropagation()}>CoinGecko ↗</a>
+          <a href={t.url} target="_blank" rel="noreferrer" className="mt-2 block text-pot-muted underline-offset-2 hover:text-white hover:underline" onClick={(e) => e.stopPropagation()}>CoinGecko ↗</a>
         </span>
       )}
     </span>

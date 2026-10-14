@@ -38,9 +38,12 @@ export function Sparkline({ points, width = 600, height = 160, stroke, fill = tr
   const color = stroke ?? (up ? 'var(--c-brand-green, #9CCB6E)' : 'var(--c-muted, #C9C0B0)')
   return (
     <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className={className} aria-hidden>
+      {fill && [0.25, 0.5, 0.75].map((f) => (
+        <line key={f} x1={0} x2={width} y1={height * f} y2={height * f} stroke="var(--c-border, #2E2A23)" vectorEffect="non-scaling-stroke" />
+      ))}
       {fill && <path d={d.area} fill={color} opacity={0.12} />}
       <path d={d.line} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-      {d.entryY != null && <line x1={0} x2={width} y1={d.entryY} y2={d.entryY} stroke="#ffffff" strokeOpacity={0.55} strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />}
+      {d.entryY != null && <line x1={0} x2={width} y1={d.entryY} y2={d.entryY} stroke="var(--c-text, #F2ECE0)" strokeOpacity={0.55} strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />}
     </svg>
   )
 }
@@ -55,22 +58,22 @@ export function NavChart({ mint, symbol, entry }: { mint: string; symbol: string
   const since = stats?.since ? new Date(stats.since * 1000) : null
 
   return (
-    <div className="card p-5">
+    <div className="rounded-3xl border border-pot-border bg-pot-card p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-semibold text-white">Index price</h2>
-          <p className="mt-0.5 text-xs text-white/70">
+          <h2 className="font-display text-xl font-semibold tracking-[-0.02em] text-white">Token price</h2>
+          <p className="mt-1 font-mono text-xs tabular-nums text-pot-muted">
             {stats?.last != null ? <>${stats.last.toFixed(4)} per {symbol}</> : 'Price per token over time'}
             {enough && changeForRange != null && (
               <>
-                {' '}· <span className={changeForRange >= 0 ? 'text-pot-green' : 'text-red-300'}>{pct(changeForRange)}</span> {range === 'all' ? 'since tracking began' : `over ${range}`}
+                {' '}· <span className={changeForRange >= 0 ? 'text-pot-green' : 'text-pot-muted'}>{pct(changeForRange)}</span> {range === 'all' ? 'since tracking began' : `over ${range}`}
               </>
             )}
           </p>
         </div>
-        <div className="flex rounded-lg border border-pot-border bg-pot-dark p-0.5 text-xs font-semibold">
+        <div className="flex gap-1.5 font-mono text-xs">
           {RANGES.map((r) => (
-            <button key={r} type="button" onClick={() => setRange(r)} className={`rounded-md px-2.5 py-1 transition ${range === r ? 'bg-pot-green text-pot-dark' : 'text-white/70 hover:text-white'}`}>
+            <button key={r} type="button" onClick={() => setRange(r)} className={`rounded-full border px-3 py-1 transition ${range === r ? 'border-pot-accent bg-pot-accent text-pot-dark' : 'border-pot-border text-pot-muted hover:text-white'}`}>
               {r}
             </button>
           ))}
@@ -80,13 +83,13 @@ export function NavChart({ mint, symbol, entry }: { mint: string; symbol: string
         {enough ? (
           <Sparkline points={points} className="h-full w-full" entry={entry ?? null} />
         ) : (
-          <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-pot-border text-center text-xs text-white/60">
-            {q.isLoading ? 'Loading…' : q.isError ? 'History is not available right now.' : 'Tracking started. The line appears after a few snapshots (one every 15 minutes).'}
+          <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-pot-border px-4 text-center text-sm text-pot-muted">
+            {q.isLoading ? 'Loading' : q.isError ? 'History is not available right now. Try again in a minute.' : 'Tracking started. The line appears after a few snapshots, one every 15 minutes.'}
           </div>
         )}
       </div>
       {enough && (
-        <div className="mt-2 flex flex-wrap justify-between gap-x-4 text-[11px] text-white/60">
+        <div className="mt-3 flex flex-wrap justify-between gap-x-4 font-mono text-xs tabular-nums text-pot-muted">
           <span>{stats?.change24h != null ? `24h ${pct(stats.change24h)}` : ''}{stats?.change7d != null ? ` · 7d ${pct(stats.change7d)}` : ''}{entry != null ? ` · dashed line: your average entry $${entry.toFixed(4)}` : ''}</span>
           <span>{since ? `tracked since ${since.toLocaleDateString()} · ${stats?.points} points` : ''}</span>
         </div>
