@@ -75,6 +75,7 @@ const FOOTER_COLUMNS: { title: string; links: { label: string; href: string; ext
       { label: 'POTFolios', href: '/portfolios' },
       { label: 'Create a POTFolio', href: '/portfolios/new' },
       { label: 'How it works', href: '/learn' },
+      { label: 'Docs', href: '/docs' },
       { label: 'FAQ', href: '/faq' },
     ],
   },
@@ -123,7 +124,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="grid gap-8 mb-8 sm:grid-cols-[1.4fr_1fr_1fr_1fr]">
                 <div>
                   <Link href="/" className="flex items-center gap-2">
-                    <Image src="/garden/pink-1.png" alt="" width={24} height={24} className="h-6 w-6 object-contain" />
+                    <Image src="/garden/pink-1.webp" alt="" width={24} height={24} className="h-6 w-6 object-contain" />
                     <span className="font-display text-lg font-semibold text-white">PotBot</span>
                   </Link>
                   <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-pot-muted">

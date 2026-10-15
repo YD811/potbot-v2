@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { STAGES, plantSrc, type PlantSeries, type PlantStage } from '@/lib/pot-index/garden'
+import { STAGES, plantFullSrc, type PlantSeries, type PlantStage } from '@/lib/pot-index/garden'
 
 /**
  * Landing section: one plant grows through all six stages on a loop, deposits "water" it,
@@ -105,7 +105,7 @@ export function GardenMode({ series: fixed }: { series?: PlantSeries }) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   key={s.level}
-                  src={plantSrc(series, s.level)}
+                  src={plantFullSrc(series, s.level)}
                   alt={s.name}
                   draggable={false}
                   className="absolute bottom-0 left-1/2 max-h-full max-w-full -translate-x-1/2 select-none object-contain transition-all duration-700 ease-out"
@@ -153,7 +153,7 @@ export function GardenMode({ series: fixed }: { series?: PlantSeries }) {
                     }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={plantSrc(series, s.level)} alt="" draggable={false} className="max-h-[88%] max-w-[88%] object-contain" />
+                    <img src={plantFullSrc(series, s.level)} alt="" draggable={false} className="max-h-[88%] max-w-[88%] object-contain" />
                   </div>
                   <div className="text-xs font-bold text-white">
                     <span className="text-pot-green">L{s.level}</span> {s.name}
