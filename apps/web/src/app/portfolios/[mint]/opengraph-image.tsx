@@ -30,6 +30,23 @@ async function change7d(mint: string): Promise<number | null> {
   }
 }
 
+/** public/ is not bundled into the server function on Vercel, so fetch the plant from this deployment; disk is the local fallback. */
+async function plantDataUrl(series: string): Promise<string | null> {
+  const file = `garden/${series}-5.png`
+  const host = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
+  if (host) {
+    try {
+      const r = await fetch(`${host}/${file}`)
+      if (r.ok) return `data:image/png;base64,${Buffer.from(await r.arrayBuffer()).toString('base64')}`
+    } catch {
+      /* fall through to disk */
+    }
+  }
+  return readFile(path.join(process.cwd(), 'public', file))
+    .then((b) => `data:image/png;base64,${b.toString('base64')}`)
+    .catch(() => null)
+}
+
 export default async function PotfolioOgImage({ params }: { params: Promise<{ mint: string }> }) {
   const { mint } = await params
   let name = 'POTFolio'
@@ -49,9 +66,7 @@ export default async function PotfolioOgImage({ params }: { params: Promise<{ mi
     /* render the generic card */
   }
   const ch = legs.length ? await change7d(mint) : null
-  const plant = await readFile(path.join(process.cwd(), `public/garden/${series}-5.png`))
-    .then((b) => `data:image/png;base64,${b.toString('base64')}`)
-    .catch(() => null)
+  const plant = await plantDataUrl(series)
 
   return new ImageResponse(
     (
