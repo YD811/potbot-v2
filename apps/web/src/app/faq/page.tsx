@@ -12,7 +12,6 @@ interface FAQItem {
 interface FAQCategory {
   id: string
   label: string
-  icon: string
   items: FAQItem[]
 }
 
@@ -20,7 +19,6 @@ const FAQ_DATA: FAQCategory[] = [
   {
     id: 'basics',
     label: 'Basics',
-    icon: '',
     items: [
       {
         q: 'What is PotBot?',
@@ -40,18 +38,17 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         q: 'What is a Vault, and how is it different?',
-        a: 'Vaults are PotBot v2: group treasuries where members deposit, propose trades and vote. They are in development while the interface is reworked. POTFolio (v3) is the live product: one basket, one token, no votes, fixed weights, exit any time.',
+        a: 'Vaults are PotBot v2: group treasuries where members deposit, propose trades and vote. The interface is being reworked. POTFolio is the current product: one basket, one token, no votes, fixed weights, exit any time.',
       },
       {
         q: 'What is the Bot?',
-        a: 'The Bot is the PotBot Telegram side, where the project started: group chats following a POTFolio, digests of what moved and why. For this release the web app is the product; the digest is on the roadmap.',
+        a: 'The Bot is the PotBot Telegram side, where the project started: group chats following a POTFolio, digests of what moved and why. Today the web app is the product; the digest is on the roadmap.',
       },
     ],
   },
   {
     id: 'money',
     label: 'Deposits and redemptions',
-    icon: '',
     items: [
       {
         q: 'How does a deposit work?',
@@ -82,7 +79,6 @@ const FAQ_DATA: FAQCategory[] = [
   {
     id: 'safety',
     label: 'Safety',
-    icon: '',
     items: [
       {
         q: 'Can the creator run away with my money?',
@@ -98,22 +94,21 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         q: 'Has the program been audited?',
-        a: 'Reviewed twice against the Solana Foundation program-security checklist (Oct 8 and Oct 10, 2026, the second by an independent reviewer): no criticals or highs, both mediums fixed before the devnet upgrade. A third-party audit, a multisig on the upgrade authority and a capped flagship are on the mainnet path. The report is in the repository under docs/potfolio/security.md.',
+        a: 'Reviewed three times against the Solana Foundation program-security checklist, one review independent: no criticals or highs, every medium fixed in code. An external audit, a multisig on the upgrade authority and a capped flagship come before mainnet. Every finding and its status is on the Security page.',
       },
       {
         q: 'What are the real risks?',
-        a: 'The assets inside can lose value, and the token follows them. A POTFolio of memes is as risky as the memes. Smart-contract risk exists in any program; the devnet build is for testing. Keeper slippage up to 1% per rebalance is the cost of keeping the basket at target.',
+        a: 'The assets inside can lose value, and the token follows them. A POTFolio of memes is as risky as the memes. Smart-contract risk exists in any program. Keeper slippage up to 1% per rebalance is the cost of keeping the basket at target.',
       },
       {
         q: 'Is this live on mainnet?',
-        a: 'Not yet. Everything on this site runs on Solana devnet with test tokens and real Pyth prices. The mainnet plan (capped flagship, multisig, Jupiter for swaps) is on /mainnet.',
+        a: 'Not yet. Mainnet opens after the external audit, with a capped flagship, a multisig and Jupiter for swaps. The current state of each piece is on the Status page.',
       },
     ],
   },
   {
     id: 'creators',
     label: 'Creators and referrals',
-    icon: '',
     items: [
       {
         q: 'How do I create a POTFolio?',
@@ -129,7 +124,7 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         q: 'Which assets can go in?',
-        a: 'Any asset the protocol has listed with a Pyth price feed. On devnet that is a set of majors, Solana natives and tokenized stocks. Mainnet adds the long tail by configuration.',
+        a: 'Any asset the protocol has listed with a Pyth price feed: majors, Solana natives and tokenized stocks today. Mainnet adds the long tail by configuration.',
       },
       {
         q: 'What is Garden mode?',
@@ -139,30 +134,17 @@ const FAQ_DATA: FAQCategory[] = [
   },
 ]
 
-function FAQAccordion({ items }: { items: FAQItem[] }) {
-  const [open, setOpen] = useState<number | null>(null)
+function FAQList({ items }: { items: FAQItem[] }) {
   return (
-    <div className="space-y-2">
-      {items.map((item, i) => (
-        <div key={i} className="border border-pot-border rounded-xl overflow-hidden">
-          <button
-            onClick={() => setOpen(open === i ? null : i)}
-            className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-pot-card/50 transition"
-          >
-            <span className="text-sm font-medium text-white">{item.q}</span>
-            <span
-              className="shrink-0 text-pot-muted transition-transform duration-200"
-              style={{ transform: open === i ? 'rotate(45deg)' : 'none' }}
-            >
-              +
-            </span>
-          </button>
-          {open === i && (
-            <div className="px-5 pb-5 bg-pot-card/30">
-              <p className="text-sm text-gray-300 leading-relaxed">{item.a}</p>
-            </div>
-          )}
-        </div>
+    <div className="space-y-3">
+      {items.map((item) => (
+        <details key={item.q} className="group rounded-3xl border border-pot-border bg-pot-card transition duration-200 ease-pot open:border-pot-muted/60">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 text-[15px] font-semibold text-white [&::-webkit-details-marker]:hidden">
+            <span>{item.q}</span>
+            <span aria-hidden className="shrink-0 font-mono text-lg text-pot-muted transition duration-200 ease-pot group-open:rotate-45">+</span>
+          </summary>
+          <p className="px-6 pb-6 text-[15px] leading-relaxed text-pot-muted">{item.a}</p>
+        </details>
       ))}
     </div>
   )
@@ -174,54 +156,44 @@ export default function FAQPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
-      {/* Header */}
       <PageHeader
         eyebrow="FAQ"
         title="Questions, answered"
-        lede={<>POTFolio in plain words. Longer explanations live on <Link href="/learn" className="text-pot-green underline">Learn</Link>, the mechanics in the <a href="https://github.com/YD811/potbot-v2/tree/main/docs/potfolio" target="_blank" rel="noreferrer" className="text-pot-green underline">docs</a>.</>}
+        lede={<>POTFolio in plain words. Longer explanations live on <Link href="/learn" className="text-white underline underline-offset-4">Learn</Link>, the mechanics in the <a href="https://github.com/YD811/potbot-v2/tree/main/docs/potfolio" target="_blank" rel="noreferrer" className="text-white underline underline-offset-4">docs</a>.</>}
       />
 
-      {/* Category tabs */}
-      <div className="flex gap-2 flex-wrap mb-6">
+      <div className="mb-6 flex flex-wrap gap-2">
         {FAQ_DATA.map((cat) => (
           <button
             key={cat.id}
+            type="button"
             onClick={() => setActiveCategory(cat.id)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition ${
+            className={`rounded-full border px-3 py-1 text-xs transition duration-200 ease-pot ${
               activeCategory === cat.id
-                ? 'bg-pot-green text-pot-dark font-bold'
-                : 'bg-pot-card border border-pot-border text-pot-muted hover:text-white'
+                ? 'border-pot-accent bg-pot-accent text-pot-dark'
+                : 'border-pot-border text-pot-muted hover:border-pot-muted/60 hover:text-white'
             }`}
           >
-            <span>{cat.label}</span>
+            {cat.label}
           </button>
         ))}
       </div>
 
-      {/* FAQ Items */}
-      <FAQAccordion items={category.items} />
+      <FAQList items={category.items} />
 
-      {/* Footer links */}
-      <div className="mt-10 p-6 rounded-2xl border border-pot-border bg-pot-card/50 text-center">
-        <p className="text-sm text-pot-muted mb-3">Still have questions?</p>
-        <div className="flex flex-wrap gap-3 justify-center">
-          <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm py-2 px-5">
-            Ask on X
-          </a>
-          <Link href="/learn" className="btn-secondary text-sm py-2 px-5">
-            Read Learn
-          </Link>
-          <Link href="/portfolios" className="btn-primary text-sm py-2 px-5">
-            Open the POTFolios
-          </Link>
+      <div className="mt-10 rounded-3xl border border-pot-border bg-pot-card p-6 text-center">
+        <h2 className="font-display text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">Still have a question</h2>
+        <p className="mt-2 text-[15px] text-pot-muted">Ask us on X, or go straight to the POTFolios.</p>
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
+          <Link href="/portfolios" className="btn-primary">Explore POTFolios</Link>
+          <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="btn-secondary">Ask on X</a>
         </div>
       </div>
 
-      {/* Disclaimers */}
-      <div className="mt-8 p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20">
-        <p className="text-xs text-pot-muted leading-relaxed space-y-1">
-          <strong className="text-amber-400/80 block mb-2">Risk Disclosures</strong>
-          PotBot is non-custodial software: assets sit in program-owned accounts with no withdraw instruction. Crypto assets are volatile; you may lose some or all of the value you deposit. Past performance does not predict future results. PotBot is not investment advice. This build runs on Solana devnet with test tokens. Use of PotBot may be restricted in certain jurisdictions; by using this app you confirm compliance with your local laws.
+      <div className="mt-8 rounded-2xl border border-pot-border p-5">
+        <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-muted">Risk disclosure</p>
+        <p className="mt-2 text-sm leading-relaxed text-pot-muted">
+          PotBot is non-custodial software: assets sit in program-owned accounts with no withdraw instruction. Crypto assets are volatile; you may lose some or all of the value you deposit. Past performance does not predict future results. PotBot is not investment advice. Use of PotBot may be restricted in certain jurisdictions; by using this app you confirm compliance with your local laws.
         </p>
       </div>
     </div>

@@ -19,6 +19,8 @@ function ago(t: number | null) {
   return `${Math.floor(s / 86400)}d ago`
 }
 
+const LINK = 'underline-offset-2 transition hover:text-white hover:underline'
+
 export function ActivityFeed({ pot }: { pot: PotView }) {
   const q = usePotActivity(pot)
   const legSym = (i: number) => (i === CASH_LEG ? 'USDC' : assetByMint(pot.legs[i]?.mint.toBase58())?.symbol ?? `leg ${i}`)
@@ -39,64 +41,66 @@ export function ActivityFeed({ pot }: { pot: PotView }) {
   }, [q.data])
 
   return (
-    <div className="card p-5">
+    <div className="rounded-3xl border border-pot-border bg-pot-card p-6">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-semibold text-white">On-chain activity</h2>
-        <span className="text-xs text-pot-muted">{q.isFetching ? 'updating…' : 'live from devnet'}</span>
+        <h2 className="font-display text-xl font-semibold tracking-[-0.02em] text-white">Activity</h2>
+        <span className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.14em] text-pot-muted">
+          {q.isFetching ? 'Updating' : <><span className="h-1.5 w-1.5 rounded-full bg-pot-green" aria-hidden />Live</>}
+        </span>
       </div>
-      {q.isLoading && <p className="text-sm text-pot-muted">Reading transaction history…</p>}
+      {q.isLoading && <p className="text-sm text-pot-muted">Reading transaction history.</p>}
       {q.data && q.data.length === 0 && <p className="text-sm text-pot-muted">No activity yet. Be the first to deposit.</p>}
       <ul className="divide-y divide-pot-border text-sm">
         {rows.map((e) => (
-          <li key={e.sig + e.kind} className="flex items-start justify-between gap-3 py-2">
-            <div>
+          <li key={e.sig + e.kind} className="flex items-start justify-between gap-3 py-2.5">
+            <div className="min-w-0">
               {e.kind === 'deposit' && (
                 <>
-                  <span className="font-semibold text-pot-green">Deposit</span>{' '}
-                  <span className="text-white">{e.amountUsdc.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC</span>
-                  <span className="text-pot-muted"> → {e.shares.toLocaleString(undefined, { maximumFractionDigits: 4 })} ${pot.symbol} · by {short(e.user)}</span>
+                  <span className="font-semibold text-white">Deposit</span>{' '}
+                  <span className="font-mono tabular-nums text-white">{e.amountUsdc.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC</span>
+                  <span className="text-pot-muted"> → <span className="font-mono tabular-nums">{e.shares.toLocaleString(undefined, { maximumFractionDigits: 4 })} ${pot.symbol}</span> · by <span className="font-mono">{short(e.user)}</span></span>
                 </>
               )}
               {e.kind === 'exit' && (
                 <>
-                  <span className="font-semibold text-pot-accent">Exit</span>{' '}
-                  <span className="text-white">{e.shares.toLocaleString(undefined, { maximumFractionDigits: 4 })} ${pot.symbol}</span>
+                  <span className="font-semibold text-white">Redeem</span>{' '}
+                  <span className="font-mono tabular-nums text-white">{e.shares.toLocaleString(undefined, { maximumFractionDigits: 4 })} ${pot.symbol}</span>
                   <span className="text-pot-muted">
-                    {e.toUsdc ? <> redeemed → {e.usdcOut.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC</> : <> redeemed → share of every asset in kind</>} · by {short(e.user)}
+                    {e.toUsdc ? <> → <span className="font-mono tabular-nums">{e.usdcOut.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC</span></> : <> → share of every asset in kind</>} · by <span className="font-mono">{short(e.user)}</span>
                   </span>
                 </>
               )}
               {e.kind === 'rebalance' && (
                 <>
-                  <span className="font-semibold text-sky-300">Rebalance</span>{' '}
-                  <span className="text-white">
+                  <span className="font-semibold text-pot-muted">Rebalance</span>{' '}
+                  <span className="font-mono tabular-nums text-white">
                     {(e.amountOut / 10 ** legDec(e.legOut)).toLocaleString(undefined, { maximumFractionDigits: 4 })} {legSym(e.legOut)} →{' '}
                     {(e.received / 10 ** legDec(e.legIn)).toLocaleString(undefined, { maximumFractionDigits: 4 })} {legSym(e.legIn)}
                   </span>
-                  <span className="text-pot-muted"> · keeper {short(e.keeper)}</span>
+                  <span className="text-pot-muted"> · keeper <span className="font-mono">{short(e.keeper)}</span></span>
                 </>
               )}
               {e.kind === 'allocation' && (
                 <details className="inline">
                   <summary className="cursor-pointer select-none list-none">
-                    <span className="font-semibold text-sky-300">Allocated</span>{' '}
-                    <span className="text-white">{(e.items.reduce((a, r) => a + r.amountOut, 0) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC</span>
-                    <span className="text-pot-muted"> → {Array.from(new Set(e.items.map((r) => legSym(r.legIn)))).join(', ')} · {e.items.length} trades · keeper {short(e.items[0].keeper)} ▾</span>
+                    <span className="font-semibold text-pot-muted">Allocated</span>{' '}
+                    <span className="font-mono tabular-nums text-white">{(e.items.reduce((a, r) => a + r.amountOut, 0) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC</span>
+                    <span className="text-pot-muted"> → {Array.from(new Set(e.items.map((r) => legSym(r.legIn)))).join(', ')} · {e.items.length} trades · keeper <span className="font-mono">{short(e.items[0].keeper)}</span> · show</span>
                   </summary>
-                  <ul className="mt-1 space-y-0.5 pl-3 text-xs text-pot-muted">
+                  <ul className="mt-1 space-y-0.5 pl-3 font-mono text-xs tabular-nums text-pot-muted">
                     {e.items.map((r) => (
                       <li key={r.sig}>
                         {(r.amountOut / 1e6).toLocaleString(undefined, { maximumFractionDigits: 4 })} USDC → {(r.received / 10 ** legDec(r.legIn)).toLocaleString(undefined, { maximumFractionDigits: 4 })} {legSym(r.legIn)}{' '}
-                        <a className="hover:text-pot-green" href={explorerTx(r.sig)} target="_blank" rel="noreferrer">↗</a>
+                        <a className={LINK} href={explorerTx(r.sig)} target="_blank" rel="noreferrer">tx</a>
                       </li>
                     ))}
                   </ul>
                 </details>
               )}
-              {e.kind === 'created' && <span className="font-semibold text-white">Pot created</span>}
+              {e.kind === 'created' && <span className="font-semibold text-white">POTFolio created</span>}
             </div>
-            <a className="shrink-0 text-xs text-pot-muted hover:text-pot-green" href={explorerTx(e.sig)} target="_blank" rel="noreferrer">
-              {ago(e.time)} ↗
+            <a className={`shrink-0 font-mono text-xs tabular-nums text-pot-muted ${LINK}`} href={explorerTx(e.sig)} target="_blank" rel="noreferrer">
+              {ago(e.time)}
             </a>
           </li>
         ))}

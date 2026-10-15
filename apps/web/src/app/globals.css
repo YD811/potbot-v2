@@ -490,24 +490,24 @@ html[data-theme="light"] button:disabled {
 .pot-range {
   -webkit-appearance: none; appearance: none;
   height: 10px; border-radius: 9999px; outline: none; cursor: pointer;
-  background: linear-gradient(90deg, #14F195 0 var(--pct, 0%), rgba(255,255,255,0.12) var(--pct, 0%) 100%);
+  background: linear-gradient(90deg, #E07A4F 0 var(--pct, 0%), rgba(255,255,255,0.12) var(--pct, 0%) 100%);
 }
-html[data-theme="light"] .pot-range { background: linear-gradient(90deg, #0f9d6a 0 var(--pct, 0%), rgba(13,17,23,0.12) var(--pct, 0%) 100%); }
+html[data-theme="light"] .pot-range { background: linear-gradient(90deg, #C9623A 0 var(--pct, 0%), rgba(26,23,18,0.12) var(--pct, 0%) 100%); }
 .pot-range::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none;
   width: 26px; height: 26px; border-radius: 9999px; background: #fff;
-  border: 3px solid #14F195; box-shadow: 0 2px 10px rgba(0,0,0,0.35); cursor: grab;
+  border: 3px solid #E07A4F; box-shadow: 0 2px 10px rgba(0,0,0,0.35); cursor: grab;
 }
 .pot-range::-moz-range-thumb {
   width: 26px; height: 26px; border-radius: 9999px; background: #fff;
-  border: 3px solid #14F195; box-shadow: 0 2px 10px rgba(0,0,0,0.35); cursor: grab;
+  border: 3px solid #E07A4F; box-shadow: 0 2px 10px rgba(0,0,0,0.35); cursor: grab;
 }
 .pot-range:active::-webkit-slider-thumb { cursor: grabbing; transform: scale(1.08); }
 
 /* Approved POTFolio creation layout. Scoped to preserve other pages. */
 .potfolio-create-card {
   border-radius: 24px;
-  border-color: rgba(20, 241, 149, 0.3);
+  border-color: rgba(224, 122, 79, 0.3);
   padding: 28px;
 }
 .potfolio-weight-row {
@@ -519,7 +519,7 @@ html[data-theme="light"] .pot-range { background: linear-gradient(90deg, #0f9d6a
 .potfolio-weight-slider {
   width: 100%;
   min-width: 0;
-  accent-color: #14f195;
+  accent-color: #E07A4F;
 }
 .potfolio-weight-input {
   width: 64px;
@@ -534,9 +534,9 @@ html[data-theme="light"] .pot-range { background: linear-gradient(90deg, #0f9d6a
   margin-top: 16px;
 }
 .potfolio-weight-total-valid {
-  color: #14f195;
-  border-color: rgba(20, 241, 149, 0.25);
-  background: rgba(20, 241, 149, 0.06);
+  color: #E07A4F;
+  border-color: rgba(224, 122, 79, 0.25);
+  background: rgba(224, 122, 79, 0.06);
 }
 .potfolio-add-asset {
   display: grid;
@@ -568,11 +568,11 @@ html[data-theme="light"] .pot-range { background: linear-gradient(90deg, #0f9d6a
   width: 100%;
   min-height: 48px;
   justify-content: center;
-  background: #14f195 !important;
+  background: #E07A4F !important;
   color: #1A120C !important;
 }
 .potfolio-create-wallet .wallet-adapter-button:hover {
-  background: #14f195 !important;
+  background: #E07A4F !important;
   filter: brightness(1.1);
 }
 html[data-theme="light"] .potfolio-create-card {
@@ -588,7 +588,7 @@ html[data-theme="light"] .potfolio-weight-total-valid {
 }
 html[data-theme="light"] .potfolio-create-action,
 html[data-theme="light"] .potfolio-create-wallet .wallet-adapter-button {
-  background: #14f195 !important;
+  background: #C9623A !important;
   color: #1A120C !important;
 }
 @media (max-width: 639px) {
@@ -627,8 +627,8 @@ html[data-theme="light"] .border-pot-accent { border-color: #C9623A !important; 
 @keyframes v3-line { from { transform: translateY(110%); } to { transform: none; } }
 @keyframes v3-draw { to { stroke-dashoffset: 0; } }
 @keyframes v3-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@keyframes v3-coin { 0% { transform: translateY(-120px) scale(.9); opacity: 0; } 15% { opacity: 1; } 70% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(8px) scale(.6); opacity: 0; } }
-@keyframes v3-token { 0%, 60% { transform: translateY(16px) scale(.6); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+@keyframes v3-coin { 0% { transform: translate3d(0,-120px,0); opacity: 0; } 15% { opacity: 1; } 70% { transform: translate3d(0,0,0); opacity: 1; } 100% { transform: translate3d(0,10px,0); opacity: 0; } }
+@keyframes v3-token { 0%, 60% { transform: translate3d(0,14px,0); opacity: 0; } 100% { transform: translate3d(0,0,0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .v3-reveal { opacity: 1; transform: none; transition: none; }
   .v3-rise, .v3-line > span, .animate-breathe, .animate-float { animation: none !important; }

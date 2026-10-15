@@ -6,18 +6,28 @@ import { usePots, useAssetPrices, useAllPotStats } from '@/hooks/usePotIndex'
 import { PotCard } from '@/components/pot-index/PotCard'
 import { ProtocolStats } from '@/components/pot-index/ProtocolStats'
 import { MyPositions } from '@/components/pot-index/MyPositions'
-import { POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
 import { potCategory } from '@/lib/pot-index/garden'
 import type { PotView } from '@/lib/pot-index/client'
 import { PageHeader } from '@/components/PageHeader'
 
 const CATS = [
   { id: 'all', label: 'All' },
-  { id: 'crypto', label: 'Crypto majors' },
-  { id: 'solana', label: 'Solana native' },
-  { id: 'stock', label: 'Stocks (xStocks)' },
+  { id: 'crypto', label: 'Crypto' },
+  { id: 'solana', label: 'Solana' },
+  { id: 'stock', label: 'Stocks' },
   { id: 'meme', label: 'Memes' },
 ] as const
+
+const SORTS = [
+  { id: 'tvl', label: 'Value' },
+  { id: 'holders', label: 'Holders' },
+  { id: 'perf', label: 'Performance' },
+  { id: 'newest', label: 'Newest' },
+] as const
+
+const CHIP = 'rounded-full border px-3 py-1 text-xs transition duration-200 ease-pot'
+const CHIP_IDLE = 'border-pot-border text-pot-muted hover:border-pot-muted/60 hover:text-white'
+const CHIP_ACTIVE = 'bg-pot-accent text-pot-dark border-pot-accent'
 
 export default function PortfoliosPage() {
   const pots = usePots()
@@ -46,59 +56,76 @@ export default function PortfoliosPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <PageHeader
-        eyebrow="Live on devnet"
+        eyebrow="Catalog"
         title="POTFolios"
-        lede="One token, a whole basket inside. Deposit USDC to get it, redeem it any time for the assets or USDC."
+        lede="Baskets built by creators. Hold one token, leave any time."
         action={
-        <Link href="/portfolios/new" className="btn-primary whitespace-nowrap">
-          + Create a POTFolio
-        </Link>
+          <Link href="/portfolios/new" className="btn-primary whitespace-nowrap">
+            Build a POTFolio
+          </Link>
         }
       />
-
-      {POT_INDEX_SETTINGS.cluster !== 'mainnet-beta' && (
-        <div className="mb-6 rounded-xl border border-pot-accent/40 bg-pot-accent/10 px-4 py-3 text-sm text-white">
-          Devnet build for Colosseum Crypto World&apos;s Fair. Test tokens, real Pyth prices.{' '}
-          <Link href="/worldsfair" className="underline hover:text-pot-green">
-            What was built →
-          </Link>
-        </div>
-      )}
 
       {pots.data && pots.data.length > 0 && <MyPositions pots={pots.data} stats={stats.data} />}
       {pots.data && pots.data.length > 0 && <ProtocolStats pots={pots.data} />}
       {pots.data && pots.data.length > 0 && (
-        <div className="mb-5 flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-2 text-sm text-white/70">
-            Category
-            <select className="input w-auto px-3 py-1.5 text-sm" value={cat} onChange={(e) => setCat(e.target.value as typeof cat)}>
-              {CATS.map((c) => (
-                <option key={c.id} value={c.id}>{c.label}</option>
-              ))}
-            </select>
-          </label>
-          <label className="flex items-center gap-2 text-sm text-white/70">
-            Sort by
-            <select className="input w-auto px-3 py-1.5 text-sm" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}>
-              <option value="tvl">Most money</option>
-              <option value="holders">Most holders</option>
-              <option value="perf">Top performers</option>
-              <option value="newest">Newest</option>
-            </select>
-          </label>
-          <span className="ml-auto text-sm text-white/70">{shown.length} POTFolio{shown.length === 1 ? '' : 's'}</span>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Category">
+            {CATS.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setCat(c.id)}
+                aria-pressed={cat === c.id}
+                className={`${CHIP} ${cat === c.id ? CHIP_ACTIVE : CHIP_IDLE}`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Sort by">
+            <span className="font-mono text-xs uppercase tracking-[0.14em] text-pot-muted">Sort</span>
+            {SORTS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setSort(s.id)}
+                aria-pressed={sort === s.id}
+                className={`${CHIP} ${sort === s.id ? CHIP_ACTIVE : CHIP_IDLE}`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
-      {pots.isLoading && <p className="text-white/70">Loading Pots from chain…</p>}
-      {pots.isError && <p className="text-red-400">Could not load Pots: {String(pots.error)}</p>}
+      {pots.isLoading && <p className="text-pot-muted">Reading from the chain…</p>}
+      {pots.isError && (
+        <p className="text-pot-muted">
+          Could not load POTFolios: {String(pots.error)}. Refresh the page to try again.
+        </p>
+      )}
       {pots.data && pots.data.length === 0 && (
-        <div className="card p-8 text-center text-white/70">
-          No Pots yet. <Link href="/portfolios/new" className="text-pot-green underline">Create the first one.</Link>
+        <div className="rounded-3xl border border-pot-border bg-pot-card p-8 text-center">
+          <p className="text-base text-pot-muted">No POTFolios here yet.</p>
+          <Link href="/portfolios/new" className="btn-primary mt-5 inline-block">
+            Build the first one
+          </Link>
         </div>
       )}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {shown.map((p) => <PotCard key={p.address.toBase58()} pot={p} prices={prices.data ?? {}} list={stats.data?.[p.address.toBase58()]} />)}
       </div>
+
+      <section className="mt-14 rounded-[28px] bg-pot-accent p-8 text-[#1A120C]">
+        <h2 className="font-display text-2xl font-semibold tracking-[-0.02em] sm:text-3xl">Have a thesis? Turn it into a token.</h2>
+        <p className="mt-3 max-w-[40em] text-[15px] sm:text-base">
+          Pick up to 5 assets, set the weights, share the link. You earn on every deposit and never hold anyone&apos;s money.
+        </p>
+        <Link href="/portfolios/new" className="mt-6 inline-block rounded-full border border-current px-5 py-2.5 text-sm font-semibold">
+          Build a POTFolio
+        </Link>
+      </section>
     </div>
   )
 }
