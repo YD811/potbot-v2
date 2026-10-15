@@ -169,6 +169,7 @@ export default function NewPotPage() {
           {/* 02 Pick assets */}
           <section className="rounded-3xl border border-pot-border bg-pot-card p-5 sm:p-6">
             <StepHeading n="02" title="Pick assets" hint={`${rows.length} of 5 selected. At least 2.`} />
+            <p className="mt-2 text-sm text-pot-muted">Popular picks below. Any Solana asset with a price feed can go into a Pot, and the list grows every week.</p>
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {POT_INDEX_ASSETS.map((a) => {
                 const idx = rows.findIndex((r) => r.mint === a.mint)

@@ -162,7 +162,7 @@ export function LandingV3() {
       {/* Vision */}
       <Reveal as="section" className="pb-12 text-center">
         <h2 className="mx-auto max-w-[22em] font-display text-[28px] font-semibold leading-tight tracking-[-0.02em] text-white sm:text-4xl">
-          A Pot can hold anything that gets tokenized. Tokens today, stocks already, <i className="italic text-pot-accent">real-world assets next.</i>
+          Tokens, stocks and real-world assets, <i className="italic text-pot-accent">in one token.</i> Anything that gets tokenized fits in a Pot.
         </h2>
         <Link href="/portfolios" className="btn-primary mt-7 inline-flex px-7 py-3 text-base">Explore POTFolios</Link>
       </Reveal>
