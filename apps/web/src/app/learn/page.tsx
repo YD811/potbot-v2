@@ -80,7 +80,7 @@ export default function LearnPage() {
             <Num>0.5%</Num> in, <Num>0.5%</Num> on each rebalance, <Num>0.5%</Num> out.
           </p>
           <p className="mt-1 text-sm text-pot-muted">
-            Devnet today: <Num>0.30%</Num> in, <Num>0.10%</Num> out.
+            Devnet today: <Num>0.30%</Num> in, <Num>0.50%</Num> out (stays in the Pot), plus <Num>0.10%</Num> when you redeem for USDC.
           </p>
         </div>
       </Section>

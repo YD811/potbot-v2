@@ -85,11 +85,11 @@ export default function WorldsFairPage() {
         </ol>
       </Section>
 
-      <Section title="What a POTFolio is" summary="One token, a slice of the basket. Nobody can withdraw. Creators earn.">
+      <Section title="What a POTFolio is" summary="One token, a slice of the basket. No withdraw instruction. Creators earn.">
         <ul className="list-disc space-y-2 pl-5">
           <li><b className="text-white">One token = a slice of the basket.</b> Minted at the basket&apos;s value (NAV), it moves with its assets.</li>
           <li><b className="text-white">No exit liquidity games.</b> Redeem for your share of every asset, or for USDC with an on-chain minimum. 0.5% stays with remaining holders.</li>
-          <li><b className="text-white">Nobody can withdraw.</b> Assets sit in program-owned accounts. Not the creator, not PotBot.</li>
+          <li><b className="text-white">No withdraw instruction.</b> Assets sit in program-owned accounts. Nobody can reach anyone else&apos;s money: not the creator, not PotBot.</li>
           <li><b className="text-white">Keepers inside limits.</b> Toward target only, max 25% per trade, at Pyth prices, or the transaction reverts.</li>
           <li><b className="text-white">Creators earn.</b> 0.30% per deposit, split on-chain: 40% creator, 40% referrer, 20% protocol.</li>
         </ul>
