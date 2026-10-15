@@ -43,7 +43,7 @@ export function FlagshipCard() {
     <div className="v3-rise relative rounded-[28px] border border-pot-border bg-pot-card p-6 shadow-[0_30px_60px_-40px_rgba(0,0,0,.6)] sm:p-7" style={{ animationDelay: '320ms' }}>
       {/* Brand illustration: the Bloom plant from the deck and the mock, not the live garden level. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/garden/pink-4.png" alt="" className="animate-breathe absolute -top-14 right-4 w-28 object-contain sm:-top-16 sm:w-32" draggable={false} />
+      <img src="/garden/pink-4.webp" alt="" className="animate-breathe absolute -top-14 right-4 w-28 object-contain sm:-top-16 sm:w-32" draggable={false} />
       <div className="pr-24">
         <p className="font-display text-2xl font-semibold text-white sm:text-[28px]">{p?.name ?? 'Solana Blue Chips'}</p>
         <p className="mt-1 font-mono text-xs text-pot-muted">
@@ -55,7 +55,7 @@ export function FlagshipCard() {
           {price == null ? '$1.00' : `$${price.toFixed(3)}`}
         </span>
         {change7d != null && (
-          <span className={`font-mono text-sm ${up ? 'text-pot-green' : 'text-pot-muted'}`}>{up ? '+' : ''}{(change7d * 100).toFixed(1)}% 7d</span>
+          <span className={`font-mono text-sm ${up ? 'text-pot-green' : 'text-pot-muted'}`}>{up ? '+' : ''}{change7d.toFixed(1)}% 7d</span>
         )}
       </div>
       <div className="mt-2 h-16">

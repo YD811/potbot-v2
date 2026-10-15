@@ -40,7 +40,7 @@ export function PotCard({ pot, list }: { pot: PotView; prices: Record<string, nu
         <div className="mt-3 flex items-center gap-3">
           <Sparkline points={series} width={240} height={36} fill={false} className="h-9 flex-1" />
           {change7d != null && (
-            <span className={`text-xs ${change7d >= 0 ? 'text-pot-green' : 'text-red-400'}`}>{change7d >= 0 ? '+' : ''}{change7d.toFixed(2)}% 7d</span>
+            <span className={`text-xs ${change7d >= 0 ? 'text-pot-green' : 'text-pot-muted'}`}>{change7d >= 0 ? '+' : ''}{change7d.toFixed(2)}% 7d</span>
           )}
         </div>
       )}

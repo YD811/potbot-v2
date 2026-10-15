@@ -45,6 +45,12 @@ export function potSeries(p: PotView): PlantSeries {
   return SERIES_BY_CATEGORY[potCategory(p)] ?? 'pink'
 }
 
+/** Tight square crop: badges, icons, cards. */
 export function plantSrc(series: PlantSeries, stage: PlantStage): string {
-  return `/garden/${series}-${stage}.png`
+  return `/garden/${series}-${stage}.webp`
+}
+
+/** Same pot size at every level, only the plant grows: the Garden ladder and big displays. */
+export function plantFullSrc(series: PlantSeries, stage: PlantStage): string {
+  return `/garden/full/${series}-${stage}.webp`
 }

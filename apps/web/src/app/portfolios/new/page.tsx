@@ -344,7 +344,7 @@ export default function NewPotPage() {
           <div className="rounded-3xl border border-pot-border bg-pot-card p-5">
             <div className="flex items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/garden/pink-1.png" alt="" width={44} height={44} className="h-11 w-11 shrink-0 object-contain" />
+              <img src="/garden/pink-1.webp" alt="" width={44} height={44} className="h-11 w-11 shrink-0 object-contain" />
               <div className="min-w-0">
                 <h3 className="truncate font-display text-xl font-semibold tracking-[-0.02em] text-white">{name.trim() || 'Your POTFolio'}</h3>
                 <p className="font-mono text-xs text-pot-muted">${symbol || 'TICKER'}</p>

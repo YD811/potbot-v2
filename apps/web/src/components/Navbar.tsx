@@ -82,7 +82,7 @@ export function Navbar() {
       <LivePriceTicker />
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2 group shrink-0">
-          <Image src="/garden/pink-1.png" alt="" width={28} height={28} className="h-7 w-7 object-contain" priority />
+          <Image src="/garden/pink-1.webp" alt="" width={28} height={28} className="h-7 w-7 object-contain" priority />
           <span className="font-display text-[22px] font-semibold tracking-tight text-white">PotBot</span>
         </Link>
 
@@ -147,7 +147,7 @@ export function Navbar() {
               }`}>{navLabel(link)}</Link>
           ))}
           <div className="pt-2 border-t border-pot-border/50 grid grid-cols-2 gap-x-2">
-            {[['/faq', 'FAQ'], ['/mainnet', 'Security'], ['/roadmap', 'Roadmap'], ['/status', 'Status']].map(([href, label]) => (
+            {[['/faq', 'FAQ'], ['/mainnet', 'Security'], ['/roadmap', 'Roadmap']].map(([href, label]) => (
               <Link key={href} href={href} onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-sm text-pot-muted hover:text-white transition">{label}</Link>
             ))}
           </div>
