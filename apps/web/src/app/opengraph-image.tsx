@@ -9,17 +9,16 @@ export const contentType = 'image/png'
 
 /** Shared-link card (X, Telegram, Discord). One line of product, one picture, the URL. */
 export default async function OgImage() {
-  const plant = await readFile(path.join(process.cwd(), 'public/garden/pink-4.png'))
-    .then((b) => `data:image/png;base64,${b.toString('base64')}`)
-    .catch(() => null)
+  const load = (rel: string) => readFile(path.join(process.cwd(), rel)).then((b) => `data:image/png;base64,${b.toString('base64')}`).catch(() => null)
+  const [plant, wordmark] = await Promise.all([load('public/garden/pink-4.png'), load('public/brand/wordmark-cream.png')])
   return new ImageResponse(
     (
       <div style={{ width: '100%', height: '100%', display: 'flex', background: '#14120F', fontFamily: 'Georgia, serif', position: 'relative' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 78% 55%, rgba(224,122,79,0.14) 0%, transparent 55%)' }} />
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 0 0 80px', width: 720 }}>
-          <div style={{ display: 'flex', fontSize: 30, fontWeight: 600, color: '#F2ECE0' }}>
-            PotBot
-            <span style={{ marginLeft: 14, color: '#C9C0B0', fontWeight: 400, fontFamily: 'monospace', fontSize: 22, alignSelf: 'center' }}>POTFolio</span>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {wordmark ? <img src={wordmark} alt="" width={143} height={36} /> : <span style={{ fontSize: 30, fontWeight: 600, color: '#F2ECE0' }}>PotBot</span>}
+            <span style={{ marginLeft: 16, color: '#C9C0B0', fontFamily: 'monospace', fontSize: 22 }}>POTFolio</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', marginTop: 28, fontSize: 74, fontWeight: 600, lineHeight: 1.02, color: '#F2ECE0', letterSpacing: -2 }}>
             <span>Your portfolio.</span>

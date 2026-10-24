@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from 'next'
 import { Fraunces, Instrument_Sans, IBM_Plex_Mono } from 'next/font/google'
-import Image from 'next/image'
 import Link from 'next/link'
 import { Analytics } from '@vercel/analytics/next'
 import { AppProviders } from './providers'
 import { Navbar } from '@/components/Navbar'
+import { BrandWordmark } from '@/components/Brand'
 import { OnboardingTutorial } from '@/components/OnboardingTutorial'
 import './globals.css'
 
@@ -85,7 +85,6 @@ const FOOTER_COLUMNS: { title: string; links: { label: string; href: string; ext
       { label: 'Security', href: '/mainnet' },
       { label: 'Status', href: '/status' },
       { label: "World's Fair", href: '/worldsfair' },
-      { label: 'For AI agents', href: '/for-agents' },
     ],
   },
   {
@@ -123,9 +122,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {/* Links row */}
               <div className="grid gap-8 mb-8 sm:grid-cols-[1.4fr_1fr_1fr_1fr]">
                 <div>
-                  <Link href="/" className="flex items-center gap-2">
-                    <Image src="/garden/pink-1.webp" alt="" width={24} height={24} className="h-6 w-6 object-contain" />
-                    <span className="font-display text-lg font-semibold text-white">PotBot</span>
+                  <Link href="/" className="inline-flex items-center" aria-label="PotBot home">
+                    <BrandWordmark height={22} />
                   </Link>
                   <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-pot-muted">
                     Your portfolio. One token. Built in Amsterdam on Solana.

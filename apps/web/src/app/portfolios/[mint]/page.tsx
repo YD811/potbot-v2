@@ -61,11 +61,13 @@ export default function PotPage() {
   const pot = usePot(mint)
   const stats = usePotStats(pot.data)
   const publishTimes = useAssetPublishTimes()
-  // Any leg whose Pyth feed is older than the program's max age (300 s) blocks deposits — stocks outside market hours.
+  // Prices are served by a fallback source while the Pyth key is not entitled: nothing can be minted until Pyth is back.
+  const feedDown = publishTimes.data?.source === 'coingecko'
+  // Any leg whose Pyth feed is older than the program's max age blocks deposits — stocks outside market hours.
   const stalePrices = useMemo(() => {
     if (!pot.data || !publishTimes.data) return false
     const now = Date.now() / 1000
-    return pot.data.legs.some((l) => now - (publishTimes.data![l.mint.toBase58()] ?? 0) > 300)
+    return pot.data.legs.some((l) => now - (publishTimes.data!.times[l.mint.toBase58()] ?? 0) > 300)
   }, [pot.data, publishTimes.data])
   const myShares = useMyIndexBalance(pot.data)
   const myUsdc = useMyUsdcBalance()
@@ -192,7 +194,8 @@ export default function PotPage() {
             {(p.paused || stalePrices) && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {p.paused && <span className="rounded-full border border-pot-border px-3 py-1 text-xs text-pot-muted">Deposits paused by the creator. Redeeming still works.</span>}
-                {stalePrices && !p.paused && <span className="rounded-full border border-pot-border px-3 py-1 text-xs text-pot-muted">Market closed. Deposits reopen with live prices, exits are always open.</span>}
+                {feedDown && !p.paused && <span className="rounded-full border border-pot-border px-3 py-1 text-xs text-pot-muted">Devnet preview: the price feed is being changed, so deposits are paused. Redeeming for the assets always works.</span>}
+                {stalePrices && !feedDown && !p.paused && <span className="rounded-full border border-pot-border px-3 py-1 text-xs text-pot-muted">Market closed. Deposits reopen with live prices, exits are always open.</span>}
               </div>
             )}
             {stats.data && (() => {

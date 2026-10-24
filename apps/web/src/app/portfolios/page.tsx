@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { usePots, useAssetPrices, useAllPotStats } from '@/hooks/usePotIndex'
 import { PotCard } from '@/components/pot-index/PotCard'
+import { PotCardSkeletonGrid } from '@/components/pot-index/PotCardSkeleton'
 import { ProtocolStats } from '@/components/pot-index/ProtocolStats'
 import { MyPositions } from '@/components/pot-index/MyPositions'
 import { potCategory } from '@/lib/pot-index/garden'
@@ -99,7 +100,6 @@ export default function PortfoliosPage() {
           </div>
         </div>
       )}
-      {pots.isLoading && <p className="text-pot-muted">Reading from the chain…</p>}
       {pots.isError && (
         <p className="text-pot-muted">
           Could not load POTFolios: {String(pots.error)}. Refresh the page to try again.
@@ -114,6 +114,7 @@ export default function PortfoliosPage() {
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {pots.isLoading && <PotCardSkeletonGrid count={6} />}
         {shown.map((p) => <PotCard key={p.address.toBase58()} pot={p} prices={prices.data ?? {}} list={stats.data?.[p.address.toBase58()]} />)}
       </div>
 

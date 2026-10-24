@@ -24,7 +24,6 @@ import {
   type CreatePotArgs,
   type PotView,
 } from '@/lib/pot-index/client'
-import { fetchHermesPrices } from '@/lib/pot-index/pyth-post'
 import { POT_INDEX_ASSETS, POT_INDEX_SETTINGS, assetByMint } from '@/lib/pot-index/registry'
 import { reportClientError } from '@/lib/pot-index/client-log'
 
@@ -83,30 +82,39 @@ export function usePot(indexMint: string | null) {
   })
 }
 
+/** Display quotes from the server: Pyth, or CoinGecko while the Pyth key is not entitled. */
+async function fetchQuotes(): Promise<{ prices: Record<string, { price: number; conf: number; publishTime: number }>; source: 'pyth' | 'coingecko' }> {
+  const r = await fetch('/api/pot-index/quotes')
+  if (!r.ok) throw new Error('quotes unavailable')
+  return r.json()
+}
+
 /** Prices for every registered asset, keyed by mint (USD). */
 export function useAssetPrices() {
   return useQuery({
     queryKey: ['pot-index', 'prices'],
     queryFn: async () => {
-      const feeds = POT_INDEX_ASSETS.map((a) => a.feedId)
-      const byFeed = await fetchHermesPrices(feeds)
+      const q = await fetchQuotes()
       const byMint: Record<string, number> = {}
-      for (const a of POT_INDEX_ASSETS) byMint[a.mint] = byFeed[a.feedId]?.price ?? 0
+      for (const a of POT_INDEX_ASSETS) byMint[a.mint] = q.prices[a.feedId.toLowerCase()]?.price ?? 0
       return byMint
     },
     refetchInterval: 10_000,
   })
 }
 
-/** Publish time (unix s) per mint — equity feeds stop outside US market hours, which blocks mint/rebalance. */
+/**
+ * Publish time (unix s) per mint plus where the quotes came from. Equity feeds stop outside US
+ * market hours, and a CoinGecko fallback reports 0: either blocks mint and rebalance.
+ */
 export function useAssetPublishTimes() {
   return useQuery({
     queryKey: ['pot-index', 'publish-times'],
     queryFn: async () => {
-      const byFeed = await fetchHermesPrices(POT_INDEX_ASSETS.map((a) => a.feedId))
-      const out: Record<string, number> = {}
-      for (const a of POT_INDEX_ASSETS) out[a.mint] = byFeed[a.feedId]?.publishTime ?? 0
-      return out
+      const q = await fetchQuotes()
+      const times: Record<string, number> = {}
+      for (const a of POT_INDEX_ASSETS) times[a.mint] = q.prices[a.feedId.toLowerCase()]?.publishTime ?? 0
+      return { times, source: q.source }
     },
     refetchInterval: 60_000,
   })

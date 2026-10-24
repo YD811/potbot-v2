@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useSolPrice } from '@/lib/prices'
@@ -10,6 +9,7 @@ import { ThemeToggle } from '@/components/ThemeToggle'
 import { ConnectButton } from '@/components/ConnectButton'
 import { SeasonPrizePoolModal } from '@/components/SeasonPrizePoolModal'
 import { useHumanText } from '@/hooks/useHumanText'
+import { BrandWordmark } from '@/components/Brand'
 
 function LivePriceTicker() {
   const { price: solPrice } = useSolPrice()
@@ -37,11 +37,6 @@ function LivePriceTicker() {
           >
             Season 1: The Garden
           </button>
-        </div>
-        <div className="ml-auto flex items-center gap-3 text-[11px] text-pot-muted">
-          <Link href="/for-agents" className="hover:text-white transition hidden sm:block">
-            For AI agents
-          </Link>
         </div>
       </div>
       {showSeasonModal && <SeasonPrizePoolModal onClose={() => setShowSeasonModal(false)} />}
@@ -81,9 +76,8 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 border-b border-pot-border bg-pot-dark/80 backdrop-blur-xl">
       <LivePriceTicker />
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2 group shrink-0">
-          <Image src="/garden/pink-1.webp" alt="" width={28} height={28} className="h-7 w-7 object-contain" priority />
-          <span className="font-display text-[22px] font-semibold tracking-tight text-white">PotBot</span>
+        <Link href="/" className="flex items-center shrink-0" aria-label="PotBot home">
+          <BrandWordmark height={26} />
         </Link>
 
         <div className="hidden sm:flex items-center gap-1 text-sm font-medium">

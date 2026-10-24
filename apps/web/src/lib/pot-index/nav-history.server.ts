@@ -2,7 +2,7 @@ import 'server-only'
 import { Connection, PublicKey } from '@solana/web3.js'
 import { createServerSupabase } from '@/lib/supabase'
 import { fetchAllPots, fetchPot, fetchPotBalances, navUsd, type PotView } from '@/lib/pot-index/client'
-import { fetchHermesPrices } from '@/lib/pot-index/pyth-post'
+import { fetchQuotes } from '@/lib/pot-index/quotes.server'
 
 /**
  * POTFolio NAV history in Supabase (`potfolio_nav`). Every value is computed here from the chain
@@ -29,13 +29,13 @@ function rpc() {
 
 async function snapshotRows(connection: Connection, pots: PotView[]) {
   const feedIds = Array.from(new Set(pots.flatMap((p) => p.legs.map((l) => l.feedId))))
-  const hermes = await fetchHermesPrices(feedIds)
+  const hermes = (await fetchQuotes(feedIds)).prices
   const rows = []
   for (const pot of pots) {
     const prices: Record<string, number> = {}
     let missing = false
     pot.legs.forEach((l) => {
-      const p = hermes[l.feedId]?.price ?? 0
+      const p = hermes[l.feedId.toLowerCase()]?.price ?? 0
       if (p <= 0) missing = true
       prices[l.mint.toBase58()] = p
     })
