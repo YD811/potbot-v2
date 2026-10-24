@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { usePot, usePotStats, useNavHistory } from '@/hooks/usePotIndex'
+import { usePot, usePotStats, useNavHistory, useAssetPublishTimes } from '@/hooks/usePotIndex'
 import { POT_INDEX_SETTINGS, assetByMint } from '@/lib/pot-index/registry'
 import { legColor } from '@/components/pot-index/CompositionBar'
 import { Sparkline } from '@/components/pot-index/NavChart'
@@ -33,6 +33,7 @@ export function FlagshipCard() {
   const pot = usePot(mint)
   const stats = usePotStats(pot.data)
   const nav = useNavHistory(mint, '7d')
+  const feedDown = useAssetPublishTimes().data?.source === 'coingecko'
   const price = useCountUp(stats.data?.indexPrice ?? null)
   const change7d = nav.data?.stats.change7d ?? null
   const points = nav.data?.points ?? []
@@ -85,11 +86,23 @@ export function FlagshipCard() {
           </ul>
         </>
       )}
-      <div className="mt-6 flex gap-2.5">
-        <Link href={mint ? `/portfolios/${mint}` : '/portfolios'} className="btn-primary flex-1 text-center">Deposit</Link>
-        <Link href={mint ? `/portfolios/${mint}` : '/portfolios'} className="btn-secondary flex-1 text-center">Redeem</Link>
-      </div>
-      <p className="mt-3 text-center text-[13px] text-pot-muted">One signature. Redeem for the assets or USDC, any time.</p>
+      {feedDown ? (
+        <>
+          <div className="mt-6 flex gap-2.5">
+            <Link href="/learn" className="btn-primary flex-1 text-center">How it works</Link>
+            <Link href={mint ? `/portfolios/${mint}` : '/portfolios'} className="btn-secondary flex-1 text-center">Open</Link>
+          </div>
+          <p className="mt-3 text-center text-[13px] text-pot-muted">Devnet preview. Deposits reopen with the new price feed; redeeming for the assets always works.</p>
+        </>
+      ) : (
+        <>
+          <div className="mt-6 flex gap-2.5">
+            <Link href={mint ? `/portfolios/${mint}` : '/portfolios'} className="btn-primary flex-1 text-center">Deposit</Link>
+            <Link href={mint ? `/portfolios/${mint}` : '/portfolios'} className="btn-secondary flex-1 text-center">Redeem</Link>
+          </div>
+          <p className="mt-3 text-center text-[13px] text-pot-muted">One signature. Redeem for the assets or USDC, any time.</p>
+        </>
+      )}
     </div>
   )
 }
