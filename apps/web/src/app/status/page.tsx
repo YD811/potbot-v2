@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PageHeader } from '@/components/PageHeader'
+import { POT_INDEX_SETTINGS, explorerAddress } from '@/lib/pot-index/registry'
 
 export const metadata: Metadata = {
   title: 'Status',
@@ -29,10 +30,35 @@ const ENDPOINTS: { name: string; href: string; note: string }[] = [
   { name: 'Leaderboard API', href: '/api/leaderboard', note: 'Public rankings endpoint' },
 ]
 
+const PROOF: { k: string; v: string; href?: string; mono?: boolean }[] = [
+  { k: 'Network', v: POT_INDEX_SETTINGS.cluster },
+  { k: 'Program', v: POT_INDEX_SETTINGS.programId, href: explorerAddress(POT_INDEX_SETTINGS.programId), mono: true },
+  { k: 'Program version', v: 'pot_index v1.2, 18 instructions, 40 tests', href: 'https://github.com/YD811/potbot-v2/tree/main/packages/pot-index' },
+  { k: 'Security reviews', v: '3 published, none with a critical or high finding', href: 'https://github.com/YD811/potbot-v2/blob/main/docs/potfolio/security.md' },
+  { k: 'External audit', v: 'Scope published, quotes requested', href: 'https://github.com/YD811/potbot-v2/pull/104' }, // audit-scope.md lands on main with PR 104,
+  { k: 'Upgrade key', v: 'Team key on devnet; Squads multisig before mainnet' },
+  { k: 'Incidents', v: 'None reported' },
+]
+
 export default function StatusPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <PageHeader eyebrow="Status" title="What is live" lede="Devnet. Mainnet opens after the external audit." />
+
+      <section className="mt-10 overflow-hidden rounded-3xl border border-pot-border bg-pot-card">
+        <dl className="divide-y divide-pot-border">
+          {PROOF.map((row) => (
+            <div key={row.k} className="grid gap-1 px-5 py-3.5 sm:grid-cols-[160px_1fr] sm:gap-4">
+              <dt className="font-mono text-xs uppercase tracking-[0.14em] text-pot-muted sm:pt-0.5">{row.k}</dt>
+              <dd className={`${row.mono ? 'font-mono text-[13px] break-all' : 'text-[15px]'} text-white`}>
+                {row.href ? (
+                  <a href={row.href} target="_blank" rel="noopener noreferrer" className="underline decoration-pot-border underline-offset-4 transition hover:decoration-pot-muted">{row.v}</a>
+                ) : row.v}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
       <Section title="Live">
         {LIVE.map((item) => (

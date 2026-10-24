@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePots, useAssetPrices, useAllPotStats } from '@/hooks/usePotIndex'
 import { POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
 import { PotCard } from '@/components/pot-index/PotCard'
+import { PotCardSkeletonGrid } from '@/components/pot-index/PotCardSkeleton'
 import { HowAPotWorks } from '@/components/pot-index/HowAPotWorks'
 import { GardenMode } from '@/components/pot-index/GardenMode'
 import { Reveal } from './Reveal'
@@ -98,8 +99,8 @@ export function LandingV3() {
           <H2>Live now.</H2>
           <Link href="/portfolios" className="btn-secondary px-5 py-2 text-sm">See all POTFolios</Link>
         </Reveal>
-        {pots.isLoading && <p className="text-sm text-pot-muted">Reading from the chain…</p>}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {pots.isLoading && <PotCardSkeletonGrid count={3} />}
           {live.map((p, i) => (
             <Reveal key={p.address.toBase58()} delay={i * 80}>
               <PotCard pot={p} prices={prices.data ?? {}} list={stats.data?.[p.address.toBase58()]} />

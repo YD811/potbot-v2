@@ -633,3 +633,24 @@ html[data-theme="light"] .border-pot-accent { border-color: #C9623A !important; 
   .v3-reveal { opacity: 1; transform: none; transition: none; }
   .v3-rise, .v3-line > span, .animate-breathe, .animate-float { animation: none !important; }
 }
+
+/* ── MVP pass: page transitions, smooth scroll, skeletons ─────────── */
+html { scroll-behavior: smooth; scroll-padding-top: 6rem; }
+/* Every route change: the new page fades in and rises 12 px, once. template.tsx remounts per navigation. */
+.v3-page { animation: v3-page .5s var(--ease-pot) both; }
+@keyframes v3-page { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+/* Buttons lift 1 px, cards 2 px, 200 ms, one easing. */
+.btn-primary, .btn-secondary { transition: transform .2s var(--ease-pot), filter .2s var(--ease-pot), border-color .2s var(--ease-pot), background-color .2s var(--ease-pot); }
+.btn-primary:hover, .btn-secondary:hover { transform: translateY(-1px); }
+.btn-primary:active, .btn-secondary:active { transform: translateY(0) scale(.98); }
+/* Skeleton: a quiet shimmer in the card colour, no spinner. */
+.v3-skeleton { position: relative; overflow: hidden; background: var(--c-card, #1E1B16); border-radius: 12px; }
+.v3-skeleton::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent); animation: v3-shimmer 1.4s var(--ease-pot) infinite; }
+html[data-theme="light"] .v3-skeleton::after { background: linear-gradient(90deg, transparent, rgba(0,0,0,.05), transparent); }
+@keyframes v3-shimmer { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .v3-page { animation: none; }
+  .v3-skeleton::after { animation: none; }
+  .btn-primary:hover, .btn-secondary:hover { transform: none; }
+}
