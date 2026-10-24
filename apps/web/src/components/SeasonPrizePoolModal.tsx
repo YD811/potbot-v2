@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 /**
- * Season 1 Prize Pool — "How it works" modal.
+ * Season 1: The Garden, the short "what it is" modal. Rules and the pool are published before the season opens.
  *
  * Rendered via React Portal to document.body so position:fixed is always
  * viewport-relative — any transform/backdrop-filter on an ancestor (Navbar,
@@ -47,7 +47,7 @@ export function SeasonPrizePoolModal({ onClose }: { onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 id="season-modal-title" className="text-lg font-bold text-white">🏆 Season 1 Prize Pool</h2>
+          <h2 id="season-modal-title" className="font-display text-xl font-semibold text-white">Season 1: The Garden</h2>
           <button
             onClick={onClose}
             className="text-pot-muted hover:text-white transition text-2xl leading-none w-8 h-8 flex items-center justify-center"
@@ -57,47 +57,18 @@ export function SeasonPrizePoolModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        <div className="space-y-4 text-sm">
-          {/* Distribution */}
-          <div>
-            <h3 className="text-xs font-semibold text-pot-muted uppercase tracking-wide mb-2">Distribution</h3>
-            <div className="space-y-2">
-              {[
-                { rank: '🥇 1st Place', pct: '50%', desc: 'Pro-rata to all members by shares' },
-                { rank: '🥈 2nd Place', pct: '30%', desc: 'Pro-rata to all members by shares' },
-                { rank: '🥉 3rd Place', pct: '20%', desc: 'Pro-rata to all members by shares' },
-              ].map((r) => (
-                <div key={r.rank} className="flex items-start gap-3 p-3 rounded-xl bg-pot-dark">
-                  <span className="font-semibold text-white w-28 shrink-0">{r.rank}</span>
-                  <span className="text-pot-green font-bold w-10 shrink-0">{r.pct}</span>
-                  <span className="text-pot-muted text-xs">{r.desc}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Ranking formula */}
-          <div>
-            <h3 className="text-xs font-semibold text-pot-muted uppercase tracking-wide mb-2">Ranking Formula</h3>
-            <div className="p-3 rounded-xl bg-pot-dark border border-pot-border font-mono text-xs text-pot-green break-all">
-              Season Score = volume × members × pet_health
-            </div>
-            <p className="text-xs text-pot-muted mt-2 leading-relaxed">
-              Rewards activity, growth, and community engagement — not raw trading P&amp;L.
-              All inputs are verifiable on-chain or in the public database.
-            </p>
-          </div>
-
-          {/* Source */}
-          <div>
-            <h3 className="text-xs font-semibold text-pot-muted uppercase tracking-wide mb-2">Prize Source</h3>
-            <p className="text-xs text-pot-muted leading-relaxed">
-              1% of all protocol swap fees (0.30% × 1% = 0.003% per trade) flow into the
-              on-chain <code className="bg-pot-dark px-1 rounded text-pot-green">competition_treasury</code> PDA.
-              Distribution is triggered by a permissioned admin instruction at season end,
-              enforced by the smart contract rules above.
-            </p>
-          </div>
+        <div className="space-y-4 text-[15px] leading-relaxed text-pot-muted">
+          <p>
+            Every POTFolio is a plant. Deposits water it, exits dry it out, and its level is read from the chain, so it cannot be faked.
+          </p>
+          <p>
+            Season 1 starts with mainnet. Holders and creators earn points for growing their garden: depositing, holding, inviting
+            others and launching POTFolios that people hold. Points turn into rewards from a prize pool funded by protocol fees.
+          </p>
+          <p>
+            The rules, the point formula and the pool size are published before the season opens. Until then: grow your garden on devnet.
+          </p>
+          <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">Opens with mainnet</p>
         </div>
 
         <button

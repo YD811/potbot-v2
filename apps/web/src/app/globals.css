@@ -654,3 +654,8 @@ html[data-theme="light"] .v3-skeleton::after { background: linear-gradient(90deg
   .v3-skeleton::after { animation: none; }
   .btn-primary:hover, .btn-secondary:hover { transform: none; }
 }
+
+/* Brand: cream mark on dark, ink mark on light. */
+.brand-light { display: none; }
+html[data-theme="light"] .brand-dark, html.light-theme .brand-dark { display: none; }
+html[data-theme="light"] .brand-light, html.light-theme .brand-light { display: block; }
