@@ -85,7 +85,6 @@ const FOOTER_COLUMNS: { title: string; links: { label: string; href: string; ext
       { label: 'Security', href: '/mainnet' },
       { label: 'Status', href: '/status' },
       { label: "World's Fair", href: '/worldsfair' },
-      { label: 'For AI agents', href: '/for-agents' },
     ],
   },
   {

@@ -137,19 +137,6 @@ export default function LearnPage() {
         </div>
       </Section>
 
-      <Section title="For AI agents">
-        <div className="rounded-3xl border border-pot-border bg-pot-card p-6">
-          <p>
-            Every POTFolio is readable and actionable over MCP. An agent can list baskets, read NAV and composition, quote a deposit or
-            a redemption and hand the transaction to a wallet to sign. The same limits apply: the program checks every move, the agent
-            never holds a key.
-          </p>
-          <div className="mt-4">
-            <Link href="/for-agents" className="btn-secondary">Read the agent guide</Link>
-          </div>
-        </div>
-      </Section>
-
       <Section title="More questions">
         <p>Short answers to the common ones, grouped by topic, live on the FAQ.</p>
         <div className="flex flex-wrap gap-3">

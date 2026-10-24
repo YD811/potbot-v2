@@ -38,11 +38,6 @@ function LivePriceTicker() {
             Season 1: The Garden
           </button>
         </div>
-        <div className="ml-auto flex items-center gap-3 text-[11px] text-pot-muted">
-          <Link href="/for-agents" className="hover:text-white transition hidden sm:block">
-            For AI agents
-          </Link>
-        </div>
       </div>
       {showSeasonModal && <SeasonPrizePoolModal onClose={() => setShowSeasonModal(false)} />}
     </div>
