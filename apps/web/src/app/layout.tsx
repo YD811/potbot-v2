@@ -84,6 +84,7 @@ const FOOTER_COLUMNS: { title: string; links: { label: string; href: string; ext
       { label: 'Roadmap', href: '/roadmap' },
       { label: 'Security', href: '/mainnet' },
       { label: 'Status', href: '/status' },
+      { label: 'Add to your app', href: '/integrate' },
       { label: "World's Fair", href: '/worldsfair' },
     ],
   },
