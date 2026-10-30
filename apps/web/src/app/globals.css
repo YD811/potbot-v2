@@ -706,3 +706,9 @@ html[data-theme="light"] .hero-orb-b { background: radial-gradient(circle, rgba(
 @media (prefers-reduced-motion: reduce) { .nav-reveal { animation: none; } }
 .comp-seg { transform-origin: left; animation: v3-fill .8s var(--ease-pot) both; }
 @media (prefers-reduced-motion: reduce) { .comp-seg { animation: none; } }
+
+/* Wallet button never wraps; tighter on phones so the header fits at 375 px. */
+.wallet-adapter-button { white-space: nowrap; }
+@media (max-width: 639px) {
+  header .wallet-adapter-button, nav .wallet-adapter-button { height: 36px; padding: 0 14px; font-size: 13px; }
+}
