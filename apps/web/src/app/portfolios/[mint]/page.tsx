@@ -172,67 +172,66 @@ export default function PotPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
       {search.get('created') && (
         <div className="mb-6 rounded-2xl border border-pot-border bg-pot-card px-5 py-4 text-[15px] text-white">
           Your POTFolio is live. Share the link at the bottom of this page: every deposit through it pays you the referral share.
         </div>
       )}
-      {/* Hero */}
-      <header className="v3-rise relative mb-6 overflow-hidden rounded-[32px] border border-pot-border bg-pot-card p-6 sm:p-8">
-        <div className="grid items-center gap-6 md:grid-cols-[auto_1fr_auto]">
-          <PlantBadge pot={p} navUsd={stats.data?.navUsd} size={104} />
-          <div className="min-w-0">
-            <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">POTFolio · ${p.symbol}</p>
-            <h1 className="mt-1.5 font-display text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-white sm:text-5xl">{p.name}</h1>
-            <p className="mt-2 font-mono text-xs tabular-nums text-pot-muted">
-              by <a href={explorerAddress(p.creator.toBase58())} target="_blank" rel="noreferrer" className="underline-offset-2 hover:text-white hover:underline">{p.creator.toBase58().slice(0, 4)}…{p.creator.toBase58().slice(-4)}</a> · since {new Date(p.createdAt * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-            </p>
-            {stats.data && (() => {
-              const lvl = stageForUsd(stats.data.navUsd)
-              const cur = STAGES[lvl - 1]
-              const next = STAGES[lvl]
-              const prog = next ? Math.min(1, Math.max(0, (stats.data.navUsd - cur.minUsd) / (next.minUsd - cur.minUsd))) : 1
-              return (
-                <div className="mt-4 max-w-sm">
-                  <div className="flex justify-between font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">
-                    <span className="text-pot-green">Level {lvl} · {cur.name}</span>
-                    <span>{next ? `${next.name} at ${usdShort(next.minUsd)}` : 'Top level'}</span>
-                  </div>
-                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-pot-border">
-                    <div className="comp-seg h-full rounded-full bg-pot-green" style={{ width: `${Math.max(3, prog * 100)}%` }} />
-                  </div>
-                </div>
-              )
-            })()}
-          </div>
-          <div className="md:text-right">
-            <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">Token price</p>
-            <p className="mt-1 font-display text-4xl font-semibold tabular-nums tracking-[-0.02em] text-white sm:text-5xl">{stats.data ? `$${stats.data.indexPrice.toFixed(4)}` : '—'}</p>
-            {nav7d != null && (
-              <span className={`mt-2 inline-flex rounded-full px-2.5 py-0.5 font-mono text-xs tabular-nums ${nav7d >= 0 ? 'bg-pot-green/15 text-pot-green' : 'bg-pot-accent/15 text-pot-accent'}`}>
-                {nav7d >= 0 ? '+' : ''}{nav7d.toFixed(2)}% · 7d
-              </span>
-            )}
-          </div>
+      {/* Mobile: a slim title so the trade card sits right under it */}
+      <div className="mb-4 flex items-center gap-3 lg:hidden">
+        <PlantBadge pot={p} navUsd={stats.data?.navUsd} size={52} />
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate font-display text-2xl font-semibold tracking-[-0.02em] text-white">{p.name}</h1>
+          <p className="font-mono text-xs text-pot-muted">${p.symbol}{stats.data ? ` · $${stats.data.indexPrice.toFixed(4)}` : ''}{nav7d != null ? ` · ${nav7d >= 0 ? '+' : ''}${nav7d.toFixed(2)}% 7d` : ''}</p>
         </div>
-        {(p.paused || stalePrices) && (
-          <p className="mt-5 border-t border-pot-border pt-4 font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">
-            {p.paused ? 'Deposits paused by the creator · redeeming works' : feedDown ? 'On devnet · deposits reopen with the new price feed · redeeming works' : 'Market closed · deposits reopen with live prices · redeeming works'}
-          </p>
-        )}
-      </header>
-
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Pot value" value={stats.data ? `$${stats.data.navUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'} />
-        <Stat label="Supply" value={stats.data ? `${stats.data.supply.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'} sub={`$${p.symbol}`} />
-        <Stat label="Assets" value={String(p.legs.length)} sub="in the basket" />
-        <Stat label="Entry fee" value={`${ENTRY_FEE_BPS / 100}%`} sub="40% to the creator" />
       </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
         {/* Left: POTFolio info */}
         <section className="space-y-6">
+          {/* Hero */}
+          <header className="v3-rise relative hidden overflow-hidden lg:block rounded-[32px] border border-pot-border bg-pot-card p-6 sm:p-8">
+            <div className="grid items-center gap-5 sm:grid-cols-[auto_1fr]">
+              <PlantBadge pot={p} navUsd={stats.data?.navUsd} size={88} />
+              <div className="min-w-0">
+                <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">POTFolio · ${p.symbol}</p>
+                <h1 className="mt-1.5 font-display text-3xl font-semibold leading-[1.05] tracking-[-0.03em] text-white sm:text-[44px]">{p.name}</h1>
+                <p className="mt-2 font-mono text-xs tabular-nums text-pot-muted">
+                  by <a href={explorerAddress(p.creator.toBase58())} target="_blank" rel="noreferrer" className="underline-offset-2 hover:text-white hover:underline">{p.creator.toBase58().slice(0, 4)}…{p.creator.toBase58().slice(-4)}</a> · since {new Date(p.createdAt * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+                {stats.data && (() => {
+                  const lvl = stageForUsd(stats.data.navUsd)
+                  const cur = STAGES[lvl - 1]
+                  const next = STAGES[lvl]
+                  const prog = next ? Math.min(1, Math.max(0, (stats.data.navUsd - cur.minUsd) / (next.minUsd - cur.minUsd))) : 1
+                  return (
+                    <div className="mt-4 max-w-sm">
+                      <div className="flex justify-between font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">
+                        <span className="text-pot-green">Level {lvl} · {cur.name}</span>
+                        <span>{next ? `${next.name} at ${usdShort(next.minUsd)}` : 'Top level'}</span>
+                      </div>
+                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-pot-border">
+                        <div className="comp-seg h-full rounded-full bg-pot-green" style={{ width: `${Math.max(3, prog * 100)}%` }} />
+                      </div>
+                    </div>
+                  )
+                })()}
+              </div>
+            </div>
+            {(p.paused || stalePrices) && (
+              <p className="mt-5 border-t border-pot-border pt-4 font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">
+                {p.paused ? 'Deposits paused by the creator · redeeming works' : feedDown ? 'On devnet · deposits reopen with the new price feed · redeeming works' : 'Market closed · deposits reopen with live prices · redeeming works'}
+              </p>
+            )}
+          </header>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat label="Token price" value={stats.data ? `$${stats.data.indexPrice.toFixed(4)}` : '—'} sub={nav7d != null ? `${nav7d >= 0 ? '+' : ''}${nav7d.toFixed(2)}% over 7d` : undefined} tone={nav7d == null ? undefined : nav7d >= 0 ? 'text-pot-green' : 'text-pot-accent'} />
+            <Stat label="Pot value" value={stats.data ? `$${stats.data.navUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'} />
+            <Stat label="Supply" value={stats.data ? `${stats.data.supply.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'} sub={`$${p.symbol}`} />
+            <Stat label="Entry fee" value={`${ENTRY_FEE_BPS / 100}%`} sub="40% to the creator" />
+          </div>
+
           <NavChart mint={p.indexMint.toBase58()} symbol={p.symbol} entry={position.data && position.data.shares > 0 && position.data.costUsd > 0 ? position.data.costUsd / position.data.shares : null} />
 
           <CompositionTable pot={p} actualUsd={stats.data?.legsUsd} cashUsd={stats.data ? stats.data.cash / 1e6 : undefined} legAmounts={stats.data?.legs} />
@@ -256,8 +255,9 @@ export default function PotPage() {
         </section>
 
         {/* Right: deposit / redeem */}
-        <aside className="order-first space-y-4 lg:sticky lg:top-24 lg:order-none lg:self-start">
-          <div className="rounded-3xl border border-pot-border bg-pot-card p-6">
+        <aside className="order-first space-y-4 lg:order-none lg:sticky lg:top-24 lg:self-start">
+          <div className="v3-rise rounded-[28px] border-2 border-pot-accent/60 bg-pot-card p-6 shadow-[0_30px_60px_-34px_rgba(224,122,79,.55)] sm:p-7">
+            <p className="mb-4 font-display text-2xl font-semibold tracking-[-0.02em] text-white">{tab === 'deposit' ? <>Buy <span className="text-pot-accent">${p.symbol}</span></> : <>Redeem <span className="text-pot-accent">${p.symbol}</span></>}</p>
             <div className="relative mb-5 grid grid-cols-2 rounded-full border border-pot-border p-1">
               <span aria-hidden className="absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-pot-accent transition-transform duration-500 ease-pot" style={{ transform: tab === 'deposit' ? 'translateX(0)' : 'translateX(100%)' }} />
               {(['deposit', 'exit'] as const).map((t) => (
@@ -457,12 +457,12 @@ function usdShort(v: number) {
   return `$${v.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
 }
 
-function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: string }) {
   return (
     <div className="min-w-0 rounded-2xl border border-pot-border bg-pot-card px-4 py-3.5">
       <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">{label}</p>
       <p className="mt-1 break-words font-display text-2xl font-semibold tabular-nums text-white">{value}</p>
-      {sub && <p className="text-xs text-pot-muted">{sub}</p>}
+      {sub && <p className={`text-xs ${tone ?? 'text-pot-muted'}`}>{sub}</p>}
     </div>
   )
 }
