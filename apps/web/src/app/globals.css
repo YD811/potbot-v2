@@ -699,3 +699,10 @@ html[data-theme="light"] .hero-orb-b { background: radial-gradient(circle, rgba(
 .hiw-step { animation: hiw-in .55s var(--ease-pot) both; }
 @keyframes hiw-in { from { opacity: 0; transform: translateY(14px) scale(.98); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
 @media (prefers-reduced-motion: reduce) { .hiw-step { animation: none; } }
+
+/* Price chart: revealed left to right once. */
+.nav-reveal { animation: nav-reveal 1.1s var(--ease-pot) both; }
+@keyframes nav-reveal { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@media (prefers-reduced-motion: reduce) { .nav-reveal { animation: none; } }
+.comp-seg { transform-origin: left; animation: v3-fill .8s var(--ease-pot) both; }
+@media (prefers-reduced-motion: reduce) { .comp-seg { animation: none; } }

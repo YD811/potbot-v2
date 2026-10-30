@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { usePotActivity } from '@/hooks/usePotIndex'
 import type { PotEvent, PotView } from '@/lib/pot-index/client'
 import { CASH_LEG } from '@/lib/pot-index/client'
@@ -21,8 +21,17 @@ function ago(t: number | null) {
 
 const LINK = 'underline-offset-2 transition hover:text-white hover:underline'
 
+const ICON: Record<string, { g: string; cls: string }> = {
+  deposit: { g: '+', cls: 'bg-pot-green/15 text-pot-green' },
+  exit: { g: '−', cls: 'bg-pot-accent/15 text-pot-accent' },
+  rebalance: { g: '⇄', cls: 'border border-pot-border text-pot-muted' },
+  allocation: { g: '↓', cls: 'border border-pot-border text-pot-muted' },
+  created: { g: '✦', cls: 'bg-pot-accent text-[#1A120C]' },
+}
+
 export function ActivityFeed({ pot }: { pot: PotView }) {
   const q = usePotActivity(pot)
+  const [all, setAll] = useState(false)
   const legSym = (i: number) => (i === CASH_LEG ? 'USDC' : assetByMint(pot.legs[i]?.mint.toBase58())?.symbol ?? `leg ${i}`)
   const legDec = (i: number) => (i === CASH_LEG ? 6 : pot.legs[i]?.decimals ?? 0)
   type Reb = Extract<PotEvent, { kind: 'rebalance' }>
@@ -51,9 +60,10 @@ export function ActivityFeed({ pot }: { pot: PotView }) {
       {q.isLoading && <p className="text-sm text-pot-muted">Reading transaction history.</p>}
       {q.data && q.data.length === 0 && <p className="text-sm text-pot-muted">No activity yet. Be the first to deposit.</p>}
       <ul className="divide-y divide-pot-border text-sm">
-        {rows.map((e) => (
-          <li key={e.sig + e.kind} className="flex items-start justify-between gap-3 py-2.5">
-            <div className="min-w-0">
+        {(all ? rows : rows.slice(0, 6)).map((e) => (
+          <li key={e.sig + e.kind} className="flex items-start justify-between gap-3 py-3">
+            <span aria-hidden className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${ICON[e.kind].cls}`}>{ICON[e.kind].g}</span>
+            <div className="min-w-0 flex-1 leading-relaxed">
               {e.kind === 'deposit' && (
                 <>
                   <span className="font-semibold text-white">Deposit</span>{' '}
@@ -105,6 +115,11 @@ export function ActivityFeed({ pot }: { pot: PotView }) {
           </li>
         ))}
       </ul>
+      {rows.length > 6 && (
+        <button type="button" onClick={() => setAll((v) => !v)} className="mt-3 w-full rounded-full border border-pot-border py-2 text-sm font-semibold text-white transition hover:border-pot-muted/60">
+          {all ? 'Show less' : `Show all ${rows.length}`}
+        </button>
+      )}
     </div>
   )
 }
