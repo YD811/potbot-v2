@@ -97,7 +97,7 @@ export default function DashboardPage() {
       />
 
       {!pubkey && (
-        <div className="relative overflow-hidden rounded-[32px] border border-pot-border bg-pot-card">
+        <div className="relative min-h-[460px] overflow-hidden rounded-[32px] border border-pot-border bg-pot-card">
           <div aria-hidden className="pointer-events-none select-none p-6 opacity-60 blur-[3px] sm:p-8">
             <div className="grid gap-3 sm:grid-cols-4">
               {['Total value', 'P&L', 'POTFolios held', 'Earned'].map((l) => (
