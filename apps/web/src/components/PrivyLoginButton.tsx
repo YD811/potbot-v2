@@ -30,9 +30,10 @@ export function PrivyLoginButton() {
       <button
         type="button"
         onClick={() => login()}
-        className="px-4 py-2 rounded-full bg-pot-accent hover:brightness-110 text-pot-dark text-sm font-semibold transition whitespace-nowrap"
+        className="px-3.5 sm:px-4 py-2 rounded-full bg-pot-accent hover:brightness-110 text-pot-dark text-sm font-semibold transition whitespace-nowrap"
       >
-        Connect with email or Google
+        <span className="sm:hidden">Sign in</span>
+        <span className="hidden sm:inline">Connect with email or Google</span>
       </button>
     )
   }

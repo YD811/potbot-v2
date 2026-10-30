@@ -36,7 +36,7 @@ export function PrivyClientProvider({ children }: { children: ReactNode }) {
         appearance: {
           theme: 'light',
           accentColor: '#15803d',
-          logo: 'https://potbot.fun/og-image.png',
+          logo: 'https://potbot.fun/icon-512.png',
           // Hide Ethereum UI in the login modal — we only operate on Solana.
           walletChainType: 'solana-only',
         },

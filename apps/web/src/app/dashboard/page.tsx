@@ -7,7 +7,8 @@ import { useQuery } from '@tanstack/react-query'
 import { getAssociatedTokenAddressSync } from '@solana/spl-token'
 import { PageHeader } from '@/components/PageHeader'
 import { ConnectButton } from '@/components/ConnectButton'
-import { usePotIndexProgram, usePots, useAllPotStats } from '@/hooks/usePotIndex'
+import { usePotIndexProgram, usePots, useAllPotStats, useNavHistoryAll } from '@/hooks/usePotIndex'
+import { Sparkline } from '@/components/pot-index/NavChart'
 import { fetchPotActivity, fetchWalletPosition, type PotEvent, type PotView } from '@/lib/pot-index/client'
 import { plantSrc, potSeries, stageForUsd, STAGES } from '@/lib/pot-index/garden'
 import { ENTRY_FEE_BPS } from '@/lib/pot-index/client'
@@ -25,6 +26,7 @@ export default function DashboardPage() {
   const { connection, pubkey } = usePotIndexProgram()
   const pots = usePots()
   const stats = useAllPotStats(pots.data)
+  const series = useNavHistoryAll()
   const me = pubkey?.toBase58()
 
   const data = useQuery({
@@ -92,15 +94,43 @@ export default function DashboardPage() {
         eyebrow="Dashboard"
         title={pubkey ? 'Yours, from the chain' : 'Your dashboard'}
         lede={pubkey ? 'Only what this wallet holds, created and did. Nothing here is stored by PotBot.' : 'Connect a wallet to see your POTFolios, your entry prices and what you earned.'}
-        action={pubkey ? undefined : <ConnectButton />}
       />
 
       {!pubkey && (
-        <div className="rounded-3xl border border-pot-border bg-pot-card p-8 text-center">
-          <p className="text-[15px] text-pot-muted">Nothing here yet.</p>
-          <div className="mt-5 flex flex-wrap justify-center gap-3">
-            <Link href="/portfolios" className="btn-primary">Explore POTFolios</Link>
-            <Link href="/portfolios/new" className="btn-secondary">Build your own</Link>
+        <div className="relative min-h-[460px] overflow-hidden rounded-[32px] border border-pot-border bg-pot-card">
+          <div aria-hidden className="pointer-events-none select-none p-6 opacity-60 blur-[3px] sm:p-8">
+            <div className="grid gap-3 sm:grid-cols-4">
+              {['Total value', 'P&L', 'POTFolios held', 'Earned'].map((l) => (
+                <div key={l} className="rounded-2xl border border-pot-border p-4" style={{ background: 'var(--pot-bg)' }}>
+                  <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">{l}</div>
+                  <div className="v3-skeleton mt-2 h-7 w-24" />
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 space-y-2">
+              {(pots.data ?? []).slice(0, 3).map((p) => (
+                <div key={p.address.toBase58()} className="flex items-center gap-3 rounded-2xl border border-pot-border p-3" style={{ background: 'var(--pot-bg)' }}>
+                  <img src={plantSrc(potSeries(p), 1)} alt="" className="h-9 w-9 rounded-xl object-contain" />
+                  <span className="font-semibold text-white">{p.name}</span>
+                  <span className="v3-skeleton ml-auto h-4 w-20" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center p-6">
+            <div className="v3-rise max-w-md rounded-3xl border border-pot-border bg-pot-card p-7 text-center shadow-[0_30px_60px_-30px_rgba(0,0,0,.45)]">
+              <h2 className="font-display text-2xl font-semibold tracking-[-0.02em] text-white">Everything you hold, in one view</h2>
+              <ul className="mx-auto mt-4 max-w-xs space-y-2 text-left text-sm text-pot-muted">
+                {['Value and P&L of every POTFolio you hold', 'What you earned as a creator and referrer', 'Your invite links, ready to copy'].map((t) => (
+                  <li key={t} className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-pot-accent" />{t}</li>
+                ))}
+              </ul>
+              <div className="mt-6 flex flex-wrap justify-center gap-3 [&>button]:!justify-center">
+                <ConnectButton />
+                <Link href="/portfolios" className="btn-secondary">Explore POTFolios</Link>
+              </div>
+              <p className="mt-3 text-xs text-pot-muted">Read from the chain. PotBot stores nothing about your wallet.</p>
+            </div>
           </div>
         </div>
       )}
@@ -134,6 +164,7 @@ export default function DashboardPage() {
                       <th className="py-2 pr-4 font-normal">POTFolio</th>
                       <th className="hidden py-2 pr-4 text-right font-normal sm:table-cell">Tokens</th>
                       <th className="hidden py-2 pr-4 text-right font-normal sm:table-cell">Share</th>
+                      <th className="hidden py-2 pr-4 font-normal md:table-cell">7d</th>
                       <th className="py-2 pr-4 text-right font-normal">Value</th>
                       <th className="py-2 text-right font-normal">P&L</th>
                     </tr>
@@ -157,6 +188,9 @@ export default function DashboardPage() {
                           </td>
                           <td className="hidden py-3 pr-4 text-right font-mono tabular-nums text-white sm:table-cell">{fmtShares(r.shares)}</td>
                           <td className="hidden py-3 pr-4 text-right font-mono tabular-nums text-white sm:table-cell">{r.share.toFixed(2)}%</td>
+                          <td className="hidden w-28 py-3 pr-4 md:table-cell">
+                            <Sparkline points={series.data?.[r.pot.indexMint.toBase58()] ?? []} width={112} height={32} fill={false} className="h-8 w-28" />
+                          </td>
                           <td className="py-3 pr-4 text-right font-mono tabular-nums text-white">
                             {usd(r.value)}
                             <span className="block text-xs text-pot-muted">of {usd(r.nav, 0)}</span>
@@ -251,9 +285,9 @@ export default function DashboardPage() {
 
 function Tile({ label, value, tone, hint }: { label: string; value: string; tone?: string; hint?: string }) {
   return (
-    <div className="rounded-3xl border border-pot-border bg-pot-card p-5">
-      <div className="font-mono text-xs uppercase tracking-[0.14em] text-pot-muted">{label}</div>
-      <div className={`mt-1 font-mono text-2xl font-semibold tabular-nums ${tone ?? 'text-white'}`}>{value}</div>
+    <div className="v3-rise rounded-3xl border border-pot-border bg-pot-card p-5">
+      <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">{label}</div>
+      <div className={`mt-1.5 font-display text-3xl font-semibold tabular-nums tracking-[-0.02em] ${tone ?? 'text-white'}`}>{value}</div>
       {hint && <div className="mt-1 text-xs text-pot-muted">{hint}</div>}
     </div>
   )

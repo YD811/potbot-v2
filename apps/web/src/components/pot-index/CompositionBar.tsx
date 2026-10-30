@@ -1,6 +1,7 @@
 'use client'
 
-import { assetByMint } from '@/lib/pot-index/registry'
+import { assetByMint, explorerAddress } from '@/lib/pot-index/registry'
+import { ata } from '@/lib/pot-index/client'
 import type { PotView } from '@/lib/pot-index/client'
 import { TokenHover } from './TokenHover'
 
@@ -39,6 +40,17 @@ export function CompositionBar({ pot, actualUsd, cashUsd, legAmounts }: { pot: P
               >
                 {l.weightBps / 100}%
               </span>
+              {actualUsd && actualUsd[i] !== undefined && total > 0 && (
+                <a
+                  href={explorerAddress(ata(pot.address, l.mint).toBase58())}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-auto font-mono text-xs tabular-nums text-pot-muted underline decoration-pot-border underline-offset-4 hover:text-white"
+                  title="This leg's account on Explorer"
+                >
+                  ${actualUsd[i].toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </a>
+              )}
             </li>
           )
         })}

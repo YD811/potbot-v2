@@ -35,7 +35,7 @@ const TOOLS = [
   },
   {
     name: 'get_yield_rates',
-    desc: 'Current DeFi yield rates: Kamino, Marginfi, Drift, Jito',
+    desc: 'Current DeFi yield rates: Kamino, Jupiter and similar platforms',
     returns: 'protocol, APY range, TVL, asset, risk for each opportunity',
   },
   {

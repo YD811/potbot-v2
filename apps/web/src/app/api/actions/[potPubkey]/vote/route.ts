@@ -46,7 +46,7 @@ export async function GET(
   return NextResponse.json(
     {
       type: 'action',
-      icon: `${APP_URL}/og-image.png`,
+      icon: `${APP_URL}/icon-512.png`,
       title: `Vote on PotBot proposal`,
       description: `Cast your vote on the ${proposalId === 'latest' ? 'latest' : `#${proposalId}`} open proposal in pot ${potPubkey.slice(0, 8)}…. On-chain governance, vote-weight = your share of the vault.`,
       label: 'Vote',

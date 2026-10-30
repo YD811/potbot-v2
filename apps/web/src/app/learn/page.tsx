@@ -32,8 +32,8 @@ export default function LearnPage() {
             the token and you send the share.
           </Point>
           <Point title="No withdraw instruction">
-            The program can mint, redeem, and let keepers swap inside limits. It cannot send assets to anyone. Nobody can reach anyone
-            else&apos;s money: not the creator, not PotBot, not an admin.
+            The program can mint, redeem, and let keepers swap inside limits. It cannot send assets to anyone. Only a holder&apos;s own
+            redemption moves assets out: not the creator, not PotBot, not an admin.
           </Point>
           <Point title="A real token in your wallet">
             Each POTFolio token has a name, symbol and logo set by the program, so it shows up properly in wallets and explorers.
@@ -132,9 +132,19 @@ export default function LearnPage() {
               <Row k="Decisions" a="Fixed weights, program-bounded keepers" b="Proposals and votes, program executes" />
               <Row k="Leaving" a="Redeem the token for every asset in kind, or for USDC" b="Withdraw your share per vault rules" />
               <Row k="Where it is" a="The current product" b="The previous product, interface being reworked" />
+              <Row k="Getting out" a="Now, in the same transaction, for the assets or USDC" b="Per vault rules" />
             </tbody>
           </table>
         </div>
+      </Section>
+
+      <Section title="Compared with a yield vault">
+        <p>
+          Yield vaults on other chains hand you a receipt token and a withdrawal queue, often 30 days, with fees shown as labels and no
+          numbers. A POTFolio hands you a real token you can send and trade, every leg visible on Explorer with its balance, fees stated
+          above the deposit button, and an exit that settles in the same transaction. Yield-bearing assets can be legs of a POTFolio;
+          a POTFolio is never locked inside anything.
+        </p>
       </Section>
 
       <Section title="More questions">

@@ -17,7 +17,7 @@ import {
 } from '@/hooks/usePotIndex'
 import { estimateShares, EXIT_FEE_BPS, ENTRY_FEE_BPS, MIN_DEPOSIT_USDC } from '@/lib/pot-index/client'
 import { assetByMint, explorerAddress, explorerTx, POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
-import { CompositionBar } from '@/components/pot-index/CompositionBar'
+import { CompositionTable } from '@/components/pot-index/CompositionTable'
 import { ActivityFeed } from '@/components/pot-index/ActivityFeed'
 import { reportClientError } from '@/lib/pot-index/client-log'
 import { friendlyError } from '@/lib/pot-index/errors'
@@ -172,65 +172,77 @@ export default function PotPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
       {search.get('created') && (
         <div className="mb-6 rounded-2xl border border-pot-border bg-pot-card px-5 py-4 text-[15px] text-white">
           Your POTFolio is live. Share the link at the bottom of this page: every deposit through it pays you the referral share.
         </div>
       )}
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+      {/* Mobile: a slim title so the trade card sits right under it */}
+      <div className="mb-4 flex items-center gap-3 lg:hidden">
+        <PlantBadge pot={p} navUsd={stats.data?.navUsd} size={52} />
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate font-display text-2xl font-semibold tracking-[-0.02em] text-white">{p.name}</h1>
+          <p className="font-mono text-xs text-pot-muted">${p.symbol}{stats.data ? ` · $${stats.data.indexPrice.toFixed(4)}` : ''}{nav7d != null ? ` · ${nav7d >= 0 ? '+' : ''}${nav7d.toFixed(2)}% 7d` : ''}</p>
+        </div>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
         {/* Left: POTFolio info */}
         <section className="space-y-6">
-          <header>
-            <div className="flex flex-wrap items-center gap-4">
-              <PlantBadge pot={p} navUsd={stats.data?.navUsd} size={80} />
+          {/* Hero */}
+          <header className="v3-rise relative hidden overflow-hidden lg:block rounded-[32px] border border-pot-border bg-pot-card p-6 sm:p-8">
+            <div className="grid items-center gap-5 sm:grid-cols-[auto_1fr]">
+              <PlantBadge pot={p} navUsd={stats.data?.navUsd} size={88} />
               <div className="min-w-0">
-                <h1 className="font-display text-3xl font-semibold tracking-[-0.02em] text-white sm:text-4xl">{p.name}</h1>
-                <p className="mt-1 font-mono text-sm tabular-nums text-pot-muted">
-                  ${p.symbol} · by {p.creator.toBase58().slice(0, 4)}…{p.creator.toBase58().slice(-4)} · since {new Date(p.createdAt * 1000).toLocaleDateString()}
+                <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">POTFolio · ${p.symbol}</p>
+                <h1 className="mt-1.5 font-display text-3xl font-semibold leading-[1.05] tracking-[-0.03em] text-white sm:text-[44px]">{p.name}</h1>
+                <p className="mt-2 font-mono text-xs tabular-nums text-pot-muted">
+                  by <a href={explorerAddress(p.creator.toBase58())} target="_blank" rel="noreferrer" className="underline-offset-2 hover:text-white hover:underline">{p.creator.toBase58().slice(0, 4)}…{p.creator.toBase58().slice(-4)}</a> · since {new Date(p.createdAt * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                 </p>
+                {stats.data && (() => {
+                  const lvl = stageForUsd(stats.data.navUsd)
+                  const cur = STAGES[lvl - 1]
+                  const next = STAGES[lvl]
+                  const prog = next ? Math.min(1, Math.max(0, (stats.data.navUsd - cur.minUsd) / (next.minUsd - cur.minUsd))) : 1
+                  return (
+                    <div className="mt-4 max-w-sm">
+                      <div className="flex justify-between font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">
+                        <span className="text-pot-green">Level {lvl} · {cur.name}</span>
+                        <span>{next ? `${next.name} at ${usdShort(next.minUsd)}` : 'Top level'}</span>
+                      </div>
+                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-pot-border">
+                        <div className="comp-seg h-full rounded-full bg-pot-green" style={{ width: `${Math.max(3, prog * 100)}%` }} />
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             </div>
             {(p.paused || stalePrices) && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {p.paused && <span className="rounded-full border border-pot-border px-3 py-1 text-xs text-pot-muted">Deposits paused by the creator. Redeeming still works.</span>}
-                {feedDown && !p.paused && <span className="rounded-full border border-pot-border px-3 py-1 text-xs text-pot-muted">Devnet preview: the price feed is being changed, so deposits are paused. Redeeming for the assets always works.</span>}
-                {stalePrices && !feedDown && !p.paused && <span className="rounded-full border border-pot-border px-3 py-1 text-xs text-pot-muted">Market closed. Deposits reopen with live prices, exits are always open.</span>}
-              </div>
+              <p className="mt-5 border-t border-pot-border pt-4 font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">
+                {p.paused ? 'Deposits paused by the creator · redeeming works' : feedDown ? 'On devnet · deposits reopen with the new price feed · redeeming works' : 'Market closed · deposits reopen with live prices · redeeming works'}
+              </p>
             )}
-            {stats.data && (() => {
-              const lvl = stageForUsd(stats.data.navUsd)
-              const cur = STAGES[lvl - 1]
-              const next = STAGES[lvl] // undefined at level 6
-              return (
-                <p className="mt-3 font-mono text-xs tabular-nums text-pot-muted">
-                  Level {lvl} · {cur.name}{next ? <> · next: {next.name} at {usdShort(next.minUsd)}</> : <> · top level</>}
-                </p>
-              )
-            })()}
           </header>
 
-          <div className="grid grid-cols-3 gap-4 border-y border-pot-border py-4">
-            <Stat label="Token price" value={stats.data ? `$${stats.data.indexPrice.toFixed(4)}` : '—'} />
-            <Stat label="Pot value" value={stats.data ? `$${stats.data.navUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '—'} />
-            <Stat label="Supply" value={stats.data ? `${stats.data.supply.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${p.symbol}` : '—'} />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat label="Token price" value={stats.data ? `$${stats.data.indexPrice.toFixed(4)}` : '—'} sub={nav7d != null ? `${nav7d >= 0 ? '+' : ''}${nav7d.toFixed(2)}% over 7d` : undefined} tone={nav7d == null ? undefined : nav7d >= 0 ? 'text-pot-green' : 'text-pot-accent'} />
+            <Stat label="Pot value" value={stats.data ? `$${stats.data.navUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'} />
+            <Stat label="Supply" value={stats.data ? `${stats.data.supply.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'} sub={`$${p.symbol}`} />
+            <Stat label="Entry fee" value={`${ENTRY_FEE_BPS / 100}%`} sub="40% to the creator" />
           </div>
 
           <NavChart mint={p.indexMint.toBase58()} symbol={p.symbol} entry={position.data && position.data.shares > 0 && position.data.costUsd > 0 ? position.data.costUsd / position.data.shares : null} />
 
-          <div className="rounded-3xl border border-pot-border bg-pot-card p-6">
-            <h2 className="mb-3 font-display text-xl font-semibold tracking-[-0.02em] text-white">Composition</h2>
-            <CompositionBar pot={p} actualUsd={stats.data?.legsUsd} cashUsd={stats.data ? stats.data.cash / 1e6 : undefined} legAmounts={stats.data?.legs} />
-            <p className="mt-3 text-sm text-pot-muted">Target weights. Hover a weight for what is in the basket right now. New deposits arrive as USDC and are bought into the basket. Redemptions take every asset out pro rata.</p>
-          </div>
+          <CompositionTable pot={p} actualUsd={stats.data?.legsUsd} cashUsd={stats.data ? stats.data.cash / 1e6 : undefined} legAmounts={stats.data?.legs} />
 
-          <details className="rounded-3xl border border-pot-border bg-pot-card p-6 text-[15px] text-pot-muted">
-            <summary className="cursor-pointer select-none font-display text-xl font-semibold tracking-[-0.02em] text-white">How this POTFolio works</summary>
+          <details className="group rounded-3xl border border-pot-border bg-pot-card p-6 text-[15px] text-pot-muted">
+            <summary className="flex cursor-pointer list-none select-none items-center justify-between font-display text-xl font-semibold tracking-[-0.02em] text-white">How this POTFolio works<span aria-hidden className="text-2xl font-normal text-pot-muted transition group-open:rotate-45">+</span></summary>
             <ul className="mt-3 list-disc space-y-1.5 pl-5">
               <li>Deposit USDC and the POTFolio mints ${p.symbol} at the basket&apos;s value per token. Entry fee {ENTRY_FEE_BPS / 100}%.</li>
               <li>Redeem ${p.symbol} and you receive your share of every asset inside, or USDC. {EXIT_FEE_BPS / 100}% stays for the holders who remain.</li>
               <li>The token is a normal SPL token: hold it, send it, trade it.</li>
-              <li>Nobody can reach anyone else&apos;s money. There is no withdraw instruction.</li>
+              <li>There is no withdraw instruction: only your own redemption moves the assets out.</li>
             </ul>
             <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs">
               <a className="text-pot-muted underline-offset-2 transition hover:text-white hover:underline" href={explorerAddress(p.address.toBase58())} target="_blank" rel="noreferrer">POTFolio account</a>
@@ -243,16 +255,13 @@ export default function PotPage() {
         </section>
 
         {/* Right: deposit / redeem */}
-        <aside className="order-first space-y-4 lg:order-none">
-          <div className="rounded-3xl border border-pot-border bg-pot-card p-6">
-            <div className="mb-5 flex gap-2">
+        <aside className="order-first space-y-4 lg:order-none lg:sticky lg:top-24 lg:self-start">
+          <div className="v3-rise rounded-[28px] border-2 border-pot-accent/60 bg-pot-card p-6 shadow-[0_30px_60px_-34px_rgba(224,122,79,.55)] sm:p-7">
+            <p className="mb-4 font-display text-2xl font-semibold tracking-[-0.02em] text-white">{tab === 'deposit' ? <>Buy <span className="text-pot-accent">${p.symbol}</span></> : <>Redeem <span className="text-pot-accent">${p.symbol}</span></>}</p>
+            <div className="relative mb-5 grid grid-cols-2 rounded-full border border-pot-border p-1">
+              <span aria-hidden className="absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-pot-accent transition-transform duration-500 ease-pot" style={{ transform: tab === 'deposit' ? 'translateX(0)' : 'translateX(100%)' }} />
               {(['deposit', 'exit'] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTab(t)}
-                  className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${tab === t ? 'border-pot-accent bg-pot-accent text-pot-dark' : 'border-pot-border text-pot-muted hover:text-white'}`}
-                >
+                <button key={t} type="button" onClick={() => setTab(t)} className={`relative z-[1] rounded-full py-1.5 text-sm font-semibold transition-colors duration-300 ${tab === t ? 'text-pot-dark' : 'text-pot-muted hover:text-white'}`}>
                   {t === 'deposit' ? 'Deposit' : 'Redeem'}
                 </button>
               ))}
@@ -400,6 +409,10 @@ export default function PotPage() {
               </div>
             )}
 
+            {POT_INDEX_SETTINGS.cluster !== 'mainnet-beta' && (
+              <div className="mt-5 border-t border-pot-border pt-4"><DevnetFaucet compact /></div>
+            )}
+
             {msg && (
               <div className={`mt-4 border-t border-pot-border pt-3 text-sm ${msg.ok ? 'text-white' : 'text-pot-muted'}`}>
                 {msg.ok ? msg.text : `The transaction did not go through. ${msg.text}`}
@@ -415,7 +428,6 @@ export default function PotPage() {
 
           <PositionCard pot={p} sharesBase={myShares.data} indexPrice={stats.data?.indexPrice} connected={connected} change7d={nav7d} />
 
-          {POT_INDEX_SETTINGS.cluster !== 'mainnet-beta' && <DevnetFaucet />}
         </aside>
       </div>
 
@@ -445,11 +457,12 @@ function usdShort(v: number) {
   return `$${v.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: string }) {
   return (
-    <div className="min-w-0">
-      <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-muted">{label}</p>
-      <p className="mt-1 break-words font-mono text-base tabular-nums text-white sm:text-xl">{value}</p>
+    <div className="min-w-0 rounded-2xl border border-pot-border bg-pot-card px-4 py-3.5">
+      <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">{label}</p>
+      <p className="mt-1 break-words font-display text-2xl font-semibold tabular-nums text-white">{value}</p>
+      {sub && <p className={`text-xs ${tone ?? 'text-pot-muted'}`}>{sub}</p>}
     </div>
   )
 }

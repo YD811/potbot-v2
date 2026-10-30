@@ -32,6 +32,16 @@ function suggestSymbol(name: string): string {
   return letters.join('').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)
 }
 
+const TEMPLATES: { name: string; symbol: string; blurb: string; legs: [string, number][] }[] = [
+  { name: 'Solana Blue Chips', symbol: 'SBC', blurb: 'The majors, Solana first', legs: [['SOL', 50], ['BTC', 30], ['ETH', 20]] },
+  { name: 'Crypto and Stocks', symbol: 'CAS', blurb: 'Bitcoin next to Tesla and the Nasdaq', legs: [['BTC', 40], ['SOL', 20], ['TSLAX', 20], ['QQQX', 20]] },
+  { name: 'Solana Native', symbol: 'SOLN', blurb: 'SOL, staked SOL and Pyth', legs: [['SOL', 50], ['JITOSOL', 30], ['PYTH', 20]] },
+  { name: 'Top Five', symbol: 'TOP5', blurb: 'Five majors, equal weight', legs: [['BTC', 20], ['ETH', 20], ['SOL', 20], ['BNB', 20], ['XRP', 20]] },
+]
+
+type Filter = 'all' | 'crypto' | 'solana' | 'stock' | 'meme'
+const FILTERS: [Filter, string][] = [['all', 'All'], ['crypto', 'Crypto'], ['solana', 'Solana'], ['stock', 'Stocks'], ['meme', 'Meme']]
+
 function StepHeading({ n, title, hint }: { n: string; title: string; hint?: string }) {
   return (
     <div className="flex items-baseline gap-3">
@@ -60,6 +70,21 @@ export default function NewPotPage() {
   const [busy, setBusy] = useState(false)
   const [grind, setGrind] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [filter, setFilter] = useState<Filter>('all')
+  const [tpl, setTpl] = useState<string | null>(null)
+
+  const applyTemplate = (t: (typeof TEMPLATES)[number]) => {
+    const legs = t.legs
+      .map(([sym, w]) => ({ mint: POT_INDEX_ASSETS.find((a) => a.symbol === sym)?.mint, weight: w }))
+      .filter((r): r is Row => !!r.mint)
+    if (legs.length < 2) return
+    setRows(legs)
+    setName(t.name)
+    setSymbol(t.symbol)
+    setSymbolTouched(false)
+    setTpl(t.name)
+    setCaMsg(null)
+  }
 
   useEffect(() => {
     document.title = 'Create a POTFolio · PotBot'
@@ -122,7 +147,29 @@ export default function NewPotPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      <PageHeader eyebrow="Create" title="Build a POTFolio" lede="Up to 5 assets. Weights lock at creation. One transaction." />
+      <PageHeader eyebrow="Create" title="Build a POTFolio" lede="Pick the assets, set the weights, publish one token. Start from a template or from scratch." />
+
+      <section className="mb-8">
+        <p className="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-pot-muted">Start from a template</p>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {TEMPLATES.map((t) => (
+            <button
+              key={t.name}
+              type="button"
+              onClick={() => applyTemplate(t)}
+              aria-pressed={tpl === t.name}
+              className={`group rounded-2xl border p-4 text-left transition duration-200 ease-pot hover:-translate-y-0.5 ${tpl === t.name ? 'border-pot-accent bg-pot-accent/10' : 'border-pot-border bg-pot-card hover:border-pot-muted/60'}`}
+            >
+              <div className="flex h-1.5 w-full gap-[2px] overflow-hidden rounded-full">
+                {t.legs.map(([sym, w], i) => <div key={sym} style={{ width: `${w}%`, background: legColor(i) }} />)}
+              </div>
+              <p className="mt-3 font-semibold text-white">{t.name}</p>
+              <p className="mt-0.5 text-xs text-pot-muted">{t.blurb}</p>
+              <p className="mt-2 font-mono text-[11px] tabular-nums text-pot-muted">{t.legs.map(([sym, w]) => `${sym.replace(/X$/, '')} ${w}`).join(' · ')}</p>
+            </button>
+          ))}
+        </div>
+      </section>
 
       {config.data === null && (
         <p className="mb-6 rounded-2xl border border-pot-border bg-pot-card px-5 py-4 text-sm text-pot-muted">
@@ -169,9 +216,20 @@ export default function NewPotPage() {
           {/* 02 Pick assets */}
           <section className="rounded-3xl border border-pot-border bg-pot-card p-5 sm:p-6">
             <StepHeading n="02" title="Pick assets" hint={`${rows.length} of 5 selected. At least 2.`} />
-            <p className="mt-2 text-sm text-pot-muted">Popular picks below. Any Solana asset with a price feed can go into a Pot, and the list grows every week.</p>
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {POT_INDEX_ASSETS.map((a) => {
+            <p className="mt-2 text-sm text-pot-muted">Any Solana asset with a price feed can go into a Pot. The list grows as feeds are added.</p>
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {FILTERS.map(([f, label]) => {
+                const n = f === 'all' ? POT_INDEX_ASSETS.length : POT_INDEX_ASSETS.filter((a) => (a.category ?? 'crypto') === f).length
+                if (n === 0) return null
+                return (
+                  <button key={f} type="button" onClick={() => setFilter(f)} className={`rounded-full border px-3.5 py-1 text-sm transition ${filter === f ? 'border-pot-accent bg-pot-accent text-pot-dark' : 'border-pot-border text-pot-muted hover:text-white'}`}>
+                    {label} <span className="font-mono text-xs opacity-70">{n}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {POT_INDEX_ASSETS.filter((a) => filter === 'all' || (a.category ?? 'crypto') === filter).map((a) => {
                 const idx = rows.findIndex((r) => r.mint === a.mint)
                 const selected = idx >= 0
                 const px = prices.data?.[a.mint]
@@ -182,13 +240,17 @@ export default function NewPotPage() {
                     type="button"
                     onClick={() => toggleAsset(a.mint)}
                     aria-pressed={selected}
-                    className={`rounded-2xl border bg-pot-dark p-4 text-left transition duration-200 ease-pot hover:-translate-y-0.5 ${selected ? 'border-pot-accent' : 'border-pot-border hover:border-pot-muted/60'}`}
+                    className={`hiw-step rounded-2xl border p-4 text-left transition duration-200 ease-pot hover:-translate-y-0.5 ${selected ? 'border-pot-accent bg-pot-accent/10' : 'border-pot-border bg-pot-dark hover:border-pot-muted/60'}`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-mono text-base font-medium text-white">{a.symbol}</span>
-                      {selected && <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: legColor(idx) }} />}
+                      {selected ? (
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-[#1A120C]" style={{ background: legColor(idx) }}>✓</span>
+                      ) : (
+                        <span className="h-5 w-5 shrink-0 rounded-full border border-pot-border" />
+                      )}
                     </div>
-                    <p className="mt-1 truncate text-sm text-pot-muted">{a.name}</p>
+                    <p className="mt-1 truncate text-sm text-pot-muted">{a.name.replace(' (test)', '')}</p>
                     <div className="mt-3 flex items-center justify-between gap-2">
                       <span className="rounded-full border border-pot-border px-2.5 py-0.5 text-xs text-pot-muted">{CATEGORY_LABEL[cat]}</span>
                       {px != null && <span className="font-mono text-xs tabular-nums text-pot-muted">${px.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>}
@@ -339,39 +401,71 @@ export default function NewPotPage() {
         </div>
 
         {/* Live preview */}
-        <aside className="hidden lg:block lg:sticky lg:top-24">
-          <p className="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">Preview</p>
+        <aside className="hidden space-y-4 lg:sticky lg:top-24 lg:block">
           <div className="rounded-3xl border border-pot-border bg-pot-card p-5">
-            <div className="flex items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/garden/pink-1.webp" alt="" width={44} height={44} className="h-11 w-11 shrink-0 object-contain" />
+            <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">Preview</p>
+            <div className="mt-4 flex items-center gap-4">
+              <div className="flex h-20 w-20 shrink-0 items-end justify-center rounded-2xl" style={{ background: 'rgba(156,203,110,0.08)', border: '1px solid var(--c-border)' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/garden/pink-1.webp" alt="" className="max-h-[86%] max-w-[86%] animate-breathe object-contain" />
+              </div>
               <div className="min-w-0">
-                <h3 className="truncate font-display text-xl font-semibold tracking-[-0.02em] text-white">{name.trim() || 'Your POTFolio'}</h3>
-                <p className="font-mono text-xs text-pot-muted">${symbol || 'TICKER'}</p>
+                <h3 className="truncate font-display text-2xl font-semibold tracking-[-0.02em] text-white">{name.trim() || 'Your POTFolio'}</h3>
+                <p className="font-mono text-xs text-pot-muted">${symbol || 'TICKER'} · {rows.length} assets</p>
               </div>
             </div>
-            <div className="mt-4">
-              <div className="flex h-2.5 w-full gap-[2px] overflow-hidden rounded-full bg-pot-border">
-                {previewLegs.map((l) => (
-                  <div key={l.key} style={{ width: `${l.pct}%`, background: l.color }} />
-                ))}
-              </div>
-              <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-                {previewLegs.map((l, i) => (
-                  <li key={l.key} className="flex items-center gap-2">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: l.color }} />
-                    <span className="font-mono text-white">{l.symbol}</span>
-                    <span className="font-mono tabular-nums text-pot-muted">{rows[i].weight}%</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="mt-5 flex h-3 w-full gap-[3px] overflow-hidden rounded-full bg-pot-border">
+              {previewLegs.map((l) => (
+                <div key={l.key} className="h-full rounded-full transition-[width] duration-500 ease-pot" style={{ width: `${l.pct}%`, background: l.color }} />
+              ))}
             </div>
-            <div className="mt-4 flex items-center justify-between text-xs text-pot-muted">
-              <span>Level 1 · Seedling</span>
-              <span className="font-mono tabular-nums">TVL $0</span>
+            <ul className="mt-3 space-y-1.5 text-sm">
+              {previewLegs.map((l, i) => (
+                <li key={l.key} className="flex items-center gap-2">
+                  <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: l.color }} />
+                  <span className="font-mono text-white">{l.symbol}</span>
+                  <span className="ml-auto font-mono tabular-nums text-pot-muted">{rows[i].weight}%</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-4 flex items-center justify-between border-t border-pot-border pt-3 font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">
+              <span className="text-pot-green">Level 1 · Seedling</span>
+              <span className="tabular-nums">TVL $0</span>
             </div>
           </div>
-          <p className="mt-3 text-sm text-pot-muted">This is how it appears in the catalog.</p>
+
+          <div className="rounded-3xl border border-pot-border bg-pot-card p-5">
+            <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-muted">Checklist</p>
+            <ul className="mt-3 space-y-2.5 text-sm">
+              {[
+                { t: 'Name and ticker', ok: name.trim().length > 0 && symbol.trim().length > 0 },
+                { t: 'At least 2 assets', ok: rows.length >= 2 },
+                { t: 'Weights add up to 100%', ok: total === 100 && rows.every((r) => r.weight > 0) },
+                { t: 'Wallet connected', ok: connected },
+              ].map((c) => (
+                <li key={c.t} className="flex items-center gap-2.5">
+                  <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition ${c.ok ? 'bg-pot-green text-[#1A120C]' : 'border border-pot-border text-transparent'}`}>✓</span>
+                  <span className={c.ok ? 'text-white' : 'text-pot-muted'}>{c.t}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="rounded-3xl border border-pot-border p-5">
+            <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-muted">After you publish</p>
+            <ol className="mt-3 space-y-3 text-sm">
+              {[
+                ['Your token exists', 'One transaction creates the POTFolio and its token.'],
+                ['Share your link', 'Post it on X or in your group. Anyone can deposit.'],
+                ['Earn on every deposit', '40% of the 0.30% entry fee goes to you, in the same transaction.'],
+              ].map(([t, b], i) => (
+                <li key={t} className="flex gap-3">
+                  <span className="font-mono text-xs tabular-nums text-pot-accent">0{i + 1}</span>
+                  <div><p className="font-semibold text-white">{t}</p><p className="text-pot-muted">{b}</p></div>
+                </li>
+              ))}
+            </ol>
+          </div>
         </aside>
       </div>
     </div>

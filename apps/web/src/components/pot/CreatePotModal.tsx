@@ -20,7 +20,7 @@ const YIELD_OPTIONS = [
   { value: 1, label: 'Conservative',    desc: 'Kamino stablecoins · 3–6% APY' },
   { value: 2, label: 'Balanced',        desc: 'Mixed lending · 10–25% APY' },
   { value: 3, label: 'Aggressive',      desc: 'High-risk farms · 20–50%+ APY' },
-  { value: 4, label: 'JLP ⚡',          desc: 'Jupiter LP · 30–60% APY · delta-hedged via Drift' },
+  { value: 4, label: 'JLP ⚡',          desc: 'Jupiter LP' },
   { value: 5, label: 'Exponent PT 🔒',  desc: 'Fixed-rate yield via Principal Tokens · ~22% APY · no impermanent loss' },
   { value: 6, label: 'JLP Hedge 🛡️',   desc: 'Delta-neutral: JLP long + CEX/hybrid short · ~35% APY · low directional risk' },
 ]

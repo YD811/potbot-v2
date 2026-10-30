@@ -83,7 +83,7 @@ export function GardenMode({ series: fixed }: { series?: PlantSeries }) {
         {/* Big scene: deposits on the left, plant in the middle, value on the right */}
         <div className="mx-auto grid max-w-4xl items-center gap-6 sm:grid-cols-[1fr_auto_1fr]">
           <div className="order-2 text-center sm:order-1 sm:text-right">
-            <div className="text-xs font-bold uppercase tracking-wider text-white/70">Deposit</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-white/70">Example deposit</div>
             <div
               key={`d-${stage}`}
               className="mt-1 text-2xl font-black text-pot-green"
@@ -120,7 +120,7 @@ export function GardenMode({ series: fixed }: { series?: PlantSeries }) {
           </div>
 
           <div className="order-3 text-center sm:text-left">
-            <div className="text-xs font-bold uppercase tracking-wider text-white/70">Pot value</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-white/70">Example value</div>
             <div className="mt-1 text-2xl font-black text-white tabular-nums">{fmtUsd(DEMO_VALUE[stage])}</div>
             <div className="mt-1 text-sm">
               <span className="font-semibold text-pot-green">Level {st.level}</span>

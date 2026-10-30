@@ -38,7 +38,8 @@ export function ThemeToggle() {
           : 'border-pot-border bg-pot-card text-white hover:border-pot-muted')
       }
     >
-      {label}
+      <span className="sm:hidden">{label.replace(' mode', '')}</span>
+      <span className="hidden sm:inline">{label}</span>
     </button>
   )
 }

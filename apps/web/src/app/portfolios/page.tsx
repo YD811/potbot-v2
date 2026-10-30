@@ -121,7 +121,7 @@ export default function PortfoliosPage() {
       <section className="mt-14 rounded-[28px] bg-pot-accent p-8 text-[#1A120C]">
         <h2 className="font-display text-2xl font-semibold tracking-[-0.02em] sm:text-3xl">Have a thesis? Turn it into a token.</h2>
         <p className="mt-3 max-w-[40em] text-[15px] sm:text-base">
-          Pick up to 5 assets, set the weights, share the link. You earn on every deposit and never hold anyone&apos;s money.
+          Pick the assets, set the weights, share the link. You earn on every deposit and never hold anyone&apos;s money.
         </p>
         <Link href="/portfolios/new" className="mt-6 inline-block rounded-full border border-current px-5 py-2.5 text-sm font-semibold">
           Build a POTFolio

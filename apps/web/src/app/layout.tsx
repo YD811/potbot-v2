@@ -14,12 +14,12 @@ const fontMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500'], var
 
 export const metadata: Metadata = {
   title: { default: 'PotBot POTFolio: any basket of Solana assets as one liquid token', template: '%s · PotBot' },
-  description: 'Creator ETFs without the exit liquidity. Put up to 5 assets in a Pot, hold one token, leave any time. Nobody can reach anyone else\'s money.',
+  description: 'Any basket of tokenized assets as one token on Solana. Crypto, stocks and real-world assets in one Pot: hold one token, redeem for what is inside any time.',
   metadataBase: new URL('https://potbot.fun'),
   alternates: { canonical: '/' },
   openGraph: {
     title: 'PotBot POTFolio: any basket of Solana assets as one liquid token',
-    description: 'Creator ETFs without the exit liquidity. Up to 5 assets in a Pot, one token, exit any time.',
+    description: 'Any basket of tokenized assets as one token. Hold it, trade it, redeem for what is inside any time.',
     url: 'https://potbot.fun',
     siteName: 'PotBot',
     type: 'website',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     site: '@PotBot_sol',
     creator: '@CryptoYDao',
     title: 'PotBot POTFolio: any basket of Solana assets as one liquid token',
-    description: 'Creator ETFs without the exit liquidity. Up to 5 assets in a Pot, one token, exit any time.',
+    description: 'Any basket of tokenized assets as one token. Hold it, trade it, redeem for what is inside any time.',
   },
   manifest: '/manifest.json',
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'PotBot' },
@@ -41,7 +41,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: dark)',  color: '#14120F' },
@@ -82,8 +81,10 @@ const FOOTER_COLUMNS: { title: string; links: { label: string; href: string; ext
     title: 'Project',
     links: [
       { label: 'Roadmap', href: '/roadmap' },
+      { label: 'Careers', href: '/careers' },
       { label: 'Security', href: '/mainnet' },
       { label: 'Status', href: '/status' },
+      { label: 'Add to your app', href: '/integrate' },
       { label: "World's Fair", href: '/worldsfair' },
     ],
   },

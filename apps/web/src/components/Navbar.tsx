@@ -52,6 +52,7 @@ const NAV_LINKS: { href: string; emoji: string; term: string; hot?: boolean }[] 
   { href: '/portfolios',  emoji: '',     term: 'POTFolios' },
   { href: '/portfolios/new', emoji: '', term: 'Create' },
   { href: '/learn',       emoji: '',     term: 'Learn' },
+  { href: '/roadmap',     emoji: '',     term: 'Roadmap' },
   { href: '/worldsfair',  emoji: '',     term: "World's Fair", hot: true },
 ]
 
@@ -141,7 +142,7 @@ export function Navbar() {
               }`}>{navLabel(link)}</Link>
           ))}
           <div className="pt-2 border-t border-pot-border/50 grid grid-cols-2 gap-x-2">
-            {[['/faq', 'FAQ'], ['/mainnet', 'Security'], ['/roadmap', 'Roadmap']].map(([href, label]) => (
+            {[['/careers', 'Careers'], ['/mainnet', 'Security'], ['/faq', 'FAQ']].map(([href, label]) => (
               <Link key={href} href={href} onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-sm text-pot-muted hover:text-white transition">{label}</Link>
             ))}
           </div>

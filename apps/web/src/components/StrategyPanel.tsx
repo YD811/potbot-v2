@@ -26,7 +26,7 @@ const DEFI_OPTIONS = [
   },
   {
     value: 'drift',
-    label: 'Drift Protocol',
+    label: 'Perps venue',
     icon: '📈',
     desc: 'Yield vaults',
     apy: '6–12%',
