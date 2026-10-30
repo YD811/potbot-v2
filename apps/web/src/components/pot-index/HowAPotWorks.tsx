@@ -46,13 +46,20 @@ export function HowAPotWorks({ compact = false }: { compact?: boolean }) {
         </div>
       )}
       <div className="mb-8 flex justify-center">
-        <div className="inline-grid grid-cols-2 gap-1 rounded-full border border-pot-border bg-pot-card p-1">
+        <div role="tablist" className="relative inline-grid grid-cols-2 rounded-full border border-pot-border bg-pot-card p-1">
+          <span
+            aria-hidden
+            className="absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-pot-accent shadow-[0_8px_20px_-10px_rgba(224,122,79,.8)] transition-transform duration-500 ease-pot"
+            style={{ transform: who === 'holders' ? 'translateX(0)' : 'translateX(100%)' }}
+          />
           {(['holders', 'creators'] as const).map((a) => (
             <button
               key={a}
               type="button"
+              role="tab"
+              aria-selected={who === a}
               onClick={() => setWho(a)}
-              className={`rounded-full px-5 py-2 text-sm font-semibold transition ${who === a ? 'bg-pot-accent text-pot-dark' : 'text-white/70 hover:text-white'}`}
+              className={`relative z-[1] rounded-full px-5 py-2 text-sm font-semibold transition-colors duration-300 ${who === a ? 'text-pot-dark' : 'text-white/70 hover:text-white'}`}
             >
               {a === 'holders' ? 'I want to invest' : 'I want to create'}
             </button>
@@ -60,9 +67,9 @@ export function HowAPotWorks({ compact = false }: { compact?: boolean }) {
         </div>
       </div>
 
-      <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <ol key={who} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {p.steps.map((s, i) => (
-          <li key={s.title} className="card relative rounded-3xl p-6">
+          <li key={s.title} className="hiw-step card relative rounded-3xl p-6" style={{ animationDelay: `${i * 70}ms` }}>
             <span className="mb-3 block font-mono text-xs tracking-[0.12em] text-pot-accent">0{i + 1}</span>
             <h3 className="mb-2 text-lg font-semibold text-white">{s.title}</h3>
             <p className="text-[15px] leading-relaxed text-pot-muted">{s.body}</p>
@@ -70,7 +77,7 @@ export function HowAPotWorks({ compact = false }: { compact?: boolean }) {
         ))}
       </ol>
 
-      <ul className="mx-auto mt-6 flex max-w-4xl flex-wrap justify-center gap-x-6 gap-y-2 text-[15px] text-pot-muted">
+      <ul key={`b-${who}`} className="hiw-step mx-auto mt-6 flex max-w-4xl flex-wrap justify-center gap-x-6 gap-y-2 text-[15px] text-pot-muted">
         {p.benefits.map((b) => (
           <li key={b} className="flex items-start gap-2">
             <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-pot-green" />

@@ -146,9 +146,9 @@ export default function RoadmapPage() {
             ))}
           </ol>
           <Reveal className="mt-6 grid gap-3 sm:grid-cols-3">
-            <a href="mailto:hello@potbot.fun?subject=PotBot%20pre-seed" className="rounded-2xl bg-pot-accent px-5 py-4 text-[#1A120C] transition duration-200 ease-pot hover:-translate-y-0.5">
+            <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="rounded-2xl bg-pot-accent px-5 py-4 text-[#1A120C] transition duration-200 ease-pot hover:-translate-y-0.5">
               <p className="font-mono text-xs uppercase tracking-[0.14em] opacity-80">Investors</p>
-              <p className="mt-1 font-semibold">Talk to the founder</p>
+              <p className="mt-1 font-semibold">DM us on X</p>
             </a>
             <Link href="/careers" className="rounded-2xl border border-pot-border bg-pot-card px-5 py-4 transition duration-200 ease-pot hover:-translate-y-0.5 hover:border-pot-muted/60">
               <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">Builders</p>

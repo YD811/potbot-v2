@@ -86,7 +86,7 @@ export default function CareersPage() {
                   ))}
                 </ul>
               </div>
-              <a href={`mailto:hello@potbot.fun?subject=${encodeURIComponent(`Role: ${r.t}`)}`} className="btn-primary mt-6 inline-flex px-5 py-2.5 text-sm">Apply</a>
+              <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="btn-primary mt-6 inline-flex px-5 py-2.5 text-sm">Apply via DM on X</a>
             </details>
           </Reveal>
         ))}
@@ -110,10 +110,10 @@ export default function CareersPage() {
       <Reveal as="section" className="mt-16 rounded-[28px] bg-pot-accent p-8 text-[#1A120C] sm:p-10">
         <h2 className="font-display text-3xl font-semibold leading-tight">Not on the list?</h2>
         <p className="mt-3 max-w-[34em] text-base opacity-90">
-          Security researchers, designers, lawyers and creators who want to launch a basket: write to us anyway. Tell us what you would own.
+          Security researchers, designers, lawyers and creators who want to launch a basket: message us anyway. Tell us what you would own.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <a href="mailto:hello@potbot.fun?subject=PotBot%20team" className="inline-flex rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">hello@potbot.fun</a>
+          <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="inline-flex rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">DM @PotBot_sol</a>
           <Link href="/roadmap#need" className="inline-flex rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">What we need</Link>
         </div>
       </Reveal>

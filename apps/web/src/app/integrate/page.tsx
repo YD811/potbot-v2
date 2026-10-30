@@ -108,7 +108,7 @@ export default function IntegratePage() {
         <h2 className="font-display text-2xl font-semibold tracking-[-0.02em] sm:text-3xl">Talk to us before mainnet</h2>
         <p className="mt-3 max-w-[40em] text-[15px] sm:text-base">
           We are lining up the first wallets and bots for the mainnet launch. A listing takes a day; a deposit route takes a week with
-          our help. Write to hello@potbot.fun or DM @PotBot_sol.
+          our help. DM @PotBot_sol on X.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="inline-block rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">DM on X</a>

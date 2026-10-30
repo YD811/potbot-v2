@@ -92,7 +92,7 @@ export function FlagshipCard() {
             <Link href="/learn" className="btn-primary flex-1 text-center">How it works</Link>
             <Link href={mint ? `/portfolios/${mint}` : '/portfolios'} className="btn-secondary flex-1 text-center">Open</Link>
           </div>
-          <p className="mt-3 text-center text-[13px] text-pot-muted">Devnet preview. Deposits reopen with the new price feed; redeeming for the assets always works.</p>
+          <p className="mt-3 text-center font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">On devnet · deposits reopen soon</p>
         </>
       ) : (
         <>
