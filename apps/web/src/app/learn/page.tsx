@@ -32,8 +32,8 @@ export default function LearnPage() {
             the token and you send the share.
           </Point>
           <Point title="No withdraw instruction">
-            The program can mint, redeem, and let keepers swap inside limits. It cannot send assets to anyone. Nobody can reach anyone
-            else&apos;s money: not the creator, not PotBot, not an admin.
+            The program can mint, redeem, and let keepers swap inside limits. It cannot send assets to anyone. Only a holder&apos;s own
+            redemption moves assets out: not the creator, not PotBot, not an admin.
           </Point>
           <Point title="A real token in your wallet">
             Each POTFolio token has a name, symbol and logo set by the program, so it shows up properly in wallets and explorers.

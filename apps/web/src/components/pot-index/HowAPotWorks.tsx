@@ -22,7 +22,7 @@ const PATH: Record<Audience, { title: string; steps: { title: string; body: stri
   creators: {
     title: 'You create the POTFolio',
     steps: [
-      { title: 'Build the basket', body: 'Pick up to 5 assets and their weights. Name it, give it a ticker.' },
+      { title: 'Build the basket', body: 'Pick the assets and their weights. Name it, give it a ticker.' },
       { title: 'Publish it', body: 'Your portfolio becomes a token.' },
       { title: 'Share your idea', body: 'People see what you believe in and back it by holding your token.' },
       { title: 'Earn every time', body: 'Every deposit into your POTFolio pays you, instantly and on-chain. Those who bring new holders earn too.' },

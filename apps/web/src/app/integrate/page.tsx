@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { PageHeader } from '@/components/PageHeader'
 import { POT_INDEX_SETTINGS, explorerAddress } from '@/lib/pot-index/registry'
 
@@ -92,7 +91,7 @@ export default function IntegratePage() {
         <h2 className="mb-4 font-display text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">Why it is safe to list</h2>
         <ul className="grid gap-2 sm:grid-cols-2">
           {[
-            'No withdraw instruction in the program. Nobody can reach a holder’s money, including us.',
+            'No withdraw instruction in the program. Nobody can move a holder’s assets, including us.',
             'Redeem for the assets cannot be paused and needs no oracle.',
             'Keepers move the basket toward its weights and nothing else, inside limits the program checks.',
             'Three public security reviews; the external audit of the final program comes before mainnet.',
@@ -113,7 +112,7 @@ export default function IntegratePage() {
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="inline-block rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">DM on X</a>
-          <Link href="/for-agents" className="inline-block rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">Agent guide</Link>
+          <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noopener noreferrer" className="inline-block rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">SDK on GitHub</a>
         </div>
       </section>
     </div>

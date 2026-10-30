@@ -24,7 +24,7 @@ export default async function OgImage() {
             <span>Your portfolio.</span>
             <span style={{ color: '#E07A4F', fontStyle: 'italic' }}>One token.</span>
           </div>
-          <div style={{ display: 'flex', marginTop: 30, fontSize: 26, color: '#C9C0B0', fontFamily: 'system-ui, sans-serif' }}>Up to 5 assets in a Pot. Hold one token, leave any time.</div>
+          <div style={{ display: 'flex', marginTop: 30, fontSize: 26, color: '#C9C0B0', fontFamily: 'system-ui, sans-serif' }}>Any basket of tokenized assets. One token.</div>
           <div style={{ display: 'flex', marginTop: 40, fontSize: 22, color: '#C9C0B0', fontFamily: 'monospace' }}>potbot.fun</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 480 }}>

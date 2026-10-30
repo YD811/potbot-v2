@@ -10,6 +10,7 @@ import { GardenMode } from '@/components/pot-index/GardenMode'
 import { Reveal } from './Reveal'
 import { FlagshipCard } from './FlagshipCard'
 import { PotAnimation } from './PotAnimation'
+import { HeroGlow } from './HeroGlow'
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">{children}</p>
@@ -20,10 +21,25 @@ function H2({ children, className = '' }: { children: React.ReactNode; className
 }
 
 const PROMISES = [
-  { t: 'Nobody can reach your money', b: 'The assets sit in a program with no withdraw instruction. Not the creator, not us. You redeem your own token, nobody else can.' },
+  { t: 'No withdraw instruction', b: 'The assets sit in a program that has no way to move them out except your own redemption. Not the creator, not us.' },
   { t: 'Leave any time', b: 'Redeem for your share of every asset, or for USDC in one transaction. Exits cannot be paused.' },
   { t: 'Creators earn, never hold', b: '40% of every entry fee goes to the creator. Your money never touches their wallet.' },
 ]
+
+const NEEDS = [
+  { t: 'External audit', b: 'One full audit of the final program before real money.' },
+  { t: 'Engineers', b: 'A technical co-founder and a Solana engineer.' },
+  { t: 'Launch liquidity', b: 'Seed for the first flagship POTFolio and its pool.' },
+  { t: 'Partners', b: 'Wallets, bots and creators who launch the first baskets.' },
+]
+
+const STATUS = [
+  { t: 'Built', s: 'done' },
+  { t: 'Devnet', s: 'done' },
+  { t: 'Raise', s: 'now' },
+  { t: 'Audit', s: 'next' },
+  { t: 'Mainnet', s: 'next' },
+] as const
 
 const GROW = [
   { k: 'Invite and earn', t: 'Share a POTFolio, earn on every deposit', b: '40% of the entry fee goes to whoever brought the holder. Your link is in the dashboard.', cta: 'Get your link', href: '/dashboard' },
@@ -44,14 +60,19 @@ export function LandingV3() {
   return (
     <div className="-mt-6 sm:-mt-8">
       {/* Hero */}
-      <section className="grid items-center gap-14 pb-16 pt-10 sm:pt-16 lg:grid-cols-[1.1fr_.9fr] lg:gap-12 lg:pb-20">
+      <section className="relative isolate grid items-center gap-14 pb-16 pt-10 sm:pt-16 lg:grid-cols-[1.1fr_.9fr] lg:gap-12 lg:pb-20">
+        <HeroGlow />
         <div>
+          <Link href="/roadmap" className="v3-rise mb-7 inline-flex items-center gap-2.5 rounded-full border border-pot-border bg-pot-card/60 px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted backdrop-blur transition hover:border-pot-muted/60 hover:text-white">
+            <span className="v3-live-dot h-1.5 w-1.5 rounded-full bg-pot-green" />
+            Live on Solana devnet · Audit next · Raising pre-seed
+          </Link>
           <h1 className="font-display text-[44px] font-semibold leading-[1.02] tracking-[-0.03em] text-white sm:text-6xl lg:text-7xl">
             <span className="v3-line"><span>Your portfolio.</span></span>
-            <span className="v3-line"><span className="italic text-pot-accent" style={{ animationDelay: '90ms' }}>One token.</span></span>
+            <span className="v3-line"><span className="italic text-pot-accent" style={{ animationDelay: '90ms' }}><span className="v3-sheen">One token.</span></span></span>
           </h1>
           <p className="v3-rise mt-6 max-w-[34em] text-lg text-pot-muted sm:text-xl" style={{ animationDelay: '220ms' }}>
-            Creator ETFs without the exit liquidity. Put up to 5 assets in a Pot, hold one token, leave any time. Nobody can reach anyone else&apos;s money.
+            Crypto, tokenized stocks and real-world assets in one basket. Hold one token for all of it, redeem for what is inside any time.
           </p>
           <div className="v3-rise mt-8 flex flex-wrap gap-3" style={{ animationDelay: '320ms' }}>
             <Link href="/portfolios" className="btn-primary px-7 py-3 text-base">Explore POTFolios</Link>
@@ -80,7 +101,7 @@ export function LandingV3() {
           <Eyebrow>What a Pot is</Eyebrow>
           <H2 className="mt-3">Assets in. <i className="italic text-pot-accent">One token out.</i></H2>
           <p className="mt-5 max-w-[36em] text-lg text-pot-muted">
-            A Pot is an onchain treasury. Tokens, tokenized stocks and real-world assets go in, up to five of them. What comes out is one token that mirrors the whole basket. Hold it, send it, redeem it for the assets or for USDC.
+            A Pot is an onchain treasury. Tokens, tokenized stocks and real-world assets go in. What comes out is one token that mirrors the whole basket. Hold it, send it, redeem it for the assets or for USDC.
           </p>
         </Reveal>
       </section>
@@ -96,7 +117,10 @@ export function LandingV3() {
       {/* Live now */}
       <section className="pb-20">
         <Reveal className="mb-7 flex flex-wrap items-end justify-between gap-4">
-          <H2>Live now.</H2>
+          <div>
+            <H2>Live now.</H2>
+            <p className="mt-2 font-mono text-xs uppercase tracking-[0.12em] text-pot-muted">On Solana devnet · test tokens</p>
+          </div>
           <Link href="/portfolios" className="btn-secondary px-5 py-2 text-sm">See all POTFolios</Link>
         </Reveal>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -158,6 +182,46 @@ export function LandingV3() {
           <p className="mt-3 max-w-[30em] text-base opacity-80">Nobody copies anyone&apos;s trades. Everyone pools into the same basket and holds the same token at the same price.</p>
           <Link href="/portfolios" className="mt-6 inline-flex rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:opacity-80">Explore POTFolios</Link>
         </Reveal>
+      </section>
+
+      {/* Where we are / what we need */}
+      <section className="mb-20 overflow-hidden rounded-[32px] border border-pot-border bg-pot-card">
+        <div className="grid gap-10 p-8 sm:p-10 lg:grid-cols-[.9fr_1.1fr]">
+          <Reveal>
+            <Eyebrow>Where we are</Eyebrow>
+            <H2 className="mt-3">Built. Now we go <i className="italic text-pot-accent">to mainnet.</i></H2>
+            <p className="mt-4 max-w-[30em] text-base text-pot-muted">
+              The program works end to end on devnet. We are raising a pre-seed round to fund the audit, the team and the launch.
+            </p>
+            <ol className="mt-8 flex items-center gap-0">
+              {STATUS.map((st, i) => (
+                <li key={st.t} className="flex flex-1 items-center last:flex-none">
+                  <div className="flex flex-col items-center gap-2">
+                    <span className={`h-3 w-3 rounded-full ${st.s === 'done' ? 'bg-pot-accent' : st.s === 'now' ? 'v3-live-dot bg-pot-green' : 'border border-pot-muted/60'}`} />
+                    <span className={`font-mono text-[10px] uppercase tracking-[0.12em] ${st.s === 'next' ? 'text-pot-muted' : 'text-white'}`}>{st.t}</span>
+                  </div>
+                  {i < STATUS.length - 1 && <span className={`mx-1 mb-6 h-px flex-1 ${st.s === 'done' ? 'bg-pot-accent' : 'bg-pot-border'}`} />}
+                </li>
+              ))}
+            </ol>
+          </Reveal>
+          <div>
+            <Reveal><p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-muted">What we need</p></Reveal>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {NEEDS.map((n, i) => (
+                <Reveal key={n.t} delay={i * 60} className="rounded-2xl border border-pot-border p-5" style={{ background: 'var(--pot-bg)' }}>
+                  <p className="font-semibold text-white">{n.t}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-pot-muted">{n.b}</p>
+                </Reveal>
+              ))}
+            </div>
+            <Reveal delay={120} className="mt-6 flex flex-wrap gap-3">
+              <a href="mailto:hello@potbot.fun?subject=PotBot%20pre-seed" className="btn-primary px-5 py-2.5 text-sm">Investors: talk to us</a>
+              <Link href="/careers" className="btn-secondary px-5 py-2.5 text-sm">Join the team</Link>
+              <Link href="/roadmap#need" className="px-2 py-2.5 text-sm font-semibold text-white underline-offset-4 hover:underline">Full roadmap</Link>
+            </Reveal>
+          </div>
+        </div>
       </section>
 
       {/* Vision */}

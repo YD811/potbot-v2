@@ -7,8 +7,15 @@ const config = {
   // Old v2 routes: nothing 404s, every old link lands on the live product.
   async redirects() {
     return [
-      { source: '/pots', destination: '/vaults', permanent: false },
+      // v2 vault product, retired: the live product is POTFolio. Source kept for reference.
+      { source: '/pots', destination: '/portfolios', permanent: false },
+      { source: '/pots/:path*', destination: '/portfolios', permanent: false },
       { source: '/my-pots', destination: '/portfolios', permanent: false },
+      { source: '/vaults', destination: '/portfolios', permanent: false },
+      { source: '/vaults/:path*', destination: '/portfolios', permanent: false },
+      { source: '/create', destination: '/portfolios/new', permanent: false },
+      { source: '/leaderboard', destination: '/portfolios', permanent: false },
+      { source: '/for-agents', destination: '/integrate', permanent: false },
       { source: '/beta', destination: '/signup', permanent: false },
       { source: '/pricing', destination: '/learn', permanent: false },
     ]

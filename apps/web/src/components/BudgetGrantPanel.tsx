@@ -29,7 +29,7 @@ const BUDGET_TEMPLATES = [
     icon: '🔬',
     name: 'Research & Yield',
     desc: 'Allocate funds for a member to explore DeFi yield strategies on behalf of the vault.',
-    purpose: 'DeFi yield exploration — Kamino/Drift/MarginFi strategies',
+    purpose: 'DeFi yield exploration — Kamino, Jupiter and similar platforms',
     amountPct: 15,
     duration: 14,
   },

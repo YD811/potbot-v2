@@ -44,7 +44,7 @@ export async function GET(
   return NextResponse.json(
     {
       type: 'action',
-      icon: `${APP_URL}/og-image.png`,
+      icon: `${APP_URL}/icon-512.png`,
       title: 'Deposit into PotBot pot',
       description:
         'Pool funds with the group. Your share of the vault is proportional to your deposit. Withdraw anytime, governed on-chain.',

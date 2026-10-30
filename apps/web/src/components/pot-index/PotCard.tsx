@@ -1,5 +1,7 @@
 'use client'
 
+import { POT_INDEX_SETTINGS } from '@/lib/pot-index/registry'
+
 import Link from 'next/link'
 import { useNavHistoryAll, usePotStats, type PotListStats } from '@/hooks/usePotIndex'
 import { Sparkline } from './NavChart'
@@ -26,7 +28,7 @@ export function PotCard({ pot, list }: { pot: PotView; prices: Record<string, nu
           </div>
         </div>
         <div className="text-right">
-          <p className="text-xs text-white/70">TVL</p>
+          <p className="text-xs text-white/70">{POT_INDEX_SETTINGS.cluster === 'devnet' ? 'TVL, devnet' : 'TVL'}</p>
           <p className="font-mono font-medium text-white tabular-nums">
             {stats.data ? `$${stats.data.navUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}
           </p>

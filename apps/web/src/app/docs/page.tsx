@@ -11,7 +11,7 @@ const GH = 'https://github.com/YD811/potbot-v2/blob/main'
 
 const START = [
   { k: 'Hold', t: 'Hold a basket as one token', b: 'Pick a POTFolio, deposit USDC with one signature, redeem any time for the assets or USDC.', cta: 'Explore POTFolios', href: '/portfolios' },
-  { k: 'Create', t: 'Turn your thesis into a token', b: 'Up to 5 assets, weights lock at creation. You earn 40% of every entry fee and never hold anyone’s money.', cta: 'Build a POTFolio', href: '/portfolios/new' },
+  { k: 'Create', t: 'Turn your thesis into a token', b: 'Pick the assets, weights lock at creation. You earn 40% of every entry fee and never hold anyone’s money.', cta: 'Build a POTFolio', href: '/portfolios/new' },
   { k: 'Build', t: 'Build on the program', b: 'Open source program and SDK. Read the instruction reference, run the tests, write a keeper.', cta: 'Program reference', href: `${GH}/docs/potfolio/program.md`, ext: true },
 ]
 

@@ -230,7 +230,7 @@ export default function PotPage() {
               <li>Deposit USDC and the POTFolio mints ${p.symbol} at the basket&apos;s value per token. Entry fee {ENTRY_FEE_BPS / 100}%.</li>
               <li>Redeem ${p.symbol} and you receive your share of every asset inside, or USDC. {EXIT_FEE_BPS / 100}% stays for the holders who remain.</li>
               <li>The token is a normal SPL token: hold it, send it, trade it.</li>
-              <li>Nobody can reach anyone else&apos;s money. There is no withdraw instruction.</li>
+              <li>There is no withdraw instruction: only your own redemption moves the assets out.</li>
             </ul>
             <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs">
               <a className="text-pot-muted underline-offset-2 transition hover:text-white hover:underline" href={explorerAddress(p.address.toBase58())} target="_blank" rel="noreferrer">POTFolio account</a>
