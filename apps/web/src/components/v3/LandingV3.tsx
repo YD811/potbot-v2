@@ -22,7 +22,7 @@ function H2({ children, className = '' }: { children: React.ReactNode; className
 
 const NEEDS = [
   { t: 'External audit', b: 'One full audit of the final program before real money.' },
-  { t: 'Engineers', b: 'A technical co-founder and a Solana engineer.' },
+  { t: 'Engineers', b: 'A founding Solana engineer to own the program. See careers.' },
   { t: 'Launch liquidity', b: 'Seed for the first flagship POTFolio and its pool.' },
   { t: 'Partners', b: 'Wallets, bots and creators who launch the first baskets.' },
 ]
@@ -30,8 +30,7 @@ const NEEDS = [
 const STATUS = [
   { t: 'Built', s: 'done' },
   { t: 'Devnet', s: 'done' },
-  { t: 'Raise', s: 'now' },
-  { t: 'Audit', s: 'next' },
+  { t: 'Audit', s: 'now' },
   { t: 'Mainnet', s: 'next' },
 ] as const
 
@@ -65,6 +64,23 @@ export function LandingV3() {
         </div>
         <div className="pt-10 lg:pt-0">
           <FlagshipCard />
+        </div>
+      </section>
+
+      {/* Status and credibility strip */}
+      <section aria-label="Status" className="mb-16 rounded-2xl border border-pot-border bg-pot-card px-5 py-4">
+        <div className="flex flex-col gap-3 font-mono text-[11px] uppercase tracking-[0.12em] sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-white">
+            <span className="inline-flex items-center gap-2"><span className="v3-live-dot h-2 w-2 rounded-full bg-pot-green" />Devnet live</span>
+            <span className="text-pot-muted">·</span><span>External audit next</span>
+            <span className="text-pot-muted">·</span><span>Mainnet after audit</span>
+          </p>
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-pot-muted">
+            <span>Third Colosseum build</span><span>·</span>
+            <span>Netherlands local track winner</span><span>·</span>
+            <span>Superteam NL grant</span><span>·</span>
+            <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:text-white hover:underline">Built in public</a>
+          </p>
         </div>
       </section>
 
@@ -135,7 +151,7 @@ export function LandingV3() {
             <Eyebrow>Where we are</Eyebrow>
             <H2 className="mt-3">Built. Now we go <i className="italic text-pot-accent">to mainnet.</i></H2>
             <p className="mt-4 max-w-[30em] text-base text-pot-muted">
-              The program works end to end on devnet. We are raising a pre-seed round to fund the audit, the team and the launch.
+              The program works end to end on devnet. What we need next: an external audit, a lead Solana engineer and a guarded mainnet launch.
             </p>
             <ol className="mt-8 flex items-center gap-0">
               {STATUS.map((st, i) => (
