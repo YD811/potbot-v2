@@ -22,7 +22,7 @@ const FAQ_DATA: FAQCategory[] = [
     items: [
       {
         q: 'What is PotBot?',
-        a: 'PotBot turns a basket of Solana assets into one token. A creator picks up to 5 assets and their weights, publishes the POTFolio in one transaction, and the program issues a token that mirrors the whole basket. Anyone can deposit USDC to receive that token, hold it in any wallet, and redeem it any time for every asset inside or for USDC.',
+        a: 'PotBot turns a basket of Solana assets into one token. A creator picks the assets and their weights, publishes the POTFolio in one transaction, and the program issues a token that mirrors the whole basket. Anyone can deposit USDC to receive that token, hold it in any wallet, and redeem it any time for every asset inside or for USDC.',
       },
       {
         q: 'What is a POTFolio?',
@@ -112,7 +112,7 @@ const FAQ_DATA: FAQCategory[] = [
     items: [
       {
         q: 'How do I create a POTFolio?',
-        a: 'Open Create, give it a name (the ticker suggests itself), pick up to 5 assets from the listed set, set the weights to 100%, and confirm one transaction. The POTFolio and its token exist immediately with a Pot... address. Creating costs about 0.03 SOL in account rent.',
+        a: 'Open Create, give it a name (the ticker suggests itself), pick assets from the listed set (up to 5 in the current devnet version), set the weights to 100%, and confirm one transaction. The POTFolio and its token exist immediately with a Pot... address. Creating costs about 0.03 SOL in account rent.',
       },
       {
         q: 'How do creators and referrers earn?',

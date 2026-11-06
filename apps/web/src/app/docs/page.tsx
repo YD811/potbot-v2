@@ -19,7 +19,7 @@ const SECTIONS: { title: string; items: { t: string; b: string; href: string }[]
   {
     title: 'Understand it',
     items: [
-      { t: 'Overview', b: 'What a POTFolio is, who does what, and what nobody can do.', href: `${GH}/docs/potfolio/overview.md` },
+      { t: 'Overview', b: 'What a POTFolio is, who does what, and what no one can do.', href: `${GH}/docs/potfolio/overview.md` },
       { t: 'Fees and economics', b: 'Every fee, where it goes, and the planned mainnet pricing.', href: `${GH}/docs/potfolio/fees-and-economics.md` },
       { t: 'Garden levels', b: 'How the plant level is read from the chain and what each level unlocks.', href: `${GH}/docs/potfolio/garden-mode.md` },
       { t: 'FAQ', b: 'Short answers to the questions people ask first.', href: '/faq' },

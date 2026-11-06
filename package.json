@@ -1,7 +1,7 @@
 {
   "name": "potbot-v2",
   "version": "0.1.0",
-  "description": "Yield-bearing Solana vaults with liquid, redeemable share tokens",
+  "description": "Any basket of tokenized assets as one token on Solana",
   "private": true,
   "packageManager": "npm@10.8.2",
   "workspaces": [
