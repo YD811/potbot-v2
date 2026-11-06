@@ -27,7 +27,6 @@ const BUILT = [
 
 const NOW = [
   { t: 'Devnet, working end to end', b: 'Create a POTFolio, deposit, hold, redeem for the assets or for USDC. Showcase baskets run on test tokens. Deposits are paused while we move to a new price feed.' },
-  { t: 'Raising a pre-seed round', b: 'To take PotBot from devnet to mainnet. Talking to funds and angels now.' },
   { t: 'Preparing the audit', b: 'Audit scope is written and public. Quotes are being collected from security firms.' },
   { t: 'Building the team', b: 'Looking for a technical co-founder first, then a Solana engineer and early contributors.' },
 ]
@@ -135,7 +134,7 @@ export default function RoadmapPage() {
           <Cards items={NOW} />
         </Section>
 
-        <Section id="need" eyebrow="What we need" title={<>What it takes to reach <i className="italic text-pot-accent">mainnet.</i></>} lede="We are raising a pre-seed round to cover exactly this list. If you can help with any line, we want to talk.">
+        <Section id="need" eyebrow="What we need" title={<>What it takes to reach <i className="italic text-pot-accent">mainnet.</i></>} lede="This is the list between devnet and mainnet. If you can help with any line, we want to talk.">
           <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {NEED.map((f, i) => (
               <Reveal as="li" key={f.t} delay={(i % 3) * 70} className="relative overflow-hidden rounded-3xl border border-pot-border bg-pot-card p-6">

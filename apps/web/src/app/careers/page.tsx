@@ -11,16 +11,16 @@ type Role = { t: string; type: string; when: string; b: string; you: string[] }
 
 const ROLES: Role[] = [
   {
-    t: 'Technical co-founder',
-    type: 'Co-founder · equity',
+    t: 'Founding Solana Engineer / CTO',
+    type: 'Founding role · equity + salary from first funding',
     when: 'Open now',
-    b: 'Own the Anchor program, the audit and the mainnet launch. You set the engineering bar and grow the team after the round.',
-    you: ['Shipped Solana programs to mainnet (Anchor, Rust)', 'Think in invariants, limits and failure modes', 'Want to own a protocol, not a ticket queue'],
+    b: 'Own the pot_index Anchor program, the audit response, the mainnet launch under a multisig and the keeper. You set the engineering bar and grow the team.',
+    you: ['Shipped Solana programs (Rust, Anchor)', 'Security mindset: invariants, limits and failure modes', 'Want to own a protocol, not a ticket queue'],
   },
   {
     t: 'Solana engineer',
     type: 'Full-time · paid',
-    when: 'Opens with the pre-seed round',
+    when: 'Opens with first funding',
     b: 'Program work, keepers, SDK and integrations with wallets and bots, next to the technical co-founder.',
     you: ['Anchor and TypeScript', 'Comfortable with oracles, token programs and CPIs', 'Writes tests before anyone asks'],
   },
@@ -33,7 +33,7 @@ const ROLES: Role[] = [
   },
   {
     t: 'BD contributor',
-    type: 'Part-time · success fee after the round · 3 months',
+    type: 'Part-time · success fee · 3 months',
     when: 'Open now',
     b: 'Bring the first wallets, Telegram bots, creators and ecosystem partners to POTFolio.',
     you: ['Network across Solana projects and communities', 'Comfortable opening a conversation cold', 'Tracks every lead, follows up without being asked'],
@@ -57,7 +57,7 @@ export default function CareersPage() {
           <span className="v3-line"><span className="italic text-pot-accent" style={{ animationDelay: '90ms' }}>tokenized everything.</span></span>
         </h1>
         <p className="v3-rise mt-6 max-w-[36em] text-lg text-pot-muted sm:text-xl" style={{ animationDelay: '200ms' }}>
-          PotBot turns any basket of tokenized assets into one token. We are on devnet, raising a pre-seed round and heading to mainnet. These are the people we need to get there.
+          PotBot turns any basket of tokenized assets into one token. Amsterdam based, remote friendly. Live on Solana devnet and heading to mainnet after an external audit. These are the people we need to get there.
         </p>
       </header>
 
@@ -86,7 +86,10 @@ export default function CareersPage() {
                   ))}
                 </ul>
               </div>
-              <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="btn-primary mt-6 inline-flex px-5 py-2.5 text-sm">Apply via DM on X</a>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <a href="https://t.me/YegorDO" target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex px-5 py-2.5 text-sm">Apply on Telegram</a>
+                <a href="https://x.com/CryptoYDao" target="_blank" rel="noopener noreferrer" className="inline-flex rounded-full border border-pot-border px-5 py-2.5 text-sm font-semibold text-white transition hover:border-pot-muted">DM @CryptoYDao</a>
+              </div>
             </details>
           </Reveal>
         ))}
