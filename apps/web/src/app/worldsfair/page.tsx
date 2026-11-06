@@ -29,7 +29,7 @@ export default function WorldsFairPage() {
         <p className="text-xs font-semibold uppercase tracking-widest text-pot-accent">In 30 seconds</p>
         <dl className="mt-4 grid gap-4 text-[15px] leading-relaxed sm:grid-cols-[140px_1fr]">
           <dt className="font-semibold text-white">What</dt>
-          <dd className="text-pot-muted">Pick up to 5 Solana assets and weights. The program issues one token that mirrors the basket. Deposit USDC to mint it, redeem any time for the assets or USDC.</dd>
+          <dd className="text-pot-muted">Pick Solana assets and weights. The program issues one token that mirrors the basket. Deposit USDC to mint it, redeem any time for the assets or USDC.</dd>
           <dt className="font-semibold text-white">For whom</dt>
           <dd className="text-pot-muted">Holders get one token instead of ten. Creators publish a thesis and earn on every deposit without holding anyone&apos;s money.</dd>
           <dt className="font-semibold text-white">Why trust it</dt>
@@ -89,7 +89,7 @@ export default function WorldsFairPage() {
         <ul className="list-disc space-y-2 pl-5">
           <li><b className="text-white">One token = a slice of the basket.</b> Minted at the basket&apos;s value (NAV), it moves with its assets.</li>
           <li><b className="text-white">No exit liquidity games.</b> Redeem for your share of every asset, or for USDC with an on-chain minimum. 0.5% stays with remaining holders.</li>
-          <li><b className="text-white">No withdraw instruction.</b> Assets sit in program-owned accounts. Nobody can reach anyone else&apos;s money: not the creator, not PotBot.</li>
+          <li><b className="text-white">No withdraw instruction.</b> Assets sit in program-owned accounts. No one, not the creator, not PotBot, can take anyone else&apos;s money.</li>
           <li><b className="text-white">Keepers inside limits.</b> Toward target only, max 25% per trade, at Pyth prices, or the transaction reverts.</li>
           <li><b className="text-white">Creators earn.</b> 0.30% per deposit, split on-chain: 40% creator, 40% referrer, 20% protocol.</li>
         </ul>
@@ -103,7 +103,7 @@ export default function WorldsFairPage() {
         <HowAPotWorks compact />
       </Section>
 
-      <Section title="Creator ETFs, as crypto Twitter asked for" summary="The idea came from CT in Dec 2025. The difference: the creator cannot touch the money.">
+      <Section title="Creator baskets, as crypto Twitter asked for" summary="The idea came from CT in Dec 2025. The difference: the creator cannot touch the money.">
         <p>
           On Dec 20, 2025 mert (Helius) and Akshay BD asked for creator-made index funds: a basket built on a public thesis, a fee on AUM.{' '}
           <a className="text-pot-green underline" href="https://x.com/mert/status/2002394652993851679" target="_blank" rel="noreferrer">The thread</a>.
@@ -112,7 +112,7 @@ export default function WorldsFairPage() {
       </Section>
 
       <Section title="Where it sits" summary="Symmetry, Cesto, DiversiFi, GLAM, Ondo, and what POTFolio adds.">
-        <p>Baskets on Solana exist. New here: a basket that is a token anyone can hold, an exit nobody can pause, keepers bounded by code.</p>
+        <p>Baskets on Solana exist. New here: a basket that is a token anyone can hold, an exit no one can pause, keepers bounded by code.</p>
         <CompetitorTable />
       </Section>
 

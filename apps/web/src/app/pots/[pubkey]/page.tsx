@@ -873,7 +873,7 @@ export default function PotPage() {
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-pot-green/15 text-pot-green uppercase tracking-wide">Pro</span>
                 </div>
                 {[
-                  '⚖️ Drift detected: SOL allocation 12% above target — rebalance suggested',
+                  '⚖️ Weights off target: SOL allocation 12% above target — rebalance suggested',
                   '📉 USDC reserve below 15% floor — AI proposes trimming JUP',
                   '🔔 Weekly digest: NAV +3.2%, 2 rebalances executed',
                 ].map((a) => (

@@ -52,7 +52,7 @@ function generateSuggestions(potBalanceSol: number, solPrice: number | null): AI
   const list: AISuggestion[] = []
   const usd = solPrice != null ? potBalanceSol * solPrice : null
 
-  // 1. Rebalance — high-confidence allocation drift
+  // 1. Rebalance — high-confidence allocation off target
   list.push({
     id: `s-rebal-${seed}`,
     title: `Rebalance: SOL is over target (50% vs 40%)`,

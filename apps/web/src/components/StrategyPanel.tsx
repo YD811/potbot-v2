@@ -25,10 +25,10 @@ const DEFI_OPTIONS = [
     apy: '4–8%',
   },
   {
-    value: 'drift',
-    label: 'Perps venue',
+    value: 'jupiter',
+    label: 'Jupiter',
     icon: '📈',
-    desc: 'Yield vaults',
+    desc: 'Swaps and liquidity',
     apy: '6–12%',
   },
   {

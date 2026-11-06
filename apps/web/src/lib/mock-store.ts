@@ -17,7 +17,7 @@ const YIELD_APY: Record<number, number> = {
   1: 0.06,   // Conservative      ~6% APY
   2: 0.15,   // Balanced          ~15% APY
   3: 0.30,   // Aggressive        ~30% APY
-  4: 0.40,   // JLP               ~40% APY (Jupiter LP + Drift hedge)
+  4: 0.40,   // JLP               ~40% APY (Jupiter LP)
   5: 0.22,   // Exponent PT       ~22% APY (fixed-rate via Principal Tokens)
   6: 0.35,   // JLP Hedge         ~35% APY (delta-neutral: JLP long + CEX short)
 }

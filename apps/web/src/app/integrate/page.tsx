@@ -91,7 +91,7 @@ export default function IntegratePage() {
         <h2 className="mb-4 font-display text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">Why it is safe to list</h2>
         <ul className="grid gap-2 sm:grid-cols-2">
           {[
-            'No withdraw instruction in the program. Nobody can move a holder’s assets, including us.',
+            'The program has no withdraw instruction. No one, not the creator, not PotBot, can take anyone else’s money.',
             'Redeem for the assets cannot be paused and needs no oracle.',
             'Keepers move the basket toward its weights and nothing else, inside limits the program checks.',
             'Three public security reviews; the external audit of the final program comes before mainnet.',

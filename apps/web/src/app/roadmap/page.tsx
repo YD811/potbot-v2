@@ -20,7 +20,7 @@ const BUILT = [
   { k: '2025', t: 'Started as group trading', b: 'PotBot v1: a Telegram bot for trading together from one wallet. Built at a hackathon in the Netherlands, and won it.' },
   { k: 'May 2026', t: 'The vault', b: 'PotBot v2: a non-custodial group treasury with onchain rules, a Squads multisig and an AI agent that acts only inside limits. A local-track win at Colosseum.' },
   { k: 'Oct 2026', t: 'POTFolio', b: 'The idea in its final shape: any basket of tokenized assets as one token. Program and app live on Solana devnet, submitted to Colosseum Crypto World’s Fair.' },
-  { k: 'Program', t: '18 instructions, 40 tests', b: 'Open source. Three public security reviews so far. No withdraw instruction: nobody can move a holder’s assets, including us.' },
+  { k: 'Program', t: '18 instructions, 40 tests', b: 'Open source. Three public security reviews so far. The program has no withdraw instruction. No one, not the creator, not PotBot, can take anyone else’s money.' },
   { k: 'Backing', t: 'Grant funded', b: 'Supported by a Superteam Netherlands grant. Built in public in Amsterdam, with the Y-DAO builder community.' },
   { k: 'Speed', t: 'One founder, built with AI', b: 'What took a team a month at our first hackathon now ships in a week. That is how we keep the burn low.' },
 ]

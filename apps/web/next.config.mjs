@@ -8,16 +8,16 @@ const config = {
   async redirects() {
     return [
       // v2 vault product, retired: the live product is POTFolio. Source kept for reference.
-      { source: '/pots', destination: '/portfolios', permanent: false },
-      { source: '/pots/:path*', destination: '/portfolios', permanent: false },
-      { source: '/my-pots', destination: '/portfolios', permanent: false },
-      { source: '/vaults', destination: '/portfolios', permanent: false },
-      { source: '/vaults/:path*', destination: '/portfolios', permanent: false },
-      { source: '/create', destination: '/portfolios/new', permanent: false },
-      { source: '/leaderboard', destination: '/portfolios', permanent: false },
-      { source: '/for-agents', destination: '/integrate', permanent: false },
-      { source: '/beta', destination: '/signup', permanent: false },
-      { source: '/pricing', destination: '/learn', permanent: false },
+      { source: '/pots', destination: '/portfolios', permanent: true },
+      { source: '/pots/:path*', destination: '/portfolios', permanent: true },
+      { source: '/my-pots', destination: '/portfolios', permanent: true },
+      { source: '/vaults', destination: '/portfolios', permanent: true },
+      { source: '/vaults/:path*', destination: '/portfolios', permanent: true },
+      { source: '/create', destination: '/portfolios/new', permanent: true },
+      { source: '/leaderboard', destination: '/portfolios', permanent: true },
+      { source: '/for-agents', destination: '/integrate', permanent: true },
+      { source: '/beta', destination: '/signup', permanent: true },
+      { source: '/pricing', destination: '/learn', permanent: true },
     ]
   },
   transpilePackages: [

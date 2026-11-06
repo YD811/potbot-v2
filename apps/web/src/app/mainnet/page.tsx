@@ -48,7 +48,7 @@ const FINDINGS: { id: string; severity: string; title: string; status: string }[
 ]
 
 const GUARANTEES: { title: string; body: string }[] = [
-  { title: 'No withdraw instruction', body: 'Assets sit in program-owned accounts with no private key. The program can mint, redeem and let keepers swap inside limits. It cannot send assets to anyone. Nobody can reach anyone else’s money.' },
+  { title: 'No withdraw instruction', body: 'Assets sit in program-owned accounts with no private key. The program can mint, redeem and let keepers swap inside limits. It cannot send assets to anyone. No one, not the creator, not PotBot, can take anyone else’s money.' },
   { title: 'Exit always works', body: 'Redeeming the token for the assets needs no oracle, no keeper and no permission. It cannot be paused.' },
   { title: 'Keepers are boxed in', body: 'Toward the target weights only, at most 25% of the basket per trade, price inside the Pyth band. Under-delivery reverts the whole transaction.' },
   { title: 'Upgrades need two people', body: 'Before the first mainnet deposit the upgrade authority, the protocol admin and asset registration move to a Squads multisig, 2 of 3, with a timelock.' },
