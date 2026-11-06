@@ -66,7 +66,7 @@ function Sparkline({ seed, className = '' }: { seed: string; className?: string 
     for (let i = 0; i < n; i++) {
       h = (h * 1103515245 + 12345) >>> 0
       const noise = ((h % 100) / 100 - 0.45) * 18
-      v = Math.max(6, Math.min(54, v + noise + 1.6)) // gentle upward drift
+      v = Math.max(6, Math.min(54, v + noise + 1.6)) // gentle upward trend
       vals.push(v)
     }
     const w = 120

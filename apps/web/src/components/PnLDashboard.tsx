@@ -16,7 +16,7 @@ interface Props {
 const DEFI_ICONS: Record<string, string> = {
   none: '—',
   kamino: '🏦',
-  drift: '📈',
+  jupiter: '📈',
   marginfi: '💰',
 }
 

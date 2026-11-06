@@ -37,8 +37,8 @@ export interface PositionStrategy {
   takeProfitPct: number
   /** Max % of vault that can be in this position */
   maxAllocationPct: number
-  /** DeFi routing when idle — none/kamino/drift/marginfi */
-  defiRoute: 'none' | 'kamino' | 'drift' | 'marginfi'
+  /** DeFi routing when idle — none/kamino/jupiter/marginfi */
+  defiRoute: 'none' | 'kamino' | 'jupiter' | 'marginfi'
   /** % of position to route to DeFi yield */
   defiAllocationPct: number
 }
