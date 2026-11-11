@@ -73,6 +73,12 @@ export function Navbar() {
   // medium-width desktops.
   const showWaitlistCta = !pathname.startsWith('/signup') && !publicKey
 
+  // Only pages where a wallet is actually used get the login button. On
+  // content pages (home, learn, faq, roadmap, careers...) the first click
+  // should explore the product, not ask for an account.
+  const WALLET_ROUTES = ['/portfolios', '/dashboard', '/pots', '/my-pots', '/create']
+  const needsWallet = !!publicKey || WALLET_ROUTES.some((r) => pathname.startsWith(r))
+
   return (
     <nav className="sticky top-0 z-50 border-b border-pot-border bg-pot-dark/80 backdrop-blur-xl">
       <LivePriceTicker />
@@ -103,7 +109,13 @@ export function Navbar() {
 
           {/* Wallet button — switches between Privy (light/Normie) and
               wallet-adapter (dark/Crypto) via ConnectButton. */}
-          <ConnectButton />
+          {needsWallet ? (
+            <ConnectButton />
+          ) : (
+            <Link href="/portfolios" className="btn-primary inline-flex items-center px-4 py-1.5 text-sm whitespace-nowrap">
+              Explore
+            </Link>
+          )}
           <button onClick={() => setMenuOpen((v) => !v)}
             className="sm:hidden ml-1 p-2 rounded-lg text-pot-muted hover:text-white hover:bg-pot-card transition" aria-label="Toggle menu">
             {menuOpen ? (
