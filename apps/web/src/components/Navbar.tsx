@@ -54,7 +54,6 @@ const NAV_LINKS: { href: string; emoji: string; term: string; hot?: boolean }[] 
   { href: '/portfolios/new', emoji: '', term: 'Create' },
   { href: '/learn',       emoji: '',     term: 'Learn' },
   { href: '/roadmap',     emoji: '',     term: 'Roadmap' },
-  { href: '/worldsfair',  emoji: '',     term: "World's Fair" },
 ]
 
 export function Navbar() {

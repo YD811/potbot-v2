@@ -25,12 +25,21 @@ export const RESERVED_SLUGS = new Set([
   'gold', 'coinbase', 'tether', 'paxos', 'jupiter', 'solana', 'leaderboard', 'points', 'classic',
 ])
 
+/** The PotBot BAG: equal weights, pinned first, stored as a normal recipe row. */
+export const OFFICIAL_SLUG = 'potbot'
+/** Not a wallet on purpose: the official BAG has no creator who earns from joins. */
+export const OFFICIAL_CREATOR = 'potbot'
+
 export interface BagRecipe {
   slug: string
   name: string
   creator: string
   weights: BagWeights
   created_at: string
+}
+
+export function shortWallet(w: string): string {
+  return `${w.slice(0, 4)}…${w.slice(-4)}`
 }
 
 export const CLASSIC_WEIGHTS: BagWeights = { btc: 34, ant: 33, gold: 33 }
@@ -143,11 +152,23 @@ export function joinMessage(p: { slug: string; wallet: string; ts: number }): st
   ].join('\n')
 }
 
+/** A slug users can create, or the official one. Use for lookups, not for creation. */
+export function isKnownSlug(slug: string): boolean {
+  return slug === OFFICIAL_SLUG || isValidSlug(slug)
+}
+
+export function isOfficial(r: { slug: string }): boolean {
+  return r.slug === OFFICIAL_SLUG
+}
+
+export function creatorLabel(r: { slug: string; creator: string }): string {
+  return isOfficial(r) ? 'PotBot' : shortWallet(r.creator)
+}
+
 export function isFreshTs(ts: unknown, now = Date.now()): ts is number {
   return typeof ts === 'number' && Number.isFinite(ts) && Math.abs(now - ts) <= SIGN_WINDOW_MS
 }
 
-export const shortWallet = (w: string) => `${w.slice(0, 4)}…${w.slice(-4)}`
 
 /** Post text for X. The link is passed separately. */
 export function shareText(name: string, weights: BagWeights): string {

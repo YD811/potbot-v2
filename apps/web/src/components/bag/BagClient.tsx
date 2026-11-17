@@ -16,6 +16,7 @@ import {
   type BagLegKey,
 } from '@/lib/bag/config'
 import { legsForWeights, type BagWeights } from '@/lib/bag/recipes'
+import { useBagRef } from './useBagRef'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -34,7 +35,6 @@ interface Holdings {
 
 type LegStatus = { state: 'idle' | 'quoting' | 'signing' | 'sending' | 'done' | 'error'; msg?: string; sig?: string }
 
-const REF_KEY = 'potbot.bag.ref'
 const RISK_KEY = 'potbot.bag.risk-ack.v1'
 
 function readStore(k: string): string | null {
@@ -63,13 +63,10 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   const [riskAck, setRiskAck] = useState(false)
   const [busy, setBusy] = useState(false)
   const [status, setStatus] = useState<Partial<Record<BagLegKey, LegStatus>>>({})
-  const [ref, setRef] = useState<string | null>(null)
+  const ref = useBagRef()
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    const fromUrl = new URLSearchParams(window.location.search).get('ref')
-    if (fromUrl && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(fromUrl)) writeStore(REF_KEY, fromUrl)
-    setRef(readStore(REF_KEY))
     setRiskAck(readStore(RISK_KEY) === '1')
   }, [])
 

@@ -3,7 +3,7 @@ import { VersionedTransaction } from '@solana/web3.js'
 import { USDC_MINT, getLeg, isLegLive } from '@/lib/bag/config'
 import { bagConnection, isGeoBlocked, jupExecute } from '@/lib/bag/server'
 import { isValidWallet } from '@/lib/bag/points'
-import { isValidSlug } from '@/lib/bag/recipes'
+import { isKnownSlug } from '@/lib/bag/recipes'
 import { createServerSupabase, isSupabaseConfigured } from '@/lib/supabase'
 
 export const runtime = 'nodejs'
@@ -101,7 +101,7 @@ async function recordBuy(
 
   // Attribute the buy to a community BAG only if that recipe exists.
   let recipe: { slug: string; creator: string } | null = null
-  if (bag && isValidSlug(bag)) {
+  if (bag && isKnownSlug(bag)) {
     const { data } = await db.from('bag_recipes').select('slug, creator').eq('slug', bag).maybeSingle()
     recipe = data ?? null
   }
@@ -123,7 +123,7 @@ async function recordBuy(
 
   // First referrer wins; never overwrite. An explicit ?ref= link beats the
   // creator of the BAG the buy was made on.
-  const referrer = isValidWallet(ref) && ref !== payer ? ref : recipe && recipe.creator !== payer ? recipe.creator : null
+  const referrer = isValidWallet(ref) && ref !== payer ? ref : recipe && isValidWallet(recipe.creator) && recipe.creator !== payer ? recipe.creator : null
   if (referrer) {
     await db.from('bag_referrals').upsert({ wallet: payer, referrer }, { onConflict: 'wallet', ignoreDuplicates: true })
   }

@@ -1,6 +1,10 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
+import Link from 'next/link'
 import { PageHeader } from '@/components/PageHeader'
+import { BagArt } from '@/components/bag/BagArt'
+import { WeightBar } from '@/components/bag/WeightBar'
+import { CLASSIC_WEIGHTS, OFFICIAL_SLUG } from '@/lib/bag/recipes'
 import { BagBuilder } from '@/components/bag/BagBuilder'
 import { BagClient } from '@/components/bag/BagClient'
 import { BagGallery } from '@/components/bag/BagGallery'
@@ -20,6 +24,8 @@ export const dynamic = 'force-dynamic'
 
 const FAQ: [string, string][] = [
   ['What is a BAG?', 'A mix of three assets with your own percentages: Bitcoin (cbBTC), Anthropic stock (tokenized ANT) and gold. You set the weights, name it and share the link.'],
+  ['What is the PotBot BAG?', 'The official BAG: Bitcoin, Anthropic and gold in equal parts. It is the default choice if you do not want to pick weights yourself.'],
+  ['How do invites work?', 'Connect a wallet on any BAG page and copy your invite link. A wallet that joins through it is linked to you for good. Points come from what those wallets buy and hold once buying is open, so invites earn nothing until then.'],
   ['What happens when I save a BAG?', 'Your wallet signs a message that proves the BAG is yours. It is not a transaction and no funds move. The BAG gets its own page and a place in the community list.'],
   ['What does joining a BAG do?', 'It links your wallet to that BAG and its creator. It costs nothing and moves no funds. A wallet can be in one BAG at a time.'],
   ['Can I buy a BAG today?', BAG_BUY_ENABLED
@@ -48,7 +54,22 @@ export default async function BagPage() {
         <div className="card p-6 text-pot-muted">BAG is not available in your region.</div>
       ) : (
         <div className="space-y-10">
-          <BagBuilder />
+          <section className="card flex flex-col items-center gap-6 border-pot-accent/60 p-5 sm:flex-row sm:p-6">
+            <BagArt className="h-36 w-auto shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">The official BAG</p>
+              <h2 className="mt-1 font-display text-2xl font-semibold text-white">PotBot BAG</h2>
+              <p className="mt-2 text-sm text-pot-muted">
+                Bitcoin, Anthropic and gold in equal parts. Join it and invite people with your own link, or build a BAG with your own mix below.
+              </p>
+              <WeightBar weights={CLASSIC_WEIGHTS} legend className="mt-4" />
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Link href={`/bag/${OFFICIAL_SLUG}`} className="btn-primary">Join the PotBot BAG</Link>
+                <a href="#build" className="btn-secondary">Build your own</a>
+              </div>
+            </div>
+          </section>
+          <div id="build" className="scroll-mt-24"><BagBuilder /></div>
           <BagGallery />
           {BAG_BUY_ENABLED ? (
             <BagClient title="Buy the classic BAG" />
@@ -66,9 +87,9 @@ export default async function BagPage() {
 
       <section className="mt-12 grid gap-4 sm:grid-cols-3">
         {[
-          ['1. Set your mix', 'Move the sliders. The three assets always add up to 100%.'],
-          ['2. Name and share', 'Sign a free message, get your own link and a card for X.'],
-          ['3. Grow your BAG', 'Wallets that join are linked to you. Their buys count for you when buying opens.'],
+          ['1. Join or build', 'Join the PotBot BAG, or move the sliders and build a BAG with your own mix.'],
+          ['2. Invite', 'Every BAG page gives you an invite link. Wallets that join through it are linked to you.'],
+          ['3. Earn points', 'When buying opens, you earn +10% of the BAG Points of the wallets you brought.'],
         ].map(([t, d]) => (
           <div key={t} className="card p-5">
             <p className="font-semibold text-white">{t}</p>
@@ -80,11 +101,11 @@ export default async function BagPage() {
       <section className="mt-12">
         <h2 className="text-2xl font-semibold text-white">BAG Points · Season 0 “Genesis”</h2>
         <ul className="mt-4 space-y-2 text-sm text-pot-muted">
-          <li><span className="text-white">Create:</span> wallets that join your BAG are linked to you. You earn +10% of the points they earn. They lose nothing.</li>
+          <li><span className="text-white">Invite:</span> share your link to the PotBot BAG or to any other BAG. Wallets that join through it are linked to you, and you earn +10% of the points they earn. They lose nothing.</li>
+          <li><span className="text-white">Create:</span> wallets that join your own BAG without an invite link are linked to you the same way.</li>
           <li><span className="text-white">Buy:</span> 10 points per $1 bought through potbot.fun/bag, ×2 during Genesis. Confirmed after 7 days if you still hold at least half of what you bought.</li>
           <li><span className="text-white">Hold:</span> 1 point per $1 held per day, up to what you bought through PotBot. ×1.25 for a Full BAG (each leg within ±10% of target).</li>
-          <li><span className="text-white">Refer:</span> your own link works the same way as a BAG: +10% of the points earned by wallets you bring.</li>
-          <li><span className="text-white">Early holders</span> are first in line for the PotBot Tamagotchi NFT.</li>
+                    <li><span className="text-white">Early holders</span> are first in line for the PotBot Tamagotchi NFT.</li>
         </ul>
         <p className="mt-3 text-xs text-pot-muted">Buy and hold points start when buying opens. Points have no monetary value, are not a token, and carry no promise of any future token, airdrop or payout. Rules may change during the beta; wash trading and multi-wallet farming are excluded.</p>
       </section>

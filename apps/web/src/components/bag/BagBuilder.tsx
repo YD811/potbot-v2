@@ -23,6 +23,7 @@ import {
   type BagWeights,
 } from '@/lib/bag/recipes'
 import { WeightBar } from './WeightBar'
+import { useBagRef } from './useBagRef'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -35,6 +36,7 @@ export function BagBuilder() {
   const { publicKey, signMessage, connected } = useWallet()
   const wallet = publicKey?.toBase58() ?? null
   const qc = useQueryClient()
+  useBagRef() // remember a ?ref= invite even if the visitor builds instead of joining
 
   const [weights, setWeights] = useState<BagWeights>(CLASSIC_WEIGHTS)
   const [name, setName] = useState('')

@@ -1,6 +1,6 @@
 import 'server-only'
 import { createServerSupabase, isSupabaseConfigured } from '@/lib/supabase'
-import { validateWeights, type BagRecipe } from './recipes'
+import { isOfficial, validateWeights, type BagRecipe } from './recipes'
 
 export interface RecipeStats extends BagRecipe {
   joins: number
@@ -31,7 +31,7 @@ export async function getRecipe(slug: string): Promise<RecipeStats | null> {
   return { ...recipe, joins: joins.count ?? 0, volumeUsd: Math.round(volumeUsd * 100) / 100 }
 }
 
-/** All recipes ranked by volume, then joins, then age (oldest first). */
+/** The official BAG first, then all recipes ranked by volume, then joins, then age (oldest first). */
 export async function listRecipes(limit = 50): Promise<RecipeStats[]> {
   if (!bagDbReady()) return []
   const db = createServerSupabase()
@@ -49,6 +49,6 @@ export async function listRecipes(limit = 50): Promise<RecipeStats[]> {
     .map(toRecipe)
     .filter((r): r is BagRecipe => r !== null)
     .map(r => ({ ...r, joins: joinCount.get(r.slug) ?? 0, volumeUsd: Math.round((volume.get(r.slug) ?? 0) * 100) / 100 }))
-    .sort((a, b) => b.volumeUsd - a.volumeUsd || b.joins - a.joins || a.created_at.localeCompare(b.created_at))
+    .sort((a, b) => Number(isOfficial(b)) - Number(isOfficial(a)) || b.volumeUsd - a.volumeUsd || b.joins - a.joins || a.created_at.localeCompare(b.created_at))
     .slice(0, limit)
 }

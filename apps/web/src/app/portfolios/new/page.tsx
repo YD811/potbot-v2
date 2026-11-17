@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PublicKey } from '@solana/web3.js'
@@ -150,6 +151,14 @@ export default function NewPotPage() {
       <PageHeader eyebrow="Create" title="Build a POTFolio" lede="Pick the assets, set the weights, publish one token. Start from a template or from scratch." />
 
       <section className="mb-8">
+        <Link href="/bag" className="card mb-5 flex items-center justify-between gap-4 border-pot-accent/60 p-4 transition hover:border-pot-accent">
+          <span>
+            <span className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">New · BAG</span>
+            <span className="mt-1 block font-semibold text-white">Build your BAG: Bitcoin · Anthropic · Gold</span>
+            <span className="block text-sm text-pot-muted">Three sliders, your own link, no deposit needed.</span>
+          </span>
+          <span className="shrink-0 font-semibold text-white">Build →</span>
+        </Link>
         <p className="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-pot-muted">Start from a template</p>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {TEMPLATES.map((t) => (

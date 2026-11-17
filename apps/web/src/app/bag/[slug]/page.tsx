@@ -6,8 +6,9 @@ import { PageHeader } from '@/components/PageHeader'
 import { BagClient } from '@/components/bag/BagClient'
 import { BagJoin } from '@/components/bag/BagJoin'
 import { WeightBar } from '@/components/bag/WeightBar'
+import { BagArt } from '@/components/bag/BagArt'
 import { BAG_BUY_ENABLED, BAG_LEGS, legLabel, blockedCountries } from '@/lib/bag/config'
-import { encodeWeights, isValidSlug, shareText, shortWallet } from '@/lib/bag/recipes'
+import { creatorLabel, encodeWeights, isKnownSlug, isOfficial, shareText } from '@/lib/bag/recipes'
 import { getRecipe } from '@/lib/bag/recipes-server'
 
 export const dynamic = 'force-dynamic'
@@ -16,12 +17,12 @@ type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const recipe = isValidSlug(slug) ? await getRecipe(slug) : null
+  const recipe = isKnownSlug(slug) ? await getRecipe(slug) : null
   if (!recipe) return { title: 'BAG not found | PotBot' }
   const mix = BAG_LEGS.filter(l => recipe.weights[l.key] > 0).map(l => `${recipe.weights[l.key]}% ${legLabel(l)}`).join(' · ')
   return {
     title: `${recipe.name}: ${mix} | PotBot BAG`,
-    description: `${recipe.name} is a community BAG on PotBot: ${mix}. Join it or build your own. Beta.`,
+    description: `${recipe.name} is ${isOfficial(recipe) ? 'the official BAG' : 'a community BAG'} on PotBot: ${mix}. Join it or build your own. Beta.`,
     openGraph: { title: `${recipe.name} · a PotBot BAG`, description: mix },
     twitter: { card: 'summary_large_image', title: `${recipe.name} · a PotBot BAG`, description: mix },
   }
@@ -29,20 +30,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BagRecipePage({ params }: Props) {
   const { slug } = await params
-  const recipe = isValidSlug(slug) ? await getRecipe(slug) : null
+  const recipe = isKnownSlug(slug) ? await getRecipe(slug) : null
   if (!recipe) notFound()
 
   const country = ((await headers()).get('x-vercel-ip-country') ?? '').toUpperCase()
   const blocked = country !== '' && blockedCountries().has(country)
+  const official = isOfficial(recipe)
   const link = `https://potbot.fun/bag/${recipe.slug}`
   const xUrl = `https://x.com/intent/post?text=${encodeURIComponent(shareText(recipe.name, recipe.weights))}&url=${encodeURIComponent(link)}`
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
       <PageHeader
-        eyebrow={`Community BAG · by ${shortWallet(recipe.creator)}`}
+        eyebrow={official ? 'The official BAG · by PotBot' : `Community BAG · by ${creatorLabel(recipe)}`}
         title={recipe.name}
-        lede="A mix of Bitcoin, Anthropic and gold built by a PotBot user. Not a fund, not a token and not advice."
+        lede={official
+          ? 'Bitcoin, Anthropic and gold in equal parts. The first BAG and the default one. Not a fund, not a token and not advice.'
+          : 'A mix of Bitcoin, Anthropic and gold built by a PotBot user. Not a fund, not a token and not advice.'}
+        action={official ? <BagArt className="h-28 w-auto" /> : undefined}
       />
 
       {blocked ? (
@@ -65,7 +70,7 @@ export default async function BagRecipePage({ params }: Props) {
             </div>
             <div className="mt-5 flex flex-wrap gap-3 text-sm">
               <a className="btn-secondary" href={xUrl} target="_blank" rel="noopener noreferrer">Share on X</a>
-              <Link className="btn-secondary" href={`/bag?w=${encodeWeights(recipe.weights)}`}>Remix this BAG</Link>
+              <Link className="btn-secondary" href={official ? '/bag' : `/bag?w=${encodeWeights(recipe.weights)}`}>{official ? 'Build your own BAG' : 'Remix this BAG'}</Link>
               <Link className="self-center text-pot-muted underline" href="/bag">All community BAGs</Link>
             </div>
           </div>
@@ -81,7 +86,7 @@ export default async function BagRecipePage({ params }: Props) {
 
           <p className="text-xs text-pot-muted">
             Beta. High risk. Each token is issued by a third party that can freeze or claw it back. Tokenized stocks are not available to US persons.
-            A community BAG is one person’s mix, not a recommendation. Only use money you can afford to lose.
+            A BAG is a mix of weights, not a recommendation. Only use money you can afford to lose.
           </p>
         </div>
       )}

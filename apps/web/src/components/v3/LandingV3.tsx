@@ -8,7 +8,7 @@ import { PotCardSkeletonGrid } from '@/components/pot-index/PotCardSkeleton'
 import { HowAPotWorks } from '@/components/pot-index/HowAPotWorks'
 import { GardenMode } from '@/components/pot-index/GardenMode'
 import { Reveal } from './Reveal'
-import { FlagshipCard } from './FlagshipCard'
+import { BagHeroCard } from './BagHeroCard'
 import { PotAnimation } from './PotAnimation'
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -63,24 +63,7 @@ export function LandingV3() {
           </div>
         </div>
         <div className="pt-10 lg:pt-0">
-          <FlagshipCard />
-        </div>
-      </section>
-
-      {/* Status and credibility strip */}
-      <section aria-label="Status" className="mb-16 rounded-2xl border border-pot-border bg-pot-card px-5 py-4">
-        <div className="flex flex-col gap-3 font-mono text-[11px] uppercase tracking-[0.12em] sm:flex-row sm:items-center sm:justify-between">
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-white">
-            <span className="inline-flex items-center gap-2"><span className="v3-live-dot h-2 w-2 rounded-full bg-pot-green" />Devnet live</span>
-            <span className="text-pot-muted">·</span><span>External audit next</span>
-            <span className="text-pot-muted">·</span><span>Mainnet after audit</span>
-          </p>
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-pot-muted">
-            <span>Third Colosseum build</span><span>·</span>
-            <span>Netherlands local track winner</span><span>·</span>
-            <span>Superteam NL grant</span><span>·</span>
-            <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:text-white hover:underline">Built in public</a>
-          </p>
+          <BagHeroCard />
         </div>
       </section>
 

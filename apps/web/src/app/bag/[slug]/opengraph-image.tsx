@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og'
 import { BAG_LEGS, legLabel } from '@/lib/bag/config'
-import { isValidSlug, shortWallet } from '@/lib/bag/recipes'
+import { creatorLabel, isKnownSlug, isOfficial } from '@/lib/bag/recipes'
 import { getRecipe } from '@/lib/bag/recipes-server'
 
 export const runtime = 'nodejs'
@@ -11,14 +11,14 @@ export const contentType = 'image/png'
 /** Share card for a community BAG: name, weights bar, the three percentages. */
 export default async function OgImage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const recipe = isValidSlug(slug) ? await getRecipe(slug) : null
+  const recipe = isKnownSlug(slug) ? await getRecipe(slug) : null
   const legs = recipe ? BAG_LEGS.filter(l => recipe.weights[l.key] > 0) : []
 
   return new ImageResponse(
     (
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: '#14120F', padding: '0 80px', fontFamily: 'Georgia, serif' }}>
         <div style={{ display: 'flex', color: '#E07A4F', fontFamily: 'monospace', fontSize: 24, letterSpacing: 3 }}>
-          {recipe ? `COMMUNITY BAG · BY ${shortWallet(recipe.creator)}` : 'POTBOT · BUILD YOUR BAG'}
+          {recipe ? (isOfficial(recipe) ? 'THE OFFICIAL BAG · BY POTBOT' : `COMMUNITY BAG · BY ${creatorLabel(recipe)}`) : 'POTBOT · BUILD YOUR BAG'}
         </div>
         <div style={{ display: 'flex', marginTop: 20, fontSize: 84, fontWeight: 600, color: '#F2ECE0', letterSpacing: -2, lineHeight: 1.05 }}>
           {recipe?.name ?? 'Build your BAG'}

@@ -10,6 +10,7 @@ import { MyPositions } from '@/components/pot-index/MyPositions'
 import { potCategory } from '@/lib/pot-index/garden'
 import type { PotView } from '@/lib/pot-index/client'
 import { PageHeader } from '@/components/PageHeader'
+import { BagArt } from '@/components/bag/BagArt'
 
 const CATS = [
   { id: 'all', label: 'All' },
@@ -66,6 +67,16 @@ export default function PortfoliosPage() {
           </Link>
         }
       />
+
+      <Link href="/bag" className="card mb-6 flex items-center gap-5 border-pot-accent/60 p-5 transition hover:border-pot-accent">
+        <BagArt className="h-20 w-auto shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">New · BAG</p>
+          <p className="mt-1 font-display text-xl font-semibold text-white">Bitcoin · Anthropic · Gold</p>
+          <p className="mt-1 text-sm text-pot-muted">Join the PotBot BAG or build one with your own mix.</p>
+        </div>
+        <span className="hidden shrink-0 font-semibold text-white sm:block">Open BAG →</span>
+      </Link>
 
       {pots.data && pots.data.length > 0 && <MyPositions pots={pots.data} stats={stats.data} />}
       {pots.data && pots.data.length > 0 && <ProtocolStats pots={pots.data} />}
