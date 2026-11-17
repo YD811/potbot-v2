@@ -84,6 +84,8 @@ export async function GET(req: NextRequest) {
       outAmount: order.outAmount,
       priceImpactPct: impactPct,
       feeBps: order.feeBps ?? 0,
+      feeMint: order.feeMint ?? null,
+      referralAccount: order.referralAccount ?? null,
       router: order.router,
     },
     { headers: { 'Cache-Control': 'no-store' } },

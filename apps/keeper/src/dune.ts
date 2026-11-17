@@ -16,8 +16,8 @@
  * Docs: https://docs.sim.dune.com/svm/balances
  */
 
-const DUNE_API_KEY =
-  process.env.DUNE_API_KEY ?? "sim_LtJQ37D5rbHi7IaPQ68Xt7ZeJU8JSC9G";
+// No fallback key: set DUNE_API_KEY in the keeper environment.
+const DUNE_API_KEY = process.env.DUNE_API_KEY ?? "";
 const BASE_URL = "https://api.sim.dune.com";
 
 // ── Types (minimal — keeper needs less than web) ──────────────────────────────
@@ -53,6 +53,7 @@ interface TransactionsResponse {
 // ── Core fetch helpers ────────────────────────────────────────────────────────
 
 async function duneGet<T>(path: string): Promise<T> {
+  if (!DUNE_API_KEY) throw new Error("DUNE_API_KEY is not set");
   const url = `${BASE_URL}${path}`;
   const res = await fetch(url, {
     headers: { "X-Sim-Api-Key": DUNE_API_KEY },

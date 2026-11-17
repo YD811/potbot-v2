@@ -277,7 +277,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
             <h3 className="font-semibold text-white">Your BAG</h3>
             <p className="mt-2 text-3xl font-semibold text-white">{fmtUsd(holdings.totalUsd)}</p>
             <p className={`mt-1 text-sm ${holdings.fullBag ? 'text-pot-green' : 'text-pot-muted'}`}>
-              {holdings.fullBag ? 'Full BAG: ×1.25 hold points' : 'Balance your legs within ±10% of target for ×1.25 hold points'}
+              {holdings.fullBag ? 'Full BAG: ×1.25 hold points' : 'Balance your legs within 10 percentage points of target for ×1.25 hold points'}
             </p>
           </div>
           <div className="card p-5">

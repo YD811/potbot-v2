@@ -104,8 +104,7 @@ export default async function BagPage() {
           <li><span className="text-white">Invite:</span> share your link to the PotBot BAG or to any other BAG. Wallets that join through it are linked to you, and you earn +10% of the points they earn. They lose nothing.</li>
           <li><span className="text-white">Create:</span> wallets that join your own BAG without an invite link are linked to you the same way.</li>
           <li><span className="text-white">Buy:</span> 10 points per $1 bought through potbot.fun/bag, ×2 during Genesis. Confirmed after 7 days if you still hold at least half of what you bought.</li>
-          <li><span className="text-white">Hold:</span> 1 point per $1 held per day, up to what you bought through PotBot. ×1.25 for a Full BAG (each leg within ±10% of target).</li>
-                    <li><span className="text-white">Early holders</span> are first in line for the PotBot Tamagotchi NFT.</li>
+          <li><span className="text-white">Hold:</span> 1 point per $1 held per day, up to what you bought through PotBot. ×1.25 for a Full BAG (each leg within 10 percentage points of target).</li>
         </ul>
         <p className="mt-3 text-xs text-pot-muted">Buy and hold points start when buying opens. Points have no monetary value, are not a token, and carry no promise of any future token, airdrop or payout. Rules may change during the beta; wash trading and multi-wallet farming are excluded.</p>
       </section>

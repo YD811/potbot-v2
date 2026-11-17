@@ -52,8 +52,10 @@ Edit `.env.local`:
 # Solana RPC (defaults to mainnet-beta public; use devnet for testing)
 NEXT_PUBLIC_RPC_URL=https://api.devnet.solana.com
 
-# Program IDs (update after anchor deploy)
-NEXT_PUBLIC_POT_PROGRAM_ID=Hyi1PNxPMUqwdDukhB2a4fvcBxQHmbXy3CZ95mgyFHA3
+# Program IDs (devnet)
+# pot_vault: GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK
+# pot_index: 7bULMGNu443EVE48Cmfp42rvAaW2CJbKLv8fsPZBSRsV (id comes from the registry JSON, no env var needed)
+NEXT_PUBLIC_POT_PROGRAM_ID=GJap9DjUoKZ9dhXMqGCPTeTzY6kPyBJ51SXL1pi8AmiK
 ```
 
 ---

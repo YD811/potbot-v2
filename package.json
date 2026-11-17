@@ -2,6 +2,7 @@
   "name": "potbot-v2",
   "version": "0.1.0",
   "description": "Any basket of tokenized assets as one token on Solana",
+  "engines": { "node": ">=24" },
   "private": true,
   "packageManager": "npm@10.8.2",
   "workspaces": [
