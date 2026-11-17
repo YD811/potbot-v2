@@ -49,11 +49,12 @@ function LivePriceTicker() {
 // Home ⇄ Vaults is handled by the pill toggle below. Leaderboard now lives
 // as a tab inside /pots. FAQ lives in the footer only.
 const NAV_LINKS: { href: string; emoji: string; term: string; hot?: boolean }[] = [
+  { href: '/bag',         emoji: '',     term: 'BAG', hot: true },
   { href: '/portfolios',  emoji: '',     term: 'POTFolios' },
   { href: '/portfolios/new', emoji: '', term: 'Create' },
   { href: '/learn',       emoji: '',     term: 'Learn' },
   { href: '/roadmap',     emoji: '',     term: 'Roadmap' },
-  { href: '/worldsfair',  emoji: '',     term: "World's Fair", hot: true },
+  { href: '/worldsfair',  emoji: '',     term: "World's Fair" },
 ]
 
 export function Navbar() {

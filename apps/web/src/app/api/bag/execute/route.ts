@@ -1,0 +1,118 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { VersionedTransaction } from '@solana/web3.js'
+import { USDC_MINT, getLeg, isLegLive } from '@/lib/bag/config'
+import { bagConnection, isGeoBlocked, jupExecute } from '@/lib/bag/server'
+import { isValidWallet } from '@/lib/bag/points'
+import { createServerSupabase, isSupabaseConfigured } from '@/lib/supabase'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+/**
+ * POST /api/bag/execute  { signedTransaction, requestId, leg, ref? }
+ *
+ * Forwards a user-signed leg to Jupiter /execute, then — independently of
+ * what the client claims — reads the landed transaction from mainnet and
+ * records the buy for BAG Points only if the signer really spent USDC and
+ * received the leg's allowlisted mint.
+ */
+export async function POST(req: NextRequest) {
+  if (isGeoBlocked(req)) {
+    return NextResponse.json({ error: 'BAG is not available in your region.' }, { status: 451 })
+  }
+
+  let body: { signedTransaction?: string; requestId?: string; leg?: string; ref?: string }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const leg = getLeg(body.leg ?? '')
+  if (!leg || !isLegLive(leg)) return NextResponse.json({ error: 'Unknown leg' }, { status: 400 })
+  if (!body.signedTransaction || !body.requestId) {
+    return NextResponse.json({ error: 'Missing signedTransaction or requestId' }, { status: 400 })
+  }
+
+  let payer: string
+  try {
+    const tx = VersionedTransaction.deserialize(Buffer.from(body.signedTransaction, 'base64'))
+    payer = tx.message.staticAccountKeys[0].toBase58()
+  } catch {
+    return NextResponse.json({ error: 'Invalid transaction' }, { status: 400 })
+  }
+
+  const result = await jupExecute(body.signedTransaction, body.requestId)
+  if (result.status !== 'Success' || !result.signature) {
+    return NextResponse.json(
+      { status: 'Failed', signature: result.signature, error: result.error ?? 'Swap failed' },
+      { status: 502 },
+    )
+  }
+
+  let recorded = false
+  try {
+    recorded = await recordBuy(result.signature, payer, leg.key, leg.mint, body.ref)
+  } catch (err) {
+    console.error('[bag/execute] points record failed', err)
+  }
+
+  return NextResponse.json({ status: 'Success', signature: result.signature, recorded })
+}
+
+async function recordBuy(
+  signature: string,
+  payer: string,
+  legKey: string,
+  legMint: string,
+  ref: string | undefined,
+): Promise<boolean> {
+  if (!isSupabaseConfigured || !process.env.SUPABASE_SERVICE_ROLE_KEY) return false
+
+  const conn = bagConnection()
+  let tx = null
+  for (let i = 0; i < 6 && !tx; i++) {
+    tx = await conn.getTransaction(signature, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' })
+    if (!tx) await new Promise(r => setTimeout(r, 1500))
+  }
+  if (!tx || tx.meta?.err) return false
+
+  const signer = tx.transaction.message.staticAccountKeys[0]?.toBase58()
+  if (signer !== payer) return false
+
+  const meta = tx.meta
+  if (!meta) return false
+  type Bal = NonNullable<typeof meta.preTokenBalances>
+  const delta = (mint: string) => {
+    const sum = (rows: Bal | null | undefined) =>
+      (rows ?? [])
+        .filter(r => r.owner === payer && r.mint === mint)
+        .reduce((s, r) => s + BigInt(r.uiTokenAmount.amount), 0n)
+    return sum(meta.postTokenBalances) - sum(meta.preTokenBalances)
+  }
+
+  const usdcSpent = -delta(USDC_MINT)
+  const legReceived = delta(legMint)
+  if (usdcSpent <= 0n || legReceived <= 0n) return false
+
+  const db = createServerSupabase()
+  const { error } = await db.from('bag_buys').upsert(
+    {
+      signature,
+      wallet: payer,
+      leg: legKey,
+      output_mint: legMint,
+      usdc_in: Number(usdcSpent) / 1e6,
+      out_amount: legReceived.toString(),
+      created_at: new Date((tx.blockTime ?? Date.now() / 1000) * 1000).toISOString(),
+    },
+    { onConflict: 'signature', ignoreDuplicates: true },
+  )
+  if (error) throw error
+
+  if (isValidWallet(ref) && ref !== payer) {
+    // First referrer wins; never overwrite.
+    await db.from('bag_referrals').upsert({ wallet: payer, referrer: ref }, { onConflict: 'wallet', ignoreDuplicates: true })
+  }
+  return true
+}
