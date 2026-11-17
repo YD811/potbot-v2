@@ -48,6 +48,7 @@ export default async function BagPage() {
         eyebrow="Beta · Solana · Season 0"
         title={<>Build your <span className="text-pot-green">BAG</span></>}
         lede="Bitcoin · Anthropic · Gold. Set your own mix, name it, share the link."
+        action={<Link href="/bag/me" className="btn-secondary whitespace-nowrap">Your BAG & points</Link>}
       />
 
       {blocked ? (

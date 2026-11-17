@@ -57,10 +57,11 @@ export function BagJoin({ slug, creator, initialJoins }: { slug: string; creator
       <div className="flex flex-wrap items-center gap-3">
         {!connected ? (
           <WalletMultiButton />
-        ) : isCreator ? (
-          <span className="rounded-full border border-pot-green px-4 py-2 text-sm text-pot-green">This is your BAG</span>
-        ) : state === 'done' ? (
-          <span className="rounded-full border border-pot-green px-4 py-2 text-sm text-pot-green">You joined this BAG</span>
+        ) : isCreator || state === 'done' ? (
+          <>
+            <span className="rounded-full border border-pot-green px-4 py-2 text-sm text-pot-green">{isCreator ? 'This is your BAG' : 'You joined this BAG'}</span>
+            <a href="/bag/me" className="text-sm text-pot-accent underline">Your BAG & points</a>
+          </>
         ) : signMessage ? (
           <button type="button" onClick={join} disabled={state === 'busy'} className="btn-primary">
             {state === 'busy' ? 'Check your wallet…' : 'Join this BAG'}
