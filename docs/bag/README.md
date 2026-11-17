@@ -40,6 +40,11 @@
 
 Rules: at least 2 assets, whole percents, 3 BAGs per wallet, one joined BAG per wallet. Joining links the wallet to the BAG's creator in `bag_referrals` (first referrer wins), so buys after launch count for the creator through the existing +10% referral rule. When buying is on, a buy on `/bag/<slug>` is split by the recipe's weights and stored with `bag_slug`.
 
+## Checking a new mint (ANT on 19.11)
+`cd apps/web && npx tsx scripts/bag-check-mint.ts <mint> --expect-symbol ANT`
+
+Read-only. Reports token program, Token-2022 extensions, issuer powers, Jupiter verification and $100/$500 quotes, then GO / GO WITH RISK BADGES / NO. A transfer hook, default-frozen accounts or no route are NO. A pass is necessary, not sufficient: the mint must also be on the issuer's official list.
+
 ## Launch checklist
 1. Apply both Supabase migrations (`20261117120000_bag_points.sql`, then `20261117210000_bag_recipes.sql`).
 2. Create the Jupiter referral account and its USDC token account, then set the env vars.
