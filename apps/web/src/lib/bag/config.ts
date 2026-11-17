@@ -98,6 +98,11 @@ export const BAG_LEGS: BagLeg[] = [
   },
 ]
 
+/** Short asset label for the builder and share cards: Bitcoin, Anthropic, Gold. */
+export function legLabel(leg: BagLeg): string {
+  return leg.key === 'gold' ? 'Gold' : leg.name
+}
+
 export function getLeg(key: string): BagLeg | undefined {
   return BAG_LEGS.find(l => l.key === key)
 }
@@ -160,6 +165,12 @@ export function smartSplitUsdc(
   })
   return out
 }
+
+/**
+ * Buying is off until YD turns it on after the Anthropic listing and a
+ * mainnet smoke test. While off, /bag is the builder, gallery and joins only.
+ */
+export const BAG_BUY_ENABLED = process.env.NEXT_PUBLIC_BAG_BUY_ENABLED === '1'
 
 // ── Limits (beta) ────────────────────────────────────────────────────────────
 export const BAG_MIN_BUY_USDC = Number(process.env.NEXT_PUBLIC_BAG_MIN_BUY_USDC ?? '10')

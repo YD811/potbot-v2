@@ -3,13 +3,14 @@ import { VersionedTransaction } from '@solana/web3.js'
 import { USDC_MINT, getLeg, isLegLive } from '@/lib/bag/config'
 import { bagConnection, isGeoBlocked, jupExecute } from '@/lib/bag/server'
 import { isValidWallet } from '@/lib/bag/points'
+import { isValidSlug } from '@/lib/bag/recipes'
 import { createServerSupabase, isSupabaseConfigured } from '@/lib/supabase'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 /**
- * POST /api/bag/execute  { signedTransaction, requestId, leg, ref? }
+ * POST /api/bag/execute  { signedTransaction, requestId, leg, ref?, bag? }
  *
  * Forwards a user-signed leg to Jupiter /execute, then — independently of
  * what the client claims — reads the landed transaction from mainnet and
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'BAG is not available in your region.' }, { status: 451 })
   }
 
-  let body: { signedTransaction?: string; requestId?: string; leg?: string; ref?: string }
+  let body: { signedTransaction?: string; requestId?: string; leg?: string; ref?: string; bag?: string }
   try {
     body = await req.json()
   } catch {
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
 
   let recorded = false
   try {
-    recorded = await recordBuy(result.signature, payer, leg.key, leg.mint, body.ref)
+    recorded = await recordBuy(result.signature, payer, leg.key, leg.mint, body.ref, body.bag)
   } catch (err) {
     console.error('[bag/execute] points record failed', err)
   }
@@ -66,6 +67,7 @@ async function recordBuy(
   legKey: string,
   legMint: string,
   ref: string | undefined,
+  bag: string | undefined,
 ): Promise<boolean> {
   if (!isSupabaseConfigured || !process.env.SUPABASE_SERVICE_ROLE_KEY) return false
 
@@ -96,6 +98,14 @@ async function recordBuy(
   if (usdcSpent <= 0n || legReceived <= 0n) return false
 
   const db = createServerSupabase()
+
+  // Attribute the buy to a community BAG only if that recipe exists.
+  let recipe: { slug: string; creator: string } | null = null
+  if (bag && isValidSlug(bag)) {
+    const { data } = await db.from('bag_recipes').select('slug, creator').eq('slug', bag).maybeSingle()
+    recipe = data ?? null
+  }
+
   const { error } = await db.from('bag_buys').upsert(
     {
       signature,
@@ -104,15 +114,18 @@ async function recordBuy(
       output_mint: legMint,
       usdc_in: Number(usdcSpent) / 1e6,
       out_amount: legReceived.toString(),
+      bag_slug: recipe?.slug ?? null,
       created_at: new Date((tx.blockTime ?? Date.now() / 1000) * 1000).toISOString(),
     },
     { onConflict: 'signature', ignoreDuplicates: true },
   )
   if (error) throw error
 
-  if (isValidWallet(ref) && ref !== payer) {
-    // First referrer wins; never overwrite.
-    await db.from('bag_referrals').upsert({ wallet: payer, referrer: ref }, { onConflict: 'wallet', ignoreDuplicates: true })
+  // First referrer wins; never overwrite. An explicit ?ref= link beats the
+  // creator of the BAG the buy was made on.
+  const referrer = isValidWallet(ref) && ref !== payer ? ref : recipe && recipe.creator !== payer ? recipe.creator : null
+  if (referrer) {
+    await db.from('bag_referrals').upsert({ wallet: payer, referrer }, { onConflict: 'wallet', ignoreDuplicates: true })
   }
   return true
 }

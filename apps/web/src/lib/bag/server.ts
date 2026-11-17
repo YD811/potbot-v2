@@ -2,6 +2,7 @@ import 'server-only'
 import { Connection } from '@solana/web3.js'
 import type { NextRequest } from 'next/server'
 import { blockedCountries } from './config'
+import { bagFeeBps } from './fees'
 
 /**
  * Server-side helpers for BAG. Mainnet only, independent of the site's
@@ -68,9 +69,9 @@ export async function jupOrder(params: {
     slippageBps: String(params.slippageBps),
   })
   const referral = process.env.BAG_JUP_REFERRAL_ACCOUNT
-  const feeBps = Number(process.env.BAG_JUP_REFERRAL_FEE_BPS ?? '50')
-  // Jupiter accepts 50–255 bps for referral fees.
-  if (referral && feeBps >= 50 && feeBps <= 255) {
+  // Jupiter accepts 50–255 bps for referral fees; default is 100 (see fees.ts).
+  const feeBps = bagFeeBps()
+  if (referral) {
     q.set('referralAccount', referral)
     q.set('referralFee', String(feeBps))
   }

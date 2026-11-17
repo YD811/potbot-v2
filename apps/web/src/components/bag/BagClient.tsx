@@ -15,6 +15,7 @@ import {
   smartSplitUsdc,
   type BagLegKey,
 } from '@/lib/bag/config'
+import { legsForWeights, type BagWeights } from '@/lib/bag/recipes'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -45,7 +46,15 @@ function writeStore(k: string, v: string) {
 
 const fmtUsd = (v: number) => `$${v.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`
 
-export function BagClient() {
+interface BagClientProps {
+  /** Custom weights (a community BAG). Defaults to the classic equal-weight BAG. */
+  weights?: BagWeights
+  /** Recipe slug the buys are attributed to. */
+  bagSlug?: string
+  title?: string
+}
+
+export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClientProps = {}) {
   const { publicKey, signAllTransactions, signTransaction, connected } = useWallet()
   const wallet = publicKey?.toBase58() ?? null
   const qc = useQueryClient()
@@ -85,7 +94,8 @@ export function BagClient() {
   const amountOk = amountNum >= BAG_MIN_BUY_USDC && amountNum <= BAG_MAX_BUY_USDC
   const enoughUsdc = !holdings || holdings.usdc >= amountNum
   const enoughSol = !holdings || holdings.sol >= 0.01
-  const legs = liveLegs()
+  const allLegs = useMemo(() => (weights ? legsForWeights(weights) : BAG_LEGS), [weights])
+  const legs = useMemo(() => (weights ? allLegs.filter(isLegLive) : liveLegs()), [weights, allLegs])
 
   const plan = useMemo(() => {
     const raw = BigInt(Math.floor(amountNum * 10 ** USDC_DECIMALS))
@@ -132,6 +142,7 @@ export function BagClient() {
             requestId: o.requestId,
             leg: o.leg.key,
             ref: ref ?? undefined,
+            bag: bagSlug,
           }),
         })
         const j = await r.json()
@@ -149,9 +160,9 @@ export function BagClient() {
       setBusy(false)
       qc.invalidateQueries({ queryKey: ['bag-holdings', wallet] })
     }
-  }, [wallet, amountOk, riskAck, amountNum, legs, plan, signAllTransactions, signTransaction, ref, qc])
+  }, [wallet, amountOk, riskAck, amountNum, legs, plan, signAllTransactions, signTransaction, ref, bagSlug, qc])
 
-  const refLink = wallet ? `https://potbot.fun/bag?ref=${wallet}` : ''
+  const refLink = wallet ? `https://potbot.fun/bag${bagSlug ? `/${bagSlug}` : ''}?ref=${wallet}` : ''
 
   return (
     <div className="space-y-6">
@@ -167,7 +178,7 @@ export function BagClient() {
 
       {/* Legs */}
       <div className="grid gap-3 sm:grid-cols-3">
-        {BAG_LEGS.map(l => {
+        {allLegs.map(l => {
           const pos = holdings?.positions.find(p => p.leg === l.key)
           return (
             <div key={l.key} className="card p-4">
@@ -192,7 +203,7 @@ export function BagClient() {
       {/* Buy */}
       <div className="card p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-xl font-semibold text-white">Buy the BAG</h2>
+          <h2 className="text-xl font-semibold text-white">{title}</h2>
           <WalletMultiButton />
         </div>
         <label className="mt-4 block text-sm text-pot-muted" htmlFor="bag-amount">Amount (USDC)</label>
@@ -259,7 +270,7 @@ export function BagClient() {
         >
           {!connected ? 'Connect a wallet' : !enoughUsdc ? 'Not enough USDC' : !enoughSol ? 'Add ~0.01 SOL for fees' : busy ? 'Buying…' : `Buy ${fmtUsd(amountNum)} of BAG`}
         </button>
-        <p className="mt-2 text-center text-[11px] text-pot-muted">Swaps by Jupiter. A small integrator fee goes to PotBot.</p>
+        <p className="mt-2 text-center text-[11px] text-pot-muted">Swaps by Jupiter. A 1% PotBot fee is included in each swap and shown before you sign.</p>
       </div>
 
       {/* Your BAG + points */}
