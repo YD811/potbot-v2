@@ -77,7 +77,7 @@ export function ConnectButton() {
                 </div>
               </div>
               <Link
-                href="/bag/me"
+                href="/dashboard#bag"
                 role="menuitem"
                 onClick={() => setOpen(false)}
                 className="block px-3 py-2 text-sm rounded-lg hover:bg-pot-border/30 transition"

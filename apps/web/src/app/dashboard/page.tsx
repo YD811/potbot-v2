@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { useQuery } from '@tanstack/react-query'
 import { getAssociatedTokenAddressSync } from '@solana/spl-token'
 import { PageHeader } from '@/components/PageHeader'
+import { BagDashboard } from '@/components/bag/BagDashboard'
 import { ConnectButton } from '@/components/ConnectButton'
 import { usePotIndexProgram, usePots, useAllPotStats, useNavHistoryAll } from '@/hooks/usePotIndex'
 import { Sparkline } from '@/components/pot-index/NavChart'
@@ -67,17 +68,6 @@ export default function DashboardPage() {
     },
   })
 
-  // BAG is the live mainnet product: the three BAG assets this wallet holds.
-  const bag = useQuery<{ totalUsd: number; points: { total?: number } | null }>({
-    queryKey: ['bag-holdings', me],
-    enabled: !!me,
-    refetchInterval: 30_000,
-    queryFn: async () => {
-      const r = await fetch(`/api/bag/holdings?wallet=${me}`)
-      if (!r.ok) throw new Error('holdings')
-      return r.json()
-    },
-  })
 
   const rows = useMemo(
     () =>
@@ -149,20 +139,8 @@ export default function DashboardPage() {
 
       {pubkey && (
         <>
-          <section className="mb-6 rounded-3xl border border-pot-green/50 bg-pot-card p-6">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-pot-green">BAG · Solana mainnet</div>
-                <div className="mt-1.5 font-display text-4xl font-semibold tabular-nums tracking-[-0.02em] text-white">
-                  {bag.data ? usd(bag.data.totalUsd) : bag.isError ? 'Unavailable' : 'Loading'}
-                </div>
-                <p className="mt-1 text-sm text-pot-muted">BAG assets held in this wallet. They stay in your wallet, not with PotBot.</p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <Link href="/bag/me" className="btn-primary">Your BAG and points</Link>
-                <Link href="/bag" className="btn-secondary">Buy more</Link>
-              </div>
-            </div>
+          <section id="bag" className="mb-10 scroll-mt-24">
+            <BagDashboard />
           </section>
 
           <h2 className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">POTFolios · devnet preview, test funds only</h2>

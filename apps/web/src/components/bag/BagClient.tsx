@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useBagWallet } from '@/hooks/useBagWallet'
 import { ConnectButton } from '@/components/ConnectButton'
 import { VersionedTransaction } from '@solana/web3.js'
@@ -68,14 +68,6 @@ function withTimeout<T>(p: Promise<T>, ms: number, message: string): Promise<T> 
   })
 }
 
-const RISK_KEY = 'potbot.bag.risk-ack.v1'
-
-function readStore(k: string): string | null {
-  try { return window.localStorage.getItem(k) } catch { return null }
-}
-function writeStore(k: string, v: string) {
-  try { window.localStorage.setItem(k, v) } catch { /* private mode */ }
-}
 
 const fmtUsd = (v: number) => `$${v.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`
 
@@ -92,10 +84,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   const qc = useQueryClient()
 
   const [amount, setAmount] = useState('100')
-  const [riskAck, setRiskAck] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [ackNudge, setAckNudge] = useState(false)
-  const ackRef = useRef<HTMLLabelElement>(null)
   const [addrCopied, setAddrCopied] = useState(false)
   const [receipt, setReceipt] = useState<{ usd: number; legs: number; of: number } | null>(null)
   const [status, setStatus] = useState<Partial<Record<BagLegKey, LegStatus>>>({})
@@ -105,9 +94,6 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   const ref = useBagRef()
   const [copied, setCopied] = useState(false)
 
-  useEffect(() => {
-    setRiskAck(readStore(RISK_KEY) === '1')
-  }, [])
 
   const { data: holdings } = useQuery<Holdings>({
     queryKey: ['bag-holdings', wallet],
@@ -207,12 +193,6 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   /** Buy every live leg, one wallet prompt per leg. A failed leg does not stop the next one. */
   const buy = useCallback(async () => {
     if (!wallet || !amountOk || !signTransaction) return
-    if (!riskAck) {
-      setAckNudge(true)
-      ackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      ackRef.current?.querySelector('input')?.focus({ preventScroll: true })
-      return
-    }
     setBusy(true)
     setReceipt(null)
     const total = BigInt(Math.floor(amountNum * 10 ** USDC_DECIMALS))
@@ -235,7 +215,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
       qc.invalidateQueries({ queryKey: ['bag-me', wallet] })
       qc.invalidateQueries({ queryKey: ['bag-recipes'] })
     }
-  }, [wallet, amountOk, riskAck, signTransaction, amountNum, legs, plan, buyLeg, qc])
+  }, [wallet, amountOk, signTransaction, amountNum, legs, plan, buyLeg, qc])
 
   /** Retry only a leg that failed, with the amount it was planned at. */
   const retryLeg = useCallback(async (leg: BagLeg) => {
@@ -275,40 +255,6 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
 
   return (
     <div className="space-y-6">
-      {/* Risk banner — always visible */}
-      <div className="rounded-2xl border border-pot-accent/50 bg-pot-accent/10 p-4 text-sm">
-        <p className="font-semibold text-pot-accent">Beta. High risk. Not investment advice.</p>
-        <p className="mt-1 text-pot-muted">
-          BAG buys three third-party tokens into your own wallet through Jupiter. PotBot never holds your funds.
-          Each token is issued by a third party that can freeze or claw it back. Tokenized stocks are not available
-          to US persons. Prices can go to zero. Only use money you can afford to lose.
-        </p>
-      </div>
-
-      {/* Legs */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        {allLegs.map(l => {
-          const pos = holdings?.positions.find(p => p.leg === l.key)
-          return (
-            <div key={l.key} className="card p-4">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs uppercase tracking-widest" style={{ color: l.color }}>{legLabel(l)}</span>
-                <span className="font-mono text-xs text-pot-muted">{(l.weightBps / 100).toFixed(0)}%</span>
-              </div>
-              <p className="mt-2 text-lg font-semibold text-white">{l.symbol}</p>
-              <p className="text-xs text-pot-muted">{l.issuer}</p>
-              {!isLegLive(l) && <p className="mt-2 text-xs text-pot-amber">Not live yet. Opens after the listing.</p>}
-              {pos && <p className="mt-2 text-sm text-white">{pos.balance.toPrecision(4)} · {fmtUsd(pos.valueUsd)}</p>}
-              <div className="mt-3 flex flex-wrap gap-1">
-                {l.risks.map(r => (
-                  <span key={r} className="rounded-full border border-pot-border px-2 py-0.5 text-[10px] text-pot-muted">{r}</span>
-                ))}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
       {/* Buy */}
       <div className="card p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -440,7 +386,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
                 : 'The bought assets are in your wallet. Use Retry on the failed one above.'}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <a href="/bag/me" className="btn-primary px-4 py-2 text-sm">See your BAG and points</a>
+              <a href="/dashboard" className="btn-primary px-4 py-2 text-sm">See your BAG and points</a>
               <button type="button" onClick={() => setReceipt(null)} className="rounded-full border border-pot-border px-4 py-2 text-sm text-white">Close</button>
             </div>
           </div>
@@ -449,22 +395,6 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
           <p className="mt-2 text-xs text-pot-muted">New USDC goes to underweight legs first, so every buy rebalances your BAG. Nothing is sold.</p>
         )}
 
-        <label
-          ref={ackRef}
-          className={`mt-4 flex items-start gap-3 rounded-xl border p-3 text-sm transition ${ackNudge && !riskAck ? 'border-pot-accent bg-pot-accent/10 text-white' : 'border-transparent text-pot-muted'}`}
-        >
-          <input
-            type="checkbox"
-            checked={riskAck}
-            onChange={e => { setRiskAck(e.target.checked); setAckNudge(false); writeStore(RISK_KEY, e.target.checked ? '1' : '0') }}
-            className="mt-0.5 h-5 w-5 shrink-0"
-            style={{ accentColor: '#E07A4F' }}
-          />
-          <span>
-            {ackNudge && !riskAck && <span className="mb-1 block font-semibold text-pot-accent">Tick this box to buy.</span>}
-            I understand this is an unaudited beta, the tokens are third-party issued, I am not a US person, and I can lose everything.
-          </span>
-        </label>
 
         {notLive.length > 0 && legs.length > 0 && (
           <p className="mt-4 rounded-xl border border-pot-amber/50 bg-pot-amber/10 px-3 py-2 text-sm text-white">
@@ -480,7 +410,33 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
         >
           {!connected ? 'Connect to buy' : !enoughUsdc ? 'Not enough USDC' : !enoughSol ? 'Add ~0.01 SOL for fees' : busy ? 'Buying, one approval per asset…' : `Buy ${fmtUsd(amountNum)} of BAG`}
         </button>
-        <p className="mt-2 text-center text-[11px] text-pot-muted">Swaps by Jupiter, one wallet approval per asset. A 1% PotBot fee is included in each swap and shown before you sign.</p>
+        <p className="mt-2 text-center text-[11px] text-pot-muted">
+          Swaps by Jupiter, one approval per asset, 1% PotBot fee included. Unaudited beta. Tokens are issued by third parties who can freeze them. Not for US persons. <a href="#rules" className="underline">Rules and risks</a>
+        </p>
+      </div>
+
+      {/* What is inside */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        {allLegs.map(l => {
+          const pos = holdings?.positions.find(p => p.leg === l.key)
+          return (
+            <div key={l.key} className="card p-4">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs uppercase tracking-widest" style={{ color: l.color }}>{legLabel(l)}</span>
+                <span className="font-mono text-xs text-pot-muted">{(l.weightBps / 100).toFixed(0)}%</span>
+              </div>
+              <p className="mt-2 text-lg font-semibold text-white">{l.symbol}</p>
+              <p className="text-xs text-pot-muted">{l.issuer}</p>
+              {!isLegLive(l) && <p className="mt-2 text-xs text-pot-amber">Not live yet. Opens after the listing.</p>}
+              {pos && <p className="mt-2 text-sm text-white">{pos.balance.toPrecision(4)} · {fmtUsd(pos.valueUsd)}</p>}
+              <div className="mt-3 flex flex-wrap gap-1">
+                {l.risks.map(r => (
+                  <span key={r} className="rounded-full border border-pot-border px-2 py-0.5 text-[10px] text-pot-muted">{r}</span>
+                ))}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Your BAG + points */}

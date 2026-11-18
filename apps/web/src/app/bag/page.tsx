@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
-import Link from 'next/link'
 import { PageHeader } from '@/components/PageHeader'
 import { BagArt } from '@/components/bag/BagArt'
 import { WeightBar } from '@/components/bag/WeightBar'
@@ -30,6 +29,7 @@ const RULES: [string, string][] = [
   ['Limits (beta)', '$10 to $500 per buy. A swap with a price impact above 2% is stopped before you sign.'],
   ['Creators and inviters', 'The creator of the BAG you buy and the person who invited you earn BAG Points from your buys (+10% of yours). You lose nothing. There is no cash revenue share today.'],
   ['Rebalancing', 'New buys top up the assets you are underweight in first. Nothing is ever sold for you.'],
+  ['Risks', 'Unaudited beta, not investment advice. Each token is issued by a third party that can freeze or claw it back. Tokenized stocks are not available to US persons. Prices can go to zero. Only use money you can afford to lose.'],
   ['Selling', 'Sell any share of your BAG back to USDC here with one approval per asset, or move and sell the tokens anywhere else. They are yours.'],
 ]
 
@@ -46,7 +46,7 @@ const FAQ: [string, string][] = [
   ['Does PotBot hold my money?', 'No. Every buy is a Jupiter swap signed by you. The tokens land in your wallet and you can move or sell them anywhere. There is no PotBot vault or token in this beta.'],
   ['Who issues the tokens?', 'cbBTC by Coinbase, tokenized Anthropic stock by a licensed tokenization issuer, gold by Tether or Paxos. Each issuer can freeze or claw back its token. Read each issuer’s terms.'],
   ['What are BAG Points?', 'A loyalty score for buying through PotBot, holding and bringing people in. Points have no monetary value, are not a token and come with no promise of any airdrop or payout.'],
-  ['Who can use it?', 'Not US persons, and not residents of sanctioned countries. Tokenized stocks are not offered in the US.'],
+  ['Who can use it?', 'Not US persons, and not residents of sanctioned countries. Tokenized stocks are not offered in the US. By buying you confirm this and accept that this is an unaudited beta.'],
 ]
 
 export default async function BagPage() {
@@ -58,8 +58,7 @@ export default async function BagPage() {
       <PageHeader
         eyebrow="Live beta · Solana mainnet · Season 0"
         title={<>Build your <span className="text-pot-green">BAG</span></>}
-        lede="Bitcoin, Anthropic and gold in one buy. Take the PotBot mix or set your own, straight into your wallet."
-        action={<Link href="/bag/me" className="btn-secondary whitespace-nowrap">Your BAG & points</Link>}
+        lede="A BAG is a mix of Bitcoin, Anthropic and gold that you buy in one go with USDC. Each asset lands in your own wallet. Buy the PotBot BAG or build your own mix."
       />
 
       {blocked ? (
@@ -72,19 +71,17 @@ export default async function BagPage() {
               <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">The official BAG</p>
               <h2 className="mt-1 font-display text-2xl font-semibold text-white">PotBot BAG</h2>
               <p className="mt-2 text-sm text-pot-muted">
-                Three assets in equal parts. Buy it, hold it, invite people with your link.
+                Bitcoin, Anthropic and gold in equal parts. The simple choice if you do not want to pick weights yourself.
               </p>
               <WeightBar weights={CLASSIC_WEIGHTS} legend className="mt-4" />
               <div className="mt-4 flex flex-wrap gap-3">
-                <Link href={`/bag/${OFFICIAL_SLUG}`} className="btn-primary">Join the PotBot BAG</Link>
+                <a href={BAG_BUY_ENABLED ? '#buy' : `/bag/${OFFICIAL_SLUG}`} className="btn-primary">{BAG_BUY_ENABLED ? 'Buy the PotBot BAG' : 'Join the PotBot BAG'}</a>
                 <a href="#build" className="btn-secondary">Build your own</a>
               </div>
             </div>
           </section>
-          <div id="build" className="scroll-mt-24"><BagBuilder /></div>
-          <BagGallery />
           {BAG_BUY_ENABLED ? (
-            <BagClient title="Buy the classic BAG" />
+            <div id="buy" className="scroll-mt-24"><BagClient title="Buy the PotBot BAG" /></div>
           ) : (
             <div className="card p-5 text-sm text-pot-muted">
               <p className="font-semibold text-white">Buying opens after the Anthropic listing</p>
@@ -94,23 +91,13 @@ export default async function BagPage() {
               </p>
             </div>
           )}
+          <div id="build" className="scroll-mt-24"><BagBuilder /></div>
+          <BagGallery />
         </div>
       )}
 
-      <section className="mt-12 grid gap-4 sm:grid-cols-3">
-        {[
-          ['1. Pick a mix', 'Take the PotBot BAG or move three sliders and build your own.'],
-          ['2. Buy and invite', 'Pay USDC, approve one swap per asset. Share your invite link.'],
-          ['3. Earn points', 'You earn BAG Points for what you buy and hold, plus +10% of the points of the wallets you brought.'],
-        ].map(([t, d]) => (
-          <div key={t} className="card p-5">
-            <p className="font-semibold text-white">{t}</p>
-            <p className="mt-2 text-sm text-pot-muted">{d}</p>
-          </div>
-        ))}
-      </section>
 
-      <section className="mt-12" id="rules">
+      <section className="mt-12 scroll-mt-24" id="rules">
         <h2 className="font-display text-2xl font-semibold text-white">Rules and fees</h2>
         <p className="mt-2 max-w-[44em] text-sm text-pot-muted">Short version: building is free, buying costs 1%, your assets land in your own wallet and PotBot never holds them.</p>
         <div className="mt-5 overflow-hidden rounded-2xl border border-pot-border">

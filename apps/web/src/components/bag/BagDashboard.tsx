@@ -3,9 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useBagWallet } from '@/hooks/useBagWallet'
-import { ConnectButton } from '@/components/ConnectButton'
 import { useQuery } from '@tanstack/react-query'
-import { PageHeader } from '@/components/PageHeader'
 import { BAG_BUY_ENABLED } from '@/lib/bag/config'
 import { OFFICIAL_SLUG, shortWallet, type BagWeights } from '@/lib/bag/recipes'
 import { WeightBar } from './WeightBar'
@@ -60,15 +58,16 @@ export function BagDashboard() {
 
   return (
     <>
-      <PageHeader
-        eyebrow="BAG · Season 0"
-        title="Your BAG"
-        lede="Your invite link, the wallets you brought and your BAG Points."
-        action={<ConnectButton />}
-      />
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-pot-green">BAG · Solana mainnet · Season 0</div>
+          <h2 className="mt-1 font-display text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">Your BAG and points</h2>
+        </div>
+        <a href="/bag" className="btn-secondary">Buy more</a>
+      </div>
 
       {!wallet ? (
-        <div className="card p-6 text-pot-muted">Connect a wallet to see your BAG, your invites and your points.</div>
+        <div className="card p-6 text-pot-muted">Connect to see your BAG, your invites and your points.</div>
       ) : isLoading ? (
         <div className="card p-6 text-pot-muted">Loading…</div>
       ) : isError || !data ? (

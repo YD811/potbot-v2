@@ -57,7 +57,7 @@ export function BagJoin({ slug, creator, initialJoins }: { slug: string; creator
         ) : isCreator || state === 'done' ? (
           <>
             <span className="rounded-full border border-pot-green px-4 py-2 text-sm text-pot-green">{isCreator ? 'This is your BAG' : 'You joined this BAG'}</span>
-            <a href="/bag/me" className="text-sm text-pot-accent underline">Your BAG & points</a>
+            <a href="/dashboard#bag" className="text-sm text-pot-accent underline">Your BAG and points</a>
           </>
         ) : signMessage ? (
           <button type="button" onClick={join} disabled={state === 'busy'} className="btn-primary">
