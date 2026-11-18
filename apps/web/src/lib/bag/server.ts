@@ -78,7 +78,7 @@ export async function jupOrder(params: {
   const res = await fetch(`${JUP_SWAP_V2}/order?${q}`, { headers: jupHeaders(), cache: 'no-store' })
   const body = (await res.json().catch(() => ({}))) as JupOrder
   if (!res.ok) return { ...body, transaction: null, error: body.error ?? `Jupiter order failed (${res.status})` }
-  if (referral) warnIfFeeSkipped(body, params.outputMint)
+  if (referral) warnIfFeeSkipped(body, params.outputMint === USDC_MINT ? params.inputMint : params.outputMint)
   return body
 }
 
@@ -135,6 +135,18 @@ export async function usdPrices(mints: string[]): Promise<Record<string, number>
     if (typeof row?.usdPrice === 'number') out[mint] = row.usdPrice
   }
   return out
+}
+
+/** Raw (base-unit) balance of a mint across the wallet's token accounts. */
+export async function walletBalanceRaw(owner: string, mint: string): Promise<bigint> {
+  const { PublicKey } = await import('@solana/web3.js')
+  const res = await bagConnection().getParsedTokenAccountsByOwner(new PublicKey(owner), { mint: new PublicKey(mint) })
+  let total = 0n
+  for (const a of res.value) {
+    const amt = (a.account.data as any)?.parsed?.info?.tokenAmount?.amount
+    if (typeof amt === 'string') total += BigInt(amt)
+  }
+  return total
 }
 
 /** Sum of a wallet's balance for a mint across all its token accounts (both token programs). */

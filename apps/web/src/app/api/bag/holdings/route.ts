@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PublicKey } from '@solana/web3.js'
 import { BAG_LEGS, USDC_MINT, isLegLive } from '@/lib/bag/config'
-import { bagConnection, usdPrices, walletBalanceUi } from '@/lib/bag/server'
+import { bagConnection, usdPrices, walletBalanceRaw, walletBalanceUi } from '@/lib/bag/server'
 import { isFullBag, isValidWallet, ownPoints, withReferral, type BuyRow, type SnapshotRow } from '@/lib/bag/points'
 import { createServerSupabase, isSupabaseConfigured } from '@/lib/supabase'
 
@@ -16,14 +16,15 @@ export async function GET(req: NextRequest) {
   const legs = BAG_LEGS.filter(isLegLive)
   const [prices, balances, usdc, lamports] = await Promise.all([
     usdPrices(legs.map(l => l.mint)),
-    Promise.all(legs.map(l => walletBalanceUi(wallet, l.mint).catch(() => 0))),
+    Promise.all(legs.map(l => walletBalanceRaw(wallet, l.mint).catch(() => 0n))),
     walletBalanceUi(wallet, USDC_MINT).catch(() => 0),
     bagConnection().getBalance(new PublicKey(wallet)).catch(() => 0),
   ])
 
   const positions = legs.map((l, i) => {
     const price = prices[l.mint] ?? 0
-    return { leg: l.key, symbol: l.symbol, mint: l.mint, balance: balances[i], priceUsd: price, valueUsd: balances[i] * price }
+    const ui = Number(balances[i]) / 10 ** l.decimals
+    return { leg: l.key, symbol: l.symbol, mint: l.mint, balance: ui, raw: balances[i].toString(), priceUsd: price, valueUsd: ui * price }
   })
   const totalUsd = positions.reduce((s, p) => s + p.valueUsd, 0)
   const fullBag = isFullBag(positions.map(p => p.valueUsd), legs.map(l => l.weightBps))

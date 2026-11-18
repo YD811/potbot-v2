@@ -30,7 +30,7 @@ const WalletMultiButton = dynamic(
 )
 
 interface Holdings {
-  positions: { leg: BagLegKey; symbol: string; balance: number; priceUsd: number; valueUsd: number }[]
+  positions: { leg: BagLegKey; symbol: string; balance: number; raw: string; priceUsd: number; valueUsd: number }[]
   totalUsd: number
   fullBag: boolean
   usdc: number
@@ -99,6 +99,9 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   const [riskAck, setRiskAck] = useState(false)
   const [busy, setBusy] = useState(false)
   const [status, setStatus] = useState<Partial<Record<BagLegKey, LegStatus>>>({})
+  const [sellStatus, setSellStatus] = useState<Partial<Record<BagLegKey, LegStatus>>>({})
+  const [sellPct, setSellPct] = useState(100)
+  const [sellOpen, setSellOpen] = useState(false)
   const ref = useBagRef()
   const [copied, setCopied] = useState(false)
 
@@ -150,13 +153,15 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   }, [amountNum, holdings, legs])
 
   /** One leg, start to finish: quote → simulate (server) → sign → send. */
-  const buyLeg = useCallback(async (leg: BagLeg, amountRaw: bigint, total: bigint): Promise<boolean> => {
+  const buyLeg = useCallback(async (leg: BagLeg, amountRaw: bigint, total: bigint, side: 'buy' | 'sell' = 'buy'): Promise<boolean> => {
     if (!wallet || !signTransaction) return false
-    const set = (st: LegStatus) => setStatus(s => ({ ...s, [leg.key]: st }))
+    const setMap = side === 'sell' ? setSellStatus : setStatus
+    const set = (st: LegStatus) => setMap(s => ({ ...s, [leg.key]: st }))
     let step: BuyStep = 'quote'
     try {
       set({ state: 'quoting' })
       const q = new URLSearchParams({ leg: leg.key, amount: String(amountRaw), total: String(total), taker: wallet })
+      if (side === 'sell') q.set('side', 'sell')
       const r = await withTimeout(fetch(`/api/bag/order?${q}`), 30_000, 'Quote timed out. Try again.')
       const j = await r.json()
       if (!r.ok) {
@@ -228,6 +233,23 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
       qc.invalidateQueries({ queryKey: ['bag-recipes'] })
     }
   }, [status, busy, buyLeg, qc, wallet])
+
+  /** Sell a share of every held asset back to USDC, one approval per asset. */
+  const sell = useCallback(async () => {
+    if (!wallet || !signTransaction || !holdings || busy) return
+    setBusy(true)
+    const todo = allLegs
+      .map(l => ({ l, raw: (BigInt(holdings.positions.find(p => p.leg === l.key)?.raw ?? '0') * BigInt(sellPct)) / 100n }))
+      .filter(x => x.raw > 0n)
+    setSellStatus(Object.fromEntries(todo.map(x => [x.l.key, { state: 'waiting' } as LegStatus])))
+    try {
+      for (const x of todo) await buyLeg(x.l, x.raw, x.raw, 'sell')
+    } finally {
+      setBusy(false)
+      qc.invalidateQueries({ queryKey: ['bag-holdings', wallet] })
+      qc.invalidateQueries({ queryKey: ['bag-me', wallet] })
+    }
+  }, [wallet, signTransaction, holdings, busy, allLegs, sellPct, buyLeg, qc])
 
   const origin = useBagOrigin()
   const refLink = wallet ? `${origin}/bag${bagSlug ? `/${bagSlug}` : ''}?ref=${wallet}` : ''
@@ -397,6 +419,47 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
             <p className={`mt-1 text-sm ${holdings.fullBag ? 'text-pot-green' : 'text-pot-muted'}`}>
               {holdings.fullBag ? 'Full BAG: ×1.25 hold points' : 'Balance your legs within 10 percentage points of target for ×1.25 hold points'}
             </p>
+            {holdings.totalUsd > 0 && (
+              <div className="mt-4 border-t border-pot-border pt-4">
+                {!sellOpen ? (
+                  <button type="button" onClick={() => setSellOpen(true)} className="btn-secondary w-full py-2 text-sm">Sell to USDC</button>
+                ) : (
+                  <div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-sm text-white">Sell {sellPct}% of your BAG</span>
+                      <span className="font-mono text-sm text-pot-muted">about {fmtUsd((holdings.totalUsd * sellPct) / 100)}</span>
+                    </div>
+                    <input type="range" min={5} max={100} step={5} value={sellPct} onChange={e => setSellPct(Number(e.target.value))} className="mt-2 w-full cursor-pointer" style={{ accentColor: '#E07A4F' }} aria-label="Share of your BAG to sell" />
+                    <div className="mt-2 flex gap-2">
+                      {[25, 50, 100].map(v => (
+                        <button key={v} type="button" onClick={() => setSellPct(v)} className={`rounded-full border px-3 py-1 text-xs ${sellPct === v ? 'border-pot-accent text-white' : 'border-pot-border text-pot-muted hover:text-white'}`}>{v === 100 ? 'All' : `${v}%`}</button>
+                      ))}
+                    </div>
+                    <ul className="mt-3 space-y-1 text-xs">
+                      {allLegs.map(l => {
+                        const st = sellStatus[l.key]
+                        if (!st) return null
+                        return (
+                          <li key={l.key} className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-white">{legLabel(l)}</span>
+                            <span className="font-mono">
+                              {st.state === 'done' && <span className="text-pot-green">sold</span>}
+                              {STATE_LABEL[st.state] && <span className="text-pot-amber">{STATE_LABEL[st.state]}</span>}
+                              {st.state === 'error' && <span className="text-red-400">{st.step ? `${STEP_LABEL[st.step]} failed: ` : ''}{st.msg}</span>}
+                              {st.sig && <a className="ml-2 underline" href={`https://solscan.io/tx/${st.sig}`} target="_blank" rel="noopener noreferrer">view on Solscan</a>}
+                            </span>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                    <button type="button" onClick={sell} disabled={busy || !signTransaction} className="btn-primary mt-3 w-full py-2 text-sm">
+                      {busy ? 'Selling, one approval per asset…' : `Sell ${sellPct}% to USDC`}
+                    </button>
+                    <p className="mt-2 text-[11px] text-pot-muted">Each asset is swapped to USDC by Jupiter, with the same 1% PotBot fee. USDC lands in your wallet. Points for holding stop on what you sell.</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <div className="card p-5">
             <h3 className="font-semibold text-white">BAG Points · Genesis</h3>

@@ -4,7 +4,7 @@
 
 ### Any basket of Solana assets. One liquid token.
 
-Pick up to 5 assets and weights. Holders deposit USDC and get a token that mirrors the whole basket. They can hold it, send it, trade it, and redeem it any time for every asset inside or for USDC. Nobody can withdraw the assets, because the program has no instruction for that.
+Pick up to 5 assets and weights. Holders deposit USDC and get a token that mirrors the whole basket. They can hold it, send it, trade it, and redeem it any time for every asset inside or for USDC. No one, not the creator and not PotBot, can take the assets: the program has no instruction for it.
 
 [potbot.fun](https://potbot.fun) · [Live POTFolios](https://potbot.fun/portfolios) · [How it works](https://potbot.fun/learn) · [Roadmap](https://potbot.fun/roadmap) · [Docs](docs/potfolio)
 
@@ -14,6 +14,8 @@ Pick up to 5 assets and weights. Holders deposit USDC and get a token that mirro
 [![Pyth](https://img.shields.io/badge/Oracle-Pyth%20pull-7142CF?style=flat-square)](https://pyth.network)
 [![Tests](https://img.shields.io/badge/LiteSVM-12%2F12-14F195?style=flat-square)](packages/pot-index/tests)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+
+**Now in beta on mainnet: [BAG](https://potbot.fun/bag)**, Bitcoin · Anthropic · Gold bought in your own wallet through Jupiter. Details: [docs/bag](docs/bag/README.md). The POTFolio index-token program below runs on devnet and goes to mainnet after an external audit.
 
 **Colosseum Crypto World's Fair entry (Sept 14 to Oct 12, 2026).** What was built during the Fair, where it lives and how to verify it in two minutes: **[HACKATHON.md](HACKATHON.md)** · [judges page](https://potbot.fun/worldsfair)
 
@@ -33,6 +35,18 @@ Pick up to 5 assets and weights. Holders deposit USDC and get a token that mirro
 8. [Build, test, run](#build-test-run)
 9. [Documentation](#documentation)
 10. [History](#history)
+
+## Two products, two stages
+
+| | BAG | POTFolio |
+|---|---|---|
+| What | Set a mix of Bitcoin, Anthropic and gold, buy it with USDC. Assets land in your wallet | Any basket as one index token minted by the `pot_index` program |
+| Stage | Beta on Solana mainnet | Live demo on devnet, audit next |
+| Custody | None. Jupiter swaps signed by the user | Program-owned accounts, no withdraw instruction |
+| Revenue | 1% integrator fee per swap (Jupiter keeps 20% of it) | Deposit, exit and conversion fees |
+| Code | `apps/web/src/lib/bag`, `apps/web/src/app/bag` | `packages/pot-index` |
+
+Contact: hello@potbot.fun · security reports: security@potbot.fun ([SECURITY.md](SECURITY.md))
 
 ## What it is
 

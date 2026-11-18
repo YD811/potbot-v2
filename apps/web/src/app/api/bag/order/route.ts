@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic'
 
 /**
  * GET /api/bag/order?leg=btc|ant|gold&amount=<raw USDC>&taker=<wallet>[&total=<raw USDC>]
+ * GET /api/bag/order?side=sell&leg=…&amount=<raw token units>&taker=<wallet>  (asset → USDC, no size limit)
  *
  * Builds one leg of a BAG buy: USDC → leg mint via Jupiter Swap V2.
  * Output mint comes from the server allowlist only. `total` is the whole
@@ -41,10 +42,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
   }
 
+  const sell = sp.get('side') === 'sell'
   const amount = Number(amountRaw) / 10 ** USDC_DECIMALS
   const total = Number(totalRaw) / 10 ** USDC_DECIMALS
-  if (amount <= 0 || amount > total) return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
-  if (total < BAG_MIN_BUY_USDC || total > BAG_MAX_BUY_USDC) {
+  if (!sell && (amount <= 0 || amount > total)) return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
+  if (sell && BigInt(amountRaw) <= 0n) return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
+  if (!sell && (total < BAG_MIN_BUY_USDC || total > BAG_MAX_BUY_USDC)) {
     return NextResponse.json(
       { error: `Beta limit: $${BAG_MIN_BUY_USDC}–$${BAG_MAX_BUY_USDC} per buy` },
       { status: 400 },
@@ -52,8 +55,8 @@ export async function GET(req: NextRequest) {
   }
 
   const order = await jupOrder({
-    inputMint: USDC_MINT,
-    outputMint: leg.mint,
+    inputMint: sell ? leg.mint : USDC_MINT,
+    outputMint: sell ? USDC_MINT : leg.mint,
     amount: amountRaw,
     taker,
     slippageBps: BAG_SLIPPAGE_BPS,

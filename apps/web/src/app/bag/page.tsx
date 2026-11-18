@@ -25,12 +25,12 @@ export const dynamic = 'force-dynamic'
 const RULES: [string, string][] = [
   ['Build or join a BAG', 'Free. You sign a message, not a transaction, and no funds move. At least two assets, whole percents that add up to 100, up to 3 BAGs built per wallet. You can join as many as you like, and buying a BAG joins it automatically.'],
   ['Buy', 'You pay USDC. Jupiter swaps it into each asset straight into your wallet, one approval per asset. An asset that is not live yet is skipped and the buy splits between the others.'],
-  ['PotBot fee', '1% of each swap, already included in the price you see before you sign. Jupiter keeps a fifth of it. There is no deposit, holding or exit fee.'],
+  ['PotBot fee', '1% of each swap, buying or selling here, already included in the price you see before you sign. Jupiter keeps a fifth of it. There is no holding fee.'],
   ['Network costs', 'Solana network fees of a fraction of a cent, plus about 0.002 SOL the first time your wallet holds a new asset (a refundable account deposit).'],
   ['Limits (beta)', '$10 to $500 per buy. A swap with a price impact above 2% is stopped before you sign.'],
   ['Creators and inviters', 'The creator of the BAG you buy and the person who invited you earn BAG Points from your buys (+10% of yours). You lose nothing. There is no cash revenue share today.'],
   ['Rebalancing', 'New buys top up the assets you are underweight in first. Nothing is ever sold for you.'],
-  ['Selling', 'The tokens are yours. Sell or move them any time in any wallet or on Jupiter.'],
+  ['Selling', 'Sell any share of your BAG back to USDC here with one approval per asset, or move and sell the tokens anywhere else. They are yours.'],
 ]
 
 const FAQ: [string, string][] = [
@@ -55,9 +55,9 @@ export default async function BagPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
       <PageHeader
-        eyebrow="Beta · Solana · Season 0"
+        eyebrow="Live beta · Solana mainnet · Season 0"
         title={<>Build your <span className="text-pot-green">BAG</span></>}
-        lede="Bitcoin · Anthropic · Gold. Set your own mix, name it, share the link."
+        lede="Bitcoin, Anthropic and gold in one buy. Take the PotBot mix or set your own, straight into your wallet."
         action={<Link href="/bag/me" className="btn-secondary whitespace-nowrap">Your BAG & points</Link>}
       />
 
@@ -65,13 +65,13 @@ export default async function BagPage() {
         <div className="card p-6 text-pot-muted">BAG is not available in your region.</div>
       ) : (
         <div className="space-y-10">
-          <section className="card flex flex-col items-center gap-6 border-pot-accent/60 p-5 sm:flex-row sm:p-6">
-            <BagArt className="h-36 w-auto shrink-0" />
+          <section className="v3-rise card flex flex-col items-center gap-6 border-pot-accent/60 p-5 sm:flex-row sm:p-6" style={{ backgroundImage: 'radial-gradient(circle at 12% 40%, rgba(224,122,79,0.10), transparent 55%)' }}>
+            <BagArt className="h-36 w-auto shrink-0 animate-float" />
             <div className="min-w-0 flex-1">
               <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">The official BAG</p>
               <h2 className="mt-1 font-display text-2xl font-semibold text-white">PotBot BAG</h2>
               <p className="mt-2 text-sm text-pot-muted">
-                Bitcoin, Anthropic and gold in equal parts. Join it and invite people with your own link, or build a BAG with your own mix below.
+                Three assets in equal parts. Buy it, hold it, invite people with your link.
               </p>
               <WeightBar weights={CLASSIC_WEIGHTS} legend className="mt-4" />
               <div className="mt-4 flex flex-wrap gap-3">
@@ -98,8 +98,8 @@ export default async function BagPage() {
 
       <section className="mt-12 grid gap-4 sm:grid-cols-3">
         {[
-          ['1. Join or build', 'Join the PotBot BAG, or move the sliders and build a BAG with your own mix.'],
-          ['2. Invite', 'Every BAG page gives you an invite link. Wallets that join through it are linked to you.'],
+          ['1. Pick a mix', 'Take the PotBot BAG or move three sliders and build your own.'],
+          ['2. Buy and invite', 'Pay USDC, approve one swap per asset. Share your invite link.'],
           ['3. Earn points', 'You earn BAG Points for what you buy and hold, plus +10% of the points of the wallets you brought.'],
         ].map(([t, d]) => (
           <div key={t} className="card p-5">
