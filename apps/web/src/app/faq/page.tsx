@@ -94,7 +94,7 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         q: 'Why does a stock POTFolio sometimes refuse deposits?',
-        a: 'Tokenized stocks are priced by Pyth equity feeds, which stop publishing when US markets are closed. The program refuses to mint on a price older than 5 minutes, so deposits reopen when the market opens. Redeeming for assets always works.',
+        a: 'Tokenized stocks are priced by Pyth equity feeds, which stop publishing when US markets are closed. The program refuses to mint on a price older than 60 seconds, so deposits reopen when the market opens. Redeeming for assets always works.',
       },
       {
         q: 'What do I see on the POTFolio page?',
@@ -116,7 +116,7 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         q: 'What if the price oracle is wrong or stale?',
-        a: 'Deposits use Pyth pull prices posted in the same transaction, at most 5 minutes old, with a confidence band no wider than 2%, and the program prices conservatively (price minus confidence in favour of the POTFolio). If any of that fails, the deposit is refused. Redeeming for assets needs no price at all.',
+        a: 'Deposits use Pyth pull prices posted in the same transaction, at most 60 seconds old, with a confidence band no wider than 2%, and the program prices conservatively (price minus confidence in favour of the POTFolio). If any of that fails, the deposit is refused. Redeeming for assets needs no price at all.',
       },
       {
         q: 'Has the program been audited?',
