@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { useTheme } from '@/contexts/ThemeContext'
 import { PrivyLoginButton } from '@/components/PrivyLoginButton'
 import { useActiveWallet } from '@/hooks/useActiveWallet'
+import { usePathname } from 'next/navigation'
 
 const HAS_PRIVY = !!process.env.NEXT_PUBLIC_PRIVY_APP_ID
 
@@ -31,6 +32,9 @@ export function ConnectButton() {
   const { isLight } = useTheme()
   const wallet = useActiveWallet()
   const [open, setOpen] = useState(false)
+  const pathname = usePathname()
+  // BAG signs every swap with a Solana wallet, so an email login cannot buy.
+  const walletOnly = pathname?.startsWith('/bag') ?? false
 
   if (wallet.isConnected) {
     const accentClass = isLight
@@ -111,6 +115,6 @@ export function ConnectButton() {
   }
 
   // Not connected — pick the connect surface for the current theme.
-  if (isLight && HAS_PRIVY) return <PrivyLoginButton />
+  if (isLight && HAS_PRIVY && !walletOnly) return <PrivyLoginButton />
   return <WalletMultiButtonDynamic />
 }
