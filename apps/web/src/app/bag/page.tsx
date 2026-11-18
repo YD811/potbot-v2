@@ -29,7 +29,7 @@ const FAQ: [string, string][] = [
   ['What happens when I save a BAG?', 'Your wallet signs a message that proves the BAG is yours. It is not a transaction and no funds move. The BAG gets its own page and a place in the community list.'],
   ['What does joining a BAG do?', 'It links your wallet to that BAG and its creator. It costs nothing and moves no funds. A wallet can be in one BAG at a time.'],
   ['Can I buy a BAG today?', BAG_BUY_ENABLED
-    ? 'Yes. One click buys every live asset with USDC, straight into your own wallet. The Anthropic leg opens after the Nasdaq listing.'
+    ? 'Yes. You pay USDC and approve one swap per live asset, straight into your own wallet. An asset that is not live yet is skipped and the buy splits between the others.'
     : 'Not yet. Buying opens after the Anthropic listing, once the token is live and liquid. Then one click will buy your mix with USDC, straight into your own wallet.'],
   ['Does PotBot hold my money?', 'No. Every buy is a Jupiter swap signed by you. The tokens land in your wallet and you can move or sell them anywhere. There is no PotBot vault or token in this beta.'],
   ['What does it cost?', 'Building and joining are free. When buying is open, each swap includes a 1% PotBot fee shown before you sign, plus Solana network fees.'],

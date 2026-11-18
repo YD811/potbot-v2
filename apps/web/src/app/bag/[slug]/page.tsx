@@ -36,7 +36,9 @@ export default async function BagRecipePage({ params }: Props) {
   const country = ((await headers()).get('x-vercel-ip-country') ?? '').toUpperCase()
   const blocked = country !== '' && blockedCountries().has(country)
   const official = isOfficial(recipe)
-  const link = `https://potbot.fun/bag/${recipe.slug}`
+  const host = (await headers()).get('host') ?? 'potbot.fun'
+  const origin = process.env.VERCEL_ENV === 'production' ? 'https://potbot.fun' : `${host.startsWith('localhost') ? 'http' : 'https'}://${host}`
+  const link = `${origin}/bag/${recipe.slug}`
   const xUrl = `https://x.com/intent/post?text=${encodeURIComponent(shareText(recipe.name, recipe.weights))}&url=${encodeURIComponent(link)}`
 
   return (

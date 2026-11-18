@@ -6,13 +6,6 @@ import {
   WalletProvider,
 } from '@solana/wallet-adapter-react'
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
-// Import each wallet from its own package, NOT the @solana/wallet-adapter-
-// wallets meta-package — that barrel pulls every adapter (Backpack, Glow,
-// Coin98, Trust, etc.) and adds ~120 kB to the initial JS bundle even
-// though we only ship Phantom + Solflare. Direct imports tree-shake
-// cleanly.
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom'
-import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { getRpcUrl } from '@/lib/rpc'
@@ -37,13 +30,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
     []
   )
 
-  const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter(),
-    ],
-    []
-  )
+  // Wallet Standard auto-detection only. Phantom, Solflare, Backpack, Jupiter
+  // and the rest register themselves; legacy adapters made them appear twice
+  // and broke connecting.
+  const wallets = useMemo(() => [], [])
 
   return (
     <ThemeProvider>

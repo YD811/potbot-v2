@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { BAG_BUY_ENABLED } from '@/lib/bag/config'
 import { OFFICIAL_SLUG, shortWallet, type BagWeights } from '@/lib/bag/recipes'
 import { WeightBar } from './WeightBar'
+import { useBagOrigin } from './useBagOrigin'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -55,7 +56,8 @@ export function BagDashboard() {
   })
 
   const inviteSlug = data?.joined?.slug ?? OFFICIAL_SLUG
-  const invite = wallet ? `https://potbot.fun/bag/${inviteSlug}?ref=${wallet}` : ''
+  const origin = useBagOrigin()
+  const invite = wallet ? `${origin}/bag/${inviteSlug}?ref=${wallet}` : ''
 
   return (
     <>

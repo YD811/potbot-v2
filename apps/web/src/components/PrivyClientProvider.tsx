@@ -3,6 +3,12 @@
 import { type ReactNode } from 'react'
 import nextDynamic from 'next/dynamic'
 import { PrivyProvider } from '@privy-io/react-auth'
+import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana'
+
+// Privy is told which Solana wallets exist; without connectors it logs
+// "Solana wallet login enabled, but no Solana wallet connectors" and the
+// wallet login button does nothing.
+const solanaConnectors = toSolanaWalletConnectors({ shouldAutoConnect: false })
 
 const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID
 
@@ -35,11 +41,12 @@ export function PrivyClientProvider({ children }: { children: ReactNode }) {
         loginMethods: ['email', 'google', 'twitter', 'linkedin', 'wallet'],
         appearance: {
           theme: 'light',
-          accentColor: '#15803d',
+          accentColor: '#E07A4F',
           logo: 'https://potbot.fun/icon-512.png',
           // Hide Ethereum UI in the login modal — we only operate on Solana.
           walletChainType: 'solana-only',
         },
+        externalWallets: { solana: { connectors: solanaConnectors } },
         embeddedWallets: {
           // Solana embedded wallet only. Drop the Ethereum block so a
           // new user doesn't have an EVM address attached to their POT

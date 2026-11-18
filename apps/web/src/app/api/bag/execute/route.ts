@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   const result = await jupExecute(body.signedTransaction, body.requestId)
   if (result.status !== 'Success' || !result.signature) {
     return NextResponse.json(
-      { status: 'Failed', signature: result.signature, error: result.error ?? 'Swap failed' },
+      { status: 'Failed', step: 'send', code: result.code ?? null, signature: result.signature, error: result.error ?? 'Swap failed' },
       { status: 502 },
     )
   }

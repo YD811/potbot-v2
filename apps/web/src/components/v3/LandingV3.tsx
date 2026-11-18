@@ -159,7 +159,8 @@ export function LandingV3() {
               ))}
             </div>
             <Reveal delay={120} className="mt-6 flex flex-wrap gap-3">
-              <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="btn-primary px-5 py-2.5 text-sm">Investors: DM us on X</a>
+              <a href="mailto:yd@potbot.fun?subject=PotBot%20pre-seed" className="btn-primary px-5 py-2.5 text-sm">Investors: yd@potbot.fun</a>
+              <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="btn-secondary px-5 py-2.5 text-sm">DM us on X</a>
               <Link href="/careers" className="btn-secondary px-5 py-2.5 text-sm">Join the team</Link>
               <Link href="/roadmap#need" className="px-2 py-2.5 text-sm font-semibold text-white underline-offset-4 hover:underline">Full roadmap</Link>
             </Reveal>

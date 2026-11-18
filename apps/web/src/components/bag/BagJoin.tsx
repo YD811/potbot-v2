@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { joinMessage } from '@/lib/bag/recipes'
 import { useBagRef } from './useBagRef'
+import { useBagOrigin } from './useBagOrigin'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -26,7 +27,8 @@ export function BagJoin({ slug, creator, initialJoins }: { slug: string; creator
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const isCreator = wallet === creator
-  const invite = wallet ? `https://potbot.fun/bag/${slug}?ref=${wallet}` : ''
+  const origin = useBagOrigin()
+  const invite = wallet ? `${origin}/bag/${slug}?ref=${wallet}` : ''
 
   async function join() {
     if (!wallet || !signMessage) return

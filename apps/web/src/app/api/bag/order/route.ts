@@ -9,7 +9,8 @@ import {
   getLeg,
   isLegLive,
 } from '@/lib/bag/config'
-import { isGeoBlocked, jupOrder } from '@/lib/bag/server'
+import { VersionedTransaction } from '@solana/web3.js'
+import { bagConnection, isGeoBlocked, jupOrder } from '@/lib/bag/server'
 import { isValidWallet } from '@/lib/bag/points'
 
 export const runtime = 'nodejs'
@@ -60,7 +61,7 @@ export async function GET(req: NextRequest) {
 
   if (!order.transaction) {
     return NextResponse.json(
-      { error: order.errorMessage ?? order.error ?? 'No route for this leg right now' },
+      { step: 'quote', code: order.errorCode ?? null, error: order.errorMessage ?? order.error ?? 'No route for this leg right now' },
       { status: 502 },
     )
   }
@@ -70,9 +71,29 @@ export async function GET(req: NextRequest) {
   )
   if (impactPct > BAG_MAX_PRICE_IMPACT_PCT) {
     return NextResponse.json(
-      { error: `${leg.symbol}: price impact ${impactPct.toFixed(2)}% is above the ${BAG_MAX_PRICE_IMPACT_PCT}% limit. Try a smaller amount.` },
+      { step: 'quote', error: `${leg.symbol}: price impact ${impactPct.toFixed(2)}% is above the ${BAG_MAX_PRICE_IMPACT_PCT}% limit. Try a smaller amount.` },
       { status: 422 },
     )
+  }
+
+  // Simulate on our own RPC before the wallet sees the transaction. A swap
+  // that would fail is stopped here with a readable reason, instead of the
+  // wallet showing a "could be malicious" warning or the user paying a fee
+  // for a failed transaction. An RPC outage does not block the buy.
+  try {
+    const tx = VersionedTransaction.deserialize(Buffer.from(order.transaction, 'base64'))
+    const sim = await bagConnection().simulateTransaction(tx, { sigVerify: false, replaceRecentBlockhash: false, commitment: 'confirmed' })
+    if (sim.value.err) {
+      const logs = sim.value.logs ?? []
+      const hint = logs.find(l => /insufficient|slippage|exceeds|frozen|error/i.test(l)) ?? logs[logs.length - 1] ?? ''
+      console.warn(`[bag/order] simulation failed leg=${leg.key} err=${JSON.stringify(sim.value.err)} hint=${hint}`)
+      return NextResponse.json(
+        { step: 'simulate', error: `${leg.symbol}: this swap would fail right now${/insufficient/i.test(hint) ? ' (not enough USDC or SOL)' : /slippage|exceeds/i.test(hint) ? ' (price moved, try again)' : /frozen/i.test(hint) ? ' (token account is frozen by the issuer)' : ''}.`, detail: JSON.stringify(sim.value.err) },
+        { status: 422 },
+      )
+    }
+  } catch (err) {
+    console.warn('[bag/order] simulation skipped', err instanceof Error ? err.message : err)
   }
 
   return NextResponse.json(

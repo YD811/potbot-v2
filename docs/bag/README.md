@@ -53,8 +53,11 @@ Read-only. Reports token program, Token-2022 extensions, issuer powers, Jupiter 
 5. Set `NEXT_PUBLIC_BAG_BUY_ENABLED=1` to open buying.
 6. Promote to production only after YD says yes.
 
+## Buy flow (18.11.2026)
+One leg at a time: `GET /api/bag/order` (quote + server-side simulation on `BAG_RPC_URL`) → `signTransaction` (one wallet prompt per leg, 60 s timeout) → `POST /api/bag/execute`. `signAllTransactions` is not used: the Jupiter wallet never resolved it. A failed leg shows its step (quote / pre-check / signature / send) and the Jupiter code, and has its own Retry button. Wallets come from Wallet Standard auto-detection only.
+
 ## Known limits (beta)
-- Wallet-adapter wallets only (Phantom, Solflare). Privy embedded wallets are not wired in yet.
+- Wallet Standard wallets (Phantom, Solflare, Backpack, Jupiter and others). Privy embedded wallets are not wired into BAG yet.
 - No sell or rebalance-by-selling. A new buy tops up underweight legs first.
 - The leaderboard ignores the referral bonus. The wallet page shows full points.
-- If one leg fails, the others still land. The user sees a per-leg status and can buy the missing leg again.
+- If one leg fails, the others still land. The user sees a per-leg status and retries only the failed leg.

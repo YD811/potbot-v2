@@ -11,12 +11,15 @@ import {
   BAG_MIN_BUY_USDC,
   USDC_DECIMALS,
   isLegLive,
+  legLabel,
   liveLegs,
   smartSplitUsdc,
+  type BagLeg,
   type BagLegKey,
 } from '@/lib/bag/config'
 import { legsForWeights, type BagWeights } from '@/lib/bag/recipes'
 import { useBagRef } from './useBagRef'
+import { useBagOrigin } from './useBagOrigin'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -33,7 +36,37 @@ interface Holdings {
   points: null | { boughtUsd: number; buyConfirmed: number; buyPending: number; hold: number; referral: number; total: number }
 }
 
-type LegStatus = { state: 'idle' | 'quoting' | 'signing' | 'sending' | 'done' | 'error'; msg?: string; sig?: string }
+type BuyStep = 'quote' | 'simulate' | 'sign' | 'send'
+type LegStatus = {
+  state: 'idle' | 'waiting' | 'quoting' | 'signing' | 'sending' | 'done' | 'error'
+  step?: BuyStep
+  code?: number
+  msg?: string
+  sig?: string
+  /** Kept on a failed leg so it can be retried on its own. */
+  amountRaw?: string
+  total?: string
+}
+
+const WALLET_TIMEOUT_MS = 60_000
+const STEP_LABEL: Record<BuyStep, string> = { quote: 'Quote', simulate: 'Pre-check', sign: 'Signature', send: 'Send' }
+const STATE_LABEL: Partial<Record<LegStatus['state'], string>> = {
+  waiting: 'waiting',
+  quoting: 'getting a quote and pre-checking…',
+  signing: 'approve in your wallet…',
+  sending: 'sending…',
+}
+
+class StepError extends Error {
+  constructor(message: string, public code?: number) { super(message) }
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(message)), ms)
+    p.then(v => { clearTimeout(t); resolve(v) }, e => { clearTimeout(t); reject(e) })
+  })
+}
 
 const RISK_KEY = 'potbot.bag.risk-ack.v1'
 
@@ -55,7 +88,7 @@ interface BagClientProps {
 }
 
 export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClientProps = {}) {
-  const { publicKey, signAllTransactions, signTransaction, connected } = useWallet()
+  const { publicKey, signTransaction, connected } = useWallet()
   const wallet = publicKey?.toBase58() ?? null
   const qc = useQueryClient()
 
@@ -93,6 +126,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   const enoughSol = !holdings || holdings.sol >= 0.01
   const allLegs = useMemo(() => (weights ? legsForWeights(weights) : BAG_LEGS), [weights])
   const legs = useMemo(() => (weights ? allLegs.filter(isLegLive) : liveLegs()), [weights, allLegs])
+  const notLive = useMemo(() => allLegs.filter(l => !isLegLive(l)), [allLegs])
 
   const plan = useMemo(() => {
     const raw = BigInt(Math.floor(amountNum * 10 ** USDC_DECIMALS))
@@ -101,65 +135,84 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
     return smartSplitUsdc(raw, current, legs)
   }, [amountNum, holdings, legs])
 
+  /** One leg, start to finish: quote → simulate (server) → sign → send. */
+  const buyLeg = useCallback(async (leg: BagLeg, amountRaw: bigint, total: bigint): Promise<boolean> => {
+    if (!wallet || !signTransaction) return false
+    const set = (st: LegStatus) => setStatus(s => ({ ...s, [leg.key]: st }))
+    let step: BuyStep = 'quote'
+    try {
+      set({ state: 'quoting' })
+      const q = new URLSearchParams({ leg: leg.key, amount: String(amountRaw), total: String(total), taker: wallet })
+      const r = await withTimeout(fetch(`/api/bag/order?${q}`), 30_000, 'Quote timed out. Try again.')
+      const j = await r.json()
+      if (!r.ok) {
+        step = j.step === 'simulate' ? 'simulate' : 'quote'
+        throw new StepError(j.error ?? `${leg.symbol}: quote failed`, j.code)
+      }
+
+      step = 'sign'
+      set({ state: 'signing' })
+      const tx = VersionedTransaction.deserialize(Buffer.from(j.transaction, 'base64'))
+      const signed = await withTimeout(signTransaction(tx), WALLET_TIMEOUT_MS, 'Wallet did not respond. Try again or use another wallet.')
+
+      step = 'send'
+      set({ state: 'sending' })
+      const x = await withTimeout(fetch('/api/bag/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          signedTransaction: Buffer.from(signed.serialize()).toString('base64'),
+          requestId: j.requestId,
+          leg: leg.key,
+          ref: ref ?? undefined,
+          bag: bagSlug,
+        }),
+      }), 90_000, 'Sending timed out. Check your wallet history before trying again.')
+      const xj = await x.json()
+      if (!x.ok) {
+        set({ state: 'error', step, code: xj.code ?? undefined, msg: xj.error ?? 'Swap failed', sig: xj.signature, amountRaw: String(amountRaw), total: String(total) })
+        return false
+      }
+      set({ state: 'done', sig: xj.signature })
+      return true
+    } catch (e) {
+      const raw = e instanceof Error ? e.message : 'Something went wrong'
+      const msg = /reject|denied|cancel|declin/i.test(raw) ? 'Cancelled in the wallet.' : raw
+      set({ state: 'error', step, code: e instanceof StepError ? e.code : undefined, msg, amountRaw: String(amountRaw), total: String(total) })
+      return false
+    }
+  }, [wallet, signTransaction, ref, bagSlug])
+
+  /** Buy every live leg, one wallet prompt per leg. A failed leg does not stop the next one. */
   const buy = useCallback(async () => {
-    if (!wallet || !amountOk || !riskAck) return
+    if (!wallet || !amountOk || !riskAck || !signTransaction) return
     setBusy(true)
     const total = BigInt(Math.floor(amountNum * 10 ** USDC_DECIMALS))
     const todo = legs.filter(l => (plan.get(l.key) ?? 0n) >= 1_000_000n)
-    const next: Partial<Record<BagLegKey, LegStatus>> = {}
-    todo.forEach(l => { next[l.key] = { state: 'quoting' } })
-    setStatus(next)
-
+    setStatus(Object.fromEntries(todo.map(l => [l.key, { state: 'waiting' } as LegStatus])))
     try {
-      // 1. Quote every leg.
-      const orders = await Promise.all(todo.map(async l => {
-        const q = new URLSearchParams({ leg: l.key, amount: String(plan.get(l.key)), total: String(total), taker: wallet })
-        const r = await fetch(`/api/bag/order?${q}`)
-        const j = await r.json()
-        if (!r.ok) throw new Error(j.error ?? `${l.symbol}: quote failed`)
-        return { leg: l, ...j } as { leg: typeof l; transaction: string; requestId: string }
-      }))
-
-      // 2. One wallet prompt for all legs.
-      setStatus(s => Object.fromEntries(Object.keys(s).map(k => [k, { state: 'signing' }])))
-      const txs = orders.map(o => VersionedTransaction.deserialize(Buffer.from(o.transaction, 'base64')))
-      const signed = signAllTransactions
-        ? await signAllTransactions(txs)
-        : await Promise.all(txs.map(t => signTransaction!(t)))
-
-      // 3. Execute leg by leg.
-      for (let i = 0; i < orders.length; i++) {
-        const o = orders[i]
-        setStatus(s => ({ ...s, [o.leg.key]: { state: 'sending' } }))
-        const r = await fetch('/api/bag/execute', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            signedTransaction: Buffer.from(signed[i].serialize()).toString('base64'),
-            requestId: o.requestId,
-            leg: o.leg.key,
-            ref: ref ?? undefined,
-            bag: bagSlug,
-          }),
-        })
-        const j = await r.json()
-        setStatus(s => ({
-          ...s,
-          [o.leg.key]: r.ok
-            ? { state: 'done', sig: j.signature }
-            : { state: 'error', msg: j.error ?? 'Swap failed', sig: j.signature },
-        }))
-      }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Something went wrong'
-      setStatus(s => Object.fromEntries(Object.entries(s).map(([k, v]) => [k, v?.state === 'done' ? v : { state: 'error', msg }])))
+      for (const l of todo) await buyLeg(l, plan.get(l.key)!, total)
     } finally {
       setBusy(false)
       qc.invalidateQueries({ queryKey: ['bag-holdings', wallet] })
     }
-  }, [wallet, amountOk, riskAck, amountNum, legs, plan, signAllTransactions, signTransaction, ref, bagSlug, qc])
+  }, [wallet, amountOk, riskAck, signTransaction, amountNum, legs, plan, buyLeg, qc])
 
-  const refLink = wallet ? `https://potbot.fun/bag${bagSlug ? `/${bagSlug}` : ''}?ref=${wallet}` : ''
+  /** Retry only a leg that failed, with the amount it was planned at. */
+  const retryLeg = useCallback(async (leg: BagLeg) => {
+    const st = status[leg.key]
+    if (!st?.amountRaw || !st.total || busy) return
+    setBusy(true)
+    try {
+      await buyLeg(leg, BigInt(st.amountRaw), BigInt(st.total))
+    } finally {
+      setBusy(false)
+      qc.invalidateQueries({ queryKey: ['bag-holdings', wallet] })
+    }
+  }, [status, busy, buyLeg, qc, wallet])
+
+  const origin = useBagOrigin()
+  const refLink = wallet ? `${origin}/bag${bagSlug ? `/${bagSlug}` : ''}?ref=${wallet}` : ''
 
   return (
     <div className="space-y-6">
@@ -180,12 +233,12 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
           return (
             <div key={l.key} className="card p-4">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs uppercase tracking-widest" style={{ color: l.color }}>{l.name}</span>
+                <span className="font-mono text-xs uppercase tracking-widest" style={{ color: l.color }}>{legLabel(l)}</span>
                 <span className="font-mono text-xs text-pot-muted">{(l.weightBps / 100).toFixed(0)}%</span>
               </div>
               <p className="mt-2 text-lg font-semibold text-white">{l.symbol}</p>
               <p className="text-xs text-pot-muted">{l.issuer}</p>
-              {!isLegLive(l) && <p className="mt-2 text-xs text-pot-amber">Goes live with the Nasdaq listing (19 Nov)</p>}
+              {!isLegLive(l) && <p className="mt-2 text-xs text-pot-amber">Not live yet. Opens after the listing.</p>}
               {pos && <p className="mt-2 text-sm text-white">{pos.balance.toPrecision(4)} · {fmtUsd(pos.valueUsd)}</p>}
               <div className="mt-3 flex flex-wrap gap-1">
                 {l.risks.map(r => (
@@ -227,19 +280,28 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
               const raw = plan.get(l.key) ?? 0n
               const st = status[l.key]
               return (
-                <li key={l.key} className="flex items-center justify-between">
-                  <span className="text-white">{l.symbol}</span>
-                  <span className="font-mono text-pot-muted">
-                    {fmtUsd(Number(raw) / 10 ** USDC_DECIMALS)}
-                    {st && st.state !== 'idle' && (
-                      <span className={st.state === 'error' ? ' text-red-400' : st.state === 'done' ? ' text-pot-green' : ' text-pot-amber'}>
-                        {' · '}{st.state === 'done' ? 'done' : st.state === 'error' ? st.msg : `${st.state}…`}
+                <li key={l.key} className="rounded-lg px-1 py-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-white">{l.symbol}</span>
+                    <span className="font-mono text-pot-muted">
+                      {fmtUsd(Number(st?.amountRaw ?? raw) / 10 ** USDC_DECIMALS)}
+                      {st && st.state === 'done' && <span className="text-pot-green"> · done</span>}
+                      {st && STATE_LABEL[st.state] && <span className="text-pot-amber"> · {STATE_LABEL[st.state]}</span>}
+                      {st?.sig && (
+                        <a className="ml-2 underline" href={`https://solscan.io/tx/${st.sig}`} target="_blank" rel="noopener noreferrer">view on Solscan</a>
+                      )}
+                    </span>
+                  </div>
+                  {st?.state === 'error' && (
+                    <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-xs" role="alert">
+                      <span className="text-red-400">
+                        {st.step ? `${STEP_LABEL[st.step]} failed: ` : ''}{st.msg}{st.code != null ? ` (Jupiter code ${st.code})` : ''}
                       </span>
-                    )}
-                    {st?.sig && (
-                      <a className="ml-2 underline" href={`https://solscan.io/tx/${st.sig}`} target="_blank" rel="noopener noreferrer">tx</a>
-                    )}
-                  </span>
+                      <button type="button" onClick={() => retryLeg(l)} disabled={busy} className="rounded-full border border-pot-border px-3 py-1 text-white hover:border-pot-accent disabled:opacity-50">
+                        Retry {l.symbol}
+                      </button>
+                    </div>
+                  )}
                 </li>
               )
             })}
@@ -259,15 +321,21 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
           <span>I understand this is an unaudited beta, the tokens are third-party issued, I am not a US person, and I can lose everything.</span>
         </label>
 
+        {notLive.length > 0 && legs.length > 0 && (
+          <p className="mt-4 rounded-xl border border-pot-amber/50 bg-pot-amber/10 px-3 py-2 text-sm text-white">
+            {notLive.map(l => legLabel(l)).join(' and ')} {notLive.length > 1 ? 'are' : 'is'} not live yet. This buy splits between {legs.map(l => legLabel(l)).join(' and ')}.
+          </p>
+        )}
+
         <button
           type="button"
           onClick={buy}
-          disabled={!connected || !amountOk || !riskAck || busy || !enoughUsdc || !enoughSol || legs.length === 0}
+          disabled={!connected || !signTransaction || !amountOk || !riskAck || busy || !enoughUsdc || !enoughSol || legs.length === 0}
           className="btn-primary mt-4 w-full py-3 text-base disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {!connected ? 'Connect a wallet' : !enoughUsdc ? 'Not enough USDC' : !enoughSol ? 'Add ~0.01 SOL for fees' : busy ? 'Buying…' : `Buy ${fmtUsd(amountNum)} of BAG`}
+          {!connected ? 'Connect a wallet' : !enoughUsdc ? 'Not enough USDC' : !enoughSol ? 'Add ~0.01 SOL for fees' : busy ? 'Buying, one approval per asset…' : `Buy ${fmtUsd(amountNum)} of BAG`}
         </button>
-        <p className="mt-2 text-center text-[11px] text-pot-muted">Swaps by Jupiter. A 1% PotBot fee is included in each swap and shown before you sign.</p>
+        <p className="mt-2 text-center text-[11px] text-pot-muted">Swaps by Jupiter, one wallet approval per asset. A 1% PotBot fee is included in each swap and shown before you sign.</p>
       </div>
 
       {/* Your BAG + points */}
