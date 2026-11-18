@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useBagWallet } from '@/hooks/useBagWallet'
+import { ConnectButton } from '@/components/ConnectButton'
 import { useQuery } from '@tanstack/react-query'
 import { PageHeader } from '@/components/PageHeader'
 import { BAG_BUY_ENABLED } from '@/lib/bag/config'
@@ -11,10 +11,6 @@ import { OFFICIAL_SLUG, shortWallet, type BagWeights } from '@/lib/bag/recipes'
 import { WeightBar } from './WeightBar'
 import { useBagOrigin } from './useBagOrigin'
 
-const WalletMultiButton = dynamic(
-  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  { ssr: false },
-)
 
 interface Me {
   joined: { slug: string; name: string; since: string; boughtUsd: number }[]
@@ -43,8 +39,7 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
 }
 
 export function BagDashboard() {
-  const { publicKey } = useWallet()
-  const wallet = publicKey?.toBase58() ?? null
+  const { address: wallet } = useBagWallet()
   const [copied, setCopied] = useState(false)
 
   const { data, isLoading, isError } = useQuery<Me>({
@@ -69,7 +64,7 @@ export function BagDashboard() {
         eyebrow="BAG · Season 0"
         title="Your BAG"
         lede="Your invite link, the wallets you brought and your BAG Points."
-        action={<WalletMultiButton />}
+        action={<ConnectButton />}
       />
 
       {!wallet ? (

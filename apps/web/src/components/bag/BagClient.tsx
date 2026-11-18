@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import dynamic from 'next/dynamic'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useBagWallet } from '@/hooks/useBagWallet'
+import { ConnectButton } from '@/components/ConnectButton'
 import { VersionedTransaction } from '@solana/web3.js'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -25,10 +25,6 @@ const BAG_FEE_RATE = BAG_FEE_BPS_DEFAULT / 10_000
 import { useBagRef } from './useBagRef'
 import { useBagOrigin } from './useBagOrigin'
 
-const WalletMultiButton = dynamic(
-  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  { ssr: false },
-)
 
 interface Holdings {
   positions: { leg: BagLegKey; symbol: string; balance: number; raw: string; priceUsd: number; valueUsd: number }[]
@@ -92,13 +88,15 @@ interface BagClientProps {
 }
 
 export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClientProps = {}) {
-  const { publicKey, signTransaction, connected } = useWallet()
-  const wallet = publicKey?.toBase58() ?? null
+  const { address: wallet, signTransaction, connected, source } = useBagWallet()
   const qc = useQueryClient()
 
   const [amount, setAmount] = useState('100')
   const [riskAck, setRiskAck] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [ackNudge, setAckNudge] = useState(false)
+  const ackRef = useRef<HTMLLabelElement>(null)
+  const [addrCopied, setAddrCopied] = useState(false)
   const [receipt, setReceipt] = useState<{ usd: number; legs: number; of: number } | null>(null)
   const [status, setStatus] = useState<Partial<Record<BagLegKey, LegStatus>>>({})
   const [sellStatus, setSellStatus] = useState<Partial<Record<BagLegKey, LegStatus>>>({})
@@ -134,8 +132,10 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   const quickPicks = useMemo(() => {
     const picks = [25, 50, 100].filter(v => v >= BAG_MIN_BUY_USDC && v <= sliderMax).map(v => ({ label: `$${v}`, value: v }))
     if (walletCap != null && walletCap >= BAG_MIN_BUY_USDC) {
-      const half = Math.floor(sliderMax / 2)
-      if (half >= BAG_MIN_BUY_USDC) picks.push({ label: '50%', value: half })
+      for (const pct of [10, 25, 50]) {
+        const v = Math.floor((walletCap * pct) / 100)
+        if (v >= BAG_MIN_BUY_USDC && v <= sliderMax) picks.push({ label: `${pct}%`, value: v })
+      }
       picks.push({ label: 'Max', value: sliderMax })
     }
     return picks
@@ -206,7 +206,13 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
 
   /** Buy every live leg, one wallet prompt per leg. A failed leg does not stop the next one. */
   const buy = useCallback(async () => {
-    if (!wallet || !amountOk || !riskAck || !signTransaction) return
+    if (!wallet || !amountOk || !signTransaction) return
+    if (!riskAck) {
+      setAckNudge(true)
+      ackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      ackRef.current?.querySelector('input')?.focus({ preventScroll: true })
+      return
+    }
     setBusy(true)
     setReceipt(null)
     const total = BigInt(Math.floor(amountNum * 10 ** USDC_DECIMALS))
@@ -307,12 +313,43 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
       <div className="card p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xl font-semibold text-white">{title}</h2>
-          <WalletMultiButton />
+          <ConnectButton />
         </div>
-        <div className="mt-5 rounded-2xl border border-pot-border bg-pot-dark/40 p-4">
+        {wallet && (
+          <div className="mt-4 rounded-2xl border border-pot-border p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">{source === 'privy' ? 'Your PotBot wallet' : 'Your wallet'}</div>
+                <button
+                  type="button"
+                  onClick={async () => { try { await navigator.clipboard.writeText(wallet); setAddrCopied(true); setTimeout(() => setAddrCopied(false), 2000) } catch { /* clipboard blocked */ } }}
+                  className="mt-0.5 font-mono text-sm text-white underline-offset-2 hover:underline"
+                  title="Copy address"
+                >
+                  {wallet.slice(0, 4)}…{wallet.slice(-4)} <span className="text-xs text-pot-muted">{addrCopied ? 'copied' : 'copy'}</span>
+                </button>
+              </div>
+              <div className="flex gap-6">
+                <div className="text-right">
+                  <div className="font-display text-xl font-semibold tabular-nums text-white">{holdings ? fmtUsd(holdings.usdc) : '…'}</div>
+                  <div className="text-xs text-pot-muted">USDC to spend</div>
+                </div>
+                <div className="text-right">
+                  <div className={`font-display text-xl font-semibold tabular-nums ${holdings && holdings.sol < 0.01 ? 'text-pot-amber' : 'text-white'}`}>{holdings ? holdings.sol.toFixed(3) : '…'}</div>
+                  <div className="text-xs text-pot-muted">SOL for fees</div>
+                </div>
+              </div>
+            </div>
+            {holdings && (holdings.usdc < BAG_MIN_BUY_USDC || holdings.sol < 0.01) && (
+              <p className="mt-3 border-t border-pot-border pt-3 text-sm text-pot-muted">
+                To buy, this wallet needs at least ${BAG_MIN_BUY_USDC} in USDC and about 0.01 SOL, both on Solana. Copy the address above and send them from an exchange or another wallet.
+              </p>
+            )}
+          </div>
+        )}
+        <div className="mt-4 rounded-2xl border border-pot-border bg-pot-dark/40 p-4">
           <div className="flex items-end justify-between gap-3">
             <label htmlFor="bag-amount" className="text-sm text-pot-muted">You pay</label>
-            {holdings && <span className="text-xs text-pot-muted">Wallet: {fmtUsd(holdings.usdc)} USDC · {holdings.sol.toFixed(3)} SOL</span>}
           </div>
           <div className="mt-1 flex items-baseline gap-2">
             <span className="font-display text-4xl font-semibold text-white">$</span>
@@ -412,14 +449,21 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
           <p className="mt-2 text-xs text-pot-muted">New USDC goes to underweight legs first, so every buy rebalances your BAG. Nothing is sold.</p>
         )}
 
-        <label className="mt-4 flex items-start gap-2 text-sm text-pot-muted">
+        <label
+          ref={ackRef}
+          className={`mt-4 flex items-start gap-3 rounded-xl border p-3 text-sm transition ${ackNudge && !riskAck ? 'border-pot-accent bg-pot-accent/10 text-white' : 'border-transparent text-pot-muted'}`}
+        >
           <input
             type="checkbox"
             checked={riskAck}
-            onChange={e => { setRiskAck(e.target.checked); writeStore(RISK_KEY, e.target.checked ? '1' : '0') }}
-            className="mt-1"
+            onChange={e => { setRiskAck(e.target.checked); setAckNudge(false); writeStore(RISK_KEY, e.target.checked ? '1' : '0') }}
+            className="mt-0.5 h-5 w-5 shrink-0"
+            style={{ accentColor: '#E07A4F' }}
           />
-          <span>I understand this is an unaudited beta, the tokens are third-party issued, I am not a US person, and I can lose everything.</span>
+          <span>
+            {ackNudge && !riskAck && <span className="mb-1 block font-semibold text-pot-accent">Tick this box to buy.</span>}
+            I understand this is an unaudited beta, the tokens are third-party issued, I am not a US person, and I can lose everything.
+          </span>
         </label>
 
         {notLive.length > 0 && legs.length > 0 && (
@@ -431,10 +475,10 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
         <button
           type="button"
           onClick={buy}
-          disabled={!connected || !signTransaction || !amountOk || !riskAck || busy || !enoughUsdc || !enoughSol || legs.length === 0}
+          disabled={!connected || !signTransaction || !amountOk || busy || !enoughUsdc || !enoughSol || legs.length === 0}
           className="btn-primary mt-4 w-full py-3 text-base disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {!connected ? 'Connect a wallet' : !enoughUsdc ? 'Not enough USDC' : !enoughSol ? 'Add ~0.01 SOL for fees' : busy ? 'Buying, one approval per asset…' : `Buy ${fmtUsd(amountNum)} of BAG`}
+          {!connected ? 'Connect to buy' : !enoughUsdc ? 'Not enough USDC' : !enoughSol ? 'Add ~0.01 SOL for fees' : busy ? 'Buying, one approval per asset…' : `Buy ${fmtUsd(amountNum)} of BAG`}
         </button>
         <p className="mt-2 text-center text-[11px] text-pot-muted">Swaps by Jupiter, one wallet approval per asset. A 1% PotBot fee is included in each swap and shown before you sign.</p>
       </div>

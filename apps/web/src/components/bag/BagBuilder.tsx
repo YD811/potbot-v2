@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useBagWallet } from '@/hooks/useBagWallet'
+import { ConnectButton } from '@/components/ConnectButton'
 import { useQueryClient } from '@tanstack/react-query'
 import { BAG_LEGS, legLabel, isLegLive } from '@/lib/bag/config'
 import {
@@ -26,16 +26,11 @@ import { WeightBar } from './WeightBar'
 import { useBagRef } from './useBagRef'
 import { useBagOrigin } from './useBagOrigin'
 
-const WalletMultiButton = dynamic(
-  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  { ssr: false },
-)
 
 const PREVIEW_USD = 100
 
 export function BagBuilder() {
-  const { publicKey, signMessage, connected } = useWallet()
-  const wallet = publicKey?.toBase58() ?? null
+  const { address: wallet, signMessage, connected } = useBagWallet()
   const qc = useQueryClient()
   const origin = useBagOrigin()
   useBagRef() // remember a ?ref= invite even if the visitor builds instead of joining
@@ -218,7 +213,7 @@ export function BagBuilder() {
         ) : connected ? (
           <p className="text-sm text-pot-amber">This wallet cannot sign messages. Try Phantom or Solflare.</p>
         ) : (
-          <WalletMultiButton />
+          <ConnectButton />
         )}
         <p className="text-xs text-pot-muted">Free. You sign a message, not a transaction. No funds move. <a href="#rules" className="underline">Rules and fees</a></p>
       </div>

@@ -4,8 +4,8 @@ import { Component, useMemo, type ReactNode } from 'react'
 import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js'
 import type { Wallet as AnchorWallet } from '@coral-xyz/anchor'
 import { usePrivy } from '@privy-io/react-auth'
-import { useSignTransaction, useWallets } from '@privy-io/react-auth/solana'
-import { PrivyAnchorWalletContext } from '@/contexts/PrivyAnchorWalletContext'
+import { useSignMessage, useSignTransaction, useWallets } from '@privy-io/react-auth/solana'
+import { PrivyAnchorWalletContext, type PrivyWallet } from '@/contexts/PrivyAnchorWalletContext'
 
 const CLUSTER = process.env.NEXT_PUBLIC_SOLANA_CLUSTER ?? 'devnet'
 const SOLANA_CHAIN: `solana:${string}` =
@@ -70,9 +70,10 @@ function BridgeGate({ children }: { children: ReactNode }) {
 function AuthedBridge({ children }: { children: ReactNode }) {
   const { wallets } = useWallets()
   const { signTransaction: privySign } = useSignTransaction()
+  const { signMessage: privySignMessage } = useSignMessage()
   const wallet = wallets[0] ?? null
 
-  const anchorWallet = useMemo<AnchorWallet | null>(() => {
+  const anchorWallet = useMemo<PrivyWallet | null>(() => {
     if (!wallet) return null
     let pk: PublicKey
     try { pk = new PublicKey(wallet.address) } catch { return null }
@@ -106,8 +107,17 @@ function AuthedBridge({ children }: { children: ReactNode }) {
         return out
       },
       payer: undefined as any,
-    } as unknown as AnchorWallet
-  }, [wallet, privySign])
+      // BAG always trades on mainnet, whatever cluster the POTFolio demo uses.
+      async signMainnetTransaction(tx: VersionedTransaction): Promise<VersionedTransaction> {
+        const out = await privySign({ transaction: new Uint8Array(tx.serialize()), wallet: wallet!, chain: 'solana:mainnet' })
+        return VersionedTransaction.deserialize(out.signedTransaction)
+      },
+      async signMessage(message: Uint8Array): Promise<Uint8Array> {
+        const out = await privySignMessage({ message, wallet: wallet! })
+        return out.signature
+      },
+    } as unknown as PrivyWallet
+  }, [wallet, privySign, privySignMessage])
 
   return (
     <PrivyAnchorWalletContext.Provider value={anchorWallet}>
