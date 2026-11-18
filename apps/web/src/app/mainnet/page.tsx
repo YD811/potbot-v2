@@ -70,7 +70,7 @@ export default function SecurityPage() {
       <PageHeader
         eyebrow="Security"
         title="Security"
-        lede="Open code. No withdraw instruction. Reviewed three times, every finding published. Mainnet opens after the external audit, with a multisig and a capped first POTFolio."
+        lede="Open code. No withdraw instruction. Reviewed three times, every finding published. BAG is live because it holds nothing: swaps go through Jupiter into your wallet. The POTFolio program opens on mainnet after the external audit, with a multisig and a capped first POTFolio."
       />
 
       <div className="grid gap-3 sm:grid-cols-3">

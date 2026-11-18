@@ -155,7 +155,7 @@ packages/sdk/  apps/api/  apps/keeper/  apps/bot/  apps/potbot-mcp/      PotBot 
 ```bash
 # program (Anchor 1.2.1, Solana CLI 4.3, Rust 1.89)
 cd packages/pot-index
-./test.sh                                  # SBPF build + LiteSVM suite, 40 tests, mainnet and devnet builds
+./test.sh                                  # SBPF build + LiteSVM suite, 46 tests, mainnet and devnet builds
 anchor build                               # deployable artifact + IDL
 
 # web

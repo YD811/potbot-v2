@@ -17,6 +17,32 @@ interface FAQCategory {
 
 const FAQ_DATA: FAQCategory[] = [
   {
+    id: 'bag',
+    label: 'BAG (live)',
+    items: [
+      {
+        q: 'What is BAG?',
+        a: 'BAG is the first live product: a basket bought in one flow on Solana mainnet. You choose the mix, and each asset is swapped from your USDC through Jupiter straight into your wallet. Bitcoin and gold are live. Anthropic opens after its listing, once a tokenized version trades on Solana.',
+      },
+      {
+        q: 'Does PotBot hold my money when I buy a BAG?',
+        a: 'No. BAG uses no PotBot program and no PotBot account. Every swap goes from your wallet to your wallet through Jupiter, and you approve each one. The assets are yours the moment the swap lands, and you can sell or move them anywhere.',
+      },
+      {
+        q: 'What does BAG cost?',
+        a: 'A 1% fee on each buy and each sell, taken inside the swap and shown before you approve. Jupiter keeps a part of it. Network fees are paid in SOL.',
+      },
+      {
+        q: 'Is BAG audited?',
+        a: 'BAG is an unaudited beta with a limit per buy. It does not use our program, only Jupiter swaps, so there is no PotBot contract holding funds. The risks that remain: the interface can have bugs, token prices move, and the tokenized assets are issued by third parties who can freeze them.',
+      },
+      {
+        q: 'How is BAG different from a POTFolio?',
+        a: 'With BAG the separate assets sit in your wallet. A POTFolio holds the assets in a program and gives you one token for the whole basket. POTFolios run on devnet today and open on mainnet after the external audit.',
+      },
+    ],
+  },
+  {
     id: 'basics',
     label: 'Basics',
     items: [
@@ -102,7 +128,7 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         q: 'Is this live on mainnet?',
-        a: 'Not yet. Mainnet opens after the external audit, with a capped flagship, a multisig and Jupiter for swaps. The current state of each piece is on the Status page.',
+        a: 'BAG is live on Solana mainnet: it routes swaps through Jupiter into your wallet and holds nothing. POTFolios, where a program holds the basket and mints one token, are on devnet. They open on mainnet after the external audit, with a capped flagship and a multisig. The current state of each piece is on the Status page.',
       },
     ],
   },

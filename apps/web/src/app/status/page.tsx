@@ -33,7 +33,7 @@ const ENDPOINTS: { name: string; href: string; note: string }[] = [
 const PROOF: { k: string; v: string; href?: string; mono?: boolean }[] = [
   { k: 'Network', v: POT_INDEX_SETTINGS.cluster },
   { k: 'Program', v: POT_INDEX_SETTINGS.programId, href: explorerAddress(POT_INDEX_SETTINGS.programId), mono: true },
-  { k: 'Program version', v: 'pot_index v1.2, 18 instructions, 40 tests', href: 'https://github.com/YD811/potbot-v2/tree/main/packages/pot-index' },
+  { k: 'Program version', v: 'pot_index v1.2, 18 instructions, 46 tests', href: 'https://github.com/YD811/potbot-v2/tree/main/packages/pot-index' },
   { k: 'Security reviews', v: '3 published, none with a critical or high finding', href: 'https://github.com/YD811/potbot-v2/blob/main/docs/potfolio/security.md' },
   { k: 'External audit', v: 'Scope published, quotes requested', href: 'https://github.com/YD811/potbot-v2/pull/104' }, // audit-scope.md lands on main with PR 104,
   { k: 'Upgrade key', v: 'Team key on devnet; Squads multisig before mainnet' },
