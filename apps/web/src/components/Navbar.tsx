@@ -7,13 +7,11 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { useSolPrice } from '@/lib/prices'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ConnectButton } from '@/components/ConnectButton'
-import { SeasonPrizePoolModal } from '@/components/SeasonPrizePoolModal'
 import { useHumanText } from '@/hooks/useHumanText'
 import { BrandWordmark } from '@/components/Brand'
 
 function LivePriceTicker() {
   const { price: solPrice } = useSolPrice()
-  const [showSeasonModal, setShowSeasonModal] = useState(false)
 
   return (
     <div className="border-b border-pot-border/60 bg-pot-dark/60">
@@ -27,19 +25,14 @@ function LivePriceTicker() {
             <span className="text-pot-muted">SOL</span>
           </div>
         )}
-        {/* Season 1 ticker — clickable, opens prize-pool modal */}
+        {/* Current season: BAG Points on mainnet */}
         <div className="hidden sm:flex items-center gap-1.5 text-[11px]">
           <span className="w-px h-3 bg-pot-border" />
-          <button
-            onClick={() => setShowSeasonModal(true)}
-            className="text-pot-muted hover:text-white hover:underline underline-offset-2 transition cursor-pointer"
-            aria-label="Open Season 1 prize pool details"
-          >
-            Season 1: The Garden
-          </button>
+          <Link href="/bag#rules" className="text-pot-muted hover:text-white hover:underline underline-offset-2 transition">
+            Season 0 Genesis: BAG Points are live
+          </Link>
         </div>
       </div>
-      {showSeasonModal && <SeasonPrizePoolModal onClose={() => setShowSeasonModal(false)} />}
     </div>
   )
 }

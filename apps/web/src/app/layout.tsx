@@ -77,7 +77,6 @@ const FOOTER_COLUMNS: { title: string; links: { label: string; href: string; ext
     title: 'Product',
     links: [
       { label: 'POTFolios', href: '/portfolios' },
-      { label: 'Create a POTFolio', href: '/portfolios/new' },
       { label: 'How it works', href: '/learn' },
       { label: 'FAQ', href: '/faq' },
     ],
@@ -100,7 +99,7 @@ const FOOTER_COLUMNS: { title: string; links: { label: string; href: string; ext
       { label: 'Docs', href: '/docs' },
       { label: 'X', href: 'https://x.com/PotBot_sol', external: true },
       { label: 'Y-DAO Amsterdam', href: 'https://y-dao.com', external: true },
-      { label: 'Waitlist', href: '/signup' },
+      { label: 'POTFolio waitlist', href: '/signup' },
     ],
   },
 ]

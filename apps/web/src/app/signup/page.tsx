@@ -11,9 +11,9 @@ export default function SignupPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
       <PageHeader
-        eyebrow="Waitlist"
+        eyebrow="POTFolio waitlist"
         title="Get early access"
-        lede="Creators who want a basket at launch and holders who want in first. One email, one line from us when mainnet opens."
+        lede="BAG is live now. POTFolios, baskets minted as one token, are next. Leave an email and get one line from us when they open on mainnet."
       />
       <WaitlistForm />
     </div>

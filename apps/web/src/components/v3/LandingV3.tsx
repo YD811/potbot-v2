@@ -185,7 +185,7 @@ export function LandingV3() {
         </h2>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link href="/portfolios" className="btn-primary px-7 py-3 text-base">Explore POTFolios</Link>
-          <Link href="/signup" className="btn-secondary px-7 py-3 text-base">Join the waitlist</Link>
+          <Link href="/signup" className="btn-secondary px-7 py-3 text-base">POTFolio waitlist</Link>
         </div>
       </Reveal>
     </div>
