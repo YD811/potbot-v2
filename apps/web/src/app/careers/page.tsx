@@ -117,6 +117,7 @@ export default function CareersPage() {
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="inline-flex rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">DM @PotBot_sol</a>
+          <a href="mailto:hello@potbot.fun?subject=PotBot%20careers" className="inline-flex rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">hello@potbot.fun</a>
           <Link href="/roadmap#need" className="inline-flex rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">What we need</Link>
         </div>
       </Reveal>

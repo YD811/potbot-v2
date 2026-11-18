@@ -8,11 +8,15 @@
   "crons": [
     {
       "path": "/api/cron/price-refresh",
-      "schedule": "* * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/agent-poll",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/bag-hold-points",
+      "schedule": "17 3 * * *"
     }
   ],
 

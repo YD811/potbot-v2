@@ -67,6 +67,18 @@ export default function DashboardPage() {
     },
   })
 
+  // BAG is the live mainnet product: the three BAG assets this wallet holds.
+  const bag = useQuery<{ totalUsd: number; points: { total?: number } | null }>({
+    queryKey: ['bag-holdings', me],
+    enabled: !!me,
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const r = await fetch(`/api/bag/holdings?wallet=${me}`)
+      if (!r.ok) throw new Error('holdings')
+      return r.json()
+    },
+  })
+
   const rows = useMemo(
     () =>
       (data.data?.positions ?? []).map((h) => {
@@ -93,7 +105,7 @@ export default function DashboardPage() {
       <PageHeader
         eyebrow="Dashboard"
         title={pubkey ? 'Yours, from the chain' : 'Your dashboard'}
-        lede={pubkey ? 'Only what this wallet holds, created and did. Nothing here is stored by PotBot.' : 'Connect a wallet to see your POTFolios, your entry prices and what you earned.'}
+        lede={pubkey ? 'What this wallet holds through PotBot: your BAG on mainnet and your POTFolios on devnet.' : 'Connect a wallet to see your BAG, your POTFolios and what you earned.'}
       />
 
       {!pubkey && (
@@ -137,8 +149,25 @@ export default function DashboardPage() {
 
       {pubkey && (
         <>
+          <section className="mb-6 rounded-3xl border border-pot-green/50 bg-pot-card p-6">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-pot-green">BAG · Solana mainnet</div>
+                <div className="mt-1.5 font-display text-4xl font-semibold tabular-nums tracking-[-0.02em] text-white">
+                  {bag.data ? usd(bag.data.totalUsd) : bag.isError ? 'Unavailable' : 'Loading'}
+                </div>
+                <p className="mt-1 text-sm text-pot-muted">BAG assets held in this wallet. They stay in your wallet, not with PotBot.</p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/bag/me" className="btn-primary">Your BAG and points</Link>
+                <Link href="/bag" className="btn-secondary">Buy more</Link>
+              </div>
+            </div>
+          </section>
+
+          <h2 className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">POTFolios · devnet preview, test funds only</h2>
           <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Tile label="Total value" value={usd(total)} />
+            <Tile label="In POTFolios" value={usd(total)} hint="value of your index tokens" />
             <Tile label="P&L" value={`${sign(totalPnl)}${usd(Math.abs(totalPnl))}`} tone={tone(totalPnl)} hint={`realized ${sign(totalRealized)}${usd(Math.abs(totalRealized))}`} />
             <Tile label="POTFolios held" value={String(rows.length)} />
             <Tile label="Created" value={String(createdCount)} hint={`${usd(creatorFees)} earned, ${CREATOR_SHARE * 100}% of each ${ENTRY_FEE_BPS / 100}% entry fee`} />

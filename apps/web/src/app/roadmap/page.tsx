@@ -20,19 +20,20 @@ const BUILT = [
   { k: '2025', t: 'Started as group trading', b: 'PotBot v1: a Telegram bot for trading together from one wallet. Built at a hackathon in the Netherlands, and won it.' },
   { k: 'May 2026', t: 'The vault', b: 'PotBot v2: a non-custodial group treasury with onchain rules, a Squads multisig and an AI agent that acts only inside limits. A local-track win at Colosseum.' },
   { k: 'Oct 2026', t: 'POTFolio', b: 'The idea in its final shape: any basket of tokenized assets as one token. Program and app live on Solana devnet, submitted to Colosseum Crypto World’s Fair.' },
-  { k: 'Program', t: '18 instructions, 40 tests', b: 'Open source. Three public security reviews so far. The program has no withdraw instruction. No one, not the creator, not PotBot, can take anyone else’s money.' },
+  { k: 'Nov 2026', t: 'BAG, live on mainnet', b: 'The first live product: Bitcoin and gold in one buy through Jupiter, straight into your wallet. Anthropic opens after its listing. Unaudited beta with a limit per buy.' },
+  { k: 'Program', t: '18 instructions, 46 tests', b: 'Open source. Three public security reviews so far. The program has no withdraw instruction. No one, not the creator, not PotBot, can take anyone else’s money.' },
   { k: 'Backing', t: 'Grant funded', b: 'Supported by a Superteam Netherlands grant. Built in public in Amsterdam, with the Y-DAO builder community.' },
   { k: 'Speed', t: 'One founder, built with AI', b: 'What took a team a month at our first hackathon now ships in a week. That is how we keep the burn low.' },
 ]
 
 const NOW = [
-  { t: 'Devnet, working end to end', b: 'Create a POTFolio, deposit, hold, redeem for the assets or for USDC. Showcase baskets run on test tokens. Deposits are paused while we move to a new price feed.' },
+  { t: 'POTFolios on devnet, working end to end', b: 'Create a POTFolio, deposit, hold, redeem for the assets or for USDC. Showcase baskets run on test tokens. Deposits are paused while we move to a new price feed.' },
   { t: 'Preparing the audit', b: 'Audit scope is written and public. Quotes are being collected from security firms.' },
   { t: 'Building the team', b: 'Looking for a technical co-founder first, then a Solana engineer and early contributors.' },
 ]
 
 const NEED = [
-  { n: '01', t: 'An external audit', b: 'One full audit of the final program before the first real deposit. The single biggest item between us and mainnet.' },
+  { n: '01', t: 'An external audit', b: 'One full audit of the POTFolio program before it takes a real deposit. BAG is live without it because BAG holds nothing: it only routes swaps into your wallet.' },
   { n: '02', t: 'Engineers', b: 'A technical co-founder who owns the program, and a Solana engineer next to them.' },
   { n: '03', t: 'Launch liquidity', b: 'Seed capital for the first flagship POTFolio and its trading pool, so the token trades from day one.' },
   { n: '04', t: 'Price data', b: 'Reliable onchain prices for tokenized stocks, gold and other real-world assets, beyond the free crypto feeds.' },

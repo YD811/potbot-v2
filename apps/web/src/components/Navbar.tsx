@@ -7,13 +7,11 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { useSolPrice } from '@/lib/prices'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ConnectButton } from '@/components/ConnectButton'
-import { SeasonPrizePoolModal } from '@/components/SeasonPrizePoolModal'
 import { useHumanText } from '@/hooks/useHumanText'
 import { BrandWordmark } from '@/components/Brand'
 
 function LivePriceTicker() {
   const { price: solPrice } = useSolPrice()
-  const [showSeasonModal, setShowSeasonModal] = useState(false)
 
   return (
     <div className="border-b border-pot-border/60 bg-pot-dark/60">
@@ -27,19 +25,14 @@ function LivePriceTicker() {
             <span className="text-pot-muted">SOL</span>
           </div>
         )}
-        {/* Season 1 ticker — clickable, opens prize-pool modal */}
+        {/* Current season: BAG Points on mainnet */}
         <div className="hidden sm:flex items-center gap-1.5 text-[11px]">
           <span className="w-px h-3 bg-pot-border" />
-          <button
-            onClick={() => setShowSeasonModal(true)}
-            className="text-pot-muted hover:text-white hover:underline underline-offset-2 transition cursor-pointer"
-            aria-label="Open Season 1 prize pool details"
-          >
-            Season 1: The Garden
-          </button>
+          <Link href="/bag#rules" className="text-pot-muted hover:text-white hover:underline underline-offset-2 transition">
+            Season 0 Genesis: BAG Points are live
+          </Link>
         </div>
       </div>
-      {showSeasonModal && <SeasonPrizePoolModal onClose={() => setShowSeasonModal(false)} />}
     </div>
   )
 }
@@ -48,12 +41,11 @@ function LivePriceTicker() {
 // translator can swap "Vaults" → "POTs" etc. in light mode.
 // Home ⇄ Vaults is handled by the pill toggle below. Leaderboard now lives
 // as a tab inside /pots. FAQ lives in the footer only.
-const NAV_LINKS: { href: string; emoji: string; term: string; hot?: boolean }[] = [
+const NAV_LINKS: { href: string; emoji: string; term: string; hot?: boolean; tag?: string }[] = [
+  { href: '/bag',         emoji: '',     term: 'BAG', hot: true },
   { href: '/portfolios',  emoji: '',     term: 'POTFolios' },
-  { href: '/portfolios/new', emoji: '', term: 'Create' },
   { href: '/learn',       emoji: '',     term: 'Learn' },
   { href: '/roadmap',     emoji: '',     term: 'Roadmap' },
-  { href: '/worldsfair',  emoji: '',     term: "World's Fair", hot: true },
 ]
 
 export function Navbar() {
@@ -67,16 +59,10 @@ export function Navbar() {
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
 
-  // Hide the Waitlist CTA when the user has already connected a wallet —
-  // they obviously don't need a waitlist invite anymore, and the extra
-  // pill was the main reason the navbar wrapped to two lines on
-  // medium-width desktops.
-  const showWaitlistCta = !pathname.startsWith('/signup') && !publicKey
-
   // Only pages where a wallet is actually used get the login button. On
   // content pages (home, learn, faq, roadmap, careers...) the first click
   // should explore the product, not ask for an account.
-  const WALLET_ROUTES = ['/portfolios', '/dashboard', '/pots', '/my-pots', '/create']
+  const WALLET_ROUTES = ['/bag', '/portfolios', '/dashboard', '/pots', '/my-pots', '/create']
   const needsWallet = !!publicKey || WALLET_ROUTES.some((r) => pathname.startsWith(r))
 
   return (
@@ -90,30 +76,23 @@ export function Navbar() {
         <div className="hidden sm:flex items-center gap-1 text-sm font-medium">
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className={`px-3.5 py-1.5 rounded-full transition ${
-              isActive(link.href) ? 'text-white bg-pot-card border border-pot-border' : 'text-pot-muted hover:text-white'
-            }`}>{link.hot && <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-pot-green align-middle" />}{navLabel(link)}</Link>
+              link.hot
+                ? `border border-pot-green text-pot-green hover:bg-pot-green/10 ${isActive(link.href) ? 'bg-pot-green/10' : ''}`
+                : isActive(link.href) ? 'text-white bg-pot-card border border-pot-border' : 'text-pot-muted hover:text-white'
+            }`}>{navLabel(link)}{link.tag && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 align-middle font-mono text-[9px] uppercase tracking-wider ${link.hot ? 'bg-pot-green/20 text-pot-green' : 'border border-pot-border text-pot-muted'}`}>{link.tag}</span>}</Link>
           ))}
         </div>
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
 
-          {showWaitlistCta && (
-            <Link
-              href="/signup"
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-pot-border px-4 py-1.5 text-sm font-semibold text-white hover:border-pot-muted transition whitespace-nowrap"
-            >
-              Waitlist
-            </Link>
-          )}
-
           {/* Wallet button — switches between Privy (light/Normie) and
               wallet-adapter (dark/Crypto) via ConnectButton. */}
           {needsWallet ? (
             <ConnectButton />
           ) : (
-            <Link href="/portfolios" className="btn-primary inline-flex items-center px-4 py-1.5 text-sm whitespace-nowrap">
-              Explore
+            <Link href="/bag" className="btn-primary inline-flex items-center px-4 py-1.5 text-sm whitespace-nowrap">
+              Get BAG
             </Link>
           )}
           <button onClick={() => setMenuOpen((v) => !v)}
@@ -133,16 +112,6 @@ export function Navbar() {
 
       {menuOpen && (
         <div className="sm:hidden border-t border-pot-border bg-pot-dark/95 backdrop-blur-xl px-4 py-3 space-y-1">
-          {showWaitlistCta && (
-            <Link
-              href="/signup"
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center justify-center gap-1.5 rounded-full bg-pot-accent px-4 py-3 text-sm font-semibold text-pot-dark hover:brightness-110 transition mb-2"
-            >
-              Join the waitlist
-            </Link>
-          )}
-
           <Link href="/" onClick={() => setMenuOpen(false)}
             className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
               isActive('/') ? 'text-white bg-pot-card border border-pot-border' : 'text-pot-muted hover:text-white hover:bg-pot-card/50'
@@ -151,7 +120,7 @@ export function Navbar() {
             <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}
               className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
                 isActive(link.href) ? 'text-white bg-pot-card border border-pot-border' : 'text-pot-muted hover:text-white hover:bg-pot-card/50'
-              }`}>{navLabel(link)}</Link>
+              }`}>{navLabel(link)}{link.tag && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 align-middle font-mono text-[9px] uppercase tracking-wider ${link.hot ? 'bg-pot-green/20 text-pot-green' : 'border border-pot-border text-pot-muted'}`}>{link.tag}</span>}</Link>
           ))}
           <div className="pt-2 border-t border-pot-border/50 grid grid-cols-2 gap-x-2">
             {[['/careers', 'Careers'], ['/mainnet', 'Security'], ['/faq', 'FAQ']].map(([href, label]) => (
