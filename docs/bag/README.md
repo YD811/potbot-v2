@@ -9,7 +9,7 @@
 - `apps/web/src/app/api/bag/{order,execute,holdings,leaderboard}`: API routes
 - `apps/web/src/app/api/cron/bag-hold-points`: daily hold snapshot (Vercel cron, 03:17 UTC)
 - `apps/web/src/app/bag/page.tsx` and `apps/web/src/components/bag/BagClient.tsx`: the page
-- `supabase/migrations/20261117120000_bag_points.sql`: tables
+- `supabase/migrations/20261117215549_bag_points.sql`: tables
 
 ## Environment (Vercel)
 | Var | Required | Notes |
@@ -36,7 +36,7 @@
 - `apps/web/src/lib/bag/sig.ts`: Ed25519 check of the wallet signature
 - `apps/web/src/app/api/bag/recipes` (GET list, POST create) and `apps/web/src/app/api/bag/join` (POST)
 - `apps/web/src/components/bag/{BagBuilder,BagGallery,BagJoin,WeightBar}.tsx`
-- `supabase/migrations/20261117210000_bag_recipes.sql`: `bag_recipes`, `bag_joins`, `bag_buys.bag_slug`
+- `supabase/migrations/20261117215556_bag_recipes.sql`: `bag_recipes`, `bag_joins`, `bag_buys.bag_slug`
 
 Rules: at least 2 assets, whole percents, 3 BAGs per wallet, one joined BAG per wallet. Joining links the wallet to the BAG's creator in `bag_referrals` (first referrer wins), so buys after launch count for the creator through the existing +10% referral rule. When buying is on, a buy on `/bag/<slug>` is split by the recipe's weights and stored with `bag_slug`.
 
@@ -46,7 +46,7 @@ Rules: at least 2 assets, whole percents, 3 BAGs per wallet, one joined BAG per 
 Read-only. Reports token program, Token-2022 extensions, issuer powers, Jupiter verification and $100/$500 quotes, then GO / GO WITH RISK BADGES / NO. A transfer hook, default-frozen accounts or no route are NO. A pass is necessary, not sufficient: the mint must also be on the issuer's official list.
 
 ## Launch checklist
-1. Apply both Supabase migrations (`20261117120000_bag_points.sql`, then `20261117210000_bag_recipes.sql`).
+1. Apply both Supabase migrations (`20261117215549_bag_points.sql`, then `20261117215556_bag_recipes.sql`).
 2. Create the Jupiter referral account and its USDC token account, then set the env vars.
 3. Smoke test on mainnet with $10–20 from the team wallet: both live legs land, `/api/bag/holdings` shows them, and `bag_buys` gets a row.
 4. On 19.11, after the IPO: confirm the ANT mint from the issuer, check its liquidity on Jupiter (a $100 quote with price impact under 1%), set `NEXT_PUBLIC_BAG_ANT_MINT` and redeploy.
