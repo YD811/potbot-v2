@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useBagWallet } from '@/hooks/useBagWallet'
+import { useOpenConnect } from '@/hooks/useOpenConnect'
 import { ConnectButton } from '@/components/ConnectButton'
 import { VersionedTransaction } from '@solana/web3.js'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -81,6 +82,7 @@ interface BagClientProps {
 
 export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClientProps = {}) {
   const { address: wallet, signTransaction, connected, source } = useBagWallet()
+  const openConnect = useOpenConnect()
   const qc = useQueryClient()
 
   const [amount, setAmount] = useState('100')
@@ -404,8 +406,8 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
 
         <button
           type="button"
-          onClick={buy}
-          disabled={!connected || !signTransaction || !amountOk || busy || !enoughUsdc || !enoughSol || legs.length === 0}
+          onClick={connected ? buy : openConnect}
+          disabled={connected && (!signTransaction || !amountOk || busy || !enoughUsdc || !enoughSol || legs.length === 0)}
           className="btn-primary mt-4 w-full py-3 text-base disabled:cursor-not-allowed disabled:opacity-50"
         >
           {!connected ? 'Connect to buy' : !enoughUsdc ? 'Not enough USDC' : !enoughSol ? 'Add ~0.01 SOL for fees' : busy ? 'Buying, one approval per asset…' : `Buy ${fmtUsd(amountNum)} of BAG`}
