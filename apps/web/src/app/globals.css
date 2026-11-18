@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-display: 'Fraunces';
+  --font-sans: 'Instrument Sans';
+  --font-mono: 'IBM Plex Mono';
+}
+
 /* ── Base ── */
 @layer base {
   body {
