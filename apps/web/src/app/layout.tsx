@@ -1,5 +1,15 @@
 import type { Metadata, Viewport } from 'next'
-import { Fraunces, Instrument_Sans, IBM_Plex_Mono } from 'next/font/google'
+// Fonts are self-hosted from npm. Loading them from Google at build time
+// failed builds whenever Google's response changed shape.
+import '@fontsource/fraunces/latin-500.css'
+import '@fontsource/fraunces/latin-600.css'
+import '@fontsource/fraunces/latin-500-italic.css'
+import '@fontsource/fraunces/latin-600-italic.css'
+import '@fontsource/instrument-sans/latin-400.css'
+import '@fontsource/instrument-sans/latin-500.css'
+import '@fontsource/instrument-sans/latin-600.css'
+import '@fontsource/ibm-plex-mono/latin-400.css'
+import '@fontsource/ibm-plex-mono/latin-500.css'
 import Link from 'next/link'
 import { Analytics } from '@vercel/analytics/next'
 import { AppProviders } from './providers'
@@ -8,9 +18,6 @@ import { BrandWordmark } from '@/components/Brand'
 import { OnboardingTutorial } from '@/components/OnboardingTutorial'
 import './globals.css'
 
-const fontDisplay = Fraunces({ subsets: ['latin'], weight: ['500', '600'], style: ['normal', 'italic'], variable: '--font-display', display: 'swap' })
-const fontSans = Instrument_Sans({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-sans', display: 'swap' })
-const fontMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-mono', display: 'swap' })
 
 export const metadata: Metadata = {
   title: { default: 'PotBot POTFolio: any basket of Solana assets as one liquid token', template: '%s · PotBot' },
@@ -111,7 +118,7 @@ const CONTACTS: { label: string; email: string }[] = [
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${fontDisplay.variable} ${fontSans.variable} ${fontMono.variable}`}>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
       </head>
