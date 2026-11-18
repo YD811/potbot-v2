@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     db.from('bag_referrals').select('referrer, created_at').eq('wallet', wallet).maybeSingle(),
     db.from('bag_referrals').select('wallet, created_at').eq('referrer', wallet).order('created_at', { ascending: false }).limit(500),
     db.from('bag_recipes').select('slug, name, weights, created_at').eq('creator', wallet).order('created_at', { ascending: true }),
-    db.from('bag_buys').select('signature, leg, usdc_in, out_amount, bag_slug, created_at').eq('wallet', wallet).order('created_at', { ascending: false }).limit(100),
+    db.from('bag_buys').select('signature, leg, usdc_in, out_amount, bag_slug, side, created_at').eq('wallet', wallet).order('created_at', { ascending: false }).limit(100),
     db.from('bag_hold_snapshots').select('day, held_usd, eligible_usd, full_bag, points').eq('wallet', wallet),
   ])
 
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
 
   const [refJoins, refBuys, refSnaps, slugJoins, slugBuys, slugNames] = await Promise.all([
     refWallets.length ? db.from('bag_joins').select('wallet, slug').in('wallet', refWallets) : Promise.resolve({ data: [] as { wallet: string; slug: string }[] }),
-    refWallets.length ? db.from('bag_buys').select('wallet, usdc_in, created_at').in('wallet', refWallets) : Promise.resolve({ data: [] as { wallet: string; usdc_in: number; created_at: string }[] }),
+    refWallets.length ? db.from('bag_buys').select('wallet, usdc_in, created_at').in('wallet', refWallets).eq('side', 'buy') : Promise.resolve({ data: [] as { wallet: string; usdc_in: number; created_at: string }[] }),
     refWallets.length ? db.from('bag_hold_snapshots').select('wallet, points').in('wallet', refWallets) : Promise.resolve({ data: [] as { wallet: string; points: number }[] }),
     lookupSlugs.length ? db.from('bag_joins').select('slug').in('slug', lookupSlugs) : Promise.resolve({ data: [] as { slug: string }[] }),
     lookupSlugs.length ? db.from('bag_buys').select('bag_slug, usdc_in').in('bag_slug', lookupSlugs) : Promise.resolve({ data: [] as { bag_slug: string; usdc_in: number }[] }),
@@ -79,8 +79,10 @@ export async function GET(req: NextRequest) {
     }
   })
 
-  const ownBuys = buys.data ?? []
-  const own = ownPoints((buys.data ?? []) as BuyRow[], (snaps.data ?? []) as SnapshotRow[], Number.MAX_SAFE_INTEGER)
+  const trades = buys.data ?? []
+  const ownBuys = trades.filter(b => b.side !== 'sell')
+  const soldUsd = trades.filter(b => b.side === 'sell').reduce((s, b) => s + Number(b.usdc_in), 0)
+  const own = ownPoints(ownBuys as BuyRow[], (snaps.data ?? []) as SnapshotRow[], Number.MAX_SAFE_INTEGER)
   const referral = round2(referees.reduce((s, r) => s + r.yourShare, 0))
 
   return NextResponse.json(
@@ -109,7 +111,8 @@ export async function GET(req: NextRequest) {
           joins: joinsBySlug.get(r.slug) ?? 0,
           volumeUsd: round2(volBySlug.get(r.slug) ?? 0),
         })),
-      buys: (buys.data ?? []).map(b => ({ signature: b.signature, leg: b.leg, usdc: Number(b.usdc_in), bag: b.bag_slug, at: b.created_at })),
+      buys: trades.map(b => ({ signature: b.signature, leg: b.leg, side: b.side === 'sell' ? 'sell' : 'buy', usdc: Number(b.usdc_in), bag: b.bag_slug, at: b.created_at })),
+      soldUsd: round2(soldUsd),
       points: {
         boughtUsd: own.boughtUsd,
         buyConfirmed: own.buyConfirmed,

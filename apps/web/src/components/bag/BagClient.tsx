@@ -248,6 +248,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
       setBusy(false)
       qc.invalidateQueries({ queryKey: ['bag-holdings', wallet] })
       qc.invalidateQueries({ queryKey: ['bag-me', wallet] })
+      qc.invalidateQueries({ queryKey: ['bag-recipes'] })
     }
   }, [wallet, signTransaction, holdings, busy, allLegs, sellPct, buyLeg, qc])
 

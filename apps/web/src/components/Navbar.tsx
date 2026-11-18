@@ -49,9 +49,8 @@ function LivePriceTicker() {
 // Home ⇄ Vaults is handled by the pill toggle below. Leaderboard now lives
 // as a tab inside /pots. FAQ lives in the footer only.
 const NAV_LINKS: { href: string; emoji: string; term: string; hot?: boolean; tag?: string }[] = [
-  { href: '/bag',         emoji: '',     term: 'BAG', hot: true, tag: 'Live' },
+  { href: '/bag',         emoji: '',     term: 'BAG', hot: true },
   { href: '/portfolios',  emoji: '',     term: 'POTFolios', tag: 'Demo' },
-  { href: '/portfolios/new', emoji: '', term: 'Create' },
   { href: '/learn',       emoji: '',     term: 'Learn' },
   { href: '/roadmap',     emoji: '',     term: 'Roadmap' },
 ]
@@ -90,8 +89,10 @@ export function Navbar() {
         <div className="hidden sm:flex items-center gap-1 text-sm font-medium">
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className={`px-3.5 py-1.5 rounded-full transition ${
-              isActive(link.href) ? 'text-white bg-pot-card border border-pot-border' : 'text-pot-muted hover:text-white'
-            }`}>{link.hot && <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-pot-green align-middle" />}{navLabel(link)}{link.tag && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 align-middle font-mono text-[9px] uppercase tracking-wider ${link.hot ? 'bg-pot-green/20 text-pot-green' : 'border border-pot-border text-pot-muted'}`}>{link.tag}</span>}</Link>
+              link.hot
+                ? `border border-pot-green text-pot-green hover:bg-pot-green/10 ${isActive(link.href) ? 'bg-pot-green/10' : ''}`
+                : isActive(link.href) ? 'text-white bg-pot-card border border-pot-border' : 'text-pot-muted hover:text-white'
+            }`}>{navLabel(link)}{link.tag && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 align-middle font-mono text-[9px] uppercase tracking-wider ${link.hot ? 'bg-pot-green/20 text-pot-green' : 'border border-pot-border text-pot-muted'}`}>{link.tag}</span>}</Link>
           ))}
         </div>
 

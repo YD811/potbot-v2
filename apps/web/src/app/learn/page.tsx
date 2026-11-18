@@ -4,6 +4,7 @@ import { HowAPotWorks } from '@/components/pot-index/HowAPotWorks'
 import { FeeCalculator } from '@/components/pot-index/FeeCalculator'
 import { STAGES } from '@/lib/pot-index/garden'
 import { PageHeader } from '@/components/PageHeader'
+import { BagVsPotfolio } from '@/components/bag/BagVsPotfolio'
 
 export const metadata: Metadata = {
   title: 'Learn: what is a POTFolio?',
@@ -16,9 +17,11 @@ export default function LearnPage() {
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
       <PageHeader
         eyebrow="Learn"
-        title="What a POTFolio is"
+        title="How PotBot works"
         lede="A basket of Solana assets issued as one liquid token. Create a portfolio, hold the token. Deposit USDC to mint it at the current value of the basket, redeem it any time for every asset inside or for USDC. No withdraw instruction."
       />
+
+      <div className="mb-12"><BagVsPotfolio /></div>
 
       <Section title="What a POTFolio is">
         <HowAPotWorks compact />

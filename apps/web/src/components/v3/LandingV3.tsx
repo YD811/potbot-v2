@@ -9,6 +9,7 @@ import { HowAPotWorks } from '@/components/pot-index/HowAPotWorks'
 import { GardenMode } from '@/components/pot-index/GardenMode'
 import { Reveal } from './Reveal'
 import { BagHeroCard } from './BagHeroCard'
+import { BagCard, useBagRecipes } from '@/components/bag/BagCard'
 import { PotAnimation } from './PotAnimation'
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -41,6 +42,7 @@ export function LandingV3() {
   const prices = useAssetPrices()
   const stats = useAllPotStats(pots.data)
   const flagship = POT_INDEX_SETTINGS.flagship
+  const bagRows = (useBagRecipes().data?.rows ?? []).slice(0, 2)
   const live = [...(pots.data ?? [])]
     .sort((a, b) => Number(b.indexMint.toBase58() === flagship) - Number(a.indexMint.toBase58() === flagship))
     .slice(0, 3)
@@ -91,14 +93,17 @@ export function LandingV3() {
       <section className="pb-20">
         <Reveal className="mb-7 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <H2>Live now.</H2>
-            <p className="mt-2 font-mono text-xs uppercase tracking-[0.12em] text-pot-muted">On Solana devnet · test tokens</p>
+            <H2>Examples.</H2>
+            <p className="mt-2 max-w-[36em] text-sm text-pot-muted">BAGs are live on mainnet. POTFolios are the one-token version, shown here as a devnet demo.</p>
           </div>
-          <Link href="/portfolios" className="btn-secondary px-5 py-2 text-sm">See all POTFolios</Link>
+          <Link href="/portfolios" className="btn-secondary px-5 py-2 text-sm">See all baskets</Link>
         </Reveal>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {pots.isLoading && <PotCardSkeletonGrid count={3} />}
-          {live.map((p, i) => (
+          {bagRows.map((b, i) => (
+            <Reveal key={`bag-${b.slug}`} delay={i * 80}><BagCard bag={b} /></Reveal>
+          ))}
+          {pots.isLoading && <PotCardSkeletonGrid count={2} />}
+          {live.slice(0, Math.max(1, 3 - bagRows.length)).map((p, i) => (
             <Reveal key={p.address.toBase58()} delay={i * 80}>
               <PotCard pot={p} prices={prices.data ?? {}} list={stats.data?.[p.address.toBase58()]} />
             </Reveal>

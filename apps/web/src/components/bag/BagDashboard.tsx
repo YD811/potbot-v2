@@ -22,7 +22,8 @@ interface Me {
   referees: { wallet: string; since: string; bag: { slug: string; name: string } | null; boughtUsd: number; points: number; yourShare: number }[]
   totals: { referred: number; referredBought: number; referredBuyers: number }
   created: { slug: string; name: string; weights: BagWeights; official: boolean; joins: number; volumeUsd: number }[]
-  buys: { signature: string; leg: string; usdc: number; bag: string | null; at: string }[]
+  buys: { signature: string; leg: string; side: 'buy' | 'sell'; usdc: number; bag: string | null; at: string }[]
+  soldUsd: number
   points: { boughtUsd: number; buyConfirmed: number; buyPending: number; hold: number; referral: number; total: number }
 }
 
@@ -85,11 +86,11 @@ export function BagDashboard() {
             </p>
           )}
 
-          <section className="grid gap-3 sm:grid-cols-3">
+          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Stat
               label="BAG Points"
               value={int(data.points.total)}
-              sub={`Buy ${int(data.points.buyConfirmed)} · hold ${int(data.points.hold)} · invites ${int(data.points.referral)}${data.points.buyPending > 0 ? ` · ${int(data.points.buyPending)} pending` : ''}`}
+              sub={`Confirmed: buy ${int(data.points.buyConfirmed)} · hold ${int(data.points.hold)} · invites ${int(data.points.referral)}`}
             />
             <Stat
               label="Wallets you brought"
@@ -97,9 +98,14 @@ export function BagDashboard() {
               sub={`${data.totals.referredBuyers} bought · ${usd(data.totals.referredBought)} in total`}
             />
             <Stat
+              label="Pending points"
+              value={int(data.points.buyPending)}
+              sub="From your buys. Confirmed after 7 days if you still hold at least half."
+            />
+            <Stat
               label="You bought"
               value={usd(data.points.boughtUsd)}
-              sub={data.joined.length ? `In ${data.joined.length} BAG${data.joined.length > 1 ? 's' : ''}` : 'Not in a BAG yet'}
+              sub={`${data.soldUsd > 0 ? `Sold ${usd(data.soldUsd)} · ` : ''}${data.joined.length ? `in ${data.joined.length} BAG${data.joined.length > 1 ? 's' : ''}` : 'not in a BAG yet'}`}
             />
           </section>
 
@@ -147,18 +153,19 @@ export function BagDashboard() {
           )}
 
           <section>
-            <h2 className="font-display text-2xl font-semibold text-white">Your buys</h2>
+            <h2 className="font-display text-2xl font-semibold text-white">Your trades</h2>
             {data.buys.length === 0 ? (
-              <div className="card mt-4 p-5 text-sm text-pot-muted">No buys yet.{BAG_BUY_ENABLED ? ' Your first buy shows up here within a minute.' : ''}</div>
+              <div className="card mt-4 p-5 text-sm text-pot-muted">No trades yet.{BAG_BUY_ENABLED ? ' Your first buy shows up here within a minute.' : ''}</div>
             ) : (
               <div className="card mt-4 overflow-x-auto">
                 <table className="w-full min-w-[520px] text-sm">
                   <thead>
                     <tr className="border-b border-pot-border text-left font-mono text-xs uppercase tracking-[0.1em] text-pot-muted">
                       <th className="px-4 py-3 font-normal">When</th>
+                      <th className="px-4 py-3 font-normal">Side</th>
                       <th className="px-4 py-3 font-normal">Asset</th>
                       <th className="px-4 py-3 font-normal">BAG</th>
-                      <th className="px-4 py-3 text-right font-normal">Paid</th>
+                      <th className="px-4 py-3 text-right font-normal">USDC</th>
                       <th className="px-4 py-3 text-right font-normal">Transaction</th>
                     </tr>
                   </thead>
@@ -166,6 +173,7 @@ export function BagDashboard() {
                     {data.buys.map(b => (
                       <tr key={b.signature} className="border-b border-pot-border/60 last:border-0">
                         <td className="px-4 py-3 text-pot-muted">{day(b.at)}</td>
+                        <td className={`px-4 py-3 ${b.side === 'sell' ? 'text-pot-accent' : 'text-pot-green'}`}>{b.side === 'sell' ? 'Sold' : 'Bought'}</td>
                         <td className="px-4 py-3 text-white">{LEG_NAME[b.leg] ?? b.leg}</td>
                         <td className="px-4 py-3">{b.bag ? <Link href={`/bag/${b.bag}`} className="text-pot-accent underline">{b.bag}</Link> : <span className="text-pot-muted">—</span>}</td>
                         <td className="px-4 py-3 text-right tabular-nums text-white">{usd(b.usdc)}</td>
@@ -234,7 +242,7 @@ export function BagDashboard() {
           </section>
 
           <p className="text-xs text-pot-muted">
-            Buy points show before the 7-day check that you still hold at least half of what you bought. Points have no monetary value, are not a token and carry no promise of any airdrop or payout.
+            How points work: a buy gives 10 points per $1 (×2 in Genesis), pending for 7 days and confirmed only if you still hold at least half of what you bought. Holding gives 1 point per $1 per day, counted once a day. Selling gives no points. Points have no monetary value, are not a token and carry no promise of any airdrop or payout.
           </p>
         </div>
       )}

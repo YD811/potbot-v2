@@ -11,9 +11,11 @@ import { potCategory } from '@/lib/pot-index/garden'
 import type { PotView } from '@/lib/pot-index/client'
 import { PageHeader } from '@/components/PageHeader'
 import { BagArt } from '@/components/bag/BagArt'
+import { BagCard, useBagRecipes } from '@/components/bag/BagCard'
 
 const CATS = [
   { id: 'all', label: 'All' },
+  { id: 'bags', label: 'BAGs' },
   { id: 'crypto', label: 'Crypto' },
   { id: 'solana', label: 'Solana' },
   { id: 'stock', label: 'Stocks' },
@@ -37,6 +39,8 @@ export default function PortfoliosPage() {
   const [cat, setCat] = useState<string>('all')
   const [sort, setSort] = useState<'tvl' | 'holders' | 'newest' | 'perf'>('tvl')
   const stats = useAllPotStats(pots.data)
+  const bags = useBagRecipes()
+  const bagRows = cat === 'all' || cat === 'bags' ? bags.data?.rows ?? [] : []
   const shown = useMemo(() => {
     const list = (pots.data ?? []).filter((p) => cat === 'all' || potCategory(p) === cat)
     const st = stats.data ?? {}
@@ -58,12 +62,12 @@ export default function PortfoliosPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <PageHeader
-        eyebrow="Live demo · Solana devnet · test tokens"
-        title="POTFolios"
-        lede="The index-token version of PotBot, running on devnet with test tokens. It goes to mainnet after the audit. BAG is live today."
+        eyebrow="Catalog"
+        title="Baskets"
+        lede={<>BAGs are live on mainnet. POTFolios, the one-token version, are a devnet demo until the audit. <Link href="/learn#bag-vs-potfolio" className="underline">What is the difference?</Link></>}
         action={
-          <Link href="/portfolios/new" className="btn-primary whitespace-nowrap">
-            Build a POTFolio
+          <Link href="/bag#build" className="btn-primary whitespace-nowrap">
+            Build your BAG
           </Link>
         }
       />
@@ -125,7 +129,8 @@ export default function PortfoliosPage() {
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {pots.isLoading && <PotCardSkeletonGrid count={6} />}
+        {bagRows.map((b) => <BagCard key={`bag-${b.slug}`} bag={b} />)}
+        {pots.isLoading && cat !== 'bags' && <PotCardSkeletonGrid count={6} />}
         {shown.map((p) => <PotCard key={p.address.toBase58()} pot={p} prices={prices.data ?? {}} list={stats.data?.[p.address.toBase58()]} />)}
       </div>
 

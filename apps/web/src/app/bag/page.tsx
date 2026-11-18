@@ -35,6 +35,7 @@ const RULES: [string, string][] = [
 
 const FAQ: [string, string][] = [
   ['What is a BAG?', 'A mix of three assets with your own percentages: Bitcoin (cbBTC), Anthropic stock (tokenized ANT) and gold. You set the weights, name it and share the link.'],
+  ['How is a BAG different from a POTFolio?', 'A BAG puts the assets themselves in your wallet and works today on mainnet. A POTFolio wraps a basket into one index token and is a devnet demo until its audit. See Learn for the full comparison.'],
   ['What is the PotBot BAG?', 'The official BAG: Bitcoin, Anthropic and gold in equal parts. It is the default choice if you do not want to pick weights yourself.'],
   ['How do invites work?', 'Connect a wallet on any BAG page and copy your invite link. A wallet that joins through it is linked to you for good. Points come from what those wallets buy and hold once buying is open, so invites earn nothing until then.'],
   ['What happens when I save a BAG?', 'Your wallet signs a message that proves the BAG is yours. It is not a transaction and no funds move. The BAG gets its own page and a place in the community list.'],

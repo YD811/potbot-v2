@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
   if (isSupabaseConfigured && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     const db = createServerSupabase()
     const [buys, snaps, refs] = await Promise.all([
-      db.from('bag_buys').select('usdc_in, created_at').eq('wallet', wallet),
+      db.from('bag_buys').select('usdc_in, created_at').eq('wallet', wallet).eq('side', 'buy'),
       db.from('bag_hold_snapshots').select('day, held_usd, eligible_usd, full_bag, points').eq('wallet', wallet),
       db.from('bag_referrals').select('wallet').eq('referrer', wallet),
     ])
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
 async function refereesConfirmedPoints(db: ReturnType<typeof createServerSupabase>, wallets: string[]): Promise<number> {
   if (wallets.length === 0) return 0
   const [buys, snaps] = await Promise.all([
-    db.from('bag_buys').select('wallet, usdc_in, created_at').in('wallet', wallets),
+    db.from('bag_buys').select('wallet, usdc_in, created_at').in('wallet', wallets).eq('side', 'buy'),
     db.from('bag_hold_snapshots').select('points').in('wallet', wallets),
   ])
   const own = ownPoints((buys.data ?? []) as BuyRow[], [], Number.MAX_SAFE_INTEGER)
