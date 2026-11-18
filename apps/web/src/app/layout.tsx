@@ -15,7 +15,12 @@ const fontMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500'], var
 export const metadata: Metadata = {
   title: { default: 'PotBot POTFolio: any basket of Solana assets as one liquid token', template: '%s · PotBot' },
   description: 'Any basket of tokenized assets as one token on Solana. Crypto, stocks and real-world assets in one Pot: hold one token, redeem for what is inside any time.',
+  applicationName: 'PotBot',
   metadataBase: new URL('https://potbot.fun'),
+  icons: {
+    icon: [{ url: '/icon-192.png', sizes: '192x192', type: 'image/png' }, { url: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
+    apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
   alternates: { canonical: '/' },
   openGraph: {
     title: 'PotBot POTFolio: any basket of Solana assets as one liquid token',
@@ -72,7 +77,6 @@ const FOOTER_COLUMNS: { title: string; links: { label: string; href: string; ext
     title: 'Product',
     links: [
       { label: 'POTFolios', href: '/portfolios' },
-      { label: 'Create a POTFolio', href: '/portfolios/new' },
       { label: 'How it works', href: '/learn' },
       { label: 'FAQ', href: '/faq' },
     ],
@@ -95,9 +99,14 @@ const FOOTER_COLUMNS: { title: string; links: { label: string; href: string; ext
       { label: 'Docs', href: '/docs' },
       { label: 'X', href: 'https://x.com/PotBot_sol', external: true },
       { label: 'Y-DAO Amsterdam', href: 'https://y-dao.com', external: true },
-      { label: 'Waitlist', href: '/signup' },
+      { label: 'POTFolio waitlist', href: '/signup' },
     ],
   },
+]
+
+const CONTACTS: { label: string; email: string }[] = [
+  { label: 'General', email: 'hello@potbot.fun' },
+  { label: 'Vulnerability reports', email: 'security@potbot.fun' },
 ]
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -129,6 +138,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-pot-muted">
                     Your portfolio. One token. Built in Amsterdam on Solana.
                   </p>
+                  <ul className="mt-4 space-y-1 text-[13px] text-pot-muted">
+                    {CONTACTS.map((c) => (
+                      <li key={c.email}>
+                        <a href={`mailto:${c.email}`} className="text-white hover:underline">{c.email}</a>
+                        <span className="ml-2 text-[11px]">{c.label}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
                 {FOOTER_COLUMNS.map((col) => (
                   <nav key={col.title} aria-label={col.title}>

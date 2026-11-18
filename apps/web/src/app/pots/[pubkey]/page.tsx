@@ -40,7 +40,6 @@ import { isLikelyBase58Pubkey, tryPublicKey } from '@/lib/solana-validation'
 // switches to that view — saves several hundred ms on first render of
 // the Trade tab and trims first-load JS for the page.
 const PnLDashboard      = dynamic(() => import('@/components/PnLDashboard').then(m => m.PnLDashboard))
-const VaultPortfolio    = dynamic(() => import('@/components/VaultPortfolio'))
 const VaultPortfolioDisplay = dynamic(() => import('@/components/VaultPortfolioDisplay'))
 const SharesTab         = dynamic(() => import('@/components/SharesTab'))
 const MembersList       = dynamic(() => import('@/components/MembersList').then(m => m.MembersList))
@@ -336,7 +335,7 @@ export default function PotPage() {
   // try/catch for the remaining edge cases.
   const validRoutePubkey = isLikelyBase58Pubkey(pubkey) ? pubkey : null
 
-  // Vault PDA — feeds VaultPortfolio (Dune SIM real-time data)
+  // Vault PDA
   const vaultPda = useMemo(() => {
     if (!validRoutePubkey) return ''
     const potPk = tryPublicKey(validRoutePubkey)
@@ -746,16 +745,6 @@ export default function PotPage() {
                     <div className="lg:col-span-2"><SharesPanel potPubkey={pubkey} /></div>
                     <div><PnLDashboard potPubkey={pubkey} vaultBalanceSol={pot.balance} /></div>
                   </div>
-                  {vaultPda && (
-                    <DeferredDetails
-                      summary="🔎 Vault portfolio (live, Dune SIM)"
-                      className="bg-pot-card/50 border border-pot-border rounded-2xl p-4"
-                    >
-                      <div className="mt-4">
-                        <VaultPortfolio vaultPda={vaultPda} potName={pot.name} />
-                      </div>
-                    </DeferredDetails>
-                  )}
                   <details className="bg-pot-card/50 border border-pot-border rounded-2xl p-4">
                     <summary className="cursor-pointer text-xs text-white font-semibold">
                       🪙 Manage shares (withdraw)
@@ -952,7 +941,7 @@ export default function PotPage() {
 
 /**
  * Wraps a native <details> so its children mount lazily on first
- * expansion. Avoids running expensive child fetches (Dune SIM,
+ * expansion. Avoids running expensive child fetches (
  * sub-queries) when the disclosure is collapsed — which is the default
  * state for the portfolio sections on /pots/[pubkey].
  */

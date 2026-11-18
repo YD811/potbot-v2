@@ -8,7 +8,7 @@
   "crons": [
     {
       "path": "/api/cron/price-refresh",
-      "schedule": "* * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/agent-poll",

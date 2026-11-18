@@ -112,6 +112,7 @@ export default function IntegratePage() {
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="inline-block rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">DM on X</a>
+          <a href="mailto:hello@potbot.fun?subject=PotBot%20integration" className="ml-3 inline-block rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">hello@potbot.fun</a>
           <a href="https://github.com/YD811/potbot-v2" target="_blank" rel="noopener noreferrer" className="inline-block rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">SDK on GitHub</a>
         </div>
       </section>

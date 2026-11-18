@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { joinMessage } from '@/lib/bag/recipes'
 import { useBagRef } from './useBagRef'
+import { useBagOrigin } from './useBagOrigin'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -26,7 +27,8 @@ export function BagJoin({ slug, creator, initialJoins }: { slug: string; creator
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const isCreator = wallet === creator
-  const invite = wallet ? `https://potbot.fun/bag/${slug}?ref=${wallet}` : ''
+  const origin = useBagOrigin()
+  const invite = wallet ? `${origin}/bag/${slug}?ref=${wallet}` : ''
 
   async function join() {
     if (!wallet || !signMessage) return
@@ -57,10 +59,11 @@ export function BagJoin({ slug, creator, initialJoins }: { slug: string; creator
       <div className="flex flex-wrap items-center gap-3">
         {!connected ? (
           <WalletMultiButton />
-        ) : isCreator ? (
-          <span className="rounded-full border border-pot-green px-4 py-2 text-sm text-pot-green">This is your BAG</span>
-        ) : state === 'done' ? (
-          <span className="rounded-full border border-pot-green px-4 py-2 text-sm text-pot-green">You joined this BAG</span>
+        ) : isCreator || state === 'done' ? (
+          <>
+            <span className="rounded-full border border-pot-green px-4 py-2 text-sm text-pot-green">{isCreator ? 'This is your BAG' : 'You joined this BAG'}</span>
+            <a href="/bag/me" className="text-sm text-pot-accent underline">Your BAG & points</a>
+          </>
         ) : signMessage ? (
           <button type="button" onClick={join} disabled={state === 'busy'} className="btn-primary">
             {state === 'busy' ? 'Check your wallet…' : 'Join this BAG'}
@@ -70,7 +73,7 @@ export function BagJoin({ slug, creator, initialJoins }: { slug: string; creator
         )}
         <span className="font-mono text-sm text-pot-muted"><span className="text-white">{joins}</span> joined</span>
       </div>
-      <p className="mt-2 text-xs text-pot-muted">Free. You sign a message, not a transaction. One BAG per wallet: joining another one moves you.</p>
+      <p className="mt-2 text-xs text-pot-muted">Free. You sign a message, not a transaction. Buying a BAG joins it too, and you can be in several.</p>
       {error && <p className="mt-2 text-sm text-red-400" role="alert">{error}</p>}
 
       {wallet && (

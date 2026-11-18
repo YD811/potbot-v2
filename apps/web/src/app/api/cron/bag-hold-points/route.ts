@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
   }
 
   const db = createServerSupabase()
-  const { data: buys, error } = await db.from('bag_buys').select('wallet, usdc_in')
+  const { data: buys, error } = await db.from('bag_buys').select('wallet, usdc_in').eq('side', 'buy')
   if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
 
   const bought = new Map<string, number>()

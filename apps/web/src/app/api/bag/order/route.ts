@@ -9,7 +9,8 @@ import {
   getLeg,
   isLegLive,
 } from '@/lib/bag/config'
-import { isGeoBlocked, jupOrder } from '@/lib/bag/server'
+import { VersionedTransaction } from '@solana/web3.js'
+import { bagConnection, isGeoBlocked, jupOrder } from '@/lib/bag/server'
 import { isValidWallet } from '@/lib/bag/points'
 
 export const runtime = 'nodejs'
@@ -17,6 +18,7 @@ export const dynamic = 'force-dynamic'
 
 /**
  * GET /api/bag/order?leg=btc|ant|gold&amount=<raw USDC>&taker=<wallet>[&total=<raw USDC>]
+ * GET /api/bag/order?side=sell&leg=…&amount=<raw token units>&taker=<wallet>  (asset → USDC, no size limit)
  *
  * Builds one leg of a BAG buy: USDC → leg mint via Jupiter Swap V2.
  * Output mint comes from the server allowlist only. `total` is the whole
@@ -40,10 +42,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
   }
 
+  const sell = sp.get('side') === 'sell'
   const amount = Number(amountRaw) / 10 ** USDC_DECIMALS
   const total = Number(totalRaw) / 10 ** USDC_DECIMALS
-  if (amount <= 0 || amount > total) return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
-  if (total < BAG_MIN_BUY_USDC || total > BAG_MAX_BUY_USDC) {
+  if (!sell && (amount <= 0 || amount > total)) return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
+  if (sell && BigInt(amountRaw) <= 0n) return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
+  if (!sell && (total < BAG_MIN_BUY_USDC || total > BAG_MAX_BUY_USDC)) {
     return NextResponse.json(
       { error: `Beta limit: $${BAG_MIN_BUY_USDC}–$${BAG_MAX_BUY_USDC} per buy` },
       { status: 400 },
@@ -51,8 +55,8 @@ export async function GET(req: NextRequest) {
   }
 
   const order = await jupOrder({
-    inputMint: USDC_MINT,
-    outputMint: leg.mint,
+    inputMint: sell ? leg.mint : USDC_MINT,
+    outputMint: sell ? USDC_MINT : leg.mint,
     amount: amountRaw,
     taker,
     slippageBps: BAG_SLIPPAGE_BPS,
@@ -60,7 +64,7 @@ export async function GET(req: NextRequest) {
 
   if (!order.transaction) {
     return NextResponse.json(
-      { error: order.errorMessage ?? order.error ?? 'No route for this leg right now' },
+      { step: 'quote', code: order.errorCode ?? null, error: order.errorMessage ?? order.error ?? 'No route for this leg right now' },
       { status: 502 },
     )
   }
@@ -70,9 +74,29 @@ export async function GET(req: NextRequest) {
   )
   if (impactPct > BAG_MAX_PRICE_IMPACT_PCT) {
     return NextResponse.json(
-      { error: `${leg.symbol}: price impact ${impactPct.toFixed(2)}% is above the ${BAG_MAX_PRICE_IMPACT_PCT}% limit. Try a smaller amount.` },
+      { step: 'quote', error: `${leg.symbol}: price impact ${impactPct.toFixed(2)}% is above the ${BAG_MAX_PRICE_IMPACT_PCT}% limit. Try a smaller amount.` },
       { status: 422 },
     )
+  }
+
+  // Simulate on our own RPC before the wallet sees the transaction. A swap
+  // that would fail is stopped here with a readable reason, instead of the
+  // wallet showing a "could be malicious" warning or the user paying a fee
+  // for a failed transaction. An RPC outage does not block the buy.
+  try {
+    const tx = VersionedTransaction.deserialize(Buffer.from(order.transaction, 'base64'))
+    const sim = await bagConnection().simulateTransaction(tx, { sigVerify: false, replaceRecentBlockhash: false, commitment: 'confirmed' })
+    if (sim.value.err) {
+      const logs = sim.value.logs ?? []
+      const hint = logs.find(l => /insufficient|slippage|exceeds|frozen|error/i.test(l)) ?? logs[logs.length - 1] ?? ''
+      console.warn(`[bag/order] simulation failed leg=${leg.key} err=${JSON.stringify(sim.value.err)} hint=${hint}`)
+      return NextResponse.json(
+        { step: 'simulate', error: `${leg.symbol}: this swap would fail right now${/insufficient/i.test(hint) ? ' (not enough USDC or SOL)' : /slippage|exceeds/i.test(hint) ? ' (price moved, try again)' : /frozen/i.test(hint) ? ' (token account is frozen by the issuer)' : ''}.`, detail: JSON.stringify(sim.value.err) },
+        { status: 422 },
+      )
+    }
+  } catch (err) {
+    console.warn('[bag/order] simulation skipped', err instanceof Error ? err.message : err)
   }
 
   return NextResponse.json(
@@ -84,6 +108,8 @@ export async function GET(req: NextRequest) {
       outAmount: order.outAmount,
       priceImpactPct: impactPct,
       feeBps: order.feeBps ?? 0,
+      feeMint: order.feeMint ?? null,
+      referralAccount: order.referralAccount ?? null,
       router: order.router,
     },
     { headers: { 'Cache-Control': 'no-store' } },

@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   const result = await jupExecute(body.signedTransaction, body.requestId)
   if (result.status !== 'Success' || !result.signature) {
     return NextResponse.json(
-      { status: 'Failed', signature: result.signature, error: result.error ?? 'Swap failed' },
+      { status: 'Failed', step: 'send', code: result.code ?? null, signature: result.signature, error: result.error ?? 'Swap failed' },
       { status: 502 },
     )
   }
@@ -93,9 +93,13 @@ async function recordBuy(
     return sum(meta.postTokenBalances) - sum(meta.preTokenBalances)
   }
 
-  const usdcSpent = -delta(USDC_MINT)
-  const legReceived = delta(legMint)
-  if (usdcSpent <= 0n || legReceived <= 0n) return false
+  const usdcDelta = delta(USDC_MINT)
+  const legDelta = delta(legMint)
+  // Buy: USDC out, asset in. Sell: asset out, USDC in. Anything else is not ours.
+  const side: 'buy' | 'sell' | null = usdcDelta < 0n && legDelta > 0n ? 'buy' : usdcDelta > 0n && legDelta < 0n ? 'sell' : null
+  if (!side) return false
+  const usdcSpent = usdcDelta < 0n ? -usdcDelta : usdcDelta
+  const legReceived = legDelta < 0n ? -legDelta : legDelta
 
   const db = createServerSupabase()
 
@@ -115,11 +119,19 @@ async function recordBuy(
       usdc_in: Number(usdcSpent) / 1e6,
       out_amount: legReceived.toString(),
       bag_slug: recipe?.slug ?? null,
+      side,
       created_at: new Date((tx.blockTime ?? Date.now() / 1000) * 1000).toISOString(),
     },
     { onConflict: 'signature', ignoreDuplicates: true },
   )
   if (error) throw error
+
+  if (side === 'sell') return true
+
+  // Buying a BAG joins it. A wallet can be in several BAGs.
+  if (recipe) {
+    await db.from('bag_joins').upsert({ wallet: payer, slug: recipe.slug }, { onConflict: 'wallet,slug', ignoreDuplicates: true })
+  }
 
   // First referrer wins; never overwrite. An explicit ?ref= link beats the
   // creator of the BAG the buy was made on.

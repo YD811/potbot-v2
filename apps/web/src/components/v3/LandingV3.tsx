@@ -9,6 +9,7 @@ import { HowAPotWorks } from '@/components/pot-index/HowAPotWorks'
 import { GardenMode } from '@/components/pot-index/GardenMode'
 import { Reveal } from './Reveal'
 import { BagHeroCard } from './BagHeroCard'
+import { BagCard, useBagRecipes } from '@/components/bag/BagCard'
 import { PotAnimation } from './PotAnimation'
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -41,6 +42,7 @@ export function LandingV3() {
   const prices = useAssetPrices()
   const stats = useAllPotStats(pots.data)
   const flagship = POT_INDEX_SETTINGS.flagship
+  const bagRows = (useBagRecipes().data?.rows ?? []).slice(0, 2)
   const live = [...(pots.data ?? [])]
     .sort((a, b) => Number(b.indexMint.toBase58() === flagship) - Number(a.indexMint.toBase58() === flagship))
     .slice(0, 3)
@@ -91,14 +93,17 @@ export function LandingV3() {
       <section className="pb-20">
         <Reveal className="mb-7 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <H2>Live now.</H2>
-            <p className="mt-2 font-mono text-xs uppercase tracking-[0.12em] text-pot-muted">On Solana devnet · test tokens</p>
+            <H2>Examples.</H2>
+            <p className="mt-2 max-w-[36em] text-sm text-pot-muted">BAGs are live on mainnet. POTFolios are the one-token version, shown here as a devnet demo.</p>
           </div>
-          <Link href="/portfolios" className="btn-secondary px-5 py-2 text-sm">See all POTFolios</Link>
+          <Link href="/portfolios" className="btn-secondary px-5 py-2 text-sm">See all baskets</Link>
         </Reveal>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {pots.isLoading && <PotCardSkeletonGrid count={3} />}
-          {live.map((p, i) => (
+          {bagRows.map((b, i) => (
+            <Reveal key={`bag-${b.slug}`} delay={i * 80}><BagCard bag={b} /></Reveal>
+          ))}
+          {pots.isLoading && <PotCardSkeletonGrid count={2} />}
+          {live.slice(0, Math.max(1, 3 - bagRows.length)).map((p, i) => (
             <Reveal key={p.address.toBase58()} delay={i * 80}>
               <PotCard pot={p} prices={prices.data ?? {}} list={stats.data?.[p.address.toBase58()]} />
             </Reveal>
@@ -158,8 +163,14 @@ export function LandingV3() {
                 </Reveal>
               ))}
             </div>
+            <Reveal delay={100} className="mt-6 rounded-2xl border border-pot-accent/50 bg-pot-accent/10 p-5">
+              <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">For investors</p>
+              <p className="mt-2 font-semibold text-white">Open to angel checks ahead of the pre-seed.</p>
+              <p className="mt-1 text-sm text-pot-muted">Write to yd@potbot.fun for the deck, the numbers and the terms. Nothing on this page is an offer of securities.</p>
+            </Reveal>
             <Reveal delay={120} className="mt-6 flex flex-wrap gap-3">
-              <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="btn-primary px-5 py-2.5 text-sm">Investors: DM us on X</a>
+              <a href="mailto:yd@potbot.fun?subject=PotBot%20pre-seed" className="btn-primary px-5 py-2.5 text-sm">Investors: yd@potbot.fun</a>
+              <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="btn-secondary px-5 py-2.5 text-sm">DM us on X</a>
               <Link href="/careers" className="btn-secondary px-5 py-2.5 text-sm">Join the team</Link>
               <Link href="/roadmap#need" className="px-2 py-2.5 text-sm font-semibold text-white underline-offset-4 hover:underline">Full roadmap</Link>
             </Reveal>
@@ -174,7 +185,7 @@ export function LandingV3() {
         </h2>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link href="/portfolios" className="btn-primary px-7 py-3 text-base">Explore POTFolios</Link>
-          <Link href="/signup" className="btn-secondary px-7 py-3 text-base">Join the waitlist</Link>
+          <Link href="/signup" className="btn-secondary px-7 py-3 text-base">POTFolio waitlist</Link>
         </div>
       </Reveal>
     </div>

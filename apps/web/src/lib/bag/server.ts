@@ -1,7 +1,7 @@
 import 'server-only'
 import { Connection } from '@solana/web3.js'
 import type { NextRequest } from 'next/server'
-import { blockedCountries } from './config'
+import { USDC_MINT, blockedCountries } from './config'
 import { bagFeeBps } from './fees'
 
 /**
@@ -78,7 +78,27 @@ export async function jupOrder(params: {
   const res = await fetch(`${JUP_SWAP_V2}/order?${q}`, { headers: jupHeaders(), cache: 'no-store' })
   const body = (await res.json().catch(() => ({}))) as JupOrder
   if (!res.ok) return { ...body, transaction: null, error: body.error ?? `Jupiter order failed (${res.status})` }
+  if (referral) warnIfFeeSkipped(body, params.outputMint === USDC_MINT ? params.inputMint : params.outputMint)
   return body
+}
+
+const WSOL_MINT = 'So11111111111111111111111111111111111111112'
+
+/**
+ * A referral account is configured, yet Jupiter took no integrator fee or
+ * took it in a mint we hold no referral token account for. The swap still
+ * works; PotBot just earns nothing on it. Log it so it shows up in Vercel.
+ * No secrets here: mints and the fee in bps are public.
+ */
+function warnIfFeeSkipped(order: JupOrder, outputMint: string): void {
+  const feeBps = order.feeBps ?? 0
+  const feeMint = order.feeMint ?? ''
+  const mintOk = feeMint === USDC_MINT || feeMint === WSOL_MINT
+  if (feeBps > 0 && mintOk && order.referralAccount) return
+  console.warn(
+    `[bag/order] integrator fee may be skipped: feeBps=${feeBps} feeMint=${feeMint || 'none'} ` +
+      `referralInResponse=${order.referralAccount ? 'yes' : 'no'} outputMint=${outputMint}`,
+  )
 }
 
 export interface JupExecute {
@@ -115,6 +135,18 @@ export async function usdPrices(mints: string[]): Promise<Record<string, number>
     if (typeof row?.usdPrice === 'number') out[mint] = row.usdPrice
   }
   return out
+}
+
+/** Raw (base-unit) balance of a mint across the wallet's token accounts. */
+export async function walletBalanceRaw(owner: string, mint: string): Promise<bigint> {
+  const { PublicKey } = await import('@solana/web3.js')
+  const res = await bagConnection().getParsedTokenAccountsByOwner(new PublicKey(owner), { mint: new PublicKey(mint) })
+  let total = 0n
+  for (const a of res.value) {
+    const amt = (a.account.data as any)?.parsed?.info?.tokenAmount?.amount
+    if (typeof amt === 'string') total += BigInt(amt)
+  }
+  return total
 }
 
 /** Sum of a wallet's balance for a mint across all its token accounts (both token programs). */

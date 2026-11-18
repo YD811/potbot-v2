@@ -77,14 +77,6 @@ export function HowAPotWorks({ compact = false }: { compact?: boolean }) {
         ))}
       </ol>
 
-      <ul key={`b-${who}`} className="hiw-step mx-auto mt-6 flex max-w-4xl flex-wrap justify-center gap-x-6 gap-y-2 text-[15px] text-pot-muted">
-        {p.benefits.map((b) => (
-          <li key={b} className="flex items-start gap-2">
-            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-pot-green" />
-            {b}
-          </li>
-        ))}
-      </ul>
 
       {!compact && (
         <div className="mt-8 flex flex-wrap justify-center gap-3">

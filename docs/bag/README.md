@@ -40,6 +40,11 @@
 
 Rules: at least 2 assets, whole percents, 3 BAGs per wallet, one joined BAG per wallet. Joining links the wallet to the BAG's creator in `bag_referrals` (first referrer wins), so buys after launch count for the creator through the existing +10% referral rule. When buying is on, a buy on `/bag/<slug>` is split by the recipe's weights and stored with `bag_slug`.
 
+## Checking a new mint (ANT on 19.11)
+`cd apps/web && npx tsx scripts/bag-check-mint.ts <mint> --expect-symbol ANT`
+
+Read-only. Reports token program, Token-2022 extensions, issuer powers, Jupiter verification and $100/$500 quotes, then GO / GO WITH RISK BADGES / NO. A transfer hook, default-frozen accounts or no route are NO. A pass is necessary, not sufficient: the mint must also be on the issuer's official list.
+
 ## Launch checklist
 1. Apply both Supabase migrations (`20261117120000_bag_points.sql`, then `20261117210000_bag_recipes.sql`).
 2. Create the Jupiter referral account and its USDC token account, then set the env vars.
@@ -48,8 +53,11 @@ Rules: at least 2 assets, whole percents, 3 BAGs per wallet, one joined BAG per 
 5. Set `NEXT_PUBLIC_BAG_BUY_ENABLED=1` to open buying.
 6. Promote to production only after YD says yes.
 
+## Buy flow (18.11.2026)
+One leg at a time: `GET /api/bag/order` (quote + server-side simulation on `BAG_RPC_URL`) → `signTransaction` (one wallet prompt per leg, 60 s timeout) → `POST /api/bag/execute`. `signAllTransactions` is not used: the Jupiter wallet never resolved it. A failed leg shows its step (quote / pre-check / signature / send) and the Jupiter code, and has its own Retry button. Wallets come from Wallet Standard auto-detection only.
+
 ## Known limits (beta)
-- Wallet-adapter wallets only (Phantom, Solflare). Privy embedded wallets are not wired in yet.
+- Wallet Standard wallets (Phantom, Solflare, Backpack, Jupiter and others). Privy embedded wallets are not wired into BAG yet.
 - No sell or rebalance-by-selling. A new buy tops up underweight legs first.
 - The leaderboard ignores the referral bonus. The wallet page shows full points.
-- If one leg fails, the others still land. The user sees a per-leg status and can buy the missing leg again.
+- If one leg fails, the others still land. The user sees a per-leg status and retries only the failed leg.

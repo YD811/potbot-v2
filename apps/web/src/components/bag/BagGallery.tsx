@@ -27,7 +27,7 @@ export function BagGallery() {
     <section>
       <div className="flex items-end justify-between gap-3">
         <h2 className="font-display text-2xl font-semibold text-white">Community BAGs</h2>
-        <p className="text-xs text-pot-muted">PotBot BAG first, then by volume and wallets joined</p>
+        <p className="text-xs text-pot-muted">PotBot BAG first, then by traded volume and wallets joined</p>
       </div>
 
       {isLoading ? (

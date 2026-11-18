@@ -1,0 +1,7 @@
+# PotBot security contact (RFC 9116)
+Contact: mailto:security@potbot.fun
+Contact: https://x.com/CryptoYDao
+Expires: 2027-11-18T00:00:00.000Z
+Preferred-Languages: en, ru, uk
+Canonical: https://potbot.fun/.well-known/security.txt
+Policy: https://github.com/YD811/potbot-v2/blob/main/SECURITY.md

@@ -85,7 +85,7 @@ All localStorage usage has been removed in commit `feat: migrate localStorage to
 | `prop-swap-meta-${proposalPubkey}` | Supabase `swap_proposal_meta` via `/api/proposals/[pubkey]/meta` |
 | `potbot-ref-${pubkey}` | Supabase `referrals` |
 
-`sessionStorage.admin_unlocked` is intentionally kept — it is a session-only password gate that clears when the tab closes, which is the correct behavior.
+`sessionStorage.admin_unlocked` is intentionally kept — it is a session-only password gate that clears when the tab closes, which is the correct behavior. **Superseded 2026-11-17:** `/admin` is now gated on the server by `ADMIN_SECRET` (httpOnly cookie set by `/api/admin/login`); the client-side password gate and `sessionStorage.admin_unlocked` are removed.
 
 ---
 

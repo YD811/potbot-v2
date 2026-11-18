@@ -16,7 +16,7 @@ export async function GET() {
   }
   const db = createServerSupabase()
   const [buys, snaps] = await Promise.all([
-    db.from('bag_buys').select('wallet, usdc_in, created_at'),
+    db.from('bag_buys').select('wallet, usdc_in, created_at').eq('side', 'buy'),
     db.from('bag_hold_snapshots').select('wallet, points'),
   ])
   const totals = new Map<string, number>()

@@ -22,17 +22,28 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
+const RULES: [string, string][] = [
+  ['Build or join a BAG', 'Free. You sign a message, not a transaction, and no funds move. At least two assets, whole percents that add up to 100, up to 3 BAGs built per wallet. You can join as many as you like, and buying a BAG joins it automatically.'],
+  ['Buy', 'You pay USDC. Jupiter swaps it into each asset straight into your wallet, one approval per asset. An asset that is not live yet is skipped and the buy splits between the others.'],
+  ['PotBot fee', '1% of each swap, buying or selling here, already included in the price you see before you sign. Jupiter keeps a fifth of it. There is no holding fee.'],
+  ['Network costs', 'Solana network fees of a fraction of a cent, plus about 0.002 SOL the first time your wallet holds a new asset (a refundable account deposit).'],
+  ['Limits (beta)', '$10 to $500 per buy. A swap with a price impact above 2% is stopped before you sign.'],
+  ['Creators and inviters', 'The creator of the BAG you buy and the person who invited you earn BAG Points from your buys (+10% of yours). You lose nothing. There is no cash revenue share today.'],
+  ['Rebalancing', 'New buys top up the assets you are underweight in first. Nothing is ever sold for you.'],
+  ['Selling', 'Sell any share of your BAG back to USDC here with one approval per asset, or move and sell the tokens anywhere else. They are yours.'],
+]
+
 const FAQ: [string, string][] = [
   ['What is a BAG?', 'A mix of three assets with your own percentages: Bitcoin (cbBTC), Anthropic stock (tokenized ANT) and gold. You set the weights, name it and share the link.'],
+  ['How is a BAG different from a POTFolio?', 'A BAG puts the assets themselves in your wallet and works today on mainnet. A POTFolio wraps a basket into one index token and is a devnet demo until its audit. See Learn for the full comparison.'],
   ['What is the PotBot BAG?', 'The official BAG: Bitcoin, Anthropic and gold in equal parts. It is the default choice if you do not want to pick weights yourself.'],
   ['How do invites work?', 'Connect a wallet on any BAG page and copy your invite link. A wallet that joins through it is linked to you for good. Points come from what those wallets buy and hold once buying is open, so invites earn nothing until then.'],
   ['What happens when I save a BAG?', 'Your wallet signs a message that proves the BAG is yours. It is not a transaction and no funds move. The BAG gets its own page and a place in the community list.'],
-  ['What does joining a BAG do?', 'It links your wallet to that BAG and its creator. It costs nothing and moves no funds. A wallet can be in one BAG at a time.'],
+  ['What does joining a BAG do?', 'It links your wallet to that BAG and its creator. It costs nothing and moves no funds. Buying a BAG joins it automatically, and a wallet can be in several BAGs.'],
   ['Can I buy a BAG today?', BAG_BUY_ENABLED
-    ? 'Yes. One click buys every live asset with USDC, straight into your own wallet. The Anthropic leg opens after the Nasdaq listing.'
+    ? 'Yes. You pay USDC and approve one swap per live asset, straight into your own wallet. An asset that is not live yet is skipped and the buy splits between the others.'
     : 'Not yet. Buying opens after the Anthropic listing, once the token is live and liquid. Then one click will buy your mix with USDC, straight into your own wallet.'],
   ['Does PotBot hold my money?', 'No. Every buy is a Jupiter swap signed by you. The tokens land in your wallet and you can move or sell them anywhere. There is no PotBot vault or token in this beta.'],
-  ['What does it cost?', 'Building and joining are free. When buying is open, each swap includes a 1% PotBot fee shown before you sign, plus Solana network fees.'],
   ['Who issues the tokens?', 'cbBTC by Coinbase, tokenized Anthropic stock by a licensed tokenization issuer, gold by Tether or Paxos. Each issuer can freeze or claw back its token. Read each issuer’s terms.'],
   ['What are BAG Points?', 'A loyalty score for buying through PotBot, holding and bringing people in. Points have no monetary value, are not a token and come with no promise of any airdrop or payout.'],
   ['Who can use it?', 'Not US persons, and not residents of sanctioned countries. Tokenized stocks are not offered in the US.'],
@@ -45,22 +56,23 @@ export default async function BagPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
       <PageHeader
-        eyebrow="Beta · Solana · Season 0"
+        eyebrow="Live beta · Solana mainnet · Season 0"
         title={<>Build your <span className="text-pot-green">BAG</span></>}
-        lede="Bitcoin · Anthropic · Gold. Set your own mix, name it, share the link."
+        lede="Bitcoin, Anthropic and gold in one buy. Take the PotBot mix or set your own, straight into your wallet."
+        action={<Link href="/bag/me" className="btn-secondary whitespace-nowrap">Your BAG & points</Link>}
       />
 
       {blocked ? (
         <div className="card p-6 text-pot-muted">BAG is not available in your region.</div>
       ) : (
         <div className="space-y-10">
-          <section className="card flex flex-col items-center gap-6 border-pot-accent/60 p-5 sm:flex-row sm:p-6">
-            <BagArt className="h-36 w-auto shrink-0" />
+          <section className="v3-rise card flex flex-col items-center gap-6 border-pot-accent/60 p-5 sm:flex-row sm:p-6" style={{ backgroundImage: 'radial-gradient(circle at 12% 40%, rgba(224,122,79,0.10), transparent 55%)' }}>
+            <BagArt className="h-36 w-auto shrink-0 animate-float" />
             <div className="min-w-0 flex-1">
               <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">The official BAG</p>
               <h2 className="mt-1 font-display text-2xl font-semibold text-white">PotBot BAG</h2>
               <p className="mt-2 text-sm text-pot-muted">
-                Bitcoin, Anthropic and gold in equal parts. Join it and invite people with your own link, or build a BAG with your own mix below.
+                Three assets in equal parts. Buy it, hold it, invite people with your link.
               </p>
               <WeightBar weights={CLASSIC_WEIGHTS} legend className="mt-4" />
               <div className="mt-4 flex flex-wrap gap-3">
@@ -87,9 +99,9 @@ export default async function BagPage() {
 
       <section className="mt-12 grid gap-4 sm:grid-cols-3">
         {[
-          ['1. Join or build', 'Join the PotBot BAG, or move the sliders and build a BAG with your own mix.'],
-          ['2. Invite', 'Every BAG page gives you an invite link. Wallets that join through it are linked to you.'],
-          ['3. Earn points', 'When buying opens, you earn +10% of the BAG Points of the wallets you brought.'],
+          ['1. Pick a mix', 'Take the PotBot BAG or move three sliders and build your own.'],
+          ['2. Buy and invite', 'Pay USDC, approve one swap per asset. Share your invite link.'],
+          ['3. Earn points', 'You earn BAG Points for what you buy and hold, plus +10% of the points of the wallets you brought.'],
         ].map(([t, d]) => (
           <div key={t} className="card p-5">
             <p className="font-semibold text-white">{t}</p>
@@ -98,14 +110,30 @@ export default async function BagPage() {
         ))}
       </section>
 
+      <section className="mt-12" id="rules">
+        <h2 className="font-display text-2xl font-semibold text-white">Rules and fees</h2>
+        <p className="mt-2 max-w-[44em] text-sm text-pot-muted">Short version: building is free, buying costs 1%, your assets land in your own wallet and PotBot never holds them.</p>
+        <div className="mt-5 overflow-hidden rounded-2xl border border-pot-border">
+          <table className="w-full text-sm">
+            <tbody>
+              {RULES.map(([k, v]) => (
+                <tr key={k} className="border-b border-pot-border/60 last:border-0 align-top">
+                  <th scope="row" className="w-[34%] bg-pot-card px-4 py-3 text-left font-semibold text-white">{k}</th>
+                  <td className="px-4 py-3 text-pot-muted">{v}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <section className="mt-12">
         <h2 className="text-2xl font-semibold text-white">BAG Points · Season 0 “Genesis”</h2>
         <ul className="mt-4 space-y-2 text-sm text-pot-muted">
           <li><span className="text-white">Invite:</span> share your link to the PotBot BAG or to any other BAG. Wallets that join through it are linked to you, and you earn +10% of the points they earn. They lose nothing.</li>
           <li><span className="text-white">Create:</span> wallets that join your own BAG without an invite link are linked to you the same way.</li>
           <li><span className="text-white">Buy:</span> 10 points per $1 bought through potbot.fun/bag, ×2 during Genesis. Confirmed after 7 days if you still hold at least half of what you bought.</li>
-          <li><span className="text-white">Hold:</span> 1 point per $1 held per day, up to what you bought through PotBot. ×1.25 for a Full BAG (each leg within ±10% of target).</li>
-                    <li><span className="text-white">Early holders</span> are first in line for the PotBot Tamagotchi NFT.</li>
+          <li><span className="text-white">Hold:</span> 1 point per $1 held per day, up to what you bought through PotBot. ×1.25 for a Full BAG (each leg within 10 percentage points of target).</li>
         </ul>
         <p className="mt-3 text-xs text-pot-muted">Buy and hold points start when buying opens. Points have no monetary value, are not a token, and carry no promise of any future token, airdrop or payout. Rules may change during the beta; wash trading and multi-wallet farming are excluded.</p>
       </section>

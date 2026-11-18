@@ -13,8 +13,8 @@
  * Docs: https://docs.sim.dune.com/svm/balances
  */
 
-const DUNE_API_KEY =
-  process.env.NEXT_PUBLIC_DUNE_API_KEY ?? "sim_LtJQ37D5rbHi7IaPQ68Xt7ZeJU8JSC9G";
+// No fallback key: without NEXT_PUBLIC_DUNE_API_KEY the Dune features return empty data.
+const DUNE_API_KEY = process.env.NEXT_PUBLIC_DUNE_API_KEY ?? "";
 const BASE_URL = "https://api.sim.dune.com";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -80,6 +80,10 @@ export async function getVaultBalances(
   const params = new URLSearchParams({ limit: limit.toString() });
   if (offset) params.set("offset", offset);
 
+  if (!DUNE_API_KEY) {
+    return { wallet_address: vaultAddress, next_offset: null, balances_count: 0, balances: [] };
+  }
+
   const url = `${BASE_URL}/beta/svm/balances/${vaultAddress}?${params}`;
   const res = await fetch(url, {
     headers: { "X-Sim-Api-Key": DUNE_API_KEY },
@@ -130,6 +134,10 @@ export async function getVaultTransactions(
 ): Promise<DuneTransactionsResponse> {
   const params = new URLSearchParams({ limit: limit.toString() });
   if (offset) params.set("offset", offset);
+
+  if (!DUNE_API_KEY) {
+    return { next_offset: null, transactions: [] };
+  }
 
   const url = `${BASE_URL}/beta/svm/transactions/${vaultAddress}?${params}`;
   const res = await fetch(url, {

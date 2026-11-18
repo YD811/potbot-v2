@@ -24,6 +24,7 @@ import {
 } from '@/lib/bag/recipes'
 import { WeightBar } from './WeightBar'
 import { useBagRef } from './useBagRef'
+import { useBagOrigin } from './useBagOrigin'
 
 const WalletMultiButton = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
@@ -36,6 +37,7 @@ export function BagBuilder() {
   const { publicKey, signMessage, connected } = useWallet()
   const wallet = publicKey?.toBase58() ?? null
   const qc = useQueryClient()
+  const origin = useBagOrigin()
   useBagRef() // remember a ?ref= invite even if the visitor builds instead of joining
 
   const [weights, setWeights] = useState<BagWeights>(CLASSIC_WEIGHTS)
@@ -86,7 +88,7 @@ export function BagBuilder() {
   }
 
   if (saved) {
-    const link = `https://potbot.fun/bag/${saved.slug}`
+    const link = `${origin}/bag/${saved.slug}`
     const xUrl = `https://x.com/intent/post?text=${encodeURIComponent(shareText(saved.name, saved.weights))}&url=${encodeURIComponent(link)}`
     return (
       <div className="card p-5 sm:p-6">
@@ -148,7 +150,7 @@ export function BagBuilder() {
               <label htmlFor={`bag-w-${l.key}`} className="text-sm text-white">
                 <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle" style={{ background: l.color }} aria-hidden />
                 {legLabel(l)} <span className="text-pot-muted">· {l.symbol}</span>
-                {!isLegLive(l) && <span className="ml-2 text-xs text-pot-amber">opens after the Nasdaq listing</span>}
+                {!isLegLive(l) && <span className="ml-2 text-xs text-pot-amber">not live yet</span>}
               </label>
               <span className="font-mono text-lg tabular-nums text-white">{weights[l.key]}%</span>
             </div>
@@ -218,7 +220,7 @@ export function BagBuilder() {
         ) : (
           <WalletMultiButton />
         )}
-        <p className="text-xs text-pot-muted">Free. You sign a message, not a transaction. No funds move.</p>
+        <p className="text-xs text-pot-muted">Free. You sign a message, not a transaction. No funds move. <a href="#rules" className="underline">Rules and fees</a></p>
       </div>
       {error && <p className="mt-3 text-sm text-red-400" role="alert">{error}</p>}
     </div>
