@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { VersionedTransaction } from '@solana/web3.js'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import {
   BAG_LEGS,
   BAG_MAX_BUY_USDC,
@@ -98,6 +99,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   const [amount, setAmount] = useState('100')
   const [riskAck, setRiskAck] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [receipt, setReceipt] = useState<{ usd: number; legs: number; of: number } | null>(null)
   const [status, setStatus] = useState<Partial<Record<BagLegKey, LegStatus>>>({})
   const [sellStatus, setSellStatus] = useState<Partial<Record<BagLegKey, LegStatus>>>({})
   const [sellPct, setSellPct] = useState(100)
@@ -206,11 +208,21 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   const buy = useCallback(async () => {
     if (!wallet || !amountOk || !riskAck || !signTransaction) return
     setBusy(true)
+    setReceipt(null)
     const total = BigInt(Math.floor(amountNum * 10 ** USDC_DECIMALS))
     const todo = legs.filter(l => (plan.get(l.key) ?? 0n) >= 1_000_000n)
     setStatus(Object.fromEntries(todo.map(l => [l.key, { state: 'waiting' } as LegStatus])))
     try {
-      for (const l of todo) await buyLeg(l, plan.get(l.key)!, total)
+      let okUsd = 0
+      let okLegs = 0
+      for (const l of todo) {
+        const raw = plan.get(l.key)!
+        if (await buyLeg(l, raw, total)) { okLegs += 1; okUsd += Number(raw) / 10 ** USDC_DECIMALS }
+      }
+      if (okLegs > 0) {
+        setReceipt({ usd: okUsd, legs: okLegs, of: todo.length })
+        toast.success(okLegs === todo.length ? `Bought ${fmtUsd(okUsd)} of BAG` : `Bought ${okLegs} of ${todo.length} assets`)
+      }
     } finally {
       setBusy(false)
       qc.invalidateQueries({ queryKey: ['bag-holdings', wallet] })
@@ -379,6 +391,22 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
               )
             })}
           </ul>
+        )}
+        {receipt && !busy && (
+          <div className="mt-4 rounded-2xl border border-pot-green/60 bg-pot-green/10 p-4" role="status">
+            <p className="text-base font-semibold text-white">
+              {receipt.legs === receipt.of ? `You bought ${fmtUsd(receipt.usd)} of BAG` : `${receipt.legs} of ${receipt.of} assets bought (${fmtUsd(receipt.usd)})`}
+            </p>
+            <p className="mt-1 text-sm text-pot-muted">
+              {receipt.legs === receipt.of
+                ? 'The assets are in your wallet. Points for this buy are pending and confirm after 7 days if you still hold at least half.'
+                : 'The bought assets are in your wallet. Use Retry on the failed one above.'}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <a href="/bag/me" className="btn-primary px-4 py-2 text-sm">See your BAG and points</a>
+              <button type="button" onClick={() => setReceipt(null)} className="rounded-full border border-pot-border px-4 py-2 text-sm text-white">Close</button>
+            </div>
+          </div>
         )}
         {holdings && holdings.totalUsd > 0 && (
           <p className="mt-2 text-xs text-pot-muted">New USDC goes to underweight legs first, so every buy rebalances your BAG. Nothing is sold.</p>

@@ -40,7 +40,7 @@ const DEEP_LINKS: DeepLink[] = [
   },
 ]
 
-function MobileWalletSheet({ onClose, onOther }: { onClose: () => void; onOther: () => void }) {
+function MobileWalletSheet({ onClose, onOther }: { onClose: () => void; onOther?: () => void }) {
   const [copied, setCopied] = useState(false)
   const url = typeof window === 'undefined' ? '' : window.location.href
   const ref = typeof window === 'undefined' ? '' : window.location.origin
@@ -95,7 +95,7 @@ function MobileWalletSheet({ onClose, onOther }: { onClose: () => void; onOther:
           <div className="rounded-2xl border border-pot-border px-4 py-4">
             <span className="block text-base font-semibold text-white">Jupiter or another wallet</span>
             <span className="mt-1 block text-xs text-pot-muted">
-              Copy the link, open the browser inside your wallet app and paste it there.
+              These apps have no open-this-page link yet. Copy the link, then paste it in the browser inside your wallet app (in Jupiter: the globe icon, top right).
             </span>
             <button type="button" onClick={copy} className="mt-3 w-full rounded-full border border-pot-accent px-4 py-2 text-sm font-semibold text-pot-accent">
               {copied ? 'Link copied' : 'Copy link'}
@@ -103,9 +103,11 @@ function MobileWalletSheet({ onClose, onOther }: { onClose: () => void; onOther:
           </div>
         </div>
 
-        <button type="button" onClick={onOther} className="mt-4 w-full text-center text-xs text-pot-muted underline">
-          Show the standard wallet list
-        </button>
+        {onOther && (
+          <button type="button" onClick={onOther} className="mt-4 w-full text-center text-xs text-pot-muted underline">
+            Use a wallet app installed on this phone
+          </button>
+        )}
       </div>
     </div>
   )
@@ -117,6 +119,9 @@ export function WalletModalGate({ children }: { children: ReactNode }) {
   const { wallets } = useWallet()
 
   const hasInstalled = wallets.some((w) => w.readyState === WalletReadyState.Installed)
+  // Android only: the Mobile Wallet Adapter can hand off to an installed app.
+  // On iOS there is nothing behind the standard list, so the link is hidden.
+  const hasLoadable = wallets.some((w) => w.readyState === WalletReadyState.Loadable)
   const useSheet = visible && !forceStandard && !hasInstalled && isMobileBrowser()
 
   const set = useCallback((open: boolean) => {
@@ -130,7 +135,7 @@ export function WalletModalGate({ children }: { children: ReactNode }) {
     <WalletModalContext.Provider value={value}>
       {children}
       {visible && (useSheet
-        ? <MobileWalletSheet onClose={() => set(false)} onOther={() => setForceStandard(true)} />
+        ? <MobileWalletSheet onClose={() => set(false)} onOther={hasLoadable ? () => setForceStandard(true) : undefined} />
         : <WalletModal />)}
     </WalletModalContext.Provider>
   )

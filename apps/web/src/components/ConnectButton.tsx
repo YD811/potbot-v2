@@ -77,12 +77,20 @@ export function ConnectButton() {
                 </div>
               </div>
               <Link
+                href="/bag/me"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block px-3 py-2 text-sm rounded-lg hover:bg-pot-border/30 transition"
+              >
+                My BAG and points
+              </Link>
+              <Link
                 href="/dashboard"
                 role="menuitem"
                 onClick={() => setOpen(false)}
                 className="block px-3 py-2 text-sm rounded-lg hover:bg-pot-border/30 transition"
               >
-                {isLight ? 'My account' : 'My Dashboard'}
+                Dashboard
               </Link>
               <button
                 type="button"

@@ -50,7 +50,7 @@ function LivePriceTicker() {
 // as a tab inside /pots. FAQ lives in the footer only.
 const NAV_LINKS: { href: string; emoji: string; term: string; hot?: boolean; tag?: string }[] = [
   { href: '/bag',         emoji: '',     term: 'BAG', hot: true },
-  { href: '/portfolios',  emoji: '',     term: 'POTFolios', tag: 'Demo' },
+  { href: '/portfolios',  emoji: '',     term: 'POTFolios' },
   { href: '/learn',       emoji: '',     term: 'Learn' },
   { href: '/roadmap',     emoji: '',     term: 'Roadmap' },
 ]
@@ -66,16 +66,10 @@ export function Navbar() {
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
 
-  // Hide the Waitlist CTA when the user has already connected a wallet —
-  // they obviously don't need a waitlist invite anymore, and the extra
-  // pill was the main reason the navbar wrapped to two lines on
-  // medium-width desktops.
-  const showWaitlistCta = !pathname.startsWith('/signup') && !publicKey
-
   // Only pages where a wallet is actually used get the login button. On
   // content pages (home, learn, faq, roadmap, careers...) the first click
   // should explore the product, not ask for an account.
-  const WALLET_ROUTES = ['/portfolios', '/dashboard', '/pots', '/my-pots', '/create']
+  const WALLET_ROUTES = ['/bag', '/portfolios', '/dashboard', '/pots', '/my-pots', '/create']
   const needsWallet = !!publicKey || WALLET_ROUTES.some((r) => pathname.startsWith(r))
 
   return (
@@ -99,22 +93,13 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
 
-          {showWaitlistCta && (
-            <Link
-              href="/signup"
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-pot-border px-4 py-1.5 text-sm font-semibold text-white hover:border-pot-muted transition whitespace-nowrap"
-            >
-              Waitlist
-            </Link>
-          )}
-
           {/* Wallet button — switches between Privy (light/Normie) and
               wallet-adapter (dark/Crypto) via ConnectButton. */}
           {needsWallet ? (
             <ConnectButton />
           ) : (
-            <Link href="/portfolios" className="btn-primary inline-flex items-center px-4 py-1.5 text-sm whitespace-nowrap">
-              Explore
+            <Link href="/bag" className="btn-primary inline-flex items-center px-4 py-1.5 text-sm whitespace-nowrap">
+              Get BAG
             </Link>
           )}
           <button onClick={() => setMenuOpen((v) => !v)}
@@ -134,16 +119,6 @@ export function Navbar() {
 
       {menuOpen && (
         <div className="sm:hidden border-t border-pot-border bg-pot-dark/95 backdrop-blur-xl px-4 py-3 space-y-1">
-          {showWaitlistCta && (
-            <Link
-              href="/signup"
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center justify-center gap-1.5 rounded-full bg-pot-accent px-4 py-3 text-sm font-semibold text-pot-dark hover:brightness-110 transition mb-2"
-            >
-              Join the waitlist
-            </Link>
-          )}
-
           <Link href="/" onClick={() => setMenuOpen(false)}
             className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
               isActive('/') ? 'text-white bg-pot-card border border-pot-border' : 'text-pot-muted hover:text-white hover:bg-pot-card/50'
