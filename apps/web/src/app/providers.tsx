@@ -5,7 +5,7 @@ import {
   ConnectionProvider,
   WalletProvider,
 } from '@solana/wallet-adapter-react'
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
+import { WalletModalGate } from '@/components/WalletModalGate'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { getRpcUrl } from '@/lib/rpc'
@@ -41,7 +41,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <ConnectionProvider endpoint={endpoint}>
         {/* autoConnect: false — prevents the adapter from probing MetaMask/EVM extensions on load */}
         <WalletProvider wallets={wallets} autoConnect={false}>
-          <WalletModalProvider>
+          <WalletModalGate>
             <QueryClientProvider client={queryClient}>
               {children}
               <Toaster
@@ -56,7 +56,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
                 }}
               />
             </QueryClientProvider>
-          </WalletModalProvider>
+          </WalletModalGate>
         </WalletProvider>
         </ConnectionProvider>
       </PrivyClientProvider>
