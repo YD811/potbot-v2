@@ -158,6 +158,11 @@ export function LandingV3() {
                 </Reveal>
               ))}
             </div>
+            <Reveal delay={100} className="mt-6 rounded-2xl border border-pot-accent/50 bg-pot-accent/10 p-5">
+              <p className="font-mono text-xs uppercase tracking-[0.14em] text-pot-accent">For investors</p>
+              <p className="mt-2 font-semibold text-white">Open to angel checks ahead of the pre-seed.</p>
+              <p className="mt-1 text-sm text-pot-muted">Write to yd@potbot.fun for the deck, the numbers and the terms. Nothing on this page is an offer of securities.</p>
+            </Reveal>
             <Reveal delay={120} className="mt-6 flex flex-wrap gap-3">
               <a href="mailto:yd@potbot.fun?subject=PotBot%20pre-seed" className="btn-primary px-5 py-2.5 text-sm">Investors: yd@potbot.fun</a>
               <a href="https://x.com/PotBot_sol" target="_blank" rel="noopener noreferrer" className="btn-secondary px-5 py-2.5 text-sm">DM us on X</a>

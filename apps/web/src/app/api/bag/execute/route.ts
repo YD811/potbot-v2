@@ -121,6 +121,11 @@ async function recordBuy(
   )
   if (error) throw error
 
+  // Buying a BAG joins it. A wallet can be in several BAGs.
+  if (recipe) {
+    await db.from('bag_joins').upsert({ wallet: payer, slug: recipe.slug }, { onConflict: 'wallet,slug', ignoreDuplicates: true })
+  }
+
   // First referrer wins; never overwrite. An explicit ?ref= link beats the
   // creator of the BAG the buy was made on.
   const referrer = isValidWallet(ref) && ref !== payer ? ref : recipe && isValidWallet(recipe.creator) && recipe.creator !== payer ? recipe.creator : null

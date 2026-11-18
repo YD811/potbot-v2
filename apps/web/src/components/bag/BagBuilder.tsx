@@ -220,7 +220,7 @@ export function BagBuilder() {
         ) : (
           <WalletMultiButton />
         )}
-        <p className="text-xs text-pot-muted">Free. You sign a message, not a transaction. No funds move.</p>
+        <p className="text-xs text-pot-muted">Free. You sign a message, not a transaction. No funds move. <a href="#rules" className="underline">Rules and fees</a></p>
       </div>
       {error && <p className="mt-3 text-sm text-red-400" role="alert">{error}</p>}
     </div>

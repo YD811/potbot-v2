@@ -18,6 +18,9 @@ import {
   type BagLegKey,
 } from '@/lib/bag/config'
 import { legsForWeights, type BagWeights } from '@/lib/bag/recipes'
+import { BAG_FEE_BPS_DEFAULT } from '@/lib/bag/fees'
+
+const BAG_FEE_RATE = BAG_FEE_BPS_DEFAULT / 10_000
 import { useBagRef } from './useBagRef'
 import { useBagOrigin } from './useBagOrigin'
 
@@ -121,6 +124,17 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   })
 
   const amountNum = Number(amount) || 0
+  const walletCap = holdings ? Math.floor(holdings.usdc) : null
+  const sliderMax = walletCap != null && walletCap >= BAG_MIN_BUY_USDC ? Math.min(BAG_MAX_BUY_USDC, walletCap) : BAG_MAX_BUY_USDC
+  const quickPicks = useMemo(() => {
+    const picks = [25, 50, 100].filter(v => v >= BAG_MIN_BUY_USDC && v <= sliderMax).map(v => ({ label: `$${v}`, value: v }))
+    if (walletCap != null && walletCap >= BAG_MIN_BUY_USDC) {
+      const half = Math.floor(sliderMax / 2)
+      if (half >= BAG_MIN_BUY_USDC) picks.push({ label: '50%', value: half })
+      picks.push({ label: 'Max', value: sliderMax })
+    }
+    return picks
+  }, [sliderMax, walletCap])
   const amountOk = amountNum >= BAG_MIN_BUY_USDC && amountNum <= BAG_MAX_BUY_USDC
   const enoughUsdc = !holdings || holdings.usdc >= amountNum
   const enoughSol = !holdings || holdings.sol >= 0.01
@@ -195,6 +209,8 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
     } finally {
       setBusy(false)
       qc.invalidateQueries({ queryKey: ['bag-holdings', wallet] })
+      qc.invalidateQueries({ queryKey: ['bag-me', wallet] })
+      qc.invalidateQueries({ queryKey: ['bag-recipes'] })
     }
   }, [wallet, amountOk, riskAck, signTransaction, amountNum, legs, plan, buyLeg, qc])
 
@@ -208,6 +224,8 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
     } finally {
       setBusy(false)
       qc.invalidateQueries({ queryKey: ['bag-holdings', wallet] })
+      qc.invalidateQueries({ queryKey: ['bag-me', wallet] })
+      qc.invalidateQueries({ queryKey: ['bag-recipes'] })
     }
   }, [status, busy, buyLeg, qc, wallet])
 
@@ -256,23 +274,52 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
           <h2 className="text-xl font-semibold text-white">{title}</h2>
           <WalletMultiButton />
         </div>
-        <label className="mt-4 block text-sm text-pot-muted" htmlFor="bag-amount">Amount (USDC)</label>
-        <div className="mt-1 flex gap-2">
+        <div className="mt-5 rounded-2xl border border-pot-border bg-pot-dark/40 p-4">
+          <div className="flex items-end justify-between gap-3">
+            <label htmlFor="bag-amount" className="text-sm text-pot-muted">You pay</label>
+            {holdings && <span className="text-xs text-pot-muted">Wallet: {fmtUsd(holdings.usdc)} USDC · {holdings.sol.toFixed(3)} SOL</span>}
+          </div>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="font-display text-4xl font-semibold text-white">$</span>
+            <input
+              id="bag-amount"
+              inputMode="decimal"
+              value={amount}
+              onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
+              className="w-full bg-transparent font-display text-4xl font-semibold tabular-nums text-white outline-none"
+              aria-describedby="bag-amount-hint"
+            />
+            <span className="font-mono text-sm text-pot-muted">USDC</span>
+          </div>
           <input
-            id="bag-amount"
-            inputMode="decimal"
-            value={amount}
-            onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
-            className="w-full rounded-xl border border-pot-border bg-pot-dark px-4 py-3 text-lg text-white outline-none focus:border-pot-accent"
+            type="range"
+            min={BAG_MIN_BUY_USDC}
+            max={sliderMax}
+            step={1}
+            value={Math.min(Math.max(amountNum || BAG_MIN_BUY_USDC, BAG_MIN_BUY_USDC), sliderMax)}
+            onChange={e => setAmount(e.target.value)}
+            className="mt-3 w-full cursor-pointer"
+            style={{ accentColor: '#E07A4F' }}
+            aria-label="Amount in USDC"
           />
-          {[50, 100, 250].map(v => (
-            <button key={v} type="button" onClick={() => setAmount(String(v))} className="rounded-xl border border-pot-border px-3 text-sm text-pot-muted hover:text-white">${v}</button>
-          ))}
+          <div className="mt-2 flex flex-wrap gap-2">
+            {quickPicks.map(q => (
+              <button
+                key={q.label}
+                type="button"
+                onClick={() => setAmount(String(q.value))}
+                className={`rounded-full border px-3 py-1 text-xs transition ${String(q.value) === amount ? 'border-pot-accent text-white' : 'border-pot-border text-pot-muted hover:text-white'}`}
+              >
+                {q.label}
+              </button>
+            ))}
+          </div>
+          <p id="bag-amount-hint" className="mt-3 text-xs text-pot-muted">
+            {amountOk
+              ? <>Includes the 1% PotBot fee ({fmtUsd(amountNum * BAG_FEE_RATE)}). Keep about 0.01 SOL for network fees and new token accounts.</>
+              : <span className="text-pot-amber">Beta limit: ${BAG_MIN_BUY_USDC} to ${BAG_MAX_BUY_USDC} per buy.</span>}
+          </p>
         </div>
-        <p className="mt-2 text-xs text-pot-muted">
-          Beta limit ${BAG_MIN_BUY_USDC}–${BAG_MAX_BUY_USDC} per buy. Keep ~0.01 SOL for network fees and new token accounts.
-          {holdings && <> Wallet: {fmtUsd(holdings.usdc)} USDC · {holdings.sol.toFixed(3)} SOL.</>}
-        </p>
 
         {amountNum > 0 && (
           <ul className="mt-4 space-y-1 text-sm">
@@ -282,7 +329,10 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
               return (
                 <li key={l.key} className="rounded-lg px-1 py-1">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-white">{l.symbol}</span>
+                    <span className="flex items-center gap-2 text-white">
+                      <span className="inline-block h-2 w-2 rounded-full" style={{ background: l.color }} aria-hidden />
+                      {legLabel(l)} <span className="text-pot-muted">· {l.symbol}</span>
+                    </span>
                     <span className="font-mono text-pot-muted">
                       {fmtUsd(Number(st?.amountRaw ?? raw) / 10 ** USDC_DECIMALS)}
                       {st && st.state === 'done' && <span className="text-pot-green"> · done</span>}

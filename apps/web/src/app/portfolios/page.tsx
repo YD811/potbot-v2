@@ -58,9 +58,9 @@ export default function PortfoliosPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <PageHeader
-        eyebrow="Catalog"
+        eyebrow="Live demo · Solana devnet · test tokens"
         title="POTFolios"
-        lede="Baskets built by creators. Hold one token, leave any time."
+        lede="The index-token version of PotBot, running on devnet with test tokens. It goes to mainnet after the audit. BAG is live today."
         action={
           <Link href="/portfolios/new" className="btn-primary whitespace-nowrap">
             Build a POTFolio

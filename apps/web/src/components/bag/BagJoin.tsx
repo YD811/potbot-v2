@@ -73,7 +73,7 @@ export function BagJoin({ slug, creator, initialJoins }: { slug: string; creator
         )}
         <span className="font-mono text-sm text-pot-muted"><span className="text-white">{joins}</span> joined</span>
       </div>
-      <p className="mt-2 text-xs text-pot-muted">Free. You sign a message, not a transaction. One BAG per wallet: joining another one moves you.</p>
+      <p className="mt-2 text-xs text-pot-muted">Free. You sign a message, not a transaction. Buying a BAG joins it too, and you can be in several.</p>
       {error && <p className="mt-2 text-sm text-red-400" role="alert">{error}</p>}
 
       {wallet && (

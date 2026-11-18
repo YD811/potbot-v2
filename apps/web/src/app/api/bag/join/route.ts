@@ -12,8 +12,8 @@ export const dynamic = 'force-dynamic'
 /**
  * POST /api/bag/join  { slug, wallet, ts, signature, ref? }
  *
- * A wallet joins a community BAG (one BAG per wallet; joining another one
- * moves it). The wallet's referrer, if it has none yet, becomes whoever
+ * A wallet joins a BAG. A wallet can be in several BAGs; buying a BAG
+ * joins it automatically (see /api/bag/execute). The wallet's referrer, if it has none yet, becomes whoever
  * invited it (`ref`, from a ?ref= link) or else the BAG's creator, so buys
  * made after launch count for that person. The official BAG has no creator.
  */
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   const { data: recipe } = await db.from('bag_recipes').select('slug, creator').eq('slug', slug).maybeSingle()
   if (!recipe) return NextResponse.json({ error: 'Unknown BAG' }, { status: 404 })
 
-  const { error } = await db.from('bag_joins').upsert({ wallet, slug, created_at: new Date().toISOString() }, { onConflict: 'wallet' })
+  const { error } = await db.from('bag_joins').upsert({ wallet, slug }, { onConflict: 'wallet,slug', ignoreDuplicates: true })
   if (error) {
     console.error('[bag/join] upsert failed', error)
     return NextResponse.json({ error: 'Could not join this BAG.' }, { status: 500 })

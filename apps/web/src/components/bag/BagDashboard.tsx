@@ -17,14 +17,16 @@ const WalletMultiButton = dynamic(
 )
 
 interface Me {
-  joined: { slug: string; name: string; since: string } | null
+  joined: { slug: string; name: string; since: string; boughtUsd: number }[]
   referredBy: { wallet: string; since: string } | null
   referees: { wallet: string; since: string; bag: { slug: string; name: string } | null; boughtUsd: number; points: number; yourShare: number }[]
   totals: { referred: number; referredBought: number; referredBuyers: number }
   created: { slug: string; name: string; weights: BagWeights; official: boolean; joins: number; volumeUsd: number }[]
+  buys: { signature: string; leg: string; usdc: number; bag: string | null; at: string }[]
   points: { boughtUsd: number; buyConfirmed: number; buyPending: number; hold: number; referral: number; total: number }
 }
 
+const LEG_NAME: Record<string, string> = { btc: 'Bitcoin', ant: 'Anthropic', gold: 'Gold' }
 const int = (v: number) => Math.round(v).toLocaleString('en-US')
 const usd = (v: number) => `$${v.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
@@ -52,10 +54,11 @@ export function BagDashboard() {
       return r.json()
     },
     enabled: !!wallet,
-    refetchInterval: 60_000,
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: true,
   })
 
-  const inviteSlug = data?.joined?.slug ?? OFFICIAL_SLUG
+  const inviteSlug = data?.joined[0]?.slug ?? OFFICIAL_SLUG
   const origin = useBagOrigin()
   const invite = wallet ? `${origin}/bag/${inviteSlug}?ref=${wallet}` : ''
 
@@ -96,7 +99,7 @@ export function BagDashboard() {
             <Stat
               label="You bought"
               value={usd(data.points.boughtUsd)}
-              sub={data.joined ? `In ${data.joined.name}` : 'Not in a BAG yet'}
+              sub={data.joined.length ? `In ${data.joined.length} BAG${data.joined.length > 1 ? 's' : ''}` : 'Not in a BAG yet'}
             />
           </section>
 
@@ -108,9 +111,7 @@ export function BagDashboard() {
                   Wallets that join through it are linked to you for good. You earn +10% of the BAG Points they earn. They lose nothing.
                 </p>
               </div>
-              {data.joined ? (
-                <Link href={`/bag/${data.joined.slug}`} className="text-sm text-pot-accent underline">Your BAG: {data.joined.name}</Link>
-              ) : (
+              {data.joined.length === 0 && (
                 <Link href={`/bag/${OFFICIAL_SLUG}`} className="btn-primary px-4 py-2 text-sm">Join the PotBot BAG</Link>
               )}
             </div>
@@ -126,6 +127,54 @@ export function BagDashboard() {
             </div>
             {data.referredBy && (
               <p className="mt-3 text-xs text-pot-muted">You were invited by {shortWallet(data.referredBy.wallet)} on {day(data.referredBy.since)}.</p>
+            )}
+          </section>
+
+          {data.joined.length > 0 && (
+            <section>
+              <h2 className="font-display text-2xl font-semibold text-white">BAGs you are in</h2>
+              <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+                {data.joined.map(j => (
+                  <li key={j.slug}>
+                    <Link href={`/bag/${j.slug}`} className="card flex items-center justify-between gap-3 p-4 transition hover:border-pot-accent">
+                      <span className="min-w-0 truncate font-semibold text-white">{j.name}</span>
+                      <span className="shrink-0 font-mono text-sm text-pot-muted">{usd(j.boughtUsd)} bought · since {day(j.since)}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <section>
+            <h2 className="font-display text-2xl font-semibold text-white">Your buys</h2>
+            {data.buys.length === 0 ? (
+              <div className="card mt-4 p-5 text-sm text-pot-muted">No buys yet.{BAG_BUY_ENABLED ? ' Your first buy shows up here within a minute.' : ''}</div>
+            ) : (
+              <div className="card mt-4 overflow-x-auto">
+                <table className="w-full min-w-[520px] text-sm">
+                  <thead>
+                    <tr className="border-b border-pot-border text-left font-mono text-xs uppercase tracking-[0.1em] text-pot-muted">
+                      <th className="px-4 py-3 font-normal">When</th>
+                      <th className="px-4 py-3 font-normal">Asset</th>
+                      <th className="px-4 py-3 font-normal">BAG</th>
+                      <th className="px-4 py-3 text-right font-normal">Paid</th>
+                      <th className="px-4 py-3 text-right font-normal">Transaction</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.buys.map(b => (
+                      <tr key={b.signature} className="border-b border-pot-border/60 last:border-0">
+                        <td className="px-4 py-3 text-pot-muted">{day(b.at)}</td>
+                        <td className="px-4 py-3 text-white">{LEG_NAME[b.leg] ?? b.leg}</td>
+                        <td className="px-4 py-3">{b.bag ? <Link href={`/bag/${b.bag}`} className="text-pot-accent underline">{b.bag}</Link> : <span className="text-pot-muted">—</span>}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-white">{usd(b.usdc)}</td>
+                        <td className="px-4 py-3 text-right"><a href={`https://solscan.io/tx/${b.signature}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-pot-accent underline">{b.signature.slice(0, 8)}…</a></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
 

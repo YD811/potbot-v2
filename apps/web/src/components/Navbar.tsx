@@ -48,9 +48,9 @@ function LivePriceTicker() {
 // translator can swap "Vaults" → "POTs" etc. in light mode.
 // Home ⇄ Vaults is handled by the pill toggle below. Leaderboard now lives
 // as a tab inside /pots. FAQ lives in the footer only.
-const NAV_LINKS: { href: string; emoji: string; term: string; hot?: boolean }[] = [
-  { href: '/bag',         emoji: '',     term: 'BAG', hot: true },
-  { href: '/portfolios',  emoji: '',     term: 'POTFolios' },
+const NAV_LINKS: { href: string; emoji: string; term: string; hot?: boolean; tag?: string }[] = [
+  { href: '/bag',         emoji: '',     term: 'BAG', hot: true, tag: 'Live' },
+  { href: '/portfolios',  emoji: '',     term: 'POTFolios', tag: 'Demo' },
   { href: '/portfolios/new', emoji: '', term: 'Create' },
   { href: '/learn',       emoji: '',     term: 'Learn' },
   { href: '/roadmap',     emoji: '',     term: 'Roadmap' },
@@ -91,7 +91,7 @@ export function Navbar() {
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className={`px-3.5 py-1.5 rounded-full transition ${
               isActive(link.href) ? 'text-white bg-pot-card border border-pot-border' : 'text-pot-muted hover:text-white'
-            }`}>{link.hot && <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-pot-green align-middle" />}{navLabel(link)}</Link>
+            }`}>{link.hot && <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-pot-green align-middle" />}{navLabel(link)}{link.tag && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 align-middle font-mono text-[9px] uppercase tracking-wider ${link.hot ? 'bg-pot-green/20 text-pot-green' : 'border border-pot-border text-pot-muted'}`}>{link.tag}</span>}</Link>
           ))}
         </div>
 
@@ -151,7 +151,7 @@ export function Navbar() {
             <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}
               className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition ${
                 isActive(link.href) ? 'text-white bg-pot-card border border-pot-border' : 'text-pot-muted hover:text-white hover:bg-pot-card/50'
-              }`}>{navLabel(link)}</Link>
+              }`}>{navLabel(link)}{link.tag && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 align-middle font-mono text-[9px] uppercase tracking-wider ${link.hot ? 'bg-pot-green/20 text-pot-green' : 'border border-pot-border text-pot-muted'}`}>{link.tag}</span>}</Link>
           ))}
           <div className="pt-2 border-t border-pot-border/50 grid grid-cols-2 gap-x-2">
             {[['/careers', 'Careers'], ['/mainnet', 'Security'], ['/faq', 'FAQ']].map(([href, label]) => (

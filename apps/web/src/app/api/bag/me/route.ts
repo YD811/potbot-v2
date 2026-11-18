@@ -25,17 +25,18 @@ export async function GET(req: NextRequest) {
 
   const db = createServerSupabase()
   const [join, referredBy, refs, created, buys, snaps] = await Promise.all([
-    db.from('bag_joins').select('slug, created_at').eq('wallet', wallet).maybeSingle(),
+    db.from('bag_joins').select('slug, created_at').eq('wallet', wallet).order('created_at', { ascending: true }),
     db.from('bag_referrals').select('referrer, created_at').eq('wallet', wallet).maybeSingle(),
     db.from('bag_referrals').select('wallet, created_at').eq('referrer', wallet).order('created_at', { ascending: false }).limit(500),
     db.from('bag_recipes').select('slug, name, weights, created_at').eq('creator', wallet).order('created_at', { ascending: true }),
-    db.from('bag_buys').select('usdc_in, created_at').eq('wallet', wallet),
+    db.from('bag_buys').select('signature, leg, usdc_in, out_amount, bag_slug, created_at').eq('wallet', wallet).order('created_at', { ascending: false }).limit(100),
     db.from('bag_hold_snapshots').select('day, held_usd, eligible_usd, full_bag, points').eq('wallet', wallet),
   ])
 
   const refWallets = (refs.data ?? []).map(r => r.wallet)
   const createdSlugs = (created.data ?? []).map(r => r.slug)
-  const lookupSlugs = [...new Set([...createdSlugs, ...(join.data ? [join.data.slug] : [])])]
+  const joinedRows = join.data ?? []
+  const lookupSlugs = [...new Set([...createdSlugs, ...joinedRows.map(j => j.slug)])]
 
   const [refJoins, refBuys, refSnaps, slugJoins, slugBuys, slugNames] = await Promise.all([
     refWallets.length ? db.from('bag_joins').select('wallet, slug').in('wallet', refWallets) : Promise.resolve({ data: [] as { wallet: string; slug: string }[] }),
@@ -78,13 +79,19 @@ export async function GET(req: NextRequest) {
     }
   })
 
+  const ownBuys = buys.data ?? []
   const own = ownPoints((buys.data ?? []) as BuyRow[], (snaps.data ?? []) as SnapshotRow[], Number.MAX_SAFE_INTEGER)
   const referral = round2(referees.reduce((s, r) => s + r.yourShare, 0))
 
   return NextResponse.json(
     {
       wallet,
-      joined: join.data ? { slug: join.data.slug, name: nameOf.get(join.data.slug) ?? join.data.slug, since: join.data.created_at } : null,
+      joined: joinedRows.map(j => ({
+        slug: j.slug,
+        name: nameOf.get(j.slug) ?? j.slug,
+        since: j.created_at,
+        boughtUsd: round2(ownBuys.filter(b => b.bag_slug === j.slug).reduce((s, b) => s + Number(b.usdc_in), 0)),
+      })),
       referredBy: referredBy.data ? { wallet: referredBy.data.referrer, since: referredBy.data.created_at } : null,
       referees,
       totals: {
@@ -102,6 +109,7 @@ export async function GET(req: NextRequest) {
           joins: joinsBySlug.get(r.slug) ?? 0,
           volumeUsd: round2(volBySlug.get(r.slug) ?? 0),
         })),
+      buys: (buys.data ?? []).map(b => ({ signature: b.signature, leg: b.leg, usdc: Number(b.usdc_in), bag: b.bag_slug, at: b.created_at })),
       points: {
         boughtUsd: own.boughtUsd,
         buyConfirmed: own.buyConfirmed,
