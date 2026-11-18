@@ -1,25 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useBagWallet } from '@/hooks/useBagWallet'
+import { ConnectButton } from '@/components/ConnectButton'
 import { joinMessage } from '@/lib/bag/recipes'
 import { useBagRef } from './useBagRef'
 import { useBagOrigin } from './useBagOrigin'
 
-const WalletMultiButton = dynamic(
-  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  { ssr: false },
-)
 
 /**
  * "Join this BAG": a signed message, no transaction and no funds. Once a
  * wallet is connected it also gets its own invite link for this BAG.
  */
 export function BagJoin({ slug, creator, initialJoins }: { slug: string; creator: string; initialJoins: number }) {
-  const { publicKey, signMessage, connected } = useWallet()
-  const wallet = publicKey?.toBase58() ?? null
+  const { address: wallet, signMessage, connected } = useBagWallet()
   const router = useRouter()
   const ref = useBagRef()
   const [joins, setJoins] = useState(initialJoins)
@@ -58,11 +53,11 @@ export function BagJoin({ slug, creator, initialJoins }: { slug: string; creator
     <div>
       <div className="flex flex-wrap items-center gap-3">
         {!connected ? (
-          <WalletMultiButton />
+          <ConnectButton />
         ) : isCreator || state === 'done' ? (
           <>
             <span className="rounded-full border border-pot-green px-4 py-2 text-sm text-pot-green">{isCreator ? 'This is your BAG' : 'You joined this BAG'}</span>
-            <a href="/bag/me" className="text-sm text-pot-accent underline">Your BAG & points</a>
+            <a href="/dashboard#bag" className="text-sm text-pot-accent underline">Your BAG and points</a>
           </>
         ) : signMessage ? (
           <button type="button" onClick={join} disabled={state === 'busy'} className="btn-primary">

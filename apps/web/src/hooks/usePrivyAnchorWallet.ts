@@ -2,7 +2,7 @@
 
 import { useContext } from 'react'
 import type { Wallet as AnchorWallet } from '@coral-xyz/anchor'
-import { PrivyAnchorWalletContext } from '@/contexts/PrivyAnchorWalletContext'
+import { PrivyAnchorWalletContext, type PrivyWallet } from '@/contexts/PrivyAnchorWalletContext'
 
 /**
  * Read the Privy-backed AnchorWallet published by
@@ -12,6 +12,6 @@ import { PrivyAnchorWalletContext } from '@/contexts/PrivyAnchorWalletContext'
  *
  * Always returns `null` until the bridge has hydrated on the client.
  */
-export function usePrivyAnchorWallet(): AnchorWallet | null {
+export function usePrivyAnchorWallet(): PrivyWallet | null {
   return useContext(PrivyAnchorWalletContext)
 }

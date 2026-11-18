@@ -1,8 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import dynamic from 'next/dynamic'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useBagWallet } from '@/hooks/useBagWallet'
+import { useOpenConnect } from '@/hooks/useOpenConnect'
+import { ConnectButton } from '@/components/ConnectButton'
 import { VersionedTransaction } from '@solana/web3.js'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -25,10 +26,6 @@ const BAG_FEE_RATE = BAG_FEE_BPS_DEFAULT / 10_000
 import { useBagRef } from './useBagRef'
 import { useBagOrigin } from './useBagOrigin'
 
-const WalletMultiButton = dynamic(
-  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  { ssr: false },
-)
 
 interface Holdings {
   positions: { leg: BagLegKey; symbol: string; balance: number; raw: string; priceUsd: number; valueUsd: number }[]
@@ -72,14 +69,6 @@ function withTimeout<T>(p: Promise<T>, ms: number, message: string): Promise<T> 
   })
 }
 
-const RISK_KEY = 'potbot.bag.risk-ack.v1'
-
-function readStore(k: string): string | null {
-  try { return window.localStorage.getItem(k) } catch { return null }
-}
-function writeStore(k: string, v: string) {
-  try { window.localStorage.setItem(k, v) } catch { /* private mode */ }
-}
 
 const fmtUsd = (v: number) => `$${v.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`
 
@@ -92,13 +81,13 @@ interface BagClientProps {
 }
 
 export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClientProps = {}) {
-  const { publicKey, signTransaction, connected } = useWallet()
-  const wallet = publicKey?.toBase58() ?? null
+  const { address: wallet, signTransaction, connected, source } = useBagWallet()
+  const openConnect = useOpenConnect()
   const qc = useQueryClient()
 
   const [amount, setAmount] = useState('100')
-  const [riskAck, setRiskAck] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [addrCopied, setAddrCopied] = useState(false)
   const [receipt, setReceipt] = useState<{ usd: number; legs: number; of: number } | null>(null)
   const [status, setStatus] = useState<Partial<Record<BagLegKey, LegStatus>>>({})
   const [sellStatus, setSellStatus] = useState<Partial<Record<BagLegKey, LegStatus>>>({})
@@ -107,9 +96,6 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   const ref = useBagRef()
   const [copied, setCopied] = useState(false)
 
-  useEffect(() => {
-    setRiskAck(readStore(RISK_KEY) === '1')
-  }, [])
 
   const { data: holdings } = useQuery<Holdings>({
     queryKey: ['bag-holdings', wallet],
@@ -134,8 +120,10 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   const quickPicks = useMemo(() => {
     const picks = [25, 50, 100].filter(v => v >= BAG_MIN_BUY_USDC && v <= sliderMax).map(v => ({ label: `$${v}`, value: v }))
     if (walletCap != null && walletCap >= BAG_MIN_BUY_USDC) {
-      const half = Math.floor(sliderMax / 2)
-      if (half >= BAG_MIN_BUY_USDC) picks.push({ label: '50%', value: half })
+      for (const pct of [10, 25, 50]) {
+        const v = Math.floor((walletCap * pct) / 100)
+        if (v >= BAG_MIN_BUY_USDC && v <= sliderMax) picks.push({ label: `${pct}%`, value: v })
+      }
       picks.push({ label: 'Max', value: sliderMax })
     }
     return picks
@@ -206,7 +194,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
 
   /** Buy every live leg, one wallet prompt per leg. A failed leg does not stop the next one. */
   const buy = useCallback(async () => {
-    if (!wallet || !amountOk || !riskAck || !signTransaction) return
+    if (!wallet || !amountOk || !signTransaction) return
     setBusy(true)
     setReceipt(null)
     const total = BigInt(Math.floor(amountNum * 10 ** USDC_DECIMALS))
@@ -229,7 +217,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
       qc.invalidateQueries({ queryKey: ['bag-me', wallet] })
       qc.invalidateQueries({ queryKey: ['bag-recipes'] })
     }
-  }, [wallet, amountOk, riskAck, signTransaction, amountNum, legs, plan, buyLeg, qc])
+  }, [wallet, amountOk, signTransaction, amountNum, legs, plan, buyLeg, qc])
 
   /** Retry only a leg that failed, with the amount it was planned at. */
   const retryLeg = useCallback(async (leg: BagLeg) => {
@@ -269,50 +257,47 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
 
   return (
     <div className="space-y-6">
-      {/* Risk banner — always visible */}
-      <div className="rounded-2xl border border-pot-accent/50 bg-pot-accent/10 p-4 text-sm">
-        <p className="font-semibold text-pot-accent">Beta. High risk. Not investment advice.</p>
-        <p className="mt-1 text-pot-muted">
-          BAG buys three third-party tokens into your own wallet through Jupiter. PotBot never holds your funds.
-          Each token is issued by a third party that can freeze or claw it back. Tokenized stocks are not available
-          to US persons. Prices can go to zero. Only use money you can afford to lose.
-        </p>
-      </div>
-
-      {/* Legs */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        {allLegs.map(l => {
-          const pos = holdings?.positions.find(p => p.leg === l.key)
-          return (
-            <div key={l.key} className="card p-4">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs uppercase tracking-widest" style={{ color: l.color }}>{legLabel(l)}</span>
-                <span className="font-mono text-xs text-pot-muted">{(l.weightBps / 100).toFixed(0)}%</span>
-              </div>
-              <p className="mt-2 text-lg font-semibold text-white">{l.symbol}</p>
-              <p className="text-xs text-pot-muted">{l.issuer}</p>
-              {!isLegLive(l) && <p className="mt-2 text-xs text-pot-amber">Not live yet. Opens after the listing.</p>}
-              {pos && <p className="mt-2 text-sm text-white">{pos.balance.toPrecision(4)} · {fmtUsd(pos.valueUsd)}</p>}
-              <div className="mt-3 flex flex-wrap gap-1">
-                {l.risks.map(r => (
-                  <span key={r} className="rounded-full border border-pot-border px-2 py-0.5 text-[10px] text-pot-muted">{r}</span>
-                ))}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
       {/* Buy */}
       <div className="card p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xl font-semibold text-white">{title}</h2>
-          <WalletMultiButton />
+          <ConnectButton />
         </div>
-        <div className="mt-5 rounded-2xl border border-pot-border bg-pot-dark/40 p-4">
+        {wallet && (
+          <div className="mt-4 rounded-2xl border border-pot-border p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">{source === 'privy' ? 'Your PotBot wallet' : 'Your wallet'}</div>
+                <button
+                  type="button"
+                  onClick={async () => { try { await navigator.clipboard.writeText(wallet); setAddrCopied(true); setTimeout(() => setAddrCopied(false), 2000) } catch { /* clipboard blocked */ } }}
+                  className="mt-0.5 font-mono text-sm text-white underline-offset-2 hover:underline"
+                  title="Copy address"
+                >
+                  {wallet.slice(0, 4)}…{wallet.slice(-4)} <span className="text-xs text-pot-muted">{addrCopied ? 'copied' : 'copy'}</span>
+                </button>
+              </div>
+              <div className="flex gap-6">
+                <div className="text-right">
+                  <div className="font-display text-xl font-semibold tabular-nums text-white">{holdings ? fmtUsd(holdings.usdc) : '…'}</div>
+                  <div className="text-xs text-pot-muted">USDC to spend</div>
+                </div>
+                <div className="text-right">
+                  <div className={`font-display text-xl font-semibold tabular-nums ${holdings && holdings.sol < 0.01 ? 'text-pot-amber' : 'text-white'}`}>{holdings ? holdings.sol.toFixed(3) : '…'}</div>
+                  <div className="text-xs text-pot-muted">SOL for fees</div>
+                </div>
+              </div>
+            </div>
+            {holdings && (holdings.usdc < BAG_MIN_BUY_USDC || holdings.sol < 0.01) && (
+              <p className="mt-3 border-t border-pot-border pt-3 text-sm text-pot-muted">
+                To buy, this wallet needs at least ${BAG_MIN_BUY_USDC} in USDC and about 0.01 SOL, both on Solana. Copy the address above and send them from an exchange or another wallet.
+              </p>
+            )}
+          </div>
+        )}
+        <div className="mt-4 rounded-2xl border border-pot-border bg-pot-dark/40 p-4">
           <div className="flex items-end justify-between gap-3">
             <label htmlFor="bag-amount" className="text-sm text-pot-muted">You pay</label>
-            {holdings && <span className="text-xs text-pot-muted">Wallet: {fmtUsd(holdings.usdc)} USDC · {holdings.sol.toFixed(3)} SOL</span>}
           </div>
           <div className="mt-1 flex items-baseline gap-2">
             <span className="font-display text-4xl font-semibold text-white">$</span>
@@ -403,7 +388,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
                 : 'The bought assets are in your wallet. Use Retry on the failed one above.'}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <a href="/bag/me" className="btn-primary px-4 py-2 text-sm">See your BAG and points</a>
+              <a href="/dashboard" className="btn-primary px-4 py-2 text-sm">See your BAG and points</a>
               <button type="button" onClick={() => setReceipt(null)} className="rounded-full border border-pot-border px-4 py-2 text-sm text-white">Close</button>
             </div>
           </div>
@@ -412,15 +397,6 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
           <p className="mt-2 text-xs text-pot-muted">New USDC goes to underweight legs first, so every buy rebalances your BAG. Nothing is sold.</p>
         )}
 
-        <label className="mt-4 flex items-start gap-2 text-sm text-pot-muted">
-          <input
-            type="checkbox"
-            checked={riskAck}
-            onChange={e => { setRiskAck(e.target.checked); writeStore(RISK_KEY, e.target.checked ? '1' : '0') }}
-            className="mt-1"
-          />
-          <span>I understand this is an unaudited beta, the tokens are third-party issued, I am not a US person, and I can lose everything.</span>
-        </label>
 
         {notLive.length > 0 && legs.length > 0 && (
           <p className="mt-4 rounded-xl border border-pot-amber/50 bg-pot-amber/10 px-3 py-2 text-sm text-white">
@@ -430,13 +406,39 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
 
         <button
           type="button"
-          onClick={buy}
-          disabled={!connected || !signTransaction || !amountOk || !riskAck || busy || !enoughUsdc || !enoughSol || legs.length === 0}
+          onClick={connected ? buy : openConnect}
+          disabled={connected && (!signTransaction || !amountOk || busy || !enoughUsdc || !enoughSol || legs.length === 0)}
           className="btn-primary mt-4 w-full py-3 text-base disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {!connected ? 'Connect a wallet' : !enoughUsdc ? 'Not enough USDC' : !enoughSol ? 'Add ~0.01 SOL for fees' : busy ? 'Buying, one approval per asset…' : `Buy ${fmtUsd(amountNum)} of BAG`}
+          {!connected ? 'Connect to buy' : !enoughUsdc ? 'Not enough USDC' : !enoughSol ? 'Add ~0.01 SOL for fees' : busy ? 'Buying, one approval per asset…' : `Buy ${fmtUsd(amountNum)} of BAG`}
         </button>
-        <p className="mt-2 text-center text-[11px] text-pot-muted">Swaps by Jupiter, one wallet approval per asset. A 1% PotBot fee is included in each swap and shown before you sign.</p>
+        <p className="mt-2 text-center text-[11px] text-pot-muted">
+          Swaps by Jupiter, one approval per asset, 1% PotBot fee included. Unaudited beta. Tokens are issued by third parties who can freeze them. Not for US persons. <a href="#rules" className="underline">Rules and risks</a>
+        </p>
+      </div>
+
+      {/* What is inside */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        {allLegs.map(l => {
+          const pos = holdings?.positions.find(p => p.leg === l.key)
+          return (
+            <div key={l.key} className="card p-4">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs uppercase tracking-widest" style={{ color: l.color }}>{legLabel(l)}</span>
+                <span className="font-mono text-xs text-pot-muted">{(l.weightBps / 100).toFixed(0)}%</span>
+              </div>
+              <p className="mt-2 text-lg font-semibold text-white">{l.symbol}</p>
+              <p className="text-xs text-pot-muted">{l.issuer}</p>
+              {!isLegLive(l) && <p className="mt-2 text-xs text-pot-amber">Not live yet. Opens after the listing.</p>}
+              {pos && <p className="mt-2 text-sm text-white">{pos.balance.toPrecision(4)} · {fmtUsd(pos.valueUsd)}</p>}
+              <div className="mt-3 flex flex-wrap gap-1">
+                {l.risks.map(r => (
+                  <span key={r} className="rounded-full border border-pot-border px-2 py-0.5 text-[10px] text-pot-muted">{r}</span>
+                ))}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Your BAG + points */}

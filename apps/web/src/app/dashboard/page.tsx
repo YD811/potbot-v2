@@ -6,6 +6,10 @@ import toast from 'react-hot-toast'
 import { useQuery } from '@tanstack/react-query'
 import { getAssociatedTokenAddressSync } from '@solana/spl-token'
 import { PageHeader } from '@/components/PageHeader'
+import { BagDashboard } from '@/components/bag/BagDashboard'
+import { useBagWallet } from '@/hooks/useBagWallet'
+
+const SHOW_POTFOLIOS = false
 import { ConnectButton } from '@/components/ConnectButton'
 import { usePotIndexProgram, usePots, useAllPotStats, useNavHistoryAll } from '@/hooks/usePotIndex'
 import { Sparkline } from '@/components/pot-index/NavChart'
@@ -24,6 +28,7 @@ const CREATOR_SHARE = 0.4 // of the entry fee
  */
 export default function DashboardPage() {
   const { connection, pubkey } = usePotIndexProgram()
+  const { address: bagWallet } = useBagWallet()
   const pots = usePots()
   const stats = useAllPotStats(pots.data)
   const series = useNavHistoryAll()
@@ -67,17 +72,6 @@ export default function DashboardPage() {
     },
   })
 
-  // BAG is the live mainnet product: the three BAG assets this wallet holds.
-  const bag = useQuery<{ totalUsd: number; points: { total?: number } | null }>({
-    queryKey: ['bag-holdings', me],
-    enabled: !!me,
-    refetchInterval: 30_000,
-    queryFn: async () => {
-      const r = await fetch(`/api/bag/holdings?wallet=${me}`)
-      if (!r.ok) throw new Error('holdings')
-      return r.json()
-    },
-  })
 
   const rows = useMemo(
     () =>
@@ -104,66 +98,34 @@ export default function DashboardPage() {
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
       <PageHeader
         eyebrow="Dashboard"
-        title={pubkey ? 'Yours, from the chain' : 'Your dashboard'}
-        lede={pubkey ? 'What this wallet holds through PotBot: your BAG on mainnet and your POTFolios on devnet.' : 'Connect a wallet to see your BAG, your POTFolios and what you earned.'}
+        title="Your dashboard"
+        lede={bagWallet ? 'Your BAG, what it is worth now, your points and the people you brought.' : 'Connect to see your BAG, what it is worth now, your points and the people you brought.'}
       />
 
-      {!pubkey && (
-        <div className="relative min-h-[460px] overflow-hidden rounded-[32px] border border-pot-border bg-pot-card">
-          <div aria-hidden className="pointer-events-none select-none p-6 opacity-60 blur-[3px] sm:p-8">
-            <div className="grid gap-3 sm:grid-cols-4">
-              {['Total value', 'P&L', 'POTFolios held', 'Earned'].map((l) => (
-                <div key={l} className="rounded-2xl border border-pot-border p-4" style={{ background: 'var(--pot-bg)' }}>
-                  <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">{l}</div>
-                  <div className="v3-skeleton mt-2 h-7 w-24" />
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 space-y-2">
-              {(pots.data ?? []).slice(0, 3).map((p) => (
-                <div key={p.address.toBase58()} className="flex items-center gap-3 rounded-2xl border border-pot-border p-3" style={{ background: 'var(--pot-bg)' }}>
-                  <img src={plantSrc(potSeries(p), 1)} alt="" className="h-9 w-9 rounded-xl object-contain" />
-                  <span className="font-semibold text-white">{p.name}</span>
-                  <span className="v3-skeleton ml-auto h-4 w-20" />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center p-6">
-            <div className="v3-rise max-w-md rounded-3xl border border-pot-border bg-pot-card p-7 text-center shadow-[0_30px_60px_-30px_rgba(0,0,0,.45)]">
-              <h2 className="font-display text-2xl font-semibold tracking-[-0.02em] text-white">Everything you hold, in one view</h2>
-              <ul className="mx-auto mt-4 max-w-xs space-y-2 text-left text-sm text-pot-muted">
-                {['Value and P&L of every POTFolio you hold', 'What you earned as a creator and referrer', 'Your invite links, ready to copy'].map((t) => (
-                  <li key={t} className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-pot-accent" />{t}</li>
-                ))}
-              </ul>
-              <div className="mt-6 flex flex-wrap justify-center gap-3 [&>button]:!justify-center">
-                <ConnectButton />
-                <Link href="/portfolios" className="btn-secondary">Explore POTFolios</Link>
-              </div>
-              <p className="mt-3 text-xs text-pot-muted">Read from the chain. PotBot stores nothing about your wallet.</p>
-            </div>
+      {!bagWallet && (
+        <div className="card mx-auto max-w-md p-7 text-center">
+          <h2 className="font-display text-2xl font-semibold tracking-[-0.02em] text-white">Your BAG in one view</h2>
+          <ul className="mx-auto mt-4 max-w-xs space-y-2 text-left text-sm text-pot-muted">
+            {['What your BAG is worth now, and your profit or loss', 'Your BAG Points and how they grow', 'Your invite link and the people you brought'].map((t) => (
+              <li key={t} className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-pot-accent" />{t}</li>
+            ))}
+          </ul>
+          <div className="mt-6 flex flex-wrap justify-center gap-3 [&>button]:!justify-center">
+            <ConnectButton />
+            <Link href="/bag" className="btn-secondary">See BAG</Link>
           </div>
         </div>
       )}
 
-      {pubkey && (
+      {bagWallet && (
+        <section id="bag" className="scroll-mt-24">
+          <BagDashboard />
+        </section>
+      )}
+
+      {/* POTFolios are a devnet demo: hidden from the dashboard until mainnet. */}
+      {SHOW_POTFOLIOS && pubkey && (
         <>
-          <section className="mb-6 rounded-3xl border border-pot-green/50 bg-pot-card p-6">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-pot-green">BAG · Solana mainnet</div>
-                <div className="mt-1.5 font-display text-4xl font-semibold tabular-nums tracking-[-0.02em] text-white">
-                  {bag.data ? usd(bag.data.totalUsd) : bag.isError ? 'Unavailable' : 'Loading'}
-                </div>
-                <p className="mt-1 text-sm text-pot-muted">BAG assets held in this wallet. They stay in your wallet, not with PotBot.</p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <Link href="/bag/me" className="btn-primary">Your BAG and points</Link>
-                <Link href="/bag" className="btn-secondary">Buy more</Link>
-              </div>
-            </div>
-          </section>
 
           <h2 className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-pot-muted">POTFolios · devnet preview, test funds only</h2>
           <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
