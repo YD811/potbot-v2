@@ -6,6 +6,7 @@ import { useBagWallet } from '@/hooks/useBagWallet'
 import { ConnectButton } from '@/components/ConnectButton'
 import { useQueryClient } from '@tanstack/react-query'
 import { BAG_LEGS, legLabel, isLegLive } from '@/lib/bag/config'
+import { useLegStatus } from './useLegStatus'
 import {
   CLASSIC_WEIGHTS,
   MIN_LEGS,
@@ -30,6 +31,7 @@ import { useBagOrigin } from './useBagOrigin'
 const PREVIEW_USD = 100
 
 export function BagBuilder() {
+  const tradable = useLegStatus()
   const { address: wallet, signMessage, connected } = useBagWallet()
   const qc = useQueryClient()
   const origin = useBagOrigin()
@@ -145,7 +147,7 @@ export function BagBuilder() {
               <label htmlFor={`bag-w-${l.key}`} className="text-sm text-white">
                 <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle" style={{ background: l.color }} aria-hidden />
                 {legLabel(l)} <span className="text-pot-muted">· {l.symbol}</span>
-                {!isLegLive(l) && <span className="ml-2 text-xs text-pot-amber">not live yet</span>}
+                {!tradable(l) && <span className="ml-2 text-xs text-pot-amber">{isLegLive(l) ? 'trading soon' : 'not live yet'}</span>}
               </label>
               <span className="font-mono text-lg tabular-nums text-white">{weights[l.key]}%</span>
             </div>

@@ -32,7 +32,14 @@ export interface BagLeg {
   color: string
 }
 
-const ANT_MINT = (process.env.NEXT_PUBLIC_BAG_ANT_MINT ?? '').trim()
+/**
+ * Anthropic xStock (ANTx), issued by Backed Assets (xStocks) on Token-2022.
+ * Checked 19.11.2026: metadata on xstocks-metadata.backed.fi, same mint and
+ * freeze authorities as the other xStocks, verified on Jupiter. The leg only
+ * opens once Jupiter has a price for it (see /api/bag/status).
+ */
+const ANT_MINT_DEFAULT = 'XsYzw7XHj8K2WHeoeNQVyevMmzjzXfcJ8tQ4FmdN1DL'
+const ANT_MINT = (process.env.NEXT_PUBLIC_BAG_ANT_MINT || ANT_MINT_DEFAULT).trim()
 const ANT_SYMBOL = (process.env.NEXT_PUBLIC_BAG_ANT_SYMBOL ?? 'ANTx').trim()
 const ANT_ISSUER = (process.env.NEXT_PUBLIC_BAG_ANT_ISSUER ?? 'xStocks (Backed Assets, Jersey)').trim()
 const ANT_DECIMALS = Number(process.env.NEXT_PUBLIC_BAG_ANT_DECIMALS ?? '8')

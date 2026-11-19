@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useBagWallet } from '@/hooks/useBagWallet'
 import { useOpenConnect } from '@/hooks/useOpenConnect'
+import { useLegStatus } from './useLegStatus'
 import { ConnectButton } from '@/components/ConnectButton'
 import { VersionedTransaction } from '@solana/web3.js'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -14,7 +15,6 @@ import {
   USDC_DECIMALS,
   isLegLive,
   legLabel,
-  liveLegs,
   smartSplitUsdc,
   type BagLeg,
   type BagLegKey,
@@ -132,8 +132,9 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   const enoughUsdc = !holdings || holdings.usdc >= amountNum
   const enoughSol = !holdings || holdings.sol >= 0.01
   const allLegs = useMemo(() => (weights ? legsForWeights(weights) : BAG_LEGS), [weights])
-  const legs = useMemo(() => (weights ? allLegs.filter(isLegLive) : liveLegs()), [weights, allLegs])
-  const notLive = useMemo(() => allLegs.filter(l => !isLegLive(l)), [allLegs])
+  const tradable = useLegStatus()
+  const legs = useMemo(() => allLegs.filter(tradable), [allLegs, tradable])
+  const notLive = useMemo(() => allLegs.filter(l => !tradable(l)), [allLegs, tradable])
 
   const plan = useMemo(() => {
     const raw = BigInt(Math.floor(amountNum * 10 ** USDC_DECIMALS))
@@ -429,7 +430,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
               </div>
               <p className="mt-2 text-lg font-semibold text-white">{l.symbol}</p>
               <p className="text-xs text-pot-muted">{l.issuer}</p>
-              {!isLegLive(l) && <p className="mt-2 text-xs text-pot-amber">Not live yet. Opens after the listing.</p>}
+              {!tradable(l) && <p className="mt-2 text-xs text-pot-amber">{isLegLive(l) ? 'Not trading on Solana yet. Opens as soon as it has a market.' : 'Not live yet. Opens after the listing.'}</p>}
               {pos && <p className="mt-2 text-sm text-white">{pos.balance.toPrecision(4)} · {fmtUsd(pos.valueUsd)}</p>}
               <div className="mt-3 flex flex-wrap gap-1">
                 {l.risks.map(r => (
