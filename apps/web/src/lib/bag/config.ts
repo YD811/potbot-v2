@@ -192,6 +192,8 @@ export const BAG_BUY_ENABLED = process.env.NEXT_PUBLIC_BAG_BUY_ENABLED === '1'
 export const BAG_MIN_BUY_USDC = Number(process.env.NEXT_PUBLIC_BAG_MIN_BUY_USDC ?? '10')
 export const BAG_MAX_BUY_USDC = Number(process.env.NEXT_PUBLIC_BAG_MAX_BUY_USDC ?? '500')
 export const BAG_SLIPPAGE_BPS = Number(process.env.NEXT_PUBLIC_BAG_SLIPPAGE_BPS ?? '100')
+/** Second try when the price moved past BAG_SLIPPAGE_BPS before the swap (thin tokens). */
+export const BAG_RETRY_SLIPPAGE_BPS = Number(process.env.NEXT_PUBLIC_BAG_RETRY_SLIPPAGE_BPS ?? '300')
 /** Block an order when Jupiter reports a price impact above this. */
 export const BAG_MAX_PRICE_IMPACT_PCT = Number(process.env.NEXT_PUBLIC_BAG_MAX_PRICE_IMPACT_PCT ?? '2')
 
