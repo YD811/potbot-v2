@@ -29,7 +29,7 @@ const RULES: [string, string][] = [
   ['Limits (beta)', '$10 to $500 per buy. A swap with a price impact above 2% is stopped before you sign.'],
   ['Creators and inviters', 'The creator of the BAG you buy and the person who invited you earn BAG Points from your buys (+10% of yours). You lose nothing. There is no cash revenue share today.'],
   ['Rebalancing', 'New buys top up the assets you are underweight in first. Nothing is ever sold for you.'],
-  ['Risks', 'Unaudited beta, not investment advice. Each token is issued by a third party that can freeze or claw it back. Tokenized stocks are not available to US persons. Prices can go to zero. Only use money you can afford to lose.'],
+  ['Risks', 'Unaudited beta, not investment advice. Each token is issued by a third party that can freeze or claw it back. Tokenized stocks are not available to US persons, and Anthropic is not offered in the UK, Canada or Australia. Prices can go to zero. Only use money you can afford to lose.'],
   ['Selling', 'Sell any share of your BAG back to USDC here with one approval per asset, or move and sell the tokens anywhere else. They are yours.'],
 ]
 

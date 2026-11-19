@@ -30,9 +30,18 @@ export interface BagLeg {
   /** Short issuer-risk badges shown on the card. */
   risks: string[]
   color: string
+  /** ISO country codes where this leg alone is not offered (the whole BAG is blocked in blockedCountries()). */
+  restrictedCountries?: string[]
 }
 
-const ANT_MINT = (process.env.NEXT_PUBLIC_BAG_ANT_MINT ?? '').trim()
+/**
+ * Anthropic xStock (ANTx), issued by Backed Assets (xStocks) on Token-2022.
+ * Checked 19.11.2026: metadata on xstocks-metadata.backed.fi, same mint and
+ * freeze authorities as the other xStocks, verified on Jupiter. The leg only
+ * opens once Jupiter has a price for it (see /api/bag/status).
+ */
+const ANT_MINT_DEFAULT = 'XsYzw7XHj8K2WHeoeNQVyevMmzjzXfcJ8tQ4FmdN1DL'
+const ANT_MINT = (process.env.NEXT_PUBLIC_BAG_ANT_MINT || ANT_MINT_DEFAULT).trim()
 const ANT_SYMBOL = (process.env.NEXT_PUBLIC_BAG_ANT_SYMBOL ?? 'ANTx').trim()
 const ANT_ISSUER = (process.env.NEXT_PUBLIC_BAG_ANT_ISSUER ?? 'xStocks (Backed Assets, Jersey)').trim()
 const ANT_DECIMALS = Number(process.env.NEXT_PUBLIC_BAG_ANT_DECIMALS ?? '8')
@@ -87,8 +96,10 @@ export const BAG_LEGS: BagLeg[] = [
     weightBps: 3333,
     issuer: ANT_ISSUER,
     tokenProgram: 'token-2022',
-    risks: ['Tokenized stock note', 'Issuer can freeze or claw back', 'No shareholder rights', 'Not available in the US'],
+    risks: ['Tokenized stock note', 'Issuer can freeze or claw back', 'No shareholder rights', 'Not available in the US, UK, Canada or Australia'],
     color: '#D97757',
+    // xStocks does not offer ANTx in these countries (the US is blocked for the whole BAG).
+    restrictedCountries: ['GB', 'CA', 'AU'],
   },
   {
     key: 'gold',
@@ -109,6 +120,11 @@ export function getLeg(key: string): BagLeg | undefined {
 
 export function isLegLive(leg: BagLeg): boolean {
   return leg.mint.length >= 32
+}
+
+/** True when this leg is not offered in the given country. */
+export function isLegRestricted(leg: BagLeg, country: string): boolean {
+  return country !== '' && (leg.restrictedCountries ?? []).includes(country.toUpperCase())
 }
 
 export function liveLegs(): BagLeg[] {

@@ -8,9 +8,10 @@ import {
   USDC_MINT,
   getLeg,
   isLegLive,
+  isLegRestricted,
 } from '@/lib/bag/config'
 import { VersionedTransaction } from '@solana/web3.js'
-import { bagConnection, isGeoBlocked, jupOrder } from '@/lib/bag/server'
+import { bagConnection, isGeoBlocked, jupOrder, requestCountry } from '@/lib/bag/server'
 import { isValidWallet } from '@/lib/bag/points'
 
 export const runtime = 'nodejs'
@@ -37,6 +38,9 @@ export async function GET(req: NextRequest) {
 
   if (!leg) return NextResponse.json({ error: 'Unknown leg' }, { status: 400 })
   if (!isLegLive(leg)) return NextResponse.json({ error: `${leg.name} leg is not live yet` }, { status: 409 })
+  if (sp.get('side') !== 'sell' && isLegRestricted(leg, requestCountry(req))) {
+    return NextResponse.json({ error: `${leg.name} is not available in your region.` }, { status: 451 })
+  }
   if (!isValidWallet(taker)) return NextResponse.json({ error: 'Invalid wallet' }, { status: 400 })
   if (!/^\d+$/.test(amountRaw) || !/^\d+$/.test(totalRaw)) {
     return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
