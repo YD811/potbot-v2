@@ -81,7 +81,7 @@ interface BagClientProps {
 }
 
 export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClientProps = {}) {
-  const { address: wallet, signTransaction, connected, source } = useBagWallet()
+  const { address: wallet, signTransaction, signAllTransactions, connected, source } = useBagWallet()
   const openConnect = useOpenConnect()
   const qc = useQueryClient()
 
@@ -144,14 +144,26 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
     return smartSplitUsdc(raw, current, legs)
   }, [amountNum, holdings, legs])
 
-  /** One leg, start to finish: quote → simulate (server) → sign → send. */
-  const buyLeg = useCallback(async (leg: BagLeg, amountRaw: bigint, total: bigint, side: 'buy' | 'sell' = 'buy'): Promise<boolean> => {
-    if (!wallet || !signTransaction) return false
+  type Side = 'buy' | 'sell'
+  type Prepared = { leg: BagLeg; amountRaw: bigint; total: bigint; side: Side; requestId: string; tx: VersionedTransaction }
+
+  const setLeg = useCallback((side: Side, key: BagLegKey, st: LegStatus) => {
     const setMap = side === 'sell' ? setSellStatus : setStatus
-    const set = (st: LegStatus) => setMap(s => ({ ...s, [leg.key]: st }))
+    setMap(s => ({ ...s, [key]: st }))
+  }, [])
+
+  const failLeg = useCallback((side: Side, leg: BagLeg, amountRaw: bigint, total: bigint, step: BuyStep, e: unknown, sig?: string) => {
+    const raw = e instanceof Error ? e.message : typeof e === 'string' ? e : 'Something went wrong'
+    const msg = /reject|denied|cancel|declin/i.test(raw) ? 'Cancelled in the wallet.' : raw
+    setLeg(side, leg.key, { state: 'error', step, code: e instanceof StepError ? e.code : undefined, msg, sig, amountRaw: String(amountRaw), total: String(total) })
+  }, [setLeg])
+
+  /** Quote + server-side simulation for one leg. Null when it failed (status already set). */
+  const prepareLeg = useCallback(async (leg: BagLeg, amountRaw: bigint, total: bigint, side: Side): Promise<Prepared | null> => {
+    if (!wallet) return null
     let step: BuyStep = 'quote'
     try {
-      set({ state: 'quoting' })
+      setLeg(side, leg.key, { state: 'quoting' })
       const q = new URLSearchParams({ leg: leg.key, amount: String(amountRaw), total: String(total), taker: wallet })
       if (side === 'sell') q.set('side', 'sell')
       const r = await withTimeout(fetch(`/api/bag/order?${q}`), 30_000, 'Quote timed out. Try again.')
@@ -160,41 +172,84 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
         step = j.step === 'simulate' ? 'simulate' : 'quote'
         throw new StepError(j.error ?? `${leg.symbol}: quote failed`, j.code)
       }
-
-      step = 'sign'
-      set({ state: 'signing' })
       const tx = VersionedTransaction.deserialize(Buffer.from(j.transaction, 'base64'))
-      const signed = await withTimeout(signTransaction(tx), WALLET_TIMEOUT_MS, 'Wallet did not respond. Try again or use another wallet.')
+      return { leg, amountRaw, total, side, requestId: j.requestId, tx }
+    } catch (e) {
+      failLeg(side, leg, amountRaw, total, step, e)
+      return null
+    }
+  }, [wallet, setLeg, failLeg])
 
-      step = 'send'
-      set({ state: 'sending' })
+  /** Send one signed leg through Jupiter. */
+  const sendLeg = useCallback(async (p: Prepared, signed: VersionedTransaction): Promise<boolean> => {
+    try {
+      setLeg(p.side, p.leg.key, { state: 'sending' })
       const x = await withTimeout(fetch('/api/bag/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           signedTransaction: Buffer.from(signed.serialize()).toString('base64'),
-          requestId: j.requestId,
-          leg: leg.key,
+          requestId: p.requestId,
+          leg: p.leg.key,
           ref: ref ?? undefined,
           bag: bagSlug,
         }),
       }), 90_000, 'Sending timed out. Check your wallet history before trying again.')
       const xj = await x.json()
       if (!x.ok) {
-        set({ state: 'error', step, code: xj.code ?? undefined, msg: xj.error ?? 'Swap failed', sig: xj.signature, amountRaw: String(amountRaw), total: String(total) })
+        failLeg(p.side, p.leg, p.amountRaw, p.total, 'send', new StepError(xj.error ?? 'Swap failed', xj.code ?? undefined), xj.signature)
         return false
       }
-      set({ state: 'done', sig: xj.signature })
+      setLeg(p.side, p.leg.key, { state: 'done', sig: xj.signature })
       return true
     } catch (e) {
-      const raw = e instanceof Error ? e.message : 'Something went wrong'
-      const msg = /reject|denied|cancel|declin/i.test(raw) ? 'Cancelled in the wallet.' : raw
-      set({ state: 'error', step, code: e instanceof StepError ? e.code : undefined, msg, amountRaw: String(amountRaw), total: String(total) })
+      failLeg(p.side, p.leg, p.amountRaw, p.total, 'send', e)
       return false
     }
-  }, [wallet, signTransaction, ref, bagSlug])
+  }, [ref, bagSlug, setLeg, failLeg])
 
-  /** Buy every live leg, one wallet prompt per leg. A failed leg does not stop the next one. */
+  /**
+   * Run several legs: quote all at once, then ONE wallet approval for all of them
+   * where the wallet supports it, otherwise one approval per leg. Returns the legs that went through.
+   */
+  const runLegs = useCallback(async (items: { leg: BagLeg; amountRaw: bigint; total: bigint }[], side: Side): Promise<Prepared[]> => {
+    if (!wallet || !signTransaction) return []
+    const prepared = (await Promise.all(items.map(i => prepareLeg(i.leg, i.amountRaw, i.total, side)))).filter((p): p is Prepared => p !== null)
+    if (prepared.length === 0) return []
+
+    if (signAllTransactions && prepared.length > 1) {
+      prepared.forEach(p => setLeg(side, p.leg.key, { state: 'signing' }))
+      let signed: VersionedTransaction[] | null = null
+      try {
+        signed = await withTimeout(signAllTransactions(prepared.map(p => p.tx)), WALLET_TIMEOUT_MS, 'Wallet did not respond. Try again or use another wallet.')
+      } catch (e) {
+        const raw = e instanceof Error ? e.message : ''
+        // Cancelled or timed out: stop here, quotes may be stale. Anything else: fall back to one by one.
+        if (/reject|denied|cancel|declin|did not respond/i.test(raw)) {
+          prepared.forEach(p => failLeg(side, p.leg, p.amountRaw, p.total, 'sign', e))
+          return []
+        }
+      }
+      if (signed && signed.length === prepared.length) {
+        const ok = await Promise.all(prepared.map((p, i) => sendLeg(p, signed![i])))
+        return prepared.filter((_, i) => ok[i])
+      }
+    }
+
+    const done: Prepared[] = []
+    for (const p of prepared) {
+      try {
+        setLeg(side, p.leg.key, { state: 'signing' })
+        const signed = await withTimeout(signTransaction(p.tx), WALLET_TIMEOUT_MS, 'Wallet did not respond. Try again or use another wallet.')
+        if (await sendLeg(p, signed)) done.push(p)
+      } catch (e) {
+        failLeg(side, p.leg, p.amountRaw, p.total, 'sign', e)
+      }
+    }
+    return done
+  }, [wallet, signTransaction, signAllTransactions, prepareLeg, sendLeg, setLeg, failLeg])
+
+  /** Buy every live leg. A failed leg does not stop the others. */
   const buy = useCallback(async () => {
     if (!wallet || !amountOk || !signTransaction) return
     setBusy(true)
@@ -203,15 +258,11 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
     const todo = legs.filter(l => (plan.get(l.key) ?? 0n) >= 1_000_000n)
     setStatus(Object.fromEntries(todo.map(l => [l.key, { state: 'waiting' } as LegStatus])))
     try {
-      let okUsd = 0
-      let okLegs = 0
-      for (const l of todo) {
-        const raw = plan.get(l.key)!
-        if (await buyLeg(l, raw, total)) { okLegs += 1; okUsd += Number(raw) / 10 ** USDC_DECIMALS }
-      }
-      if (okLegs > 0) {
-        setReceipt({ usd: okUsd, legs: okLegs, of: todo.length })
-        toast.success(okLegs === todo.length ? `Bought ${fmtUsd(okUsd)} of BAG` : `Bought ${okLegs} of ${todo.length} assets`)
+      const done = await runLegs(todo.map(l => ({ leg: l, amountRaw: plan.get(l.key)!, total })), 'buy')
+      const okUsd = done.reduce((a, p) => a + Number(p.amountRaw) / 10 ** USDC_DECIMALS, 0)
+      if (done.length > 0) {
+        setReceipt({ usd: okUsd, legs: done.length, of: todo.length })
+        toast.success(done.length === todo.length ? `Bought ${fmtUsd(okUsd)} of BAG` : `Bought ${done.length} of ${todo.length} assets`)
       }
     } finally {
       setBusy(false)
@@ -219,7 +270,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
       qc.invalidateQueries({ queryKey: ['bag-me', wallet] })
       qc.invalidateQueries({ queryKey: ['bag-recipes'] })
     }
-  }, [wallet, amountOk, signTransaction, amountNum, legs, plan, buyLeg, qc])
+  }, [wallet, amountOk, signTransaction, amountNum, legs, plan, runLegs, qc])
 
   /** Retry only a leg that failed, with the amount it was planned at. */
   const retryLeg = useCallback(async (leg: BagLeg) => {
@@ -227,16 +278,16 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
     if (!st?.amountRaw || !st.total || busy) return
     setBusy(true)
     try {
-      await buyLeg(leg, BigInt(st.amountRaw), BigInt(st.total))
+      await runLegs([{ leg, amountRaw: BigInt(st.amountRaw), total: BigInt(st.total) }], 'buy')
     } finally {
       setBusy(false)
       qc.invalidateQueries({ queryKey: ['bag-holdings', wallet] })
       qc.invalidateQueries({ queryKey: ['bag-me', wallet] })
       qc.invalidateQueries({ queryKey: ['bag-recipes'] })
     }
-  }, [status, busy, buyLeg, qc, wallet])
+  }, [status, busy, runLegs, qc, wallet])
 
-  /** Sell a share of every held asset back to USDC, one approval per asset. */
+  /** Sell a share of every held asset back to USDC (one approval where the wallet allows). */
   const sell = useCallback(async () => {
     if (!wallet || !signTransaction || !holdings || busy) return
     setBusy(true)
@@ -245,14 +296,14 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
       .filter(x => x.raw > 0n)
     setSellStatus(Object.fromEntries(todo.map(x => [x.l.key, { state: 'waiting' } as LegStatus])))
     try {
-      for (const x of todo) await buyLeg(x.l, x.raw, x.raw, 'sell')
+      await runLegs(todo.map(x => ({ leg: x.l, amountRaw: x.raw, total: x.raw })), 'sell')
     } finally {
       setBusy(false)
       qc.invalidateQueries({ queryKey: ['bag-holdings', wallet] })
       qc.invalidateQueries({ queryKey: ['bag-me', wallet] })
       qc.invalidateQueries({ queryKey: ['bag-recipes'] })
     }
-  }, [wallet, signTransaction, holdings, busy, allLegs, sellPct, buyLeg, qc])
+  }, [wallet, signTransaction, holdings, busy, allLegs, sellPct, runLegs, qc])
 
   const origin = useBagOrigin()
   const refLink = wallet ? `${origin}/bag${bagSlug ? `/${bagSlug}` : ''}?ref=${wallet}` : ''
@@ -412,10 +463,10 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
           disabled={connected && (!signTransaction || !amountOk || busy || !enoughUsdc || !enoughSol || legs.length === 0)}
           className="btn-primary mt-4 w-full py-3 text-base disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {!connected ? 'Connect to buy' : !enoughUsdc ? 'Not enough USDC' : !enoughSol ? 'Add ~0.01 SOL for fees' : busy ? 'Buying, one approval per asset…' : `Buy ${fmtUsd(amountNum)} of BAG`}
+          {!connected ? 'Connect to buy' : !enoughUsdc ? 'Not enough USDC' : !enoughSol ? 'Add ~0.01 SOL for fees' : busy ? (signAllTransactions ? 'Buying, approve once in your wallet…' : 'Buying, one approval per asset…') : `Buy ${fmtUsd(amountNum)} of BAG`}
         </button>
         <p className="mt-2 text-center text-[11px] text-pot-muted">
-          Swaps by Jupiter, one approval per asset, 1% PotBot fee included. Unaudited beta. Tokens are issued by third parties who can freeze them. Not for US persons. <a href="#rules" className="underline">Rules and risks</a>
+          Swaps by Jupiter, {!connected ? 'one approval in most wallets' : signAllTransactions ? 'one approval for all assets' : 'one approval per asset'}, 1% PotBot fee included. Unaudited beta. Tokens are issued by third parties who can freeze them. Not for US persons. <a href="#rules" className="underline">Rules and risks</a>
         </p>
       </div>
 
@@ -486,7 +537,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
                       })}
                     </ul>
                     <button type="button" onClick={sell} disabled={busy || !signTransaction} className="btn-primary mt-3 w-full py-2 text-sm">
-                      {busy ? 'Selling, one approval per asset…' : `Sell ${sellPct}% to USDC`}
+                      {busy ? (signAllTransactions ? 'Selling, approve once in your wallet…' : 'Selling, one approval per asset…') : `Sell ${sellPct}% to USDC`}
                     </button>
                     <p className="mt-2 text-[11px] text-pot-muted">Each asset is swapped to USDC by Jupiter, with the same 1% PotBot fee. USDC lands in your wallet. Points for holding stop on what you sell.</p>
                   </div>

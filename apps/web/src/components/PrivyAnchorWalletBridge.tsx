@@ -112,6 +112,12 @@ function AuthedBridge({ children }: { children: ReactNode }) {
         const out = await privySign({ transaction: new Uint8Array(tx.serialize()), wallet: wallet!, chain: 'solana:mainnet' })
         return VersionedTransaction.deserialize(out.signedTransaction)
       },
+      async signAllMainnetTransactions(txs: VersionedTransaction[]): Promise<VersionedTransaction[]> {
+        const outs = await privySign(
+          ...txs.map(tx => ({ transaction: new Uint8Array(tx.serialize()), wallet: wallet!, chain: 'solana:mainnet' as const })),
+        )
+        return (Array.isArray(outs) ? outs : [outs]).map(o => VersionedTransaction.deserialize(o.signedTransaction))
+      },
       async signMessage(message: Uint8Array): Promise<Uint8Array> {
         const out = await privySignMessage({ message, wallet: wallet! })
         return out.signature
