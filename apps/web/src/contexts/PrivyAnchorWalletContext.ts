@@ -7,6 +7,8 @@ import type { VersionedTransaction } from '@solana/web3.js'
 /** The embedded wallet, plus the two signers BAG needs on mainnet. */
 export type PrivyWallet = AnchorWallet & {
   signMainnetTransaction?: (tx: VersionedTransaction) => Promise<VersionedTransaction>
+  /** Several mainnet transactions, one Privy confirmation. */
+  signAllMainnetTransactions?: (txs: VersionedTransaction[]) => Promise<VersionedTransaction[]>
   signMessage?: (message: Uint8Array) => Promise<Uint8Array>
 }
 
