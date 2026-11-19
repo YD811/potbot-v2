@@ -30,6 +30,8 @@ export interface BagLeg {
   /** Short issuer-risk badges shown on the card. */
   risks: string[]
   color: string
+  /** ISO country codes where this leg alone is not offered (the whole BAG is blocked in blockedCountries()). */
+  restrictedCountries?: string[]
 }
 
 /**
@@ -94,8 +96,10 @@ export const BAG_LEGS: BagLeg[] = [
     weightBps: 3333,
     issuer: ANT_ISSUER,
     tokenProgram: 'token-2022',
-    risks: ['Tokenized stock note', 'Issuer can freeze or claw back', 'No shareholder rights', 'Not available in the US'],
+    risks: ['Tokenized stock note', 'Issuer can freeze or claw back', 'No shareholder rights', 'Not available in the US, UK, Canada or Australia'],
     color: '#D97757',
+    // xStocks does not offer ANTx in these countries (the US is blocked for the whole BAG).
+    restrictedCountries: ['GB', 'CA', 'AU'],
   },
   {
     key: 'gold',
@@ -116,6 +120,11 @@ export function getLeg(key: string): BagLeg | undefined {
 
 export function isLegLive(leg: BagLeg): boolean {
   return leg.mint.length >= 32
+}
+
+/** True when this leg is not offered in the given country. */
+export function isLegRestricted(leg: BagLeg, country: string): boolean {
+  return country !== '' && (leg.restrictedCountries ?? []).includes(country.toUpperCase())
 }
 
 export function liveLegs(): BagLeg[] {

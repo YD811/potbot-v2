@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useBagWallet } from '@/hooks/useBagWallet'
 import { useOpenConnect } from '@/hooks/useOpenConnect'
-import { useLegStatus } from './useLegStatus'
+import { legNote, useLegStatus, useLegStatusRows } from './useLegStatus'
 import { ConnectButton } from '@/components/ConnectButton'
 import { VersionedTransaction } from '@solana/web3.js'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -133,6 +133,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
   const enoughSol = !holdings || holdings.sol >= 0.01
   const allLegs = useMemo(() => (weights ? legsForWeights(weights) : BAG_LEGS), [weights])
   const tradable = useLegStatus()
+  const statusRows = useLegStatusRows()
   const legs = useMemo(() => allLegs.filter(tradable), [allLegs, tradable])
   const notLive = useMemo(() => allLegs.filter(l => !tradable(l)), [allLegs, tradable])
 
@@ -401,7 +402,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
 
         {notLive.length > 0 && legs.length > 0 && (
           <p className="mt-4 rounded-xl border border-pot-amber/50 bg-pot-amber/10 px-3 py-2 text-sm text-white">
-            {notLive.map(l => legLabel(l)).join(' and ')} {notLive.length > 1 ? 'are' : 'is'} not live yet. This buy splits between {legs.map(l => legLabel(l)).join(' and ')}.
+            {notLive.map(l => legLabel(l)).join(' and ')} {notLive.length > 1 ? 'are' : 'is'} not available right now. This buy splits between {legs.map(l => legLabel(l)).join(' and ')}.
           </p>
         )}
 
@@ -430,7 +431,7 @@ export function BagClient({ weights, bagSlug, title = 'Buy the BAG' }: BagClient
               </div>
               <p className="mt-2 text-lg font-semibold text-white">{l.symbol}</p>
               <p className="text-xs text-pot-muted">{l.issuer}</p>
-              {!tradable(l) && <p className="mt-2 text-xs text-pot-amber">{isLegLive(l) ? 'Not trading on Solana yet. Opens as soon as it has a market.' : 'Not live yet. Opens after the listing.'}</p>}
+              {!tradable(l) && <p className="mt-2 text-xs text-pot-amber">{legNote(statusRows.find(x => x.key === l.key)?.reason) ?? 'Not live yet.'}</p>}
               {pos && <p className="mt-2 text-sm text-white">{pos.balance.toPrecision(4)} · {fmtUsd(pos.valueUsd)}</p>}
               <div className="mt-3 flex flex-wrap gap-1">
                 {l.risks.map(r => (

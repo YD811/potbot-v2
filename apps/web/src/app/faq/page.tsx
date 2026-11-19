@@ -22,7 +22,7 @@ const FAQ_DATA: FAQCategory[] = [
     items: [
       {
         q: 'What is BAG?',
-        a: 'BAG is the first live product: a basket bought in one flow on Solana mainnet. You choose the mix, and each asset is swapped from your USDC through Jupiter straight into your wallet. Bitcoin and gold are live. Anthropic opens after its listing, once a tokenized version trades on Solana.',
+        a: 'BAG is the first live product: a basket bought in one flow on Solana mainnet. You choose the mix, and each asset is swapped from your USDC through Jupiter straight into your wallet. Bitcoin, Anthropic and gold are live. Anthropic is the xStocks ANTx token and is not offered in the US, UK, Canada or Australia.',
       },
       {
         q: 'Does PotBot hold my money when I buy a BAG?',

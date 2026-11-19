@@ -147,7 +147,7 @@ export function BagBuilder() {
               <label htmlFor={`bag-w-${l.key}`} className="text-sm text-white">
                 <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle" style={{ background: l.color }} aria-hidden />
                 {legLabel(l)} <span className="text-pot-muted">· {l.symbol}</span>
-                {!tradable(l) && <span className="ml-2 text-xs text-pot-amber">{isLegLive(l) ? 'trading soon' : 'not live yet'}</span>}
+                {!tradable(l) && <span className="ml-2 text-xs text-pot-amber">{isLegLive(l) ? 'not available right now' : 'not live yet'}</span>}
               </label>
               <span className="font-mono text-lg tabular-nums text-white">{weights[l.key]}%</span>
             </div>
