@@ -11,8 +11,9 @@ import {
   isLegRestricted,
 } from '@/lib/bag/config'
 import { VersionedTransaction } from '@solana/web3.js'
-import { bagConnection, isGeoBlocked, jupOrder, requestCountry } from '@/lib/bag/server'
+import { bagConnection, isGeoBlocked, jupOrder, requestCountry, usdPrices } from '@/lib/bag/server'
 import { isValidWallet } from '@/lib/bag/points'
+import { bagFeeBps } from '@/lib/bag/fees'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -73,9 +74,23 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  const impactPct = Math.abs(
+  // Price impact, measured by us: what the user really gets against Jupiter's
+  // market price, minus our own fee. Jupiter Ultra's own impact figure is
+  // unreliable for thin new tokens (it showed 1 to 4% on a $3 ANTx buy whose
+  // real price matched the market), so it is only a fallback.
+  const jupImpact = Math.abs(
     typeof order.priceImpact === 'number' ? order.priceImpact : Number(order.priceImpactPct ?? 0) * 100,
   )
+  const impactPct = await measuredImpact({
+    sell,
+    mint: leg.mint,
+    decimals: leg.decimals,
+    inRaw: order.inAmount,
+    outRaw: order.outAmount,
+    // The fee Jupiter actually put into this order (ours when the referral is set).
+    feeBps: typeof order.feeBps === 'number' ? order.feeBps : bagFeeBps(),
+  }).then(m => (m === null ? jupImpact : m)).catch(() => jupImpact)
+  if (impactPct !== jupImpact) console.info(`[bag/order] impact leg=${leg.key} measured=${impactPct.toFixed(2)}% jupiter=${jupImpact.toFixed(2)}%`)
   if (impactPct > BAG_MAX_PRICE_IMPACT_PCT) {
     return NextResponse.json(
       { step: 'quote', error: `${leg.symbol}: price impact ${impactPct.toFixed(2)}% is above the ${BAG_MAX_PRICE_IMPACT_PCT}% limit. Try a smaller amount.` },
@@ -118,4 +133,21 @@ export async function GET(req: NextRequest) {
     },
     { headers: { 'Cache-Control': 'no-store' } },
   )
+}
+
+/**
+ * Loss against the market price, in percent, after taking out the PotBot fee.
+ * Null when there is no market price to compare with.
+ */
+async function measuredImpact(p: { sell: boolean; mint: string; decimals: number; inRaw: string; outRaw: string; feeBps: number }): Promise<number | null> {
+  const price = (await usdPrices([p.mint]))[p.mint]
+  const inN = Number(p.inRaw)
+  const outN = Number(p.outRaw)
+  if (!price || !(inN > 0) || !(outN > 0)) return null
+  const fee = p.feeBps / 100
+  // Buy: USDC in, token out. Sell: token in, USDC out.
+  const paidUsd = p.sell ? (inN / 10 ** p.decimals) * price : inN / 10 ** USDC_DECIMALS
+  const gotUsd = p.sell ? outN / 10 ** USDC_DECIMALS : (outN / 10 ** p.decimals) * price
+  const lossPct = (1 - gotUsd / paidUsd) * 100 - fee
+  return Math.max(0, lossPct)
 }
