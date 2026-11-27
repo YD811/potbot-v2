@@ -60,8 +60,8 @@ export function LandingV3() {
             Tokens, stocks and real-world assets in one basket. One token to hold, trade or cash out whenever you want.
           </p>
           <div className="v3-rise mt-8 flex flex-wrap gap-3" style={{ animationDelay: '320ms' }}>
-            <Link href="/portfolios" className="btn-primary px-7 py-3 text-base">Explore POTFolios</Link>
-            <Link href="/portfolios/new" className="btn-secondary px-7 py-3 text-base">Build your own</Link>
+            <Link href="/bag" className="btn-primary px-7 py-3 text-base">Buy the BAG</Link>
+            <Link href="/bag#build" className="btn-secondary px-7 py-3 text-base">Build your own</Link>
           </div>
         </div>
         <div className="pt-10 lg:pt-0">
@@ -86,7 +86,7 @@ export function LandingV3() {
         <Reveal className="mb-8 text-center">
           <H2>How it works</H2>
         </Reveal>
-        <Reveal delay={80}><HowAPotWorks compact /></Reveal>
+        <Reveal delay={80}><HowAPotWorks compact product="bag" /></Reveal>
       </section>
 
       {/* Live now */}
@@ -120,15 +120,15 @@ export function LandingV3() {
       <section className="grid gap-4 pb-20 lg:grid-cols-2">
         <Reveal className="rounded-[28px] bg-pot-accent p-8 text-[#1A120C] sm:p-10">
           <p className="font-mono text-xs uppercase tracking-[0.14em] opacity-80">For creators</p>
-          <h3 className="mt-3 font-display text-3xl font-semibold leading-tight">Turn your thesis into a token.</h3>
-          <p className="mt-3 max-w-[30em] text-base opacity-90">Pick the assets, set the weights, share the link. Earn on every deposit. You never hold anyone&apos;s money.</p>
-          <Link href="/portfolios/new" className="mt-6 inline-flex rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">Build a POTFolio</Link>
+          <h3 className="mt-3 font-display text-3xl font-semibold leading-tight">Turn your thesis into a BAG.</h3>
+          <p className="mt-3 max-w-[30em] text-base opacity-90">Pick the assets, set the weights, share the link. Every buy through your link earns you BAG Points. You never hold anyone&apos;s money.</p>
+          <Link href="/bag#build" className="mt-6 inline-flex rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:bg-[#1A120C]/10">Build your BAG</Link>
         </Reveal>
         <Reveal delay={80} className="rounded-[28px] p-8 sm:p-10" style={{ background: 'var(--pot-ink)', color: 'var(--pot-bg)' }}>
           <p className="font-mono text-xs uppercase tracking-[0.14em] opacity-70">For holders</p>
           <h3 className="mt-3 font-display text-3xl font-semibold leading-tight">Back an idea. Not copy trading.</h3>
           <p className="mt-3 max-w-[30em] text-base opacity-80">Nobody copies anyone&apos;s trades. Everyone pools into the same basket and holds the same token at the same price.</p>
-          <Link href="/portfolios" className="mt-6 inline-flex rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:opacity-80">Explore POTFolios</Link>
+          <Link href="/portfolios" className="mt-6 inline-flex rounded-full border border-current px-5 py-2.5 text-sm font-semibold transition hover:opacity-80">See all baskets</Link>
         </Reveal>
       </section>
 
@@ -184,7 +184,7 @@ export function LandingV3() {
           Tokens, stocks and real-world assets, <i className="italic text-pot-accent">in one token.</i> Anything that gets tokenized fits in a Pot.
         </h2>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link href="/portfolios" className="btn-primary px-7 py-3 text-base">Explore POTFolios</Link>
+          <Link href="/bag" className="btn-primary px-7 py-3 text-base">Buy the BAG</Link>
           <Link href="/signup" className="btn-secondary px-7 py-3 text-base">POTFolio waitlist</Link>
         </div>
       </Reveal>

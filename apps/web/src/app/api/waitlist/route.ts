@@ -18,7 +18,7 @@ const devWaitlist = new Map<string, DevEntry>()
 const waitlistWindows = new Map<string, { count: number; windowStart: number }>()
 
 // Source values we expect from the front-end. Anything else is coerced to 'other'.
-const ALLOWED_SOURCES = new Set(['landing', 'signup', 'telegram', 'twitter', 'referral'])
+const ALLOWED_SOURCES = new Set(['landing', 'signup', 'telegram', 'twitter', 'referral', 'bag-region'])
 
 function cleanHandle(raw: unknown): string | null {
   if (typeof raw !== 'string') return null
@@ -100,14 +100,8 @@ export async function POST(req: NextRequest) {
     const rawSource = (body.source ?? 'landing').toString().trim().toLowerCase()
     const source = ALLOWED_SOURCES.has(rawSource) ? rawSource : 'other'
 
-    // Optional strict mode: when the request explicitly asks for the full form
-    // (source === 'signup'), validate that at least one extra contact is present.
-    if (source === 'signup' && !twitter && !telegram && !solana_wallet) {
-      return NextResponse.json(
-        { error: 'Provide at least one of: Twitter, Telegram, or Solana wallet.' },
-        { status: 400 },
-      )
-    }
+    // Email alone is enough. The /signup form only asks for an email; an older
+    // strict mode here rejected every one of those signups with a 400.
 
     if (isSupabaseConfigured) {
       const db = createServerSupabase()

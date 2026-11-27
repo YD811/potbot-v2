@@ -6,7 +6,7 @@ import Link from 'next/link'
 type Status = 'idle' | 'loading' | 'success' | 'duplicate' | 'error'
 
 /** One field, one button. Posts to the same /api/waitlist route as before. */
-export default function WaitlistForm() {
+export default function WaitlistForm({ source = 'signup', doneText = 'We write when mainnet opens. No spam.' }: { source?: string; doneText?: string } = {}) {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -28,7 +28,7 @@ export default function WaitlistForm() {
       const res = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: value, source: 'signup' }),
+        body: JSON.stringify({ email: value, source }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -49,7 +49,7 @@ export default function WaitlistForm() {
         <h2 className="font-display text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">
           {status === 'success' ? 'You are on the list' : 'Already on the list'}
         </h2>
-        <p className="mt-2 text-[15px] text-pot-muted">We write when mainnet opens. No spam.</p>
+        <p className="mt-2 text-[15px] text-pot-muted">{doneText}</p>
         <div className="mt-6">
           <Link href="/portfolios" className="btn-primary">Explore POTFolios</Link>
         </div>
@@ -85,7 +85,7 @@ export default function WaitlistForm() {
       {errorMsg && (
         <p className="mt-3 rounded-2xl border border-pot-accent/40 bg-pot-accent/10 px-4 py-2 text-sm text-white">{errorMsg}</p>
       )}
-      <p className="mt-4 text-sm text-pot-muted">We write when mainnet opens. No spam.</p>
+      <p className="mt-4 text-sm text-pot-muted">{doneText}</p>
     </form>
   )
 }
