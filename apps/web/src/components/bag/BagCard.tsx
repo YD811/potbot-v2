@@ -23,6 +23,10 @@ export function useBagRecipes() {
   })
 }
 
+const SHOW_JOINS_FROM = 25
+const SHOW_VOLUME_FROM_USD = 10_000
+const LIVE_SINCE = '18 Nov'
+
 /** A BAG as a catalog card, sized like a POTFolio card. */
 export function BagCard({ bag }: { bag: BagRow }) {
   return (
@@ -38,8 +42,13 @@ export function BagCard({ bag }: { bag: BagRow }) {
       </div>
       <WeightBar weights={bag.weights} legend />
       <div className="mt-auto flex justify-between border-t border-pot-border pt-3 font-mono text-sm">
-        <span className="text-white">{bag.joins}<span className="ml-1 text-xs text-pot-muted">in</span></span>
-        <span className="text-white">${bag.volumeUsd.toLocaleString('en-US', { maximumFractionDigits: 0 })}<span className="ml-1 text-xs text-pot-muted">traded</span></span>
+        {/* Small early numbers read as "nobody uses this": show them once they mean something. */}
+        {bag.joins >= SHOW_JOINS_FROM
+          ? <span className="text-white">{bag.joins}<span className="ml-1 text-xs text-pot-muted">in</span></span>
+          : <span className="text-xs text-pot-muted">Mainnet beta</span>}
+        {bag.volumeUsd >= SHOW_VOLUME_FROM_USD
+          ? <span className="text-white">${bag.volumeUsd.toLocaleString('en-US', { maximumFractionDigits: 0 })}<span className="ml-1 text-xs text-pot-muted">traded</span></span>
+          : <span className="text-xs text-pot-muted">Live since {LIVE_SINCE}</span>}
       </div>
     </Link>
   )

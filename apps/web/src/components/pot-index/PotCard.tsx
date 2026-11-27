@@ -17,6 +17,8 @@ export function PotCard({ pot, list }: { pot: PotView; prices: Record<string, nu
   const perf = list?.perf
   const perfCls = perf === undefined ? 'text-white/70' : perf >= 0 ? 'text-pot-green' : 'text-red-400'
   const mint = pot.indexMint.toBase58()
+  // Devnet demo baskets run on test tokens: their value and performance mean nothing, so we show only what is inside.
+  const demo = POT_INDEX_SETTINGS.cluster === 'devnet'
   return (
     <Link href={`/portfolios/${mint}`} className="card block rounded-3xl p-5 transition duration-200 ease-pot hover:-translate-y-0.5 hover:border-pot-muted/60 hover:shadow-[0_24px_40px_-32px_rgba(0,0,0,.6)]">
       <div className="flex items-start justify-between gap-3">
@@ -27,18 +29,22 @@ export function PotCard({ pot, list }: { pot: PotView; prices: Record<string, nu
           <p className="font-mono text-xs text-pot-muted">${pot.symbol}</p>
           </div>
         </div>
+        {demo ? (
+          <span className="shrink-0 rounded-full border border-pot-border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-pot-muted">Devnet demo</span>
+        ) : (
         <div className="text-right">
-          <p className="text-xs text-white/70">{POT_INDEX_SETTINGS.cluster === 'devnet' ? 'TVL, devnet' : 'TVL'}</p>
+          <p className="text-xs text-white/70">TVL</p>
           <p className="font-mono font-medium text-white tabular-nums">
             {stats.data ? `$${stats.data.navUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}
           </p>
           <p className={`text-xs ${perfCls}`}>{perf === undefined ? '' : `${perf >= 0 ? '+' : ''}${(perf * 100).toFixed(2)}% since launch`}</p>
         </div>
+        )}
       </div>
       <div className="mt-4">
         <CompositionBar pot={pot} />
       </div>
-      {series.length >= 2 && (
+      {!demo && series.length >= 2 && (
         <div className="mt-3 flex items-center gap-3">
           <Sparkline points={series} width={240} height={36} fill={false} className="h-9 flex-1" />
           {change7d != null && (
@@ -47,10 +53,12 @@ export function PotCard({ pot, list }: { pot: PotView; prices: Record<string, nu
         </div>
       )}
       <div className="mt-4 flex items-center justify-between text-xs text-white/70">
+        {demo ? <span>Test tokens · mainnet after the audit</span> : (
         <span>
           Index price{' '}
           <span className="text-white">{stats.data ? `$${stats.data.indexPrice.toFixed(4)}` : '—'}</span>
         </span>
+        )}
         <span>{list ? `${list.holders} holder${list.holders === 1 ? '' : 's'}` : ''}{pot.paused ? ' · paused' : ''}</span>
       </div>
     </Link>

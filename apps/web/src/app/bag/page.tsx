@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { RegionBlocked } from '@/components/bag/RegionBlocked'
 import { headers } from 'next/headers'
 import { PageHeader } from '@/components/PageHeader'
 import { BagArt } from '@/components/bag/BagArt'
@@ -62,7 +63,7 @@ export default async function BagPage() {
       />
 
       {blocked ? (
-        <div className="card p-6 text-pot-muted">BAG is not available in your region.</div>
+        <RegionBlocked />
       ) : (
         <div className="space-y-10">
           <section className="v3-rise card flex flex-col items-center gap-6 border-pot-accent/60 p-5 sm:flex-row sm:p-6" style={{ backgroundImage: 'radial-gradient(circle at 12% 40%, rgba(224,122,79,0.10), transparent 55%)' }}>

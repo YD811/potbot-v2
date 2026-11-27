@@ -35,9 +35,32 @@ const PATH: Record<Audience, { title: string; steps: { title: string; body: stri
   },
 }
 
-export function HowAPotWorks({ compact = false }: { compact?: boolean }) {
+const BAG_PATH: typeof PATH = {
+  holders: {
+    title: 'You buy the BAG',
+    steps: [
+      { title: 'Pick a BAG', body: 'Start with the PotBot BAG: Bitcoin, Anthropic and gold. Or set your own mix.' },
+      { title: 'Pay in USDC', body: 'One approval. Jupiter swaps it into each asset at the price you see.' },
+      { title: 'It lands in your wallet', body: 'Every asset is yours, in your own wallet. PotBot never holds it.' },
+      { title: 'Sell any time', body: 'Back to USDC in one tap, or move the tokens anywhere.' },
+    ],
+    benefits: [],
+  },
+  creators: {
+    title: 'You build a BAG',
+    steps: [
+      { title: 'Set your mix', body: 'Pick the assets and the percentages. Building is free.' },
+      { title: 'Name it', body: 'Your BAG gets its own page and link.' },
+      { title: 'Share the link', body: 'People buy your mix in one go, straight into their own wallets.' },
+      { title: 'Earn BAG Points', body: 'Every buy through your BAG or your invite link earns you points.' },
+    ],
+    benefits: [],
+  },
+}
+
+export function HowAPotWorks({ compact = false, product = 'potfolio' }: { compact?: boolean; product?: 'potfolio' | 'bag' }) {
   const [who, setWho] = useState<Audience>('holders')
-  const p = PATH[who]
+  const p = (product === 'bag' ? BAG_PATH : PATH)[who]
   return (
     <section className={compact ? '' : 'mx-auto max-w-6xl px-4 py-16'}>
       {!compact && (
@@ -77,6 +100,12 @@ export function HowAPotWorks({ compact = false }: { compact?: boolean }) {
         ))}
       </ol>
 
+      {product === 'bag' && (
+        <p className="mt-6 text-center text-sm text-pot-muted">
+          <span className="font-semibold text-white">Next: one token.</span> POTFolio turns the whole basket into a single token. On devnet now, mainnet after the audit.{' '}
+          <Link href="/portfolios" className="font-semibold text-white underline-offset-4 hover:underline">See the demo</Link>
+        </p>
+      )}
 
       {!compact && (
         <div className="mt-8 flex flex-wrap justify-center gap-3">

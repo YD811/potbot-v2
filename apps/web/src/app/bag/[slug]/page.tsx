@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { RegionBlocked } from '@/components/bag/RegionBlocked'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
@@ -53,7 +54,7 @@ export default async function BagRecipePage({ params }: Props) {
       />
 
       {blocked ? (
-        <div className="card p-6 text-pot-muted">BAG is not available in your region.</div>
+        <RegionBlocked />
       ) : (
         <div className="space-y-6">
           <div className="card p-5 sm:p-6">
